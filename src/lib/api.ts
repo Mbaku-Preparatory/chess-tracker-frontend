@@ -95,6 +95,10 @@ export const api = {
     });
   },
 
+  getGamePgn(id: number): Promise<{ id: number; pgn_text: string }> {
+    return fetchJson(`${API_BASE}/games/${id}/pgn/`);
+  },
+
   searchOpenings(query: string, limit = 20): Promise<import("@/types").OpeningResult[]> {
     const params = new URLSearchParams({ q: query, limit: String(limit) });
     return fetchJson(`${API_BASE}/openings/search/?${params}`);

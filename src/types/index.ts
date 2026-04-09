@@ -80,6 +80,7 @@ export interface Game {
   num_moves: number | null;
   time_control: string | null;
   moves_preview: string;
+  pgn_text?: string;
   source: GameSource;
   source_url: string | null;
   notes: string | null;
