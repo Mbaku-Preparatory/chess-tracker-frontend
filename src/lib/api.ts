@@ -12,7 +12,15 @@ import type {
   PrepData,
 } from "@/types";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+const rawApiBase =
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  "http://localhost:8000/api";
+
+const normalizedApiBase = rawApiBase.replace(/\/$/, "");
+const API_BASE = normalizedApiBase.endsWith("/api")
+  ? normalizedApiBase
+  : `${normalizedApiBase}/api`;
 
 async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, init);
