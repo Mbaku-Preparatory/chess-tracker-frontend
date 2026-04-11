@@ -26,9 +26,6 @@ interface RepertoireState {
 }
 
 export const STORAGE_KEY = "cs_repertoire";
-const MAX_PER_SECTION = 2;
-const MAX_TOTAL = 5;
-
 const initialState: RepertoireState = {
   white: [],
   black_vs_e4: [],
@@ -63,12 +60,8 @@ const repertoireSlice = createSlice({
     ) {
       const { section, opening } = action.payload;
       const sectionItems = state[section];
-      const totalSelected =
-        state.white.length + state.black_vs_e4.length + state.black_vs_d4.length;
 
       if (sectionItems.some((o) => o.slug === opening.slug)) return;
-      if (sectionItems.length >= MAX_PER_SECTION) return;
-      if (totalSelected >= MAX_TOTAL) return;
 
       state[section] = [...sectionItems, opening];
     },

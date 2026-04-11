@@ -7,6 +7,7 @@ export interface Player {
   full_name: string;
   slug: string;
   fide_id: string | null;
+  chesscom_username: string | null;
   federation: string | null;
   birth_year: number | null;
   standard_rating: number | null;
@@ -158,6 +159,19 @@ export interface GamesFilter {
   page?: number;
 }
 
+export interface ChessComFetchMeta {
+  username: string;
+  total_archives: number;
+  archives_visited: number;
+  archives_failed: number;
+  games_fetched: number;
+}
+
+export interface ChessComImportResult extends PGNImportResult {
+  chesscom_username: string;
+  fetch_meta: ChessComFetchMeta;
+}
+
 export interface PGNImportResult {
   player_slug: string;
   player_name: string;
@@ -167,6 +181,87 @@ export interface PGNImportResult {
   games_skipped: number;
   opening_summary: { name: string; count: number; percent: number }[];
   result_summary: { wins: number; draws: number; losses: number };
+}
+
+// ── Phase 4: Insight engine types ───────────────────────────────────────────
+
+export interface InsightMeta {
+  player_slug: string;
+  player_name: string;
+  games_analyzed: number;
+  openings_tracked: number;
+  repertoire_codes_provided: string[];
+  generated_at: string;
+  data_quality: "good" | "fair" | "limited" | "none";
+}
+
+export interface InsightConfidence {
+  score: number;
+  label: "High" | "Medium" | "Low" | "Very Low" | "None";
+  reason: string;
+}
+
+export interface InsightWeakness {
+  eco_code: string;
+  opening_name: string;
+  color: ColorChoice;
+  score_percent: number;
+  games_count: number;
+  severity: "critical" | "high" | "moderate";
+  in_your_repertoire: boolean;
+  repertoire_match: "exact" | "family" | "";
+  description: string;
+}
+
+export interface InsightRecommendedLine {
+  eco_code: string;
+  opening_name: string;
+  color: ColorChoice;
+  opponent_score: number;
+  opponent_games: number;
+  repertoire_match: "exact" | "family";
+  recommendation_strength: "strong" | "moderate" | "low";
+  rationale: string;
+}
+
+export interface InsightDangerZone {
+  eco_code: string;
+  opening_name: string;
+  color: ColorChoice;
+  score_percent: number;
+  games_count: number;
+  risk_level: "high" | "medium";
+  in_your_repertoire: boolean;
+  advice: string;
+}
+
+export interface InsightMatchPlanItem {
+  order: number;
+  type: "target" | "caution" | "consider" | "general";
+  text: string;
+}
+
+export interface InsightEvidence {
+  total_games: number;
+  white_games: number;
+  black_games: number;
+  win_rate: number;
+  white_score: number;
+  black_score: number;
+  top_openings: { eco_code: string; opening_name: string; color: string; games_count: number; score_percent: number }[];
+  worst_openings: { eco_code: string; opening_name: string; color: string; games_count: number; score_percent: number }[];
+  best_openings: { eco_code: string; opening_name: string; color: string; games_count: number; score_percent: number }[];
+}
+
+export interface PlayerInsights {
+  meta: InsightMeta;
+  confidence: InsightConfidence;
+  executive_summary: string;
+  recommended_lines: InsightRecommendedLine[];
+  weaknesses: InsightWeakness[];
+  danger_zones: InsightDangerZone[];
+  match_plan: InsightMatchPlanItem[];
+  evidence: InsightEvidence;
 }
 
 export interface OpeningResult {

@@ -6,6 +6,7 @@ import {
   formatKenyanPhoneNumber,
   normalizeKenyanPhoneNumber,
 } from "@/lib/phone";
+import { formatKesAmount, PREP_PRICE_KES } from "@/lib/marketplace";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   checkAccess,
@@ -248,7 +249,7 @@ export function PaymentModal({
             <div className="border-b border-gray-100 px-6 py-4">
               <div className="flex items-center justify-between gap-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-                  Pay KES 10 to access
+                  Pay {formatKesAmount(PREP_PRICE_KES)} to access
                 </p>
                 <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
                   Instant Unlock
@@ -350,7 +351,7 @@ export function PaymentModal({
                     Processing...
                   </span>
                 ) : (
-                  "Unlock for KES 10"
+                  `Unlock for ${formatKesAmount(PREP_PRICE_KES)}`
                 )}
               </button>
 

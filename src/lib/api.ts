@@ -1,5 +1,6 @@
 import type {
   AccessCheckResponse,
+  ChessComImportResult,
   Game,
   GamesFilter,
   OpeningDistribution,
@@ -9,6 +10,7 @@ import type {
   PerformanceSummary,
   Player,
   PlayerDetail,
+  PlayerInsights,
   PrepData,
 } from "@/types";
 
@@ -58,7 +60,7 @@ export const api = {
     return fetchJson(`${API_BASE}/players/${slug}/games/?${params}`);
   },
 
-  getPlayerOpenings(slug: string): Promise<PaginatedResponse<OpeningStat>> {
+  getPlayerOpenings(slug: string): Promise<OpeningStat[]> {
     return fetchJson(`${API_BASE}/players/${slug}/openings/`);
   },
 
@@ -97,6 +99,26 @@ export const api = {
 
   getGamePgn(id: number): Promise<{ id: number; pgn_text: string }> {
     return fetchJson(`${API_BASE}/games/${id}/pgn/`);
+  },
+
+  importFromChessCom(
+    slug: string,
+    payload: { username?: string; limit?: number }
+  ): Promise<ChessComImportResult> {
+    return fetchJson(`${API_BASE}/players/${slug}/import-chesscom/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  },
+
+  getPlayerInsights(slug: string, ecoCodes?: string[]): Promise<PlayerInsights> {
+    const params = new URLSearchParams();
+    if (ecoCodes && ecoCodes.length > 0) {
+      params.set("eco_codes", ecoCodes.join(","));
+    }
+    const qs = params.toString();
+    return fetchJson(`${API_BASE}/players/${slug}/insights/${qs ? `?${qs}` : ""}`);
   },
 
   searchOpenings(query: string, limit = 20): Promise<import("@/types").OpeningResult[]> {

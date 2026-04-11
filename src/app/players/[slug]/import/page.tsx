@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 
 import { api } from "@/lib/api";
+import { ChessComImportSection } from "@/components/import/ChessComImportSection";
 import { ImportResultPanel } from "@/components/import/ImportResultPanel";
 import type { PlayerDetail, PGNImportResult } from "@/types";
 
@@ -189,6 +190,20 @@ export default function PlayerImportPage() {
           <p className="text-sm text-gray-500">
             Adding games for <span className="font-medium text-gray-700">{player.full_name}</span>
           </p>
+        </div>
+      </div>
+
+      {/* Chess.com auto-import */}
+      <div className="mb-8 space-y-4">
+        <ChessComImportSection
+          slug={slug}
+          savedUsername={player.chesscom_username}
+        />
+
+        <div className="flex items-center gap-3">
+          <div className="h-px flex-1 bg-gray-200" />
+          <span className="text-xs font-medium text-gray-400">or import PGN manually</span>
+          <div className="h-px flex-1 bg-gray-200" />
         </div>
       </div>
 

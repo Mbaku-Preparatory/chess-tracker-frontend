@@ -40,7 +40,7 @@ function OpeningChip({
   onRemove: () => void;
 }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1 text-sm font-medium text-brand-700 border border-brand-200">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-sm font-medium text-brand-700">
       <span className="font-mono text-xs text-brand-500">{opening.eco_code}</span>
       <span className="max-w-[180px] truncate">{opening.name}</span>
       <button
@@ -65,13 +65,11 @@ function OpeningSearchSection({
   label,
   hint,
   selected,
-  totalSelected,
 }: {
   section: RepertoireSection;
   label: string;
   hint: string;
   selected: RepertoireOpening[];
-  totalSelected: number;
 }) {
   const dispatch = useAppDispatch();
   const [query, setQuery] = useState("");
@@ -80,8 +78,6 @@ function OpeningSearchSection({
   const [open, setOpen] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  const canAdd = selected.length < 2 && totalSelected < 5;
 
   const search = useCallback(async (q: string) => {
     if (!q.trim() || q.length < 2) {
@@ -119,7 +115,6 @@ function OpeningSearchSection({
     dispatch(removeOpening({ section, slug }));
   };
 
-  // Close dropdown on outside click
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -152,112 +147,103 @@ function OpeningSearchSection({
         </div>
       )}
 
-      {/* Search input */}
-      {canAdd && (
-        <div ref={containerRef} className="relative">
-          <div className="relative">
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-              {loading ? (
-                <svg
-                  className="h-4 w-4 animate-spin text-gray-400"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                  />
-                </svg>
-              ) : (
-                <svg
-                  className="h-4 w-4 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
+      {/* Search input — always visible */}
+      <div ref={containerRef} className="relative">
+        <div className="relative">
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+            {loading ? (
+              <svg
+                className="h-4 w-4 animate-spin text-gray-400"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
                   stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-              )}
-            </div>
-            <input
-              type="text"
-              value={query}
-              onChange={handleQueryChange}
-              placeholder={`Search openings — e.g. "Caro-Kann" or "car kann"`}
-              className="block w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-9 pr-3 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-            />
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                />
+              </svg>
+            ) : (
+              <svg
+                className="h-4 w-4 text-gray-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            )}
           </div>
+          <input
+            type="text"
+            value={query}
+            onChange={handleQueryChange}
+            placeholder={`Search openings — e.g. "Caro-Kann" or "car kann"`}
+            className="block w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-9 pr-3 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+          />
+        </div>
 
-          {/* Results dropdown */}
-          {open && results.length > 0 && (
-            <ul className="absolute z-20 mt-1 max-h-64 w-full overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg">
-              {results.map((result) => {
-                const alreadyPicked = isSelected(result.slug);
-                return (
-                  <li key={result.slug}>
-                    <button
-                      onClick={() => !alreadyPicked && handleSelect(result)}
-                      disabled={alreadyPicked}
-                      className={`flex w-full items-start gap-3 px-4 py-2.5 text-left transition-colors ${
-                        alreadyPicked
-                          ? "cursor-default bg-gray-50 text-gray-400"
-                          : "hover:bg-brand-50"
-                      }`}
-                    >
-                      <span className="mt-0.5 shrink-0 rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs text-gray-600">
-                        {result.eco_code}
+        {/* Results dropdown */}
+        {open && results.length > 0 && (
+          <ul className="absolute z-20 mt-1 max-h-64 w-full overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+            {results.map((result) => {
+              const alreadyPicked = isSelected(result.slug);
+              return (
+                <li key={result.slug}>
+                  <button
+                    onClick={() => !alreadyPicked && handleSelect(result)}
+                    disabled={alreadyPicked}
+                    className={`flex w-full items-start gap-3 px-4 py-2.5 text-left transition-colors ${
+                      alreadyPicked
+                        ? "cursor-default bg-gray-50 text-gray-400"
+                        : "hover:bg-brand-50"
+                    }`}
+                  >
+                    <span className="mt-0.5 shrink-0 rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs text-gray-600">
+                      {result.eco_code}
+                    </span>
+                    <span className="flex-1">
+                      <span className="block text-sm font-medium text-gray-900">
+                        {result.name}
                       </span>
-                      <span className="flex-1">
-                        <span className="block text-sm font-medium text-gray-900">
-                          {result.name}
-                        </span>
-                        {result.pgn && (
-                          <span className="block truncate text-xs text-gray-400">
-                            {result.pgn}
-                          </span>
-                        )}
-                      </span>
-                      {alreadyPicked && (
-                        <span className="ml-auto shrink-0 text-xs text-brand-500">
-                          Selected
+                      {result.pgn && (
+                        <span className="block truncate text-xs text-gray-400">
+                          {result.pgn}
                         </span>
                       )}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+                    </span>
+                    {alreadyPicked && (
+                      <span className="ml-auto shrink-0 text-xs text-brand-500">
+                        Selected
+                      </span>
+                    )}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
 
-          {open && !loading && results.length === 0 && query.length >= 2 && (
-            <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-gray-500 shadow-lg">
-              No openings found for &ldquo;{query}&rdquo;
-            </div>
-          )}
-        </div>
-      )}
-
-      {!canAdd && selected.length >= 2 && (
-        <p className="text-xs text-gray-400">Max 2 per section</p>
-      )}
-      {!canAdd && totalSelected >= 5 && selected.length < 2 && (
-        <p className="text-xs text-gray-400">Overall limit of 5 reached</p>
-      )}
+        {open && !loading && results.length === 0 && query.length >= 2 && (
+          <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-gray-500 shadow-lg">
+            No openings found for &ldquo;{query}&rdquo;
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -265,12 +251,9 @@ function OpeningSearchSection({
 export default function SetupPage() {
   const dispatch = useAppDispatch();
   const router = useRouter();
-  const { white, black_vs_e4, black_vs_d4 } = useAppSelector(
-    (s) => s.repertoire
-  );
+  const { white, black_vs_e4, black_vs_d4 } = useAppSelector((s) => s.repertoire);
 
   const totalSelected = white.length + black_vs_e4.length + black_vs_d4.length;
-
   const isEditing = useAppSelector((s) => s.repertoire.onboardingComplete);
 
   const handleContinue = () => {
@@ -299,23 +282,11 @@ export default function SetupPage() {
         </p>
       </div>
 
-      {/* Progress indicator */}
-      <div className="mb-6 flex items-center justify-between rounded-lg bg-gray-50 px-4 py-3 text-sm">
-        <span className="text-gray-600">
-          {totalSelected === 0
-            ? "Select at least one opening to continue"
-            : `${totalSelected} of 5 selected`}
-        </span>
-        <div className="flex gap-1">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div
-              key={i}
-              className={`h-2 w-6 rounded-full transition-colors ${
-                i < totalSelected ? "bg-brand-500" : "bg-gray-200"
-              }`}
-            />
-          ))}
-        </div>
+      {/* Selection counter */}
+      <div className="mb-6 rounded-lg bg-gray-50 px-4 py-3 text-sm text-gray-600">
+        {totalSelected === 0
+          ? "Select at least one opening to continue"
+          : `${totalSelected} opening${totalSelected !== 1 ? "s" : ""} selected`}
       </div>
 
       {/* Sections */}
@@ -329,7 +300,6 @@ export default function SetupPage() {
             selected={
               key === "white" ? white : key === "black_vs_e4" ? black_vs_e4 : black_vs_d4
             }
-            totalSelected={totalSelected}
           />
         ))}
       </div>

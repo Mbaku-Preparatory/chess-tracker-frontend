@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 
 import { CommonMistakesCard } from "@/components/players/CommonMistakesCard";
 import { GamesTable } from "@/components/players/GamesTable";
+import { InsightsPanel } from "@/components/players/InsightsPanel";
 import { OpeningBreakdownCard } from "@/components/players/OpeningBreakdownCard";
 import { PaymentModal } from "@/components/players/PaymentModal";
 import { PerformanceSplitCard } from "@/components/players/PerformanceSplitCard";
@@ -26,9 +27,12 @@ import {
   checkAccess,
   loadPhoneFromStorage,
 } from "@/store/slices/paymentSlice";
+import { api } from "@/lib/api";
+import { formatKesAmount, PREP_PRICE_KES } from "@/lib/marketplace";
 import type {
   OpeningStat,
   PlayerDetail,
+  PlayerInsights,
   PrepData,
   ScoutingSection,
   ScoutingSectionType,
@@ -234,8 +238,11 @@ export default function PrepPage() {
   const { accessMap, phoneNumber, loading: accessLoading } = useAppSelector(
     (state) => state.payment
   );
+  const repertoire = useAppSelector((state) => state.repertoire);
   const [showPayment, setShowPayment] = useState(false);
   const [accessChecked, setAccessChecked] = useState(false);
+  const [insights, setInsights] = useState<PlayerInsights | null>(null);
+  const [insightsLoading, setInsightsLoading] = useState(false);
 
   const hasAccess = slug ? accessMap[slug] ?? false : false;
 
@@ -265,6 +272,25 @@ export default function PrepPage() {
       dispatch(fetchPlayerPrep({ slug, phone: phoneNumber }));
     }
   }, [dispatch, hasAccess, phoneNumber, slug]);
+
+  // Collect all ECO codes from the user's stored repertoire.
+  useEffect(() => {
+    if (!slug || !hasAccess) return;
+    const ecoCodes = [
+      ...repertoire.white,
+      ...repertoire.black_vs_e4,
+      ...repertoire.black_vs_d4,
+    ]
+      .map((o) => o.eco_code)
+      .filter(Boolean);
+
+    setInsightsLoading(true);
+    api
+      .getPlayerInsights(slug, ecoCodes)
+      .then(setInsights)
+      .catch(() => setInsights(null))
+      .finally(() => setInsightsLoading(false));
+  }, [slug, hasAccess, repertoire]);
 
   if (loading || !accessChecked || accessLoading) {
     return (
@@ -363,7 +389,7 @@ export default function PrepPage() {
                     onClick={() => setShowPayment(true)}
                     className="inline-flex items-center justify-center rounded-xl bg-brand-500 px-6 py-3 text-sm font-bold text-white transition hover:bg-brand-400"
                   >
-                    Unlock {surname} Prep — KES 10
+                    Unlock {surname} Prep — {formatKesAmount(PREP_PRICE_KES)}
                   </button>
                   <Link
                     href={`/players/${player.slug}`}
@@ -393,14 +419,14 @@ export default function PrepPage() {
                     <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-300">
                       Unlock Price
                     </p>
-                    <p className="mt-2 text-4xl font-bold text-white">KES 10</p>
+                    <p className="mt-2 text-4xl font-bold text-white">{formatKesAmount(PREP_PRICE_KES)}</p>
                   </div>
                   <div className="rounded-2xl border border-amber-400/20 bg-amber-400/10 px-4 py-3 text-right">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-amber-200">
                       Perceived Value
                     </p>
                     <p className="mt-1 text-sm font-medium text-amber-50">
-                      One accurate pairing is worth far more than KES 10.
+                      One accurate pairing is worth far more than {formatKesAmount(PREP_PRICE_KES)}.
                     </p>
                   </div>
                 </div>
@@ -569,7 +595,7 @@ export default function PrepPage() {
                 onClick={() => setShowPayment(true)}
                 className="inline-flex items-center justify-center rounded-xl bg-brand-500 px-6 py-3 text-sm font-bold text-white transition hover:bg-brand-400"
               >
-                Unlock {surname} Prep — KES 10
+                Unlock {surname} Prep — {formatKesAmount(PREP_PRICE_KES)}
               </button>
             </div>
           </div>
@@ -952,6 +978,27 @@ export default function PrepPage() {
           <QuickPrepCard section={quickPrep} />
         </SectionContainer>
       )}
+
+      {/* Phase 4: Computed insights */}
+      <SectionContainer
+        title="Data-Driven Insights"
+        subtitle="Rule-based analysis of opening tendencies, weaknesses, and repertoire overlap"
+        className="mt-4"
+      >
+        {insightsLoading ? (
+          <div className="space-y-3">
+            <div className="h-5 w-48 animate-pulse rounded bg-gray-100" />
+            <div className="h-24 animate-pulse rounded-xl bg-gray-100" />
+            <div className="h-20 animate-pulse rounded-xl bg-gray-100" />
+          </div>
+        ) : insights ? (
+          <InsightsPanel insights={insights} />
+        ) : (
+          <p className="text-sm text-gray-400">
+            Could not load insights. Ensure games are imported for this player.
+          </p>
+        )}
+      </SectionContainer>
 
       <div className="no-print mt-8 flex flex-wrap items-center justify-center gap-3">
         <ShareButton slug={player.slug} playerName={playerName} />
