@@ -8,6 +8,7 @@ export interface Player {
   slug: string;
   fide_id: string | null;
   chesscom_username: string | null;
+  lichess_username: string | null;
   federation: string | null;
   birth_year: number | null;
   standard_rating: number | null;
@@ -135,21 +136,6 @@ export interface PaginatedResponse<T> {
   results: T[];
 }
 
-export interface PaymentResponse {
-  status: "completed" | "pending" | "failed";
-  transaction_id?: string;
-  checkout_request_id?: string;
-  message?: string;
-  detail?: string;
-  access?: boolean;
-  phone_number?: string;
-  amount?: number;
-}
-
-export interface AccessCheckResponse {
-  access: boolean;
-}
-
 export interface GamesFilter {
   color_played?: ColorChoice | "";
   result?: GameResult | "";
@@ -170,6 +156,16 @@ export interface ChessComFetchMeta {
 export interface ChessComImportResult extends PGNImportResult {
   chesscom_username: string;
   fetch_meta: ChessComFetchMeta;
+}
+
+export interface LichessFetchMeta {
+  username: string;
+  games_fetched: number;
+}
+
+export interface LichessImportResult extends PGNImportResult {
+  lichess_username: string;
+  fetch_meta: LichessFetchMeta;
 }
 
 export interface PGNImportResult {

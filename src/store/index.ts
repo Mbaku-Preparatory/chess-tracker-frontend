@@ -1,7 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 
 import gamesReducer from "./slices/gamesSlice";
-import paymentReducer from "./slices/paymentSlice";
 import playerDetailReducer from "./slices/playerDetailSlice";
 import playersReducer from "./slices/playersSlice";
 import repertoireReducer, { STORAGE_KEY } from "./slices/repertoireSlice";
@@ -11,7 +10,6 @@ export const store = configureStore({
     players: playersReducer,
     playerDetail: playerDetailReducer,
     games: gamesReducer,
-    payment: paymentReducer,
     repertoire: repertoireReducer,
   },
   // No preloadedState — store always starts with defaults on both server and

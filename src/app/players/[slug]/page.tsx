@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchPlayerDetail } from "@/store/slices/playerDetailSlice";
-import { checkAccess, loadPhoneFromStorage } from "@/store/slices/paymentSlice";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatCard } from "@/components/ui/StatCard";
 import { SectionContainer } from "@/components/ui/SectionContainer";
@@ -16,32 +15,15 @@ import { OpeningBreakdownCard } from "@/components/players/OpeningBreakdownCard"
 import { StrengthWeaknessCard } from "@/components/players/StrengthWeaknessCard";
 import { PrepRecommendationCard } from "@/components/players/PrepRecommendationCard";
 import { GamesTable } from "@/components/players/GamesTable";
-import { PaymentModal } from "@/components/players/PaymentModal";
-import { formatKesAmount, PREP_PRICE_KES } from "@/lib/marketplace";
 
 export default function PlayerDetailPage() {
   const { slug } = useParams<{ slug: string }>();
-  const router = useRouter();
   const dispatch = useAppDispatch();
   const { player, loading, error } = useAppSelector((s) => s.playerDetail);
-  const { accessMap, phoneNumber, loading: accessLoading } = useAppSelector((s) => s.payment);
-  const [showPayment, setShowPayment] = useState(false);
-
-  const hasAccess = slug ? accessMap[slug] ?? false : false;
-
-  useEffect(() => {
-    dispatch(loadPhoneFromStorage());
-  }, [dispatch]);
 
   useEffect(() => {
     if (slug) dispatch(fetchPlayerDetail(slug));
   }, [dispatch, slug]);
-
-  useEffect(() => {
-    if (slug && phoneNumber) {
-      dispatch(checkAccess({ slug, phone: phoneNumber }));
-    }
-  }, [dispatch, slug, phoneNumber]);
 
   if (loading) {
     return (
@@ -233,52 +215,46 @@ export default function PlayerDetailPage() {
         <Link href={`/players/${player.slug}/games`} className="btn-primary">
           View All Games
         </Link>
-        <Link
-          href={`/players/${player.slug}/import`}
-          className="btn-secondary inline-flex items-center gap-2"
-        >
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-          </svg>
-          Import Games
-        </Link>
-        {accessLoading ? (
-          <button disabled className="btn-secondary inline-flex items-center gap-2 opacity-50">
-            <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
-            Checking access...
-          </button>
-        ) : hasAccess ? (
-          <Link href={`/players/${player.slug}/prep`} className="btn-secondary">
-            Open Preparatory
-          </Link>
-        ) : (
-          <button
-            onClick={() => setShowPayment(true)}
-            className="btn-secondary inline-flex items-center gap-2"
-          >
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-            Unlock Preparatory — {formatKesAmount(PREP_PRICE_KES)}
-          </button>
-        )}
-      </div>
 
-      {player && (
-        <PaymentModal
-          playerSlug={player.slug}
-          playerName={player.full_name}
-          open={showPayment}
-          onClose={() => setShowPayment(false)}
-          onSuccess={() => {
-            setShowPayment(false);
-            router.push(`/players/${player.slug}/prep`);
-          }}
-        />
-      )}
+        <Link href={`/players/${player.slug}/prep`} className="btn-secondary">
+          View Prep
+        </Link>
+
+        {/* Import source buttons */}
+        <Link
+          href={`/players/${player.slug}/import?source=chesscom`}
+          className="inline-flex items-center gap-2 rounded-lg border border-[#7fa650] bg-[#7fa650] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#6b8f44] focus:outline-none focus:ring-2 focus:ring-[#7fa650] focus:ring-offset-1"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+            <path d="M10 2a1 1 0 00-1 1v1H8a3 3 0 00-3 3v1H4a1 1 0 000 2h1v1a3 3 0 003 3h.17l-1.9 4.55A1 1 0 007.2 20h9.6a1 1 0 00.93-1.45L15.83 14H16a3 3 0 003-3v-1h1a1 1 0 000-2h-1V7a3 3 0 00-3-3h-1V3a1 1 0 00-1-1h-4z" />
+          </svg>
+          Chess.com
+        </Link>
+
+        <Link
+          href={`/players/${player.slug}/import?source=lichess`}
+          className="inline-flex items-center gap-2 rounded-lg border border-[#b05000] bg-[#b05000] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#8f4200] focus:outline-none focus:ring-2 focus:ring-[#b05000] focus:ring-offset-1"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+            <path d="M19 22H5v-2h14v2M13 2a3 3 0 00-3 3c0 .88.39 1.67 1 2.22V8l-3 1-2 4h2v1H6l-1 3h14l-1-3h-2v-1h2l-2-4-3-1V7.22c.61-.55 1-1.34 1-2.22a3 3 0 00-1-2.24V2h-1z" />
+          </svg>
+          Lichess
+        </Link>
+
+        <button
+          disabled
+          title="FIDE import — coming soon"
+          className="inline-flex cursor-not-allowed items-center gap-2 rounded-lg border border-[#1a3a6b]/30 bg-[#1a3a6b]/10 px-4 py-2 text-sm font-semibold text-[#1a3a6b]/50"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+          </svg>
+          FIDE
+          <span className="rounded-full bg-[#1a3a6b]/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide">
+            Soon
+          </span>
+        </button>
+      </div>
     </div>
   );
 }

@@ -30,9 +30,9 @@ export const fetchPlayerDetail = createAsyncThunk(
 
 export const fetchPlayerPrep = createAsyncThunk(
   "playerDetail/fetchPrep",
-  async ({ slug, phone }: { slug: string; phone: string }, { rejectWithValue }) => {
+  async (slug: string, { rejectWithValue }) => {
     try {
-      return await api.getPlayerPrep(slug, phone);
+      return await api.getPlayerPrep(slug);
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to load prep data.";

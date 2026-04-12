@@ -6,6 +6,7 @@ const mwabuDetail: PlayerDetail = {
   slug: "timothy-mwabu",
   fide_id: "10805796",
   chesscom_username: null,
+  lichess_username: null,
   federation: "Kenya",
   birth_year: 2003,
   standard_rating: 1871,

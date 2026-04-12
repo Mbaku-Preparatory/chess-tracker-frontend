@@ -1,12 +1,11 @@
 import type {
-  AccessCheckResponse,
   ChessComImportResult,
+  LichessImportResult,
   Game,
   GamesFilter,
   OpeningDistribution,
   OpeningStat,
   PaginatedResponse,
-  PaymentResponse,
   PerformanceSummary,
   Player,
   PlayerDetail,
@@ -64,10 +63,8 @@ export const api = {
     return fetchJson(`${API_BASE}/players/${slug}/openings/`);
   },
 
-  getPlayerPrep(slug: string, phone?: string): Promise<PrepData> {
-    const params = new URLSearchParams();
-    if (phone) params.set("phone", phone);
-    return fetchJson(`${API_BASE}/players/${slug}/prep/?${params}`);
+  getPlayerPrep(slug: string): Promise<PrepData> {
+    return fetchJson(`${API_BASE}/players/${slug}/prep/`);
   },
 
   getPlayerSummary(slug: string): Promise<PerformanceSummary> {
@@ -76,11 +73,6 @@ export const api = {
 
   getPlayerOpeningDistribution(slug: string): Promise<OpeningDistribution> {
     return fetchJson(`${API_BASE}/players/${slug}/opening-distribution/`);
-  },
-
-  checkAccess(slug: string, phone: string): Promise<AccessCheckResponse> {
-    const params = new URLSearchParams({ phone });
-    return fetchJson(`${API_BASE}/players/${slug}/check-access/?${params}`);
   },
 
   importPGN(payload: {
@@ -112,6 +104,17 @@ export const api = {
     });
   },
 
+  importFromLichess(
+    slug: string,
+    payload: { username?: string; limit?: number }
+  ): Promise<LichessImportResult> {
+    return fetchJson(`${API_BASE}/players/${slug}/import-lichess/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  },
+
   getPlayerInsights(slug: string, ecoCodes?: string[]): Promise<PlayerInsights> {
     const params = new URLSearchParams();
     if (ecoCodes && ecoCodes.length > 0) {
@@ -126,21 +129,4 @@ export const api = {
     return fetchJson(`${API_BASE}/openings/search/?${params}`);
   },
 
-  initiatePayment(
-    playerSlug: string,
-    phoneNumber: string,
-    customerName: string,
-    customerEmail: string
-  ): Promise<PaymentResponse> {
-    return fetchJson(`${API_BASE}/payments/initiate/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        player_slug: playerSlug,
-        phone_number: phoneNumber,
-        customer_name: customerName,
-        customer_email: customerEmail,
-      }),
-    });
-  },
 };

@@ -8,7 +8,6 @@ import { CommonMistakesCard } from "@/components/players/CommonMistakesCard";
 import { GamesTable } from "@/components/players/GamesTable";
 import { InsightsPanel } from "@/components/players/InsightsPanel";
 import { OpeningBreakdownCard } from "@/components/players/OpeningBreakdownCard";
-import { PaymentModal } from "@/components/players/PaymentModal";
 import { PerformanceSplitCard } from "@/components/players/PerformanceSplitCard";
 import { QuickPrepCard } from "@/components/players/QuickPrepCard";
 import { StrengthWeaknessCard } from "@/components/players/StrengthWeaknessCard";
@@ -23,12 +22,7 @@ import {
   fetchPlayerDetail,
   fetchPlayerPrep,
 } from "@/store/slices/playerDetailSlice";
-import {
-  checkAccess,
-  loadPhoneFromStorage,
-} from "@/store/slices/paymentSlice";
 import { api } from "@/lib/api";
-import { formatKesAmount, PREP_PRICE_KES } from "@/lib/marketplace";
 import type {
   OpeningStat,
   PlayerDetail,
@@ -44,20 +38,15 @@ function getSurname(name: string): string {
 }
 
 function formatPercent(value: number | string | null | undefined): string {
-  if (value === null || value === undefined || value === "") {
-    return "—";
-  }
-
-  const numericValue = Number(value);
-  if (Number.isNaN(numericValue)) {
-    return "—";
-  }
-
-  return `${numericValue % 1 === 0 ? numericValue.toFixed(0) : numericValue.toFixed(1)}%`;
+  if (value === null || value === undefined) return "—";
+  return `${Number(value).toFixed(1)}%`;
 }
 
 function getTopOpening(openings: OpeningStat[]): OpeningStat | null {
-  return openings[0] ?? null;
+  if (!openings.length) return null;
+  return openings.reduce((best, o) =>
+    o.games_count > best.games_count ? o : best
+  );
 }
 
 function getScoutingSection(
@@ -65,123 +54,15 @@ function getScoutingSection(
   player: PlayerDetail,
   type: ScoutingSectionType
 ): ScoutingSection | null {
-  const existing = prepData.scouting_sections.find(
-    (section) => section.section_type === type
+  return (
+    prepData.scouting_sections?.find((s) => s.section_type === type) ?? null
   );
-
-  if (existing) {
-    return existing;
-  }
-
-  const playerName = getSurname(player.full_name);
-  const summary = prepData.performance_summary ?? player.performance_summary;
-  const whiteScore = Number(summary?.white_score ?? 0);
-  const blackScore = Number(summary?.black_score ?? 0);
-  const blackOpenings = player.opening_stats.filter((opening) => opening.color_choice === "black");
-
-  if (type === "win_condition") {
-    return {
-      id: -1,
-      section_type: type,
-      title: "How You Beat This Player",
-      order: 90,
-      content: {
-        intro: "Use the color split and opening evidence. Do not guess.",
-        as_white: {
-          heading: `If You Are White Against ${playerName}`,
-          points: [
-            "Avoid the Open Sicilian if you are not deeply prepared.",
-            "Choose slower Anti-Sicilian, Closed Sicilian, or Maroczy-type structures.",
-            "Do not hand over an easy ...d5 break that frees his pieces.",
-            "Trade his dark-squared bishop when the position allows it.",
-            "Keep the game under control and make him generate play from scratch.",
-          ],
-        },
-        as_black: {
-          heading: `If You Are Black Against ${playerName}`,
-          points: [
-            "Challenge his weaker White score with Slav, Semi-Slav, or QGD structures.",
-            "Stay solid early and wait for overextension rather than forcing play.",
-            "Punish premature kingside pawn pushes instead of reacting passively.",
-            "If he cannot create tactical chaos, keep the position positional.",
-            `Respect his best Black comfort zone: ${
-              getTopOpening(blackOpenings)?.opening_name || "...g6 Sicilian structures"
-            }.`,
-          ],
-        },
-      },
-    };
-  }
-
-  if (type === "common_mistakes") {
-    return {
-      id: -2,
-      section_type: type,
-      title: "Common Mistakes Against This Player",
-      order: 91,
-      content: {
-        intro: "These are the positions that make his life easier.",
-        avoid: [
-          "Entering tactical complications just because they look active.",
-          "Letting him reach his preferred ...g6 Sicilian rhythms without resistance.",
-          "Resolving central tension too early and improving his pieces for free.",
-          "Playing passively with Black and allowing him to dictate the game.",
-        ],
-        do_instead: [
-          "Slow the game down and make him prove he can improve quietly.",
-          "Choose structures where long-term weaknesses matter more than tactics.",
-          `Remember the split: ${formatPercent(blackScore)} with Black, ${formatPercent(whiteScore)} with White.`,
-          "Attack his comfort zone, not his reputation.",
-        ],
-      },
-    };
-  }
-
-  if (type === "quick_prep") {
-    return {
-      id: -3,
-      section_type: type,
-      title: "30-Second Prep Mode",
-      order: 92,
-      content: {
-        intro: "Read this right before round start.",
-        bullets: [
-          `Color split first: ${formatPercent(blackScore)} with Black vs ${formatPercent(whiteScore)} with White.`,
-          "As White: avoid gifting him easy tactical Sicilian positions.",
-          "As Black: stay solid and wait for overextension in his White setups.",
-          "Trade the dark-squared bishop when it improves your control.",
-          "If you are better, keep the game calm.",
-        ],
-      },
-    };
-  }
-
-  if (type === "time_pressure") {
-    return {
-      id: -4,
-      section_type: type,
-      title: "When Things Get Messy",
-      order: 93,
-      content: {
-        intro: "His tactical instincts improve when the position gets loose.",
-        observations: [
-          "Open, forcing positions suit him more than slow maneuvering.",
-          "He is more convincing when he can attack with Black than when he must prove White advantage.",
-          "If the game is calm, do not re-open it without a concrete reason.",
-        ],
-        takeaway:
-          "Do not give him chaos for free. If you have the better position, keep it stable and make him defend.",
-      },
-    };
-  }
-
-  return null;
 }
 
 function ShareButton({
   slug,
   playerName,
-  className = "btn-secondary text-sm inline-flex items-center gap-1.5",
+  className = "btn-secondary text-sm",
 }: {
   slug: string;
   playerName: string;
@@ -191,11 +72,10 @@ function ShareButton({
 
   const handleShare = useCallback(async () => {
     const url = `${window.location.origin}/players/${slug}/prep`;
-    const text = `Mbaku Preparatory dossier for ${playerName}`;
 
     if (navigator.share) {
       try {
-        await navigator.share({ title: text, url });
+        await navigator.share({ title: `${playerName} Prep`, url });
         return;
       } catch {
         // Fallback to clipboard.
@@ -235,20 +115,9 @@ export default function PrepPage() {
   const { player, prepData, loading, prepLoading, error, prepError } = useAppSelector(
     (state) => state.playerDetail
   );
-  const { accessMap, phoneNumber, loading: accessLoading } = useAppSelector(
-    (state) => state.payment
-  );
   const repertoire = useAppSelector((state) => state.repertoire);
-  const [showPayment, setShowPayment] = useState(false);
-  const [accessChecked, setAccessChecked] = useState(false);
   const [insights, setInsights] = useState<PlayerInsights | null>(null);
   const [insightsLoading, setInsightsLoading] = useState(false);
-
-  const hasAccess = slug ? accessMap[slug] ?? false : false;
-
-  useEffect(() => {
-    dispatch(loadPhoneFromStorage());
-  }, [dispatch]);
 
   useEffect(() => {
     if (slug) {
@@ -257,25 +126,13 @@ export default function PrepPage() {
   }, [dispatch, slug]);
 
   useEffect(() => {
-    if (slug && phoneNumber) {
-      dispatch(checkAccess({ slug, phone: phoneNumber })).finally(() => {
-        setAccessChecked(true);
-      });
-      return;
+    if (slug) {
+      dispatch(fetchPlayerPrep(slug));
     }
-
-    setAccessChecked(true);
-  }, [dispatch, phoneNumber, slug]);
+  }, [dispatch, slug]);
 
   useEffect(() => {
-    if (slug && hasAccess && phoneNumber) {
-      dispatch(fetchPlayerPrep({ slug, phone: phoneNumber }));
-    }
-  }, [dispatch, hasAccess, phoneNumber, slug]);
-
-  // Collect all ECO codes from the user's stored repertoire.
-  useEffect(() => {
-    if (!slug || !hasAccess) return;
+    if (!slug) return;
     const ecoCodes = [
       ...repertoire.white,
       ...repertoire.black_vs_e4,
@@ -290,9 +147,9 @@ export default function PrepPage() {
       .then(setInsights)
       .catch(() => setInsights(null))
       .finally(() => setInsightsLoading(false));
-  }, [slug, hasAccess, repertoire]);
+  }, [slug, repertoire]);
 
-  if (loading || !accessChecked || accessLoading) {
+  if (loading || prepLoading) {
     return (
       <div className="space-y-6">
         <CardSkeleton />
@@ -315,330 +172,14 @@ export default function PrepPage() {
     );
   }
 
-  const summary = player.performance_summary;
-  const playerName = player.full_name;
-  const surname = getSurname(playerName);
-  const whiteScore = Number(summary?.white_score ?? 0);
-  const blackScore = Number(summary?.black_score ?? 0);
-  const whiteOpenings = player.opening_stats.filter((opening) => opening.color_choice === "white");
-  const blackOpenings = player.opening_stats.filter((opening) => opening.color_choice === "black");
-  const strongestBlackOpening = getTopOpening(blackOpenings);
-  const weakestWhiteSignal = player.weaknesses[0]?.title || `Only ${formatPercent(summary?.white_score)} with White`;
-  const prepPriority = player.prep_recommendations[0]?.scenario_title || "Deny tactical chaos and keep the game structured.";
-
-  const lockedPreview = [
-    {
-      label: "PREP PRIORITY",
-      title: prepPriority,
-      body: player.prep_recommendations[0]?.description || "Make him prove he can win without tactical freedom.",
-    },
-    {
-      label: "WEAKNESS",
-      title: weakestWhiteSignal,
-      body: `${surname} scores ${formatPercent(summary?.white_score)} when he has White in the recovered sample.`,
-    },
-    {
-      label: "COMFORT ZONE",
-      title:
-        player.strengths[0]?.title ||
-        `${surname} is more dangerous with Black than White.`,
-      body:
-        strongestBlackOpening?.opening_name ||
-        "His best results come from dynamic Black setups.",
-    },
-    {
-      label: "OPENING WARNING",
-      title:
-        strongestBlackOpening
-          ? `${strongestBlackOpening.eco_code} ${strongestBlackOpening.opening_name}`
-          : "Do not drift into his best Sicilian structures.",
-      body: "This is the kind of position you want to deny before the middlegame starts.",
-    },
-  ];
-
-  if (!hasAccess) {
-    return (
-      <div className="py-10">
-        <div className="relative overflow-hidden rounded-[32px] border border-slate-800 bg-[radial-gradient(circle_at_top,_rgba(12,147,231,0.18),_transparent_36%),linear-gradient(180deg,#020617_0%,#0f172a_52%,#111827_100%)] text-white shadow-2xl">
-          <div className="relative px-6 py-8 sm:px-10 sm:py-10">
-            <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-300">
-              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">Paid Dossier</span>
-              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">Instant Unlock</span>
-              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
-                Based on {summary?.total_games ?? player.recent_games.length} games
-              </span>
-            </div>
-
-            <div className="mt-8 grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
-              <div>
-                <p className="text-sm font-medium uppercase tracking-[0.2em] text-brand-200">
-                  {surname} Preparatory
-                </p>
-                <h1 className="mt-4 max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl">
-                  Walk in with the plan before {surname} sits down.
-                </h1>
-                <p className="mt-4 max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
-                  This is not a course. It is the paid scouting brief that tells you where
-                  {` `}
-                  {surname} is comfortable, where he breaks, and what your win conditions are
-                  with White and Black.
-                </p>
-
-                <div className="mt-6 flex flex-wrap items-center gap-3">
-                  <button
-                    onClick={() => setShowPayment(true)}
-                    className="inline-flex items-center justify-center rounded-xl bg-brand-500 px-6 py-3 text-sm font-bold text-white transition hover:bg-brand-400"
-                  >
-                    Unlock {surname} Prep — {formatKesAmount(PREP_PRICE_KES)}
-                  </button>
-                  <Link
-                    href={`/players/${player.slug}`}
-                    className="inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/10"
-                  >
-                    Back to profile
-                  </Link>
-                </div>
-
-                <p className="mt-3 text-sm text-slate-400">
-                  One payment. Tied to your phone number. Re-open it every time you face this player.
-                </p>
-                <p className="mt-1 text-xs text-slate-500">
-                  Used by players preparing for tournaments.{" "}
-                  <button
-                    onClick={() => setShowPayment(true)}
-                    className="underline underline-offset-2 hover:text-slate-300"
-                  >
-                    Already paid? Enter your number to re-unlock.
-                  </button>
-                </p>
-              </div>
-
-              <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
-                <div className="flex items-end justify-between gap-3">
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-300">
-                      Unlock Price
-                    </p>
-                    <p className="mt-2 text-4xl font-bold text-white">{formatKesAmount(PREP_PRICE_KES)}</p>
-                  </div>
-                  <div className="rounded-2xl border border-amber-400/20 bg-amber-400/10 px-4 py-3 text-right">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-amber-200">
-                      Perceived Value
-                    </p>
-                    <p className="mt-1 text-sm font-medium text-amber-50">
-                      One accurate pairing is worth far more than {formatKesAmount(PREP_PRICE_KES)}.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-2xl border border-red-400/15 bg-red-400/10 p-4">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-red-200">
-                      Weakness
-                    </p>
-                    <p className="mt-2 text-3xl font-bold text-white">
-                      {formatPercent(summary?.white_score)}
-                    </p>
-                    <p className="mt-1 text-sm text-slate-300">
-                      Score when {surname} has White.
-                    </p>
-                  </div>
-                  <div className="rounded-2xl border border-emerald-400/15 bg-emerald-400/10 p-4">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">
-                      Comfort Zone
-                    </p>
-                    <p className="mt-2 text-3xl font-bold text-white">
-                      {formatPercent(summary?.black_score)}
-                    </p>
-                    <p className="mt-1 text-sm text-slate-300">
-                      Score when {surname} has Black.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mt-5 rounded-2xl border border-white/10 bg-slate-950/40 p-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-brand-200">
-                    Urgency
-                  </p>
-                  <p className="mt-2 text-sm leading-6 text-slate-300">
-                    If you get paired against {surname} today, this is the shortest path from
-                    “I know his name” to “I know how I win.”
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-10 grid gap-4 lg:grid-cols-2">
-              <div className="rounded-[28px] border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-brand-200">
-                  Before You Sit Down
-                </p>
-                <h2 className="mt-3 text-2xl font-bold text-white">
-                  The entire case starts with the color split.
-                </h2>
-                <p className="mt-3 text-sm leading-6 text-slate-300">
-                  {surname} is materially less convincing with White than with Black. That tells
-                  you exactly where to press and exactly which structures to deny.
-                </p>
-                <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-2xl border border-white/10 bg-slate-950/50 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                      White Score
-                    </p>
-                    <p className="mt-2 text-2xl font-bold text-white">{formatPercent(summary?.white_score)}</p>
-                    <p className="mt-2 text-sm text-slate-300">
-                      This is where the cleanest practical edge appears.
-                    </p>
-                  </div>
-                  <div className="rounded-2xl border border-white/10 bg-slate-950/50 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                      Black Score
-                    </p>
-                    <p className="mt-2 text-2xl font-bold text-white">{formatPercent(summary?.black_score)}</p>
-                    <p className="mt-2 text-sm text-slate-300">
-                      Respect this comfort zone and avoid drifting into it casually.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-[28px] border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-brand-200">
-                  What&apos;s Inside
-                </p>
-                <div className="mt-4 space-y-3">
-                  {[
-                    ["PREP PRIORITY", "How you beat this player with White and Black"],
-                    ["WEAKNESS", "Common mistakes to avoid before the middlegame starts"],
-                    ["COMFORT ZONE", "Opening families and positions he actually wants"],
-                    ["30-SECOND PREP", "A last-look checklist before you sit down"],
-                  ].map(([label, value]) => (
-                    <div
-                      key={label}
-                      className="flex items-start justify-between gap-4 rounded-2xl border border-white/10 bg-slate-950/40 px-4 py-3"
-                    >
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
-                        {label}
-                      </p>
-                      <p className="text-right text-sm font-medium text-white">{value}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-4 rounded-[28px] border border-brand-400/15 bg-brand-500/10 px-6 py-6">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-brand-200">
-                This Is Not a Course
-              </p>
-              <h2 className="mt-3 text-2xl font-bold text-white sm:text-3xl">
-                It is prep. Built for the round you actually care about.
-              </h2>
-              <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-200">
-                No filler. No generic chess tips. Just the dossier that answers one question:
-                what gives you the best practical chance to beat {surname} over the board?
-              </p>
-            </div>
-
-            <div className="mt-10 rounded-[28px] border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
-              <div className="flex flex-wrap items-end justify-between gap-3">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-brand-200">
-                    Free Preview
-                  </p>
-                  <h2 className="mt-2 text-2xl font-bold text-white">
-                    A glimpse of the dossier you unlock.
-                  </h2>
-                </div>
-                <p className="text-sm text-slate-400">
-                  The top of the report is visible. The payoff is behind the unlock.
-                </p>
-              </div>
-
-              <div className="mt-6 grid gap-4 md:grid-cols-2">
-                {lockedPreview.map((item, index) => {
-                  const isBlurred = index > 1;
-
-                  return (
-                    <div
-                      key={item.label}
-                      className={`relative rounded-2xl border border-white/10 bg-slate-950/60 p-5 ${
-                        isBlurred ? "overflow-hidden" : ""
-                      }`}
-                    >
-                      <div className={isBlurred ? "select-none blur-[6px]" : ""}>
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
-                          {item.label}
-                        </p>
-                        <h3 className="mt-3 text-lg font-semibold text-white">{item.title}</h3>
-                        <p className="mt-2 text-sm leading-6 text-slate-300">{item.body}</p>
-                      </div>
-                      {isBlurred && (
-                        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-950/35 to-slate-950/80" />
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-[28px] border border-white/10 bg-slate-950/50 px-6 py-5">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-brand-200">
-                  Final Call
-                </p>
-                <h2 className="mt-2 text-xl font-bold text-white">
-                  Search your opponent. Buy the prep. Walk in ready.
-                </h2>
-              </div>
-              <button
-                onClick={() => setShowPayment(true)}
-                className="inline-flex items-center justify-center rounded-xl bg-brand-500 px-6 py-3 text-sm font-bold text-white transition hover:bg-brand-400"
-              >
-                Unlock {surname} Prep — {formatKesAmount(PREP_PRICE_KES)}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <PaymentModal
-          playerSlug={player.slug}
-          playerName={player.full_name}
-          open={showPayment}
-          onClose={() => setShowPayment(false)}
-          onSuccess={() => {
-            setShowPayment(false);
-          }}
-        />
-      </div>
-    );
-  }
-
-  if (prepLoading) {
-    return (
-      <div className="space-y-6">
-        <CardSkeleton />
-        <CardSkeleton />
-        <CardSkeleton />
-      </div>
-    );
-  }
-
   if (!prepData) {
     return (
       <div className="py-16 text-center">
         <h2 className="text-xl font-semibold text-gray-900">
           {prepError || "Failed to load prep data."}
         </h2>
-        <p className="mt-2 text-sm text-gray-500">
-          Your access is confirmed. Try refreshing the page.
-        </p>
         <button
-          onClick={() => {
-            if (slug && phoneNumber) {
-              dispatch(fetchPlayerPrep({ slug, phone: phoneNumber }));
-            }
-          }}
+          onClick={() => { if (slug) dispatch(fetchPlayerPrep(slug)); }}
           className="btn-primary mt-4 inline-flex"
         >
           Retry
@@ -646,6 +187,13 @@ export default function PrepPage() {
       </div>
     );
   }
+
+  const summary = player.performance_summary;
+  const playerName = player.full_name;
+  const surname = getSurname(playerName);
+  const whiteOpenings = player.opening_stats.filter((o) => o.color_choice === "white");
+  const blackOpenings = player.opening_stats.filter((o) => o.color_choice === "black");
+  const strongestBlackOpening = getTopOpening(blackOpenings);
 
   const prepSummary = prepData.performance_summary ?? summary;
   const winCondition = getScoutingSection(prepData, player, "win_condition");
@@ -660,7 +208,7 @@ export default function PrepPage() {
     <div className="print:text-sm">
       <PageHeader
         title={`${surname} Preparatory`}
-        subtitle={`How to beat ${playerName}. Not a course. A paid match plan.`}
+        subtitle={`How to beat ${playerName}. Not a course. A match plan.`}
         actions={
           <div className="no-print flex flex-wrap gap-3">
             <ShareButton slug={player.slug} playerName={playerName} />
@@ -677,7 +225,7 @@ export default function PrepPage() {
       <div className="no-print mb-8 overflow-hidden rounded-[32px] border border-slate-800 bg-[radial-gradient(circle_at_top,_rgba(12,147,231,0.18),_transparent_38%),linear-gradient(180deg,#020617_0%,#0f172a_60%,#111827_100%)] text-white shadow-xl">
         <div className="px-6 py-7 sm:px-8">
           <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-300">
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">Unlocked</span>
+            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">Scouting Dossier</span>
             <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
               {prepSummary?.total_games ?? 0} games analyzed
             </span>
@@ -972,14 +520,13 @@ export default function PrepPage() {
       {quickPrep && (
         <SectionContainer
           title="One-Page Match Plan"
-          subtitle="The fastest read in the entire product"
+          subtitle="The fastest read in the entire report"
           className="mt-4"
         >
           <QuickPrepCard section={quickPrep} />
         </SectionContainer>
       )}
 
-      {/* Phase 4: Computed insights */}
       <SectionContainer
         title="Data-Driven Insights"
         subtitle="Rule-based analysis of opening tendencies, weaknesses, and repertoire overlap"
@@ -1006,7 +553,7 @@ export default function PrepPage() {
 
       <div className="mt-12 border-t border-gray-200 pt-6 text-center text-sm text-gray-400 print:mt-8">
         <p>
-          Mbaku Preparatory · Paid scouting dossier for {playerName} · Based on{" "}
+          Mbaku Preparatory · Scouting dossier for {playerName} · Based on{" "}
           {prepSummary?.total_games ?? 0} analyzed games
         </p>
       </div>
