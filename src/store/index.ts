@@ -1,5 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 
+import authReducer from "./slices/authSlice";
 import gamesReducer from "./slices/gamesSlice";
 import playerDetailReducer from "./slices/playerDetailSlice";
 import playersReducer from "./slices/playersSlice";
@@ -7,6 +8,7 @@ import repertoireReducer, { STORAGE_KEY } from "./slices/repertoireSlice";
 
 export const store = configureStore({
   reducer: {
+    auth: authReducer,
     players: playersReducer,
     playerDetail: playerDetailReducer,
     games: gamesReducer,

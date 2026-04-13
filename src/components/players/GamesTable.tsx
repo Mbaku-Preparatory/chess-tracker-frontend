@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { Game } from "@/types";
-import { ColorBadge, EcoBadge, ResultBadge } from "@/components/ui/Badge";
+import { ColorBadge, EcoBadge, ResultBadge, SourceBadge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PgnViewerModal } from "./PgnViewerModal";
 
@@ -33,6 +33,7 @@ export function GamesTable({ games, loading }: GamesTableProps) {
                 <th className="whitespace-nowrap px-4 py-3 font-semibold text-gray-600">Opening</th>
                 <th className="hidden whitespace-nowrap px-4 py-3 font-semibold text-gray-600 sm:table-cell">ECO</th>
                 <th className="hidden whitespace-nowrap px-4 py-3 font-semibold text-gray-600 sm:table-cell">Moves</th>
+                <th className="hidden whitespace-nowrap px-4 py-3 font-semibold text-gray-600 lg:table-cell">Source</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -81,6 +82,9 @@ export function GamesTable({ games, loading }: GamesTableProps) {
                   </td>
                   <td className="hidden whitespace-nowrap px-4 py-3 text-gray-500 sm:table-cell">
                     {game.num_moves ?? "—"}
+                  </td>
+                  <td className="hidden whitespace-nowrap px-4 py-3 lg:table-cell">
+                    <SourceBadge source={game.source} />
                   </td>
                 </tr>
               ))}

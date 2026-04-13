@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { OnboardingGate } from "@/components/OnboardingGate";
+import { AuthGate } from "@/components/AuthGate";
 import { Navbar } from "@/components/ui/Navbar";
 import { StoreProvider } from "@/store/provider";
 
@@ -21,12 +21,12 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <StoreProvider>
-          <OnboardingGate>
+          <AuthGate>
             <Navbar />
             <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
               {children}
             </main>
-          </OnboardingGate>
+          </AuthGate>
         </StoreProvider>
       </body>
     </html>

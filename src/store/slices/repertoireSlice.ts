@@ -11,12 +11,11 @@ export interface RepertoireOpening {
   epd: string;
 }
 
-export type RepertoireSection = "white" | "black_vs_e4" | "black_vs_d4";
+export type RepertoireSection = "white" | "black";
 
 interface RepertoireState {
   white: RepertoireOpening[];
-  black_vs_e4: RepertoireOpening[];
-  black_vs_d4: RepertoireOpening[];
+  black: RepertoireOpening[];
   onboardingComplete: boolean;
   /**
    * Runtime-only flag. False until loadRepertoireFromStorage has fired on the
@@ -28,8 +27,7 @@ interface RepertoireState {
 export const STORAGE_KEY = "cs_repertoire";
 const initialState: RepertoireState = {
   white: [],
-  black_vs_e4: [],
-  black_vs_d4: [],
+  black: [],
   onboardingComplete: false,
   initialized: false,
 };
@@ -44,9 +42,23 @@ const repertoireSlice = createSlice({
         const raw = localStorage.getItem(STORAGE_KEY);
         if (raw) {
           const stored = JSON.parse(raw);
+
           state.white = stored.white ?? [];
-          state.black_vs_e4 = stored.black_vs_e4 ?? [];
-          state.black_vs_d4 = stored.black_vs_d4 ?? [];
+
+          // Migrate: old format had black_vs_e4 + black_vs_d4, new format has black.
+          // Merge all three into black, deduplicating by slug.
+          const merged: RepertoireOpening[] = [
+            ...(stored.black ?? []),
+            ...(stored.black_vs_e4 ?? []),
+            ...(stored.black_vs_d4 ?? []),
+          ];
+          const seen = new Set<string>();
+          state.black = merged.filter((o) => {
+            if (seen.has(o.slug)) return false;
+            seen.add(o.slug);
+            return true;
+          });
+
           state.onboardingComplete = stored.onboardingComplete ?? false;
         }
       } catch {
@@ -77,8 +89,7 @@ const repertoireSlice = createSlice({
     },
     resetRepertoire(state) {
       state.white = [];
-      state.black_vs_e4 = [];
-      state.black_vs_d4 = [];
+      state.black = [];
       state.onboardingComplete = false;
     },
   },

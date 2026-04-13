@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchPlayerDetail } from "@/store/slices/playerDetailSlice";
+import { DEMO_PLAYER_SLUG } from "@/lib/constants";
+import { api } from "@/lib/api";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatCard } from "@/components/ui/StatCard";
 import { SectionContainer } from "@/components/ui/SectionContainer";
@@ -15,6 +17,57 @@ import { OpeningBreakdownCard } from "@/components/players/OpeningBreakdownCard"
 import { StrengthWeaknessCard } from "@/components/players/StrengthWeaknessCard";
 import { PrepRecommendationCard } from "@/components/players/PrepRecommendationCard";
 import { GamesTable } from "@/components/players/GamesTable";
+
+function FideSyncButton({ slug }: { slug: string }) {
+  const dispatch = useAppDispatch();
+  const [syncing, setSyncing] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+
+  const handleSync = useCallback(async () => {
+    setSyncing(true);
+    setResult(null);
+    try {
+      const data = await api.syncFide(slug);
+      const fields = data.updated_fields.filter((f) => f !== "updated_at");
+      setResult(fields.length ? `Updated: ${fields.join(", ")}` : "Nothing new to update");
+      dispatch(fetchPlayerDetail(slug));
+    } catch (err) {
+      setResult(err instanceof Error ? err.message : "Sync failed");
+    } finally {
+      setSyncing(false);
+    }
+  }, [slug, dispatch]);
+
+  return (
+    <div className="flex items-center gap-2">
+      <button
+        onClick={handleSync}
+        disabled={syncing}
+        className="inline-flex items-center gap-1.5 rounded-lg border border-[#1a3a6b]/30 bg-[#1a3a6b]/5 px-3 py-1.5 text-xs font-semibold text-[#1a3a6b] transition-colors hover:bg-[#1a3a6b]/10 disabled:opacity-50"
+      >
+        {syncing ? (
+          <>
+            <svg className="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+            </svg>
+            Syncing…
+          </>
+        ) : (
+          <>
+            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Sync from FIDE
+          </>
+        )}
+      </button>
+      {result && (
+        <span className="text-xs text-gray-500">{result}</span>
+      )}
+    </div>
+  );
+}
 
 export default function PlayerDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -53,8 +106,8 @@ export default function PlayerDetailPage() {
   }
 
   const ps = player.performance_summary;
-  const whiteOpenings = player.opening_stats.filter((o) => o.color_choice === "white");
-  const blackOpenings = player.opening_stats.filter((o) => o.color_choice === "black");
+  const whiteOpenings = player.opening_stats.filter((o) => o.color_choice === "white").slice(0, 5);
+  const blackOpenings = player.opening_stats.filter((o) => o.color_choice === "black").slice(0, 5);
 
   return (
     <div>
@@ -77,12 +130,22 @@ export default function PlayerDetailPage() {
                   {player.title}
                 </span>
               )}
+              {player.slug === DEMO_PLAYER_SLUG && (
+                <span className="rounded-lg bg-gray-100 px-2.5 py-1 text-sm font-medium text-gray-500">
+                  Example
+                </span>
+              )}
             </div>
-            <div className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm text-gray-500">
+            <div className="mt-2 flex flex-wrap items-center gap-x-6 gap-y-1 text-sm text-gray-500">
               {player.federation && <span>{player.federation}</span>}
               {player.fide_id && <span>FIDE #{player.fide_id}</span>}
               {player.birth_year && <span>Born {player.birth_year}</span>}
             </div>
+            {player.fide_id && (
+              <div className="mt-3">
+                <FideSyncButton slug={player.slug} />
+              </div>
+            )}
             {player.bio && (
               <p className="mt-4 max-w-3xl leading-relaxed text-gray-600">
                 {player.bio}
@@ -158,7 +221,7 @@ export default function PlayerDetailPage() {
       {(whiteOpenings.length > 0 || blackOpenings.length > 0) && (
         <SectionContainer
           title="Opening Repertoire"
-          subtitle="Most frequently played openings by color"
+          subtitle="Top 5 openings by color"
         >
           <div className="grid gap-4 sm:grid-cols-2">
             <OpeningBreakdownCard
@@ -171,6 +234,11 @@ export default function PlayerDetailPage() {
               openings={blackOpenings}
               colorLabel="Black"
             />
+          </div>
+          <div className="mt-3 text-right">
+            <Link href={`/players/${player.slug}/games`} className="text-sm text-brand-600 hover:underline">
+              View all games →
+            </Link>
           </div>
         </SectionContainer>
       )}

@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { getPrepProductName, getPrimaryRating } from "@/lib/marketplace";
+import { DEMO_PLAYER_SLUG } from "@/lib/constants";
 import type { Player } from "@/types";
 
 interface PlayerCardProps {
@@ -31,6 +32,11 @@ export function PlayerCard({ player }: PlayerCardProps) {
                 {player.title && (
                   <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-bold text-amber-800">
                     {player.title}
+                  </span>
+                )}
+                {player.slug === DEMO_PLAYER_SLUG && (
+                  <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-500">
+                    Example
                   </span>
                 )}
               </div>

@@ -21,14 +21,9 @@ const SECTIONS: { key: RepertoireSection; label: string; hint: string }[] = [
     hint: "Your preferred openings with the white pieces",
   },
   {
-    key: "black_vs_e4",
-    label: "As Black vs 1.e4",
-    hint: "Your response when White plays 1.e4",
-  },
-  {
-    key: "black_vs_d4",
-    label: "As Black vs 1.d4",
-    hint: "Your response when White plays 1.d4",
+    key: "black",
+    label: "As Black",
+    hint: "Your preferred openings with the black pieces",
   },
 ];
 
@@ -147,6 +142,13 @@ function OpeningSearchSection({
         </div>
       )}
 
+      {/* Cap hint */}
+      {selected.length >= 5 && (
+        <p className="mb-3 text-xs text-amber-600">
+          Keep it focused — 2–3 main openings per colour gives the best prep quality.
+        </p>
+      )}
+
       {/* Search input — always visible */}
       <div ref={containerRef} className="relative">
         <div className="relative">
@@ -192,7 +194,7 @@ function OpeningSearchSection({
             type="text"
             value={query}
             onChange={handleQueryChange}
-            placeholder={`Search openings — e.g. "Caro-Kann" or "car kann"`}
+            placeholder={`Search openings — e.g. "Caro-Kann" or "Sicilian"`}
             className="block w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-9 pr-3 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           />
         </div>
@@ -251,9 +253,9 @@ function OpeningSearchSection({
 export default function SetupPage() {
   const dispatch = useAppDispatch();
   const router = useRouter();
-  const { white, black_vs_e4, black_vs_d4 } = useAppSelector((s) => s.repertoire);
+  const { white, black } = useAppSelector((s) => s.repertoire);
 
-  const totalSelected = white.length + black_vs_e4.length + black_vs_d4.length;
+  const totalSelected = white.length + black.length;
   const isEditing = useAppSelector((s) => s.repertoire.onboardingComplete);
 
   const handleContinue = () => {
@@ -275,10 +277,10 @@ export default function SetupPage() {
           </div>
         </div>
         <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
-          Choose your openings
+          Build your repertoire
         </h1>
         <p className="mt-2 text-base text-gray-500">
-          Tell us your repertoire so we can tailor your scouting experience.
+          Pick 2–3 main openings per colour. This personalises your scouting reports.
         </p>
       </div>
 
@@ -290,16 +292,14 @@ export default function SetupPage() {
       </div>
 
       {/* Sections */}
-      <div className="space-y-4">
+      <div className="grid gap-4 sm:grid-cols-2">
         {SECTIONS.map(({ key, label, hint }) => (
           <OpeningSearchSection
             key={key}
             section={key}
             label={label}
             hint={hint}
-            selected={
-              key === "white" ? white : key === "black_vs_e4" ? black_vs_e4 : black_vs_d4
-            }
+            selected={key === "white" ? white : black}
           />
         ))}
       </div>

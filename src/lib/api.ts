@@ -12,6 +12,7 @@ import type {
   PlayerInsights,
   PrepData,
 } from "@/types";
+import { authStorage } from "@/lib/auth";
 
 const rawApiBase =
   process.env.NEXT_PUBLIC_API_BASE_URL ||
@@ -24,7 +25,17 @@ const API_BASE = normalizedApiBase.endsWith("/api")
   : `${normalizedApiBase}/api`;
 
 async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(url, init);
+  const token = authStorage.getToken();
+  const authHeader: Record<string, string> = token
+    ? { Authorization: `Bearer ${token}` }
+    : {};
+  const res = await fetch(url, {
+    ...init,
+    headers: {
+      ...authHeader,
+      ...(init?.headers ?? {}),
+    },
+  });
   if (!res.ok) {
     const body = await res.json().catch(() => null);
     const msg = body?.detail || `API error: ${res.status} ${res.statusText}`;
@@ -54,13 +65,17 @@ export const api = {
     if (filters?.result) params.set("result", filters.result);
     if (filters?.eco_code) params.set("eco_code", filters.eco_code);
     if (filters?.opening_family) params.set("opening_family", filters.opening_family);
+    if (filters?.source) params.set("source", filters.source);
     if (filters?.search) params.set("search", filters.search);
     if (filters?.page) params.set("page", String(filters.page));
     return fetchJson(`${API_BASE}/players/${slug}/games/?${params}`);
   },
 
-  getPlayerOpenings(slug: string): Promise<OpeningStat[]> {
-    return fetchJson(`${API_BASE}/players/${slug}/openings/`);
+  getPlayerOpenings(slug: string, source?: string): Promise<OpeningStat[]> {
+    const params = new URLSearchParams();
+    if (source) params.set("source", source);
+    const qs = params.toString();
+    return fetchJson(`${API_BASE}/players/${slug}/openings/${qs ? `?${qs}` : ""}`);
   },
 
   getPlayerPrep(slug: string): Promise<PrepData> {
@@ -127,6 +142,58 @@ export const api = {
   searchOpenings(query: string, limit = 20): Promise<import("@/types").OpeningResult[]> {
     const params = new URLSearchParams({ q: query, limit: String(limit) });
     return fetchJson(`${API_BASE}/openings/search/?${params}`);
+  },
+
+  // ── Auth ─────────────────────────────────────────────────────────────────
+
+  register(
+    email: string,
+    password: string
+  ): Promise<{ access: string; refresh: string; email: string }> {
+    return fetchJson(`${API_BASE}/auth/register/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+  },
+
+  login(
+    email: string,
+    password: string
+  ): Promise<{ access: string; refresh: string; email: string }> {
+    return fetchJson(`${API_BASE}/auth/login/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+  },
+
+  // ── Player create ─────────────────────────────────────────────────────────
+
+  syncFide(slug: string): Promise<{
+    updated_fields: string[];
+    full_name: string;
+    standard_rating: number | null;
+    rapid_rating: number | null;
+    blitz_rating: number | null;
+    title: string | null;
+    birth_year: number | null;
+  }> {
+    return fetchJson(`${API_BASE}/players/${slug}/sync-fide/`, { method: "POST" });
+  },
+
+  createPlayer(payload: {
+    full_name: string;
+    federation?: string;
+    fide_id?: string;
+    chesscom_username?: string;
+    lichess_username?: string;
+  }): Promise<{ id: number; full_name: string; slug: string }> {
+    return fetchJson(`${API_BASE}/players/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
   },
 
 };

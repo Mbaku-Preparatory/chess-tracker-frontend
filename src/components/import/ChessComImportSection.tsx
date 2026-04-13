@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { api } from "@/lib/api";
 import { ImportResultPanel } from "./ImportResultPanel";
 import type { ChessComImportResult, PGNImportResult } from "@/types";
@@ -136,12 +137,6 @@ export function ChessComImportSection({
             )}
             {status === "loading" ? "Fetching games…" : "Import from Chess.com"}
           </button>
-
-          {status === "success" && result && (
-            <span className="text-sm text-emerald-700">
-              ✓ {result.games_imported} game{result.games_imported !== 1 ? "s" : ""} imported
-            </span>
-          )}
         </div>
 
         {/* Loading hint */}
@@ -159,9 +154,30 @@ export function ChessComImportSection({
         </div>
       )}
 
-      {/* Success result */}
+      {/* Success */}
       {status === "success" && result && (
-        <div className="mt-4 space-y-3">
+        <div className="mt-4 space-y-4">
+          {/* Success banner + CTA */}
+          <div className="flex flex-col gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2 text-emerald-800">
+              <svg className="h-5 w-5 shrink-0 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              <span className="text-sm font-semibold">
+                {result.games_imported} game{result.games_imported !== 1 ? "s" : ""} imported successfully
+              </span>
+            </div>
+            <Link
+              href={`/players/${slug}/prep`}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
+            >
+              View Prep Report
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
+
           <FetchMetaBadges result={result} />
           <ImportResultPanel result={result as unknown as PGNImportResult} />
         </div>

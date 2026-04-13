@@ -141,6 +141,7 @@ export interface GamesFilter {
   result?: GameResult | "";
   eco_code?: string;
   opening_family?: string;
+  source?: GameSource | "";
   search?: string;
   page?: number;
 }

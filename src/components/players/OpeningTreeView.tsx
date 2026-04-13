@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { ColorBadge, ResultBadge, EcoBadge } from "@/components/ui/Badge";
 import { GamesTable } from "./GamesTable";
-import type { OpeningStat, Game, PaginatedResponse, ColorChoice } from "@/types";
+import type { OpeningStat, Game, GameSource, PaginatedResponse, ColorChoice } from "@/types";
 
 interface OpeningTreeViewProps {
   slug: string;
@@ -67,16 +67,26 @@ function ScoreBar({ score }: { score: number }) {
 interface VariationRowProps {
   stat: OpeningStat;
   slug: string;
+  sourceFilter: GameSource | "";
   isExpanded: boolean;
   onToggle: () => void;
 }
 
-function VariationRow({ stat, slug, isExpanded, onToggle }: VariationRowProps) {
+function VariationRow({ stat, slug, sourceFilter, isExpanded, onToggle }: VariationRowProps) {
   const [games, setGames] = useState<Game[] | null>(null);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [error, setError] = useState<string | null>(null);
+
+  // Reset games when sourceFilter changes
+  useEffect(() => {
+    if (isExpanded) {
+      setGames(null);
+      loadGames(1);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sourceFilter]);
 
   async function loadGames(p = 1) {
     setLoading(true);
@@ -85,6 +95,7 @@ function VariationRow({ stat, slug, isExpanded, onToggle }: VariationRowProps) {
       const data: PaginatedResponse<Game> = await api.getPlayerGames(slug, {
         eco_code: stat.eco_code,
         color_played: stat.color_choice,
+        ...(sourceFilter ? { source: sourceFilter } : {}),
         page: p,
       });
       setGames((prev) => (p === 1 ? data.results : [...(prev ?? []), ...data.results]));
@@ -193,11 +204,18 @@ function VariationRow({ stat, slug, isExpanded, onToggle }: VariationRowProps) {
 interface FamilyRowProps {
   group: FamilyGroup;
   slug: string;
+  sourceFilter: GameSource | "";
 }
 
-function FamilyRow({ group, slug }: FamilyRowProps) {
+function FamilyRow({ group, slug, sourceFilter }: FamilyRowProps) {
   const [open, setOpen] = useState(false);
   const [expandedVariations, setExpandedVariations] = useState<Set<string>>(new Set());
+
+  // Collapse everything when source filter changes
+  useEffect(() => {
+    setOpen(false);
+    setExpandedVariations(new Set());
+  }, [sourceFilter]);
 
   function toggleVariation(key: string) {
     setExpandedVariations((prev) => {
@@ -254,6 +272,7 @@ function FamilyRow({ group, slug }: FamilyRowProps) {
                 key={key}
                 stat={stat}
                 slug={slug}
+                sourceFilter={sourceFilter}
                 isExpanded={expandedVariations.has(key)}
                 onToggle={() => toggleVariation(key)}
               />
@@ -265,22 +284,32 @@ function FamilyRow({ group, slug }: FamilyRowProps) {
   );
 }
 
+const SOURCE_OPTIONS: { value: GameSource | ""; label: string }[] = [
+  { value: "", label: "All sources" },
+  { value: "chess_com", label: "Chess.com" },
+  { value: "lichess", label: "Lichess" },
+  { value: "pgn_import", label: "FIDE / Chess-Results" },
+  { value: "manual", label: "Other" },
+];
+
 export function OpeningTreeView({ slug }: OpeningTreeViewProps) {
   const [families, setFamilies] = useState<FamilyGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [colorFilter, setColorFilter] = useState<"" | ColorChoice>("");
+  const [sourceFilter, setSourceFilter] = useState<GameSource | "">("");
 
   useEffect(() => {
     setLoading(true);
+    setFamilies([]);
     api
-      .getPlayerOpenings(slug)
+      .getPlayerOpenings(slug, sourceFilter || undefined)
       .then((data) => {
         setFamilies(groupByFamily(data));
       })
       .catch(() => setError("Could not load opening data."))
       .finally(() => setLoading(false));
-  }, [slug]);
+  }, [slug, sourceFilter]);
 
   const filtered = colorFilter
     ? families.map((f) => ({
@@ -317,21 +346,39 @@ export function OpeningTreeView({ slug }: OpeningTreeViewProps) {
 
   return (
     <div>
-      {/* Color filter */}
-      <div className="mb-4 flex items-center gap-2">
-        {(["", "white", "black"] as const).map((c) => (
-          <button
-            key={c}
-            onClick={() => setColorFilter(c)}
-            className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-              colorFilter === c
-                ? "bg-brand-600 text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
-          >
-            {c === "" ? "All" : c === "white" ? "As White" : "As Black"}
-          </button>
-        ))}
+      {/* Filters row */}
+      <div className="mb-5 flex flex-wrap items-center gap-3">
+        {/* Color pills */}
+        <div className="flex items-center gap-1.5">
+          {(["", "white", "black"] as const).map((c) => (
+            <button
+              key={c}
+              onClick={() => setColorFilter(c)}
+              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                colorFilter === c
+                  ? "bg-brand-600 text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              {c === "" ? "All colors" : c === "white" ? "As White" : "As Black"}
+            </button>
+          ))}
+        </div>
+
+        {/* Divider */}
+        <span className="h-4 w-px bg-gray-200" />
+
+        {/* Source selector */}
+        <select
+          value={sourceFilter}
+          onChange={(e) => setSourceFilter(e.target.value as GameSource | "")}
+          className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-700 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+        >
+          {SOURCE_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </select>
+
         <span className="ml-auto text-xs text-gray-400">
           {filtered.length} opening family{filtered.length !== 1 ? "s" : ""}
         </span>
@@ -339,7 +386,7 @@ export function OpeningTreeView({ slug }: OpeningTreeViewProps) {
 
       <div className="space-y-3">
         {filtered.map((group) => (
-          <FamilyRow key={group.family} group={group} slug={slug} />
+          <FamilyRow key={group.family} group={group} slug={slug} sourceFilter={sourceFilter} />
         ))}
       </div>
     </div>

@@ -1,91 +1,99 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
 import { PlayerCard } from "@/components/players/PlayerCard";
 import { CardSkeleton } from "@/components/ui/LoadingSkeleton";
-import { SearchInput } from "@/components/ui/SearchInput";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { fetchPlayers, setSearchQuery } from "@/store/slices/playersSlice";
+import { api } from "@/lib/api";
+import { DEMO_PLAYER_SLUG, MY_PLAYERS_KEY } from "@/lib/constants";
+import type { Player, PlayerDetail } from "@/types";
+
+function AddOpponentCard() {
+  return (
+    <Link
+      href="/players/new"
+      className="group flex min-h-[200px] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-200 bg-white p-8 text-center transition-all hover:border-brand-300 hover:bg-brand-50/30"
+    >
+      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full border-2 border-dashed border-gray-300 text-2xl text-gray-400 transition-colors group-hover:border-brand-400 group-hover:text-brand-500">
+        +
+      </div>
+      <p className="text-sm font-semibold text-gray-600 group-hover:text-brand-600">
+        Add Opponent
+      </p>
+      <p className="mt-1 text-xs text-gray-400">Create a new opponent profile</p>
+    </Link>
+  );
+}
 
 export default function HomePage() {
-  const dispatch = useAppDispatch();
-  const { items, loading, searchQuery } = useAppSelector((state) => state.players);
+  const [demoPlayer, setDemoPlayer] = useState<PlayerDetail | null>(null);
+  const [myPlayers, setMyPlayers] = useState<PlayerDetail[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    dispatch(fetchPlayers({}));
-  }, [dispatch]);
+    async function loadPlayers() {
+      setLoading(true);
 
-  const handleSearch = useCallback(
-    (query: string) => {
-      dispatch(setSearchQuery(query));
-      dispatch(fetchPlayers({ search: query || undefined }));
-    },
-    [dispatch]
-  );
+      // Always fetch demo player
+      const demoPromise = api.getPlayerDetail(DEMO_PLAYER_SLUG).catch(() => null);
+
+      // Fetch saved opponents from localStorage
+      let savedSlugs: string[] = [];
+      try {
+        const raw = localStorage.getItem(MY_PLAYERS_KEY);
+        savedSlugs = raw ? (JSON.parse(raw) as string[]) : [];
+      } catch {
+        savedSlugs = [];
+      }
+      // Filter out demo slug to avoid duplicates
+      const uniqueSlugs = savedSlugs.filter((s) => s !== DEMO_PLAYER_SLUG);
+
+      const [demo, ...playerResults] = await Promise.all([
+        demoPromise,
+        ...uniqueSlugs.map((slug) => api.getPlayerDetail(slug).catch(() => null)),
+      ]);
+
+      setDemoPlayer(demo as PlayerDetail | null);
+      setMyPlayers(
+        playerResults.filter((p): p is PlayerDetail => p !== null)
+      );
+      setLoading(false);
+    }
+
+    loadPlayers();
+  }, []);
+
+  const allPlayers: PlayerDetail[] = [
+    ...(demoPlayer ? [demoPlayer] : []),
+    ...myPlayers,
+  ];
 
   return (
     <div>
-      <section className="relative overflow-hidden rounded-[32px] border border-slate-800 bg-[radial-gradient(circle_at_top,_rgba(12,147,231,0.2),_transparent_38%),linear-gradient(180deg,#020617_0%,#0f172a_58%,#111827_100%)] px-6 py-10 text-white shadow-2xl sm:px-10 sm:py-12">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-brand-200">
-          Opponent Intelligence
-        </p>
-        <h1 className="mt-4 max-w-4xl text-4xl font-bold tracking-tight sm:text-5xl">
-          Search your opponent. Walk in prepared.
-        </h1>
-        <p className="mt-4 max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
-          Mbaku Preparatory turns each opponent into a scouting dossier — colour splits,
-          opening tendencies, win conditions, and a match plan ready before you sit down.
-        </p>
-
-        <div className="mt-8 max-w-xl">
-          <SearchInput
-            placeholder="Search your opponent..."
-            onSearch={handleSearch}
-            defaultValue={searchQuery}
-            className="[&>input]:border-white/10 [&>input]:bg-white [&>input]:text-gray-900 [&>input]:placeholder:text-gray-400"
-          />
+      <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-brand-600">
+            Scouting
+          </p>
+          <h1 className="mt-1 text-3xl font-bold text-gray-900">My Opponents</h1>
         </div>
-      </section>
+      </div>
 
-      <section className="mt-12">
-        <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-brand-600">
-              Scouting Reports
-            </p>
-            <h2 className="mt-2 text-2xl font-bold text-gray-900">Available prep</h2>
-          </div>
-          <Link href="/players" className="btn-secondary text-sm">
-            Browse all players
-          </Link>
+      {loading ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <CardSkeleton key={i} />
+          ))}
         </div>
-
-        {loading ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 3 }).map((_, index) => (
-              <CardSkeleton key={index} />
-            ))}
-          </div>
-        ) : items.length > 0 ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {items.map((player) => (
-              <PlayerCard key={player.id} player={player} />
-            ))}
-          </div>
-        ) : (
-          <EmptyState
-            title="No players found"
-            description={
-              searchQuery
-                ? "Try a different name or federation."
-                : "Seed players to populate the database."
-            }
-          />
-        )}
-      </section>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {allPlayers.map((player) => (
+            <PlayerCard key={player.id} player={player} />
+          ))}
+          <AddOpponentCard />
+        </div>
+      )}
     </div>
   );
 }

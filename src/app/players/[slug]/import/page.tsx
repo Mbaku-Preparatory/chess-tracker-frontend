@@ -55,6 +55,18 @@ const SOURCE_TABS: {
     ),
   },
   {
+    id: "pgn",
+    label: "PGN file",
+    shortLabel: "PGN",
+    color: "#6b7280",
+    activeClass: "border-gray-700 bg-gray-700 text-white",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+    ),
+  },
+  {
     id: "lichess",
     label: "Lichess",
     shortLabel: "Lichess",
@@ -76,18 +88,6 @@ const SOURCE_TABS: {
     icon: (
       <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
         <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-      </svg>
-    ),
-  },
-  {
-    id: "pgn",
-    label: "PGN file",
-    shortLabel: "PGN",
-    color: "#6b7280",
-    activeClass: "border-gray-700 bg-gray-700 text-white",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
       </svg>
     ),
   },
