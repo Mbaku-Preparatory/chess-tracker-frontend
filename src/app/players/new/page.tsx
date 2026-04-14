@@ -13,6 +13,16 @@ type Platform = "chesscom" | "lichess" | "fide";
 
 const PLATFORMS: { id: Platform; label: string; color: string; icon: React.ReactNode }[] = [
   {
+    id: "fide",
+    label: "FIDE",
+    color: "#1a56db",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15H9V8h2v9zm4 0h-2V8h2v9z" />
+      </svg>
+    ),
+  },
+  {
     id: "chesscom",
     label: "Chess.com",
     color: "#7fa650",
@@ -29,16 +39,6 @@ const PLATFORMS: { id: Platform; label: string; color: string; icon: React.React
     icon: (
       <svg viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5">
         <path d="M19 22H5v-2h14v2M13 2a3 3 0 00-3 3c0 .88.39 1.67 1 2.22V8l-3 1-2 4h2v1H6l-1 3h14l-1-3h-2v-1h2l-2-4-3-1V7.22c.61-.55 1-1.34 1-2.22a3 3 0 00-1-2.24V2h-1z" />
-      </svg>
-    ),
-  },
-  {
-    id: "fide",
-    label: "FIDE",
-    color: "#1a56db",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5">
-        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15H9V8h2v9zm4 0h-2V8h2v9z" />
       </svg>
     ),
   },
@@ -226,7 +226,7 @@ export default function NewPlayerPage() {
   const router = useRouter();
 
   // ── Search state ────────────────────────────────────────────────────────────
-  const [searchPlatform, setSearchPlatform] = useState<Platform>("chesscom");
+  const [searchPlatform, setSearchPlatform] = useState<Platform>("fide");
   const [searchQuery, setSearchQuery] = useState("");
   const [searching, setSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<PlayerLookupResult[] | null>(null);
