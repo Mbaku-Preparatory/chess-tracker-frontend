@@ -319,27 +319,9 @@ export function OpeningTreeView({ slug }: OpeningTreeViewProps) {
     : families;
   const hasActiveFilters = Boolean(colorFilter || sourceFilter);
 
-  if (loading) {
-    return (
-      <div className="space-y-3">
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="h-14 animate-pulse rounded-xl bg-gray-200" />
-        ))}
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-        {error}
-      </div>
-    );
-  }
-
   return (
     <div>
-      {/* Filters row */}
+      {/* Filters row — always visible so the user can switch filters even when there are no results */}
       <div className="mb-5 flex flex-wrap items-center gap-3">
         {/* Color pills */}
         <div className="flex items-center gap-1.5">
@@ -372,12 +354,24 @@ export function OpeningTreeView({ slug }: OpeningTreeViewProps) {
           ))}
         </select>
 
-        <span className="ml-auto text-xs text-gray-400">
-          {filtered.length} opening family{filtered.length !== 1 ? "s" : ""}
-        </span>
+        {!loading && (
+          <span className="ml-auto text-xs text-gray-400">
+            {filtered.length} opening family{filtered.length !== 1 ? "s" : ""}
+          </span>
+        )}
       </div>
 
-      {filtered.length > 0 ? (
+      {error ? (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      ) : loading ? (
+        <div className="space-y-3">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-14 animate-pulse rounded-xl bg-gray-200" />
+          ))}
+        </div>
+      ) : filtered.length > 0 ? (
         <div className="space-y-3">
           {filtered.map((group) => (
             <FamilyRow key={group.family} group={group} slug={slug} sourceFilter={sourceFilter} />
@@ -387,7 +381,7 @@ export function OpeningTreeView({ slug }: OpeningTreeViewProps) {
         <div className="rounded-xl border border-dashed border-gray-300 py-16 text-center">
           <p className="text-sm text-gray-500">
             {hasActiveFilters
-              ? "No opening data matches the current filters. Adjust the source or color filters and try again."
+              ? "No opening data matches the current filters. Adjust the source or color filters above."
               : "No opening data yet. Import some games first."}
           </p>
         </div>
