@@ -317,6 +317,7 @@ export function OpeningTreeView({ slug }: OpeningTreeViewProps) {
         variations: f.variations.filter((v) => v.color_choice === colorFilter),
       })).filter((f) => f.variations.length > 0)
     : families;
+  const hasActiveFilters = Boolean(colorFilter || sourceFilter);
 
   if (loading) {
     return (
@@ -332,14 +333,6 @@ export function OpeningTreeView({ slug }: OpeningTreeViewProps) {
     return (
       <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
         {error}
-      </div>
-    );
-  }
-
-  if (!families.length) {
-    return (
-      <div className="rounded-xl border border-dashed border-gray-300 py-16 text-center">
-        <p className="text-sm text-gray-500">No opening data yet. Import some games first.</p>
       </div>
     );
   }
@@ -384,11 +377,21 @@ export function OpeningTreeView({ slug }: OpeningTreeViewProps) {
         </span>
       </div>
 
-      <div className="space-y-3">
-        {filtered.map((group) => (
-          <FamilyRow key={group.family} group={group} slug={slug} sourceFilter={sourceFilter} />
-        ))}
-      </div>
+      {filtered.length > 0 ? (
+        <div className="space-y-3">
+          {filtered.map((group) => (
+            <FamilyRow key={group.family} group={group} slug={slug} sourceFilter={sourceFilter} />
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-xl border border-dashed border-gray-300 py-16 text-center">
+          <p className="text-sm text-gray-500">
+            {hasActiveFilters
+              ? "No opening data matches the current filters. Adjust the source or color filters and try again."
+              : "No opening data yet. Import some games first."}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
