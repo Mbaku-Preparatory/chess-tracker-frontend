@@ -326,7 +326,7 @@ export default function NewPlayerPage() {
       });
 const hasChesscom = chesscomUsernames.some((u) => u.trim());
       const hasLichess = lichessUsernames.some((u) => u.trim());
-      const source = hasChesscom ? "chesscom" : hasLichess ? "lichess" : "chesscom";
+      const source = hasChesscom ? "chesscom" : hasLichess ? "lichess" : "chess_results";
       router.push(`/players/${player.public_id}/import?source=${source}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not create player. Try again.");
