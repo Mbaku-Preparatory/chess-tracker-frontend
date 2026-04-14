@@ -10,15 +10,9 @@ import { loadRepertoireFromStorage } from "@/store/slices/repertoireSlice";
 /**
  * Paths that are publicly accessible without a login.
  * - /login, /signup — auth pages themselves
- * - /players/[slug] — player profile (demo player browsable without account)
- * - /players/[slug]/prep — prep report (demo player viewable without account)
  */
 function isPublicPath(pathname: string): boolean {
-  if (pathname === "/login" || pathname === "/signup") return true;
-  // /players/<slug> and /players/<slug>/prep are public so the demo player
-  // can be browsed without an account.
-  if (/^\/players\/[^/]+(\/prep)?\/?$/.test(pathname)) return true;
-  return false;
+  return pathname === "/login" || pathname === "/signup";
 }
 
 export function AuthGate({ children }: { children: React.ReactNode }) {

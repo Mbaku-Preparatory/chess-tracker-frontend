@@ -123,15 +123,17 @@ export default function PlayerImportPage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  async function refreshPlayer() {
+    if (!slug) return;
+    const updated = await api.getPlayerDetail(slug);
+    setPlayer(updated);
+    setNameOverride(updated.full_name);
+  }
+
   useEffect(() => {
     if (!slug) return;
     setPlayerLoading(true);
-    api
-      .getPlayerDetail(slug)
-      .then((p) => {
-        setPlayer(p);
-        setNameOverride(p.full_name);
-      })
+    refreshPlayer()
       .catch(() => setPlayerError("Player not found."))
       .finally(() => setPlayerLoading(false));
   }, [slug]);
@@ -307,6 +309,7 @@ export default function PlayerImportPage() {
           <ChessComImportSection
             slug={slug}
             accounts={player.accounts ?? []}
+            onUpdated={refreshPlayer}
           />
         )}
 
@@ -314,6 +317,7 @@ export default function PlayerImportPage() {
           <LichessImportSection
             slug={slug}
             accounts={player.accounts ?? []}
+            onUpdated={refreshPlayer}
           />
         )}
 

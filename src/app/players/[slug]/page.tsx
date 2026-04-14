@@ -6,7 +6,6 @@ import { useParams } from "next/navigation";
 
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchPlayerDetail } from "@/store/slices/playerDetailSlice";
-import { DEMO_PLAYER_SLUG } from "@/lib/constants";
 import { api } from "@/lib/api";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatCard } from "@/components/ui/StatCard";
@@ -128,11 +127,6 @@ export default function PlayerDetailPage() {
               {player.title && (
                 <span className="rounded-lg bg-amber-100 px-2.5 py-1 text-sm font-bold text-amber-800">
                   {player.title}
-                </span>
-              )}
-              {player.slug === DEMO_PLAYER_SLUG && (
-                <span className="rounded-lg bg-gray-100 px-2.5 py-1 text-sm font-medium text-gray-500">
-                  Example
                 </span>
               )}
             </div>

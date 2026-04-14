@@ -4,6 +4,19 @@ export interface PlayerAccount {
   username: string;
 }
 
+export interface AccountDelinkResult {
+  account_deleted: boolean;
+  platform: "chesscom" | "lichess";
+  username: string;
+  deleted_games: number;
+}
+
+export interface AccountGamesDeleteResult {
+  platform: "chesscom" | "lichess";
+  username: string;
+  deleted_games: number;
+}
+
 export interface PlayerLookupResult {
   platform: "chesscom" | "lichess" | "fide";
   username?: string;       // chess.com / lichess

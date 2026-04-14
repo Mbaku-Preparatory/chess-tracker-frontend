@@ -98,16 +98,6 @@ export default function LoginPage() {
             Create one
           </Link>
         </p>
-
-        {/* Demo shortcut */}
-        <div className="mt-6 rounded-lg border border-dashed border-gray-200 px-4 py-3 text-center">
-          <p className="text-xs text-gray-400">
-            Just browsing?{" "}
-            <Link href="/players/timothy-mwabu/prep" className="font-medium text-brand-500 hover:text-brand-600">
-              View example prep report →
-            </Link>
-          </p>
-        </div>
       </div>
     </div>
   );

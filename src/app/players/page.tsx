@@ -29,6 +29,10 @@ export default function PlayersPage() {
     [dispatch]
   );
 
+  const handlePlayerDeleted = useCallback(() => {
+    dispatch(fetchPlayers({ search: searchQuery || undefined, page: currentPage }));
+  }, [dispatch, searchQuery, currentPage]);
+
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (
@@ -62,7 +66,12 @@ export default function PlayersPage() {
       ) : items.length > 0 ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((player) => (
-            <PlayerCard key={player.id} player={player} />
+            <PlayerCard
+              key={player.id}
+              player={player}
+              showDelete
+              onDeleted={handlePlayerDeleted}
+            />
           ))}
         </div>
       ) : (

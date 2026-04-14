@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { api } from "@/lib/api";
+import { ConnectedAccountManager } from "./ConnectedAccountManager";
 import { ImportResultPanel } from "./ImportResultPanel";
 import type { LichessImportResult, PlayerAccount, PGNImportResult } from "@/types";
 
@@ -9,6 +10,7 @@ interface LichessImportSectionProps {
   slug: string;
   accounts?: PlayerAccount[];
   onSuccess?: (result: LichessImportResult) => void;
+  onUpdated?: () => void | Promise<void>;
 }
 
 type Status = "idle" | "loading" | "success" | "error";
@@ -17,6 +19,7 @@ export function LichessImportSection({
   slug,
   accounts = [],
   onSuccess,
+  onUpdated,
 }: LichessImportSectionProps) {
   const lichessAccounts = accounts.filter((a) => a.platform === "lichess");
   const [username, setUsername] = useState(lichessAccounts[0]?.username || "");
@@ -43,6 +46,7 @@ export function LichessImportSection({
       setResult(data);
       setStatus("success");
       onSuccess?.(data);
+      await onUpdated?.();
     } catch (err: unknown) {
       setErrorMsg(
         err instanceof Error ? err.message : "Import failed. Check the username and try again."
@@ -187,6 +191,13 @@ export function LichessImportSection({
           <ImportResultPanel result={result as unknown as PGNImportResult} />
         </div>
       )}
+
+      <ConnectedAccountManager
+        slug={slug}
+        platform="lichess"
+        accounts={accounts}
+        onUpdated={onUpdated}
+      />
     </div>
   );
 }

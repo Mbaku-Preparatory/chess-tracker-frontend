@@ -1,4 +1,6 @@
 import type {
+  AccountDelinkResult,
+  AccountGamesDeleteResult,
   ChessComImportResult,
   ChessResultsImportResult,
   LichessImportResult,
@@ -46,6 +48,13 @@ async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
     (err as any).status = res.status;
     (err as any).body = body;
     throw err;
+  }
+  if (res.status === 204) {
+    return undefined as T;
+  }
+  const contentType = res.headers.get("content-type") || "";
+  if (!contentType.includes("application/json")) {
+    return undefined as T;
   }
   return res.json();
 }
@@ -233,8 +242,30 @@ export const api = {
     });
   },
 
-  removeAccount(slug: string, accountId: number): Promise<void> {
-    return fetchJson(`${API_BASE}/players/${slug}/accounts/${accountId}/`, { method: "DELETE" });
+  removeAccount(
+    slug: string,
+    accountId: number,
+    options?: { deleteGames?: boolean }
+  ): Promise<AccountDelinkResult> {
+    const params = new URLSearchParams();
+    if (options?.deleteGames) params.set("delete_games", "1");
+    const qs = params.toString();
+    return fetchJson(
+      `${API_BASE}/players/${slug}/accounts/${accountId}/${qs ? `?${qs}` : ""}`,
+      { method: "DELETE" }
+    );
   },
 
+  deleteImportedGamesForAccount(
+    slug: string,
+    accountId: number
+  ): Promise<AccountGamesDeleteResult> {
+    return fetchJson(`${API_BASE}/players/${slug}/accounts/${accountId}/games/`, {
+      method: "DELETE",
+    });
+  },
+
+  deletePlayer(slug: string): Promise<void> {
+    return fetchJson(`${API_BASE}/players/${slug}/`, { method: "DELETE" });
+  },
 };

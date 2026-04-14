@@ -6,7 +6,7 @@ import Link from "next/link";
 import { PlayerCard } from "@/components/players/PlayerCard";
 import { CardSkeleton } from "@/components/ui/LoadingSkeleton";
 import { api } from "@/lib/api";
-import { DEMO_PLAYER_SLUG, MY_PLAYERS_KEY } from "@/lib/constants";
+import { MY_PLAYERS_KEY } from "@/lib/constants";
 import type { Player, PlayerDetail } from "@/types";
 
 function AddOpponentCard() {
@@ -27,16 +27,12 @@ function AddOpponentCard() {
 }
 
 export default function HomePage() {
-  const [demoPlayer, setDemoPlayer] = useState<PlayerDetail | null>(null);
   const [myPlayers, setMyPlayers] = useState<PlayerDetail[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadPlayers() {
       setLoading(true);
-
-      // Always fetch demo player
-      const demoPromise = api.getPlayerDetail(DEMO_PLAYER_SLUG).catch(() => null);
 
       // Fetch saved opponents from localStorage
       let savedSlugs: string[] = [];
@@ -46,28 +42,32 @@ export default function HomePage() {
       } catch {
         savedSlugs = [];
       }
-      // Filter out demo slug to avoid duplicates
-      const uniqueSlugs = savedSlugs.filter((s) => s !== DEMO_PLAYER_SLUG);
-
-      const [demo, ...playerResults] = await Promise.all([
-        demoPromise,
-        ...uniqueSlugs.map((slug) => api.getPlayerDetail(slug).catch(() => null)),
-      ]);
-
-      setDemoPlayer(demo as PlayerDetail | null);
-      setMyPlayers(
-        playerResults.filter((p): p is PlayerDetail => p !== null)
+      const uniqueSlugs = Array.from(new Set(savedSlugs));
+      const playerResults = await Promise.all(
+        uniqueSlugs.map((slug) => api.getPlayerDetail(slug).catch(() => null))
       );
+
+      setMyPlayers(playerResults.filter((p): p is PlayerDetail => p !== null));
       setLoading(false);
     }
 
     loadPlayers();
   }, []);
 
-  const allPlayers: PlayerDetail[] = [
-    ...(demoPlayer ? [demoPlayer] : []),
-    ...myPlayers,
-  ];
+  const allPlayers: PlayerDetail[] = myPlayers;
+
+  function handlePlayerDeleted(deletedPlayer: Player) {
+    setMyPlayers((current) => current.filter((player) => player.slug !== deletedPlayer.slug));
+
+    try {
+      const raw = localStorage.getItem(MY_PLAYERS_KEY);
+      const savedSlugs = raw ? (JSON.parse(raw) as string[]) : [];
+      const nextSlugs = savedSlugs.filter((slug) => slug !== deletedPlayer.slug);
+      localStorage.setItem(MY_PLAYERS_KEY, JSON.stringify(nextSlugs));
+    } catch {
+      // Ignore localStorage issues — UI state is already updated.
+    }
+  }
 
   return (
     <div>
@@ -89,7 +89,12 @@ export default function HomePage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {allPlayers.map((player) => (
-            <PlayerCard key={player.id} player={player} />
+            <PlayerCard
+              key={player.id}
+              player={player}
+              showDelete
+              onDeleted={handlePlayerDeleted}
+            />
           ))}
           <AddOpponentCard />
         </div>
