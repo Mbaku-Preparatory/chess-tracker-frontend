@@ -271,8 +271,9 @@ function FamilyRow({ group, slug, sourceFilter, resultFilter, yearFilter }: Fami
       {/* Variations list */}
       {open && (
         <div className="border-t border-gray-100">
-          {group.variations.map((stat) => {
-            const key = `${stat.color_choice}-${stat.eco_code}`;
+          {group.variations.map((stat, idx) => {
+            const key = `${stat.color_choice}-${stat.eco_code}-${idx}`;
+            const toggleKey = `${stat.color_choice}-${stat.eco_code}`;
             return (
               <VariationRow
                 key={key}
@@ -281,8 +282,8 @@ function FamilyRow({ group, slug, sourceFilter, resultFilter, yearFilter }: Fami
                 sourceFilter={sourceFilter}
                 resultFilter={resultFilter}
                 yearFilter={yearFilter}
-                isExpanded={expandedVariations.has(key)}
-                onToggle={() => toggleVariation(key)}
+                isExpanded={expandedVariations.has(toggleKey)}
+                onToggle={() => toggleVariation(toggleKey)}
               />
             );
           })}
