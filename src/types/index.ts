@@ -313,6 +313,13 @@ export interface PlayerInsights {
   evidence: InsightEvidence;
 }
 
+export interface RepertoireData {
+  white: import("@/store/slices/repertoireSlice").RepertoireOpening[];
+  black: import("@/store/slices/repertoireSlice").RepertoireOpening[];
+  onboarding_complete: boolean;
+  updated_at?: string;
+}
+
 export interface OpeningResult {
   slug: string;
   name: string;

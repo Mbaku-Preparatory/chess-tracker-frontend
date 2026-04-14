@@ -15,6 +15,7 @@ import type {
   PlayerDetail,
   PlayerInsights,
   PlayerLookupResult,
+  RepertoireData,
 } from "@/types";
 import { authStorage } from "@/lib/auth";
 import { requestTracker } from "@/lib/request-tracker";
@@ -170,6 +171,18 @@ export const api = {
     }
     const qs = params.toString();
     return fetchJson(`${API_BASE}/players/${slug}/insights/${qs ? `?${qs}` : ""}`);
+  },
+
+  getRepertoire(): Promise<RepertoireData> {
+    return fetchJson(`${API_BASE}/repertoire/`);
+  },
+
+  saveRepertoire(data: Omit<RepertoireData, "updated_at">): Promise<RepertoireData> {
+    return fetchJson(`${API_BASE}/repertoire/`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
   },
 
   searchOpenings(query: string, limit = 20): Promise<import("@/types").OpeningResult[]> {

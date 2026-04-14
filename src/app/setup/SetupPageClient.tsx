@@ -9,6 +9,7 @@ import {
   addOpening,
   completeOnboarding,
   removeOpening,
+  saveRepertoire,
   type RepertoireOpening,
   type RepertoireSection,
 } from "@/store/slices/repertoireSlice";
@@ -257,9 +258,11 @@ export default function SetupPage() {
 
   const totalSelected = white.length + black.length;
   const isEditing = useAppSelector((s) => s.repertoire.onboardingComplete);
+  const saving = useAppSelector((s) => s.repertoire.saving);
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     dispatch(completeOnboarding());
+    await dispatch(saveRepertoire());
     if (isEditing) {
       router.back();
     } else {
@@ -308,14 +311,16 @@ export default function SetupPage() {
       <div className="mt-8">
         <button
           onClick={handleContinue}
-          disabled={totalSelected === 0}
+          disabled={totalSelected === 0 || saving}
           className={`w-full rounded-xl px-6 py-3.5 text-base font-semibold transition-all ${
-            totalSelected > 0
+            totalSelected > 0 && !saving
               ? "btn-primary shadow-md hover:shadow-lg"
               : "cursor-not-allowed bg-gray-100 text-gray-400"
           }`}
         >
-          {totalSelected > 0
+          {saving
+            ? "Saving…"
+            : totalSelected > 0
             ? isEditing
               ? "Save repertoire"
               : "Continue to Mbaku Preparatory"

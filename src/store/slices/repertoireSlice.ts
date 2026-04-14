@@ -1,4 +1,5 @@
-import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import { api } from "@/lib/api";
 
 export interface RepertoireOpening {
   slug: string;
@@ -18,64 +19,53 @@ interface RepertoireState {
   black: RepertoireOpening[];
   onboardingComplete: boolean;
   /**
-   * Runtime-only flag. False until loadRepertoireFromStorage has fired on the
-   * client. Never persisted to localStorage — the subscribe handler omits it.
+   * False until fetchRepertoire has resolved. Guards Gate 2 in AuthGate
+   * so we don't redirect to /setup before we know the actual state.
    */
   initialized: boolean;
+  saving: boolean;
 }
 
-export const STORAGE_KEY = "cs_repertoire";
 const initialState: RepertoireState = {
   white: [],
   black: [],
   onboardingComplete: false,
   initialized: false,
+  saving: false,
 };
+
+/** Load repertoire from the API. Dispatched once after auth is confirmed. */
+export const fetchRepertoire = createAsyncThunk(
+  "repertoire/fetch",
+  async () => {
+    return await api.getRepertoire();
+  }
+);
+
+/** Persist the current repertoire state to the API. */
+export const saveRepertoire = createAsyncThunk(
+  "repertoire/save",
+  async (_, { getState }) => {
+    const { repertoire } = getState() as { repertoire: RepertoireState };
+    return await api.saveRepertoire({
+      white: repertoire.white,
+      black: repertoire.black,
+      onboarding_complete: repertoire.onboardingComplete,
+    });
+  }
+);
 
 const repertoireSlice = createSlice({
   name: "repertoire",
   initialState,
   reducers: {
-    loadRepertoireFromStorage(state) {
-      if (typeof window === "undefined") return;
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) {
-          const stored = JSON.parse(raw);
-
-          state.white = stored.white ?? [];
-
-          // Migrate: old format had black_vs_e4 + black_vs_d4, new format has black.
-          // Merge all three into black, deduplicating by slug.
-          const merged: RepertoireOpening[] = [
-            ...(stored.black ?? []),
-            ...(stored.black_vs_e4 ?? []),
-            ...(stored.black_vs_d4 ?? []),
-          ];
-          const seen = new Set<string>();
-          state.black = merged.filter((o) => {
-            if (seen.has(o.slug)) return false;
-            seen.add(o.slug);
-            return true;
-          });
-
-          state.onboardingComplete = stored.onboardingComplete ?? false;
-        }
-      } catch {
-        // Corrupted storage — leave defaults
-      }
-      state.initialized = true;
-    },
     addOpening(
       state,
       action: PayloadAction<{ section: RepertoireSection; opening: RepertoireOpening }>
     ) {
       const { section, opening } = action.payload;
-      const sectionItems = state[section];
-
-      if (sectionItems.some((o) => o.slug === opening.slug)) return;
-
-      state[section] = [...sectionItems, opening];
+      if (state[section].some((o) => o.slug === opening.slug)) return;
+      state[section] = [...state[section], opening];
     },
     removeOpening(
       state,
@@ -92,15 +82,41 @@ const repertoireSlice = createSlice({
       state.black = [];
       state.onboardingComplete = false;
     },
+    /** Mark as initialized without fetching — used when the user is not authenticated. */
+    setInitialized(state) {
+      state.initialized = true;
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchRepertoire.fulfilled, (state, action) => {
+        state.white = action.payload.white ?? [];
+        state.black = action.payload.black ?? [];
+        state.onboardingComplete = action.payload.onboarding_complete ?? false;
+        state.initialized = true;
+      })
+      .addCase(fetchRepertoire.rejected, (state) => {
+        // Network error or 404 — treat as empty, let the user proceed
+        state.initialized = true;
+      })
+      .addCase(saveRepertoire.pending, (state) => {
+        state.saving = true;
+      })
+      .addCase(saveRepertoire.fulfilled, (state) => {
+        state.saving = false;
+      })
+      .addCase(saveRepertoire.rejected, (state) => {
+        state.saving = false;
+      });
   },
 });
 
 export const {
-  loadRepertoireFromStorage,
   addOpening,
   removeOpening,
   completeOnboarding,
   resetRepertoire,
+  setInitialized,
 } = repertoireSlice.actions;
 
 export default repertoireSlice.reducer;

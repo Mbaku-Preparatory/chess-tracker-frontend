@@ -6,21 +6,8 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 import { api } from "@/lib/api";
-import { MY_PLAYERS_KEY } from "@/lib/constants";
 import { FederationSelect } from "@/components/ui/FederationSelect";
 import type { PlayerLookupResult } from "@/types";
-
-function addToMyPlayers(slug: string) {
-  try {
-    const raw = localStorage.getItem(MY_PLAYERS_KEY);
-    const existing: string[] = raw ? JSON.parse(raw) : [];
-    if (!existing.includes(slug)) {
-      localStorage.setItem(MY_PLAYERS_KEY, JSON.stringify([...existing, slug]));
-    }
-  } catch {
-    // Storage unavailable — proceed anyway
-  }
-}
 
 type Platform = "chesscom" | "lichess" | "fide";
 
@@ -337,8 +324,7 @@ export default function NewPlayerPage() {
         ...(fideId.trim() ? { fide_id: fideId.trim() } : {}),
         ...(accounts.length ? { accounts } : {}),
       });
-      addToMyPlayers(player.public_id);
-      const hasChesscom = chesscomUsernames.some((u) => u.trim());
+const hasChesscom = chesscomUsernames.some((u) => u.trim());
       const hasLichess = lichessUsernames.some((u) => u.trim());
       const source = hasChesscom ? "chesscom" : hasLichess ? "lichess" : "chesscom";
       router.push(`/players/${player.public_id}/import?source=${source}`);
