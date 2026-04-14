@@ -324,6 +324,7 @@ export function OpeningTreeView({ slug }: OpeningTreeViewProps) {
   const [sourceFilter, setSourceFilter] = useState<GameSource | "">("");
   const [resultFilter, setResultFilter] = useState<GameResult | "">("");
   const [yearFilter, setYearFilter] = useState("");
+  const [openingSearch, setOpeningSearch] = useState("");
 
   useEffect(() => {
     setLoading(true);
@@ -340,16 +341,25 @@ export function OpeningTreeView({ slug }: OpeningTreeViewProps) {
       .finally(() => setLoading(false));
   }, [slug, sourceFilter, resultFilter, yearFilter]);
 
-  const filtered = colorFilter
-    ? families
-        .map((f) => ({
-          ...f,
-          variations: f.variations.filter((v) => v.color_choice === colorFilter),
-        }))
-        .filter((f) => f.variations.length > 0)
-    : families;
+  const needle = openingSearch.trim().toLowerCase();
 
-  const hasActiveFilters = Boolean(colorFilter || sourceFilter || resultFilter || yearFilter);
+  const filtered = families
+    .map((f) => {
+      let vars = f.variations;
+      if (colorFilter) vars = vars.filter((v) => v.color_choice === colorFilter);
+      if (needle) {
+        vars = vars.filter(
+          (v) =>
+            v.opening_name.toLowerCase().includes(needle) ||
+            v.eco_code.toLowerCase().includes(needle) ||
+            f.family.toLowerCase().includes(needle),
+        );
+      }
+      return { ...f, variations: vars };
+    })
+    .filter((f) => f.variations.length > 0);
+
+  const hasActiveFilters = Boolean(colorFilter || sourceFilter || resultFilter || yearFilter || openingSearch);
 
   const selectCls =
     "rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-700 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
@@ -417,6 +427,15 @@ export function OpeningTreeView({ slug }: OpeningTreeViewProps) {
             <option key={o.value} value={o.value}>{o.label}</option>
           ))}
         </select>
+
+        {/* Opening search */}
+        <input
+          type="text"
+          value={openingSearch}
+          onChange={(e) => setOpeningSearch(e.target.value)}
+          placeholder="Search openings… e.g. Sicilian, B12"
+          className={selectCls + " min-w-[200px]"}
+        />
 
         {!loading && (
           <span className="ml-auto text-xs text-gray-400">
