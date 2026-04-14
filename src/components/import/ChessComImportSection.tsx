@@ -4,11 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { ImportResultPanel } from "./ImportResultPanel";
-import type { ChessComImportResult, PGNImportResult } from "@/types";
+import type { ChessComImportResult, PlayerAccount, PGNImportResult } from "@/types";
 
 interface ChessComImportSectionProps {
   slug: string;
-  savedUsername?: string | null;
+  accounts?: PlayerAccount[];
   onSuccess?: (result: ChessComImportResult) => void;
 }
 
@@ -16,10 +16,11 @@ type Status = "idle" | "loading" | "success" | "error";
 
 export function ChessComImportSection({
   slug,
-  savedUsername,
+  accounts = [],
   onSuccess,
 }: ChessComImportSectionProps) {
-  const [username, setUsername] = useState(savedUsername || "");
+  const chesscomAccounts = accounts.filter((a) => a.platform === "chesscom");
+  const [username, setUsername] = useState(chesscomAccounts[0]?.username || "");
   const [limit, setLimit] = useState(50);
   const [status, setStatus] = useState<Status>("idle");
   const [result, setResult] = useState<ChessComImportResult | null>(null);
@@ -70,6 +71,26 @@ export function ChessComImportSection({
       </div>
 
       <form onSubmit={handleImport} className="space-y-4">
+        {/* Account chips (quick-select) */}
+        {chesscomAccounts.length > 1 && (
+          <div className="flex flex-wrap gap-1.5">
+            {chesscomAccounts.map((a) => (
+              <button
+                key={a.id}
+                type="button"
+                onClick={() => { setUsername(a.username); setResult(null); setStatus("idle"); }}
+                className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
+                  username === a.username
+                    ? "border-[#7fa650] bg-[#7fa650] text-white"
+                    : "border-gray-200 bg-white text-gray-600 hover:border-[#7fa650] hover:text-[#7fa650]"
+                }`}
+              >
+                {a.username}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Username + limit row */}
         <div className="flex flex-col gap-3 sm:flex-row">
           <div className="flex-1">

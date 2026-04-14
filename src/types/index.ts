@@ -1,6 +1,30 @@
+export interface PlayerAccount {
+  id: number;
+  platform: "chesscom" | "lichess";
+  username: string;
+}
+
+export interface PlayerLookupResult {
+  platform: "chesscom" | "lichess" | "fide";
+  username?: string;       // chess.com / lichess
+  fide_id?: string;        // fide
+  display_name: string;
+  title: string | null;
+  avatar_url: string | null;
+  ratings?: {
+    bullet?: number;
+    blitz?: number;
+    rapid?: number;
+    classical?: number;
+    standard?: number;
+  };
+  country?: string | null;
+  federation?: string | null;
+}
+
 export type ColorChoice = "white" | "black";
 export type GameResult = "win" | "draw" | "loss";
-export type GameSource = "manual" | "pgn_import" | "lichess" | "chess_com";
+export type GameSource = "manual" | "pgn_import" | "lichess" | "chess_com" | "chess_results";
 
 export interface Player {
   id: number;
@@ -17,6 +41,7 @@ export interface Player {
   title: string | null;
   bio: string;
   profile_image: string | null;
+  accounts: PlayerAccount[];
   games_count?: number;
   created_at?: string;
   updated_at?: string;
@@ -167,6 +192,28 @@ export interface LichessFetchMeta {
 export interface LichessImportResult extends PGNImportResult {
   lichess_username: string;
   fetch_meta: LichessFetchMeta;
+}
+
+export interface ChessResultsFetchMeta {
+  tournament_name: string;
+  tournament_url: string;
+  source: "pgn" | "pairings";
+  total_rounds?: number;
+}
+
+export interface ChessResultsImportResult {
+  games_imported: number;
+  games_skipped: number;
+  games_failed: number;
+  source_type: "pgn" | "pairings";
+  fetch_meta: ChessResultsFetchMeta;
+  // PGN path also carries the PGNImportResult fields
+  player_slug?: string;
+  player_name?: string;
+  games_created?: number;
+  games_updated?: number;
+  opening_summary?: { name: string; count: number; percent: number }[];
+  result_summary?: { wins: number; draws: number; losses: number };
 }
 
 export interface PGNImportResult {

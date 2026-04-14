@@ -1,5 +1,6 @@
 import type {
   ChessComImportResult,
+  ChessResultsImportResult,
   LichessImportResult,
   Game,
   GamesFilter,
@@ -8,8 +9,10 @@ import type {
   PaginatedResponse,
   PerformanceSummary,
   Player,
+  PlayerAccount,
   PlayerDetail,
   PlayerInsights,
+  PlayerLookupResult,
   PrepData,
 } from "@/types";
 import { authStorage } from "@/lib/auth";
@@ -130,6 +133,17 @@ export const api = {
     });
   },
 
+  importFromChessResults(
+    slug: string,
+    payload: { url: string }
+  ): Promise<ChessResultsImportResult> {
+    return fetchJson(`${API_BASE}/players/${slug}/import-chess-results/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  },
+
   getPlayerInsights(slug: string, ecoCodes?: string[]): Promise<PlayerInsights> {
     const params = new URLSearchParams();
     if (ecoCodes && ecoCodes.length > 0) {
@@ -168,6 +182,16 @@ export const api = {
     });
   },
 
+  // ── Player lookup (search to pre-fill add-opponent form) ─────────────────
+
+  lookupPlayer(
+    platform: "chesscom" | "lichess" | "fide",
+    q: string
+  ): Promise<{ platform: string; results: PlayerLookupResult[] }> {
+    const params = new URLSearchParams({ platform, q });
+    return fetchJson(`${API_BASE}/players/lookup/?${params}`);
+  },
+
   // ── Player create ─────────────────────────────────────────────────────────
 
   syncFide(slug: string): Promise<{
@@ -186,14 +210,31 @@ export const api = {
     full_name: string;
     federation?: string;
     fide_id?: string;
-    chesscom_username?: string;
-    lichess_username?: string;
+    accounts?: { platform: "chesscom" | "lichess"; username: string }[];
   }): Promise<{ id: number; full_name: string; slug: string }> {
     return fetchJson(`${API_BASE}/players/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
+  },
+
+  // ── Player accounts ───────────────────────────────────────────────────────
+
+  getAccounts(slug: string): Promise<PlayerAccount[]> {
+    return fetchJson(`${API_BASE}/players/${slug}/accounts/`);
+  },
+
+  addAccount(slug: string, platform: "chesscom" | "lichess", username: string): Promise<PlayerAccount> {
+    return fetchJson(`${API_BASE}/players/${slug}/accounts/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ platform, username }),
+    });
+  },
+
+  removeAccount(slug: string, accountId: number): Promise<void> {
+    return fetchJson(`${API_BASE}/players/${slug}/accounts/${accountId}/`, { method: "DELETE" });
   },
 
 };

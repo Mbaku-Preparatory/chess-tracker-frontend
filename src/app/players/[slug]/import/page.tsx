@@ -6,12 +6,13 @@ import { useParams, useSearchParams } from "next/navigation";
 
 import { api } from "@/lib/api";
 import { ChessComImportSection } from "@/components/import/ChessComImportSection";
+import { ChessResultsImportSection } from "@/components/import/ChessResultsImportSection";
 import { LichessImportSection } from "@/components/import/LichessImportSection";
 import { ImportResultPanel } from "@/components/import/ImportResultPanel";
 import type { PlayerDetail, PGNImportResult } from "@/types";
 
 type Color = "auto" | "white" | "black";
-type ImportSource = "chesscom" | "lichess" | "fide" | "pgn";
+type ImportSource = "chesscom" | "lichess" | "chess_results" | "pgn";
 
 const COLOR_OPTIONS: { value: Color; label: string; hint: string }[] = [
   {
@@ -79,12 +80,11 @@ const SOURCE_TABS: {
     ),
   },
   {
-    id: "fide",
-    label: "FIDE",
-    shortLabel: "FIDE",
+    id: "chess_results",
+    label: "OTB / Chess-Results",
+    shortLabel: "OTB",
     color: "#1a3a6b",
     activeClass: "border-[#1a3a6b] bg-[#1a3a6b] text-white",
-    comingSoon: true,
     icon: (
       <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
         <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
@@ -99,7 +99,12 @@ export default function PlayerImportPage() {
   const { slug } = useParams<{ slug: string }>();
   const searchParams = useSearchParams();
 
-  const initialSource = (searchParams.get("source") as ImportSource) || "chesscom";
+  const rawSource = searchParams.get("source");
+  // Map legacy "fide" param to chess_results
+  const initialSource: ImportSource =
+    rawSource === "fide"
+      ? "chess_results"
+      : ((rawSource as ImportSource) || "chesscom");
 
   const [player, setPlayer] = useState<PlayerDetail | null>(null);
   const [playerLoading, setPlayerLoading] = useState(true);
@@ -301,22 +306,22 @@ export default function PlayerImportPage() {
         {activeSource === "chesscom" && (
           <ChessComImportSection
             slug={slug}
-            savedUsername={player.chesscom_username}
+            accounts={player.accounts ?? []}
           />
         )}
 
         {activeSource === "lichess" && (
           <LichessImportSection
             slug={slug}
-            savedUsername={player.lichess_username}
+            accounts={player.accounts ?? []}
           />
         )}
 
-        {activeSource === "fide" && (
-          /* Unreachable — FIDE tab is disabled — kept for future wiring */
-          <div className="rounded-xl border border-[#1a3a6b]/20 bg-[#1a3a6b]/5 p-8 text-center">
-            <p className="text-sm font-medium text-[#1a3a6b]">FIDE game import coming soon</p>
-          </div>
+        {activeSource === "chess_results" && (
+          <ChessResultsImportSection
+            slug={slug}
+            fideId={player.fide_id}
+          />
         )}
 
         {activeSource === "pgn" && (
