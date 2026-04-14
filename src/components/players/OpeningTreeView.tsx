@@ -295,10 +295,11 @@ function FamilyRow({ group, slug, sourceFilter, resultFilter, yearFilter }: Fami
 
 const SOURCE_OPTIONS: { value: GameSource | ""; label: string }[] = [
   { value: "", label: "All sources" },
+  { value: "chess_results", label: "Chess-Results (OTB)" },
   { value: "chess_com", label: "Chess.com" },
   { value: "lichess", label: "Lichess" },
-  { value: "pgn_import", label: "FIDE / Chess-Results" },
-  { value: "manual", label: "Other" },
+  { value: "pgn_import", label: "PGN import" },
+  { value: "manual", label: "Manual" },
 ];
 
 const RESULT_OPTIONS: { value: GameResult | ""; label: string }[] = [

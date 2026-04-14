@@ -42,6 +42,7 @@ export function EcoBadge({ code }: { code: string }) {
 const SOURCE_STYLES: Record<string, string> = {
   chess_com: "bg-[#7fa650]/10 text-[#4a6e2e] border border-[#7fa650]/30",
   lichess: "bg-[#b05000]/10 text-[#7a3800] border border-[#b05000]/30",
+  chess_results: "bg-[#1a3a6b]/10 text-[#1a3a6b] border border-[#1a3a6b]/30",
   pgn_import: "bg-violet-50 text-violet-700 border border-violet-200",
   manual: "bg-gray-100 text-gray-600 border border-gray-200",
 };
@@ -49,6 +50,7 @@ const SOURCE_STYLES: Record<string, string> = {
 const SOURCE_LABELS: Record<string, string> = {
   chess_com: "Chess.com",
   lichess: "Lichess",
+  chess_results: "OTB",
   pgn_import: "PGN",
   manual: "Manual",
 };
