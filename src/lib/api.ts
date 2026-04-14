@@ -3,6 +3,8 @@ import type {
   AccountGamesDeleteResult,
   ChessComImportResult,
   ChessResultsImportResult,
+  ChessResultsPlayerCandidate,
+  ChessResultsTournamentOption,
   LichessImportResult,
   Game,
   GamesFilter,
@@ -151,6 +153,23 @@ export const api = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
+  },
+
+  searchChessResultsPlayer(params: {
+    q?: string;
+    fide_id?: string;
+  }): Promise<{ results: ChessResultsPlayerCandidate[] }> {
+    const qs = new URLSearchParams(
+      Object.fromEntries(Object.entries(params).filter(([, v]) => v)) as Record<string, string>
+    );
+    return fetchJson(`${API_BASE}/chess-results/search/?${qs}`);
+  },
+
+  getChessResultsTournaments(crId: string): Promise<{
+    player_name: string;
+    tournaments: ChessResultsTournamentOption[];
+  }> {
+    return fetchJson(`${API_BASE}/chess-results/player/${crId}/tournaments/`);
   },
 
   importFromChessResults(

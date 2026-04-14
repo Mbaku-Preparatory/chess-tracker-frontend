@@ -205,6 +205,25 @@ export interface ChessResultsFetchMeta {
   total_rounds?: number;
 }
 
+export interface ChessResultsPlayerCandidate {
+  cr_id: string;
+  name: string;
+  federation: string;
+  title?: string | null;
+  fide_id?: string | null;
+  rating?: number | null;
+  birth_year?: number | null;
+}
+
+export interface ChessResultsTournamentOption {
+  tnr: string;
+  snr: string;
+  name: string;
+  year?: number | null;
+  location?: string | null;
+  date?: string | null;
+}
+
 export interface ChessResultsImportResult {
   games_imported: number;
   games_skipped: number;
