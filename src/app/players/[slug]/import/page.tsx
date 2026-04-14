@@ -41,8 +41,19 @@ const SOURCE_TABS: {
   color: string;
   activeClass: string;
   icon: React.ReactNode;
-  comingSoon?: boolean;
 }[] = [
+  {
+    id: "chess_results",
+    label: "OTB / Chess-Results",
+    shortLabel: "OTB",
+    color: "#1a3a6b",
+    activeClass: "border-[#1a3a6b] bg-[#1a3a6b] text-white",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+      </svg>
+    ),
+  },
   {
     id: "chesscom",
     label: "Chess.com",
@@ -52,18 +63,6 @@ const SOURCE_TABS: {
     icon: (
       <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
         <path d="M10 2a1 1 0 00-1 1v1H8a3 3 0 00-3 3v1H4a1 1 0 000 2h1v1a3 3 0 003 3h.17l-1.9 4.55A1 1 0 007.2 20h9.6a1 1 0 00.93-1.45L15.83 14H16a3 3 0 003-3v-1h1a1 1 0 000-2h-1V7a3 3 0 00-3-3h-1V3a1 1 0 00-1-1h-4z" />
-      </svg>
-    ),
-  },
-  {
-    id: "pgn",
-    label: "PGN file",
-    shortLabel: "PGN",
-    color: "#6b7280",
-    activeClass: "border-gray-700 bg-gray-700 text-white",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
       </svg>
     ),
   },
@@ -80,14 +79,14 @@ const SOURCE_TABS: {
     ),
   },
   {
-    id: "chess_results",
-    label: "OTB / Chess-Results",
-    shortLabel: "OTB",
-    color: "#1a3a6b",
-    activeClass: "border-[#1a3a6b] bg-[#1a3a6b] text-white",
+    id: "pgn",
+    label: "PGN file",
+    shortLabel: "PGN",
+    color: "#6b7280",
+    activeClass: "border-gray-700 bg-gray-700 text-white",
     icon: (
-      <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
       </svg>
     ),
   },
@@ -104,7 +103,7 @@ export default function PlayerImportPage() {
   const initialSource: ImportSource =
     rawSource === "fide"
       ? "chess_results"
-      : ((rawSource as ImportSource) || "chesscom");
+      : ((rawSource as ImportSource) || "chess_results");
 
   const [player, setPlayer] = useState<PlayerDetail | null>(null);
   const [playerLoading, setPlayerLoading] = useState(true);
@@ -278,25 +277,17 @@ export default function PlayerImportPage() {
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => !tab.comingSoon && setActiveSource(tab.id)}
-                disabled={tab.comingSoon}
-                className={`relative inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-semibold transition-all ${
-                  tab.comingSoon
-                    ? "cursor-not-allowed border-gray-200 bg-gray-50 text-gray-400"
-                    : isActive
+                onClick={() => setActiveSource(tab.id)}
+                className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-semibold transition-all ${
+                  isActive
                     ? tab.activeClass
-                    : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+                    : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
                 }`}
               >
-                <span className={isActive && !tab.comingSoon ? "text-white" : ""}>
+                <span className={isActive ? "text-white" : ""}>
                   {tab.icon}
                 </span>
                 {tab.label}
-                {tab.comingSoon && (
-                  <span className="ml-1 rounded-full bg-gray-200 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-500">
-                    Soon
-                  </span>
-                )}
               </button>
             );
           })}
