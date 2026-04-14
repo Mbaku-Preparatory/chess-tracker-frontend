@@ -41,6 +41,7 @@ export type GameSource = "manual" | "pgn_import" | "lichess" | "chess_com" | "ch
 
 export interface Player {
   id: number;
+  public_id: string;
   full_name: string;
   slug: string;
   fide_id: string | null;
@@ -147,6 +148,7 @@ export interface ScoutingSection {
 
 export interface PrepData {
   player: string;
+  public_id?: string;
   slug: string;
   bio: string;
   performance_summary: PerformanceSummary | null;
@@ -230,6 +232,7 @@ export interface ChessResultsImportResult {
 }
 
 export interface PGNImportResult {
+  player_public_id?: string;
   player_slug: string;
   player_name: string;
   games_created: number;

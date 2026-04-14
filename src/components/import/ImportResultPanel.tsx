@@ -4,6 +4,7 @@ import type { PGNImportResult } from "@/types";
 
 export function ImportResultPanel({ result }: { result: PGNImportResult }) {
   const {
+    player_public_id,
     player_slug,
     player_name,
     games_created,
@@ -16,6 +17,7 @@ export function ImportResultPanel({ result }: { result: PGNImportResult }) {
   const { wins, draws, losses } = result_summary;
   const total = wins + draws + losses;
   const noneImported = games_imported === 0;
+  const playerRef = player_public_id || player_slug;
 
   return (
     <div className="mt-8 space-y-4">
@@ -67,7 +69,7 @@ export function ImportResultPanel({ result }: { result: PGNImportResult }) {
         {/* ── Primary CTA — view profile ── */}
         <div className="mt-3">
           <Link
-            href={`/players/${player_slug}`}
+            href={`/players/${playerRef}`}
             className="btn-primary inline-flex items-center gap-1.5 text-sm"
           >
             View Player Profile

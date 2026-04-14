@@ -337,11 +337,11 @@ export default function NewPlayerPage() {
         ...(fideId.trim() ? { fide_id: fideId.trim() } : {}),
         ...(accounts.length ? { accounts } : {}),
       });
-      addToMyPlayers(player.slug);
+      addToMyPlayers(player.public_id);
       const hasChesscom = chesscomUsernames.some((u) => u.trim());
       const hasLichess = lichessUsernames.some((u) => u.trim());
       const source = hasChesscom ? "chesscom" : hasLichess ? "lichess" : "chesscom";
-      router.push(`/players/${player.slug}/import?source=${source}`);
+      router.push(`/players/${player.public_id}/import?source=${source}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not create player. Try again.");
     } finally {

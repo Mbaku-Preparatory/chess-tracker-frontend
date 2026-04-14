@@ -130,11 +130,11 @@ export default function PrepPage() {
         subtitle={`${prepSummary?.total_games ?? 0} games on record`}
         actions={
           <div className="no-print flex flex-wrap gap-3">
-            <ShareButton slug={player.slug} playerName={playerName} />
+            <ShareButton slug={slug} playerName={playerName} />
             <button onClick={() => window.print()} className="btn-secondary text-sm">
               Print
             </button>
-            <Link href={`/players/${player.slug}`} className="btn-secondary text-sm">
+            <Link href={`/players/${slug}`} className="btn-secondary text-sm">
               Back to profile
             </Link>
           </div>
@@ -218,7 +218,7 @@ export default function PrepPage() {
             )}
           </div>
           <div className="no-print mt-3 text-right">
-            <Link href={`/players/${player.slug}/games`} className="text-sm text-brand-600 hover:underline">
+            <Link href={`/players/${slug}/games`} className="text-sm text-brand-600 hover:underline">
               View all games →
             </Link>
           </div>
@@ -230,7 +230,7 @@ export default function PrepPage() {
         <SectionContainer title="Recent Games">
           <GamesTable games={player.recent_games} />
           <div className="no-print mt-3 text-right">
-            <Link href={`/players/${player.slug}/games`} className="text-sm text-brand-600 hover:underline">
+            <Link href={`/players/${slug}/games`} className="text-sm text-brand-600 hover:underline">
               View all games →
             </Link>
           </div>
@@ -238,7 +238,7 @@ export default function PrepPage() {
       )}
 
       <div className="no-print mt-8 flex flex-wrap items-center justify-center gap-3">
-        <ShareButton slug={player.slug} playerName={playerName} />
+        <ShareButton slug={slug} playerName={playerName} />
       </div>
 
       <div className="mt-12 border-t border-gray-200 pt-6 text-center text-sm text-gray-400 print:mt-8">

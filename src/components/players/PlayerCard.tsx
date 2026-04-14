@@ -14,6 +14,7 @@ interface PlayerCardProps {
 }
 
 export function PlayerCard({ player, showDelete = false, onDeleted }: PlayerCardProps) {
+  const playerRef = player.public_id || player.slug;
   const initials = player.full_name
     .split(" ")
     .map((name) => name[0])
@@ -33,7 +34,7 @@ export function PlayerCard({ player, showDelete = false, onDeleted }: PlayerCard
     setDeleteError(null);
 
     try {
-      await api.deletePlayer(player.slug);
+      await api.deletePlayer(playerRef);
       onDeleted?.(player);
     } catch (err: unknown) {
       setDeleteError(err instanceof Error ? err.message : "Failed to delete player.");
@@ -89,10 +90,10 @@ export function PlayerCard({ player, showDelete = false, onDeleted }: PlayerCard
       </div>
 
       <div className="flex flex-wrap gap-3 px-6 py-5">
-        <Link href={`/players/${player.slug}/prep`} className="btn-primary flex-1">
+        <Link href={`/players/${playerRef}/prep`} className="btn-primary flex-1">
           View Prep
         </Link>
-        <Link href={`/players/${player.slug}`} className="btn-secondary">
+        <Link href={`/players/${playerRef}`} className="btn-secondary">
           View Profile
         </Link>
       </div>

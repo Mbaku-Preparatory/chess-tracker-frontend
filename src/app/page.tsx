@@ -35,14 +35,14 @@ export default function HomePage() {
       setLoading(true);
 
       // Fetch saved opponents from localStorage
-      let savedSlugs: string[] = [];
+      let savedRefs: string[] = [];
       try {
         const raw = localStorage.getItem(MY_PLAYERS_KEY);
-        savedSlugs = raw ? (JSON.parse(raw) as string[]) : [];
+        savedRefs = raw ? (JSON.parse(raw) as string[]) : [];
       } catch {
-        savedSlugs = [];
+        savedRefs = [];
       }
-      const uniqueSlugs = Array.from(new Set(savedSlugs));
+      const uniqueSlugs = Array.from(new Set(savedRefs));
       const playerResults = await Promise.all(
         uniqueSlugs.map((slug) => api.getPlayerDetail(slug).catch(() => null))
       );
@@ -57,12 +57,19 @@ export default function HomePage() {
   const allPlayers: PlayerDetail[] = myPlayers;
 
   function handlePlayerDeleted(deletedPlayer: Player) {
-    setMyPlayers((current) => current.filter((player) => player.slug !== deletedPlayer.slug));
+    setMyPlayers((current) =>
+      current.filter(
+        (player) =>
+          player.public_id !== deletedPlayer.public_id && player.slug !== deletedPlayer.slug
+      )
+    );
 
     try {
       const raw = localStorage.getItem(MY_PLAYERS_KEY);
       const savedSlugs = raw ? (JSON.parse(raw) as string[]) : [];
-      const nextSlugs = savedSlugs.filter((slug) => slug !== deletedPlayer.slug);
+      const nextSlugs = savedSlugs.filter(
+        (slug) => slug !== deletedPlayer.public_id && slug !== deletedPlayer.slug
+      );
       localStorage.setItem(MY_PLAYERS_KEY, JSON.stringify(nextSlugs));
     } catch {
       // Ignore localStorage issues — UI state is already updated.

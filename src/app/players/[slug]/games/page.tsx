@@ -35,7 +35,7 @@ export default function GamesPage() {
         subtitle="Drill into any opening to see individual games"
         actions={
           player && (
-            <Link href={`/players/${player.slug}`} className="btn-secondary text-sm">
+            <Link href={`/players/${slug}`} className="btn-secondary text-sm">
               Back to profile
             </Link>
           )

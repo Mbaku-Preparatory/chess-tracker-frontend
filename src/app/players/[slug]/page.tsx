@@ -137,7 +137,7 @@ export default function PlayerDetailPage() {
             </div>
             {player.fide_id && (
               <div className="mt-3">
-                <FideSyncButton slug={player.slug} />
+                <FideSyncButton slug={slug} />
               </div>
             )}
             {player.bio && (
@@ -230,7 +230,7 @@ export default function PlayerDetailPage() {
             />
           </div>
           <div className="mt-3 text-right">
-            <Link href={`/players/${player.slug}/games`} className="text-sm text-brand-600 hover:underline">
+            <Link href={`/players/${slug}/games`} className="text-sm text-brand-600 hover:underline">
               View all games →
             </Link>
           </div>
@@ -263,7 +263,7 @@ export default function PlayerDetailPage() {
         <SectionContainer
           title="Recent Games"
           action={
-            <Link href={`/players/${player.slug}/games`} className="btn-secondary text-sm">
+            <Link href={`/players/${slug}/games`} className="btn-secondary text-sm">
               View all games
             </Link>
           }
@@ -274,17 +274,17 @@ export default function PlayerDetailPage() {
 
       {/* CTA Buttons */}
       <div className="no-print mt-8 flex flex-wrap gap-3">
-        <Link href={`/players/${player.slug}/games`} className="btn-primary">
+        <Link href={`/players/${slug}/games`} className="btn-primary">
           View All Games
         </Link>
 
-        <Link href={`/players/${player.slug}/prep`} className="btn-secondary">
+        <Link href={`/players/${slug}/prep`} className="btn-secondary">
           View Prep
         </Link>
 
         {/* Import source buttons */}
         <Link
-          href={`/players/${player.slug}/import?source=chesscom`}
+          href={`/players/${slug}/import?source=chesscom`}
           className="inline-flex items-center gap-2 rounded-lg border border-[#7fa650] bg-[#7fa650] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#6b8f44] focus:outline-none focus:ring-2 focus:ring-[#7fa650] focus:ring-offset-1"
         >
           <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
@@ -294,7 +294,7 @@ export default function PlayerDetailPage() {
         </Link>
 
         <Link
-          href={`/players/${player.slug}/import?source=lichess`}
+          href={`/players/${slug}/import?source=lichess`}
           className="inline-flex items-center gap-2 rounded-lg border border-[#b05000] bg-[#b05000] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#8f4200] focus:outline-none focus:ring-2 focus:ring-[#b05000] focus:ring-offset-1"
         >
           <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">

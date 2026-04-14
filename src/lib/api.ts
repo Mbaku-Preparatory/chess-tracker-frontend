@@ -220,7 +220,7 @@ export const api = {
     federation?: string;
     fide_id?: string;
     accounts?: { platform: "chesscom" | "lichess"; username: string }[];
-  }): Promise<{ id: number; full_name: string; slug: string }> {
+  }): Promise<{ id: number; public_id: string; full_name: string; slug: string }> {
     return fetchJson(`${API_BASE}/players/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
