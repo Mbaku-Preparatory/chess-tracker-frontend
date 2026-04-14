@@ -93,7 +93,7 @@ export default function PlayerDetailPage() {
   if (error || !player) {
     return (
       <div className="py-16 text-center">
-        <h2 className="text-xl font-semibold text-gray-900">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
           {error || "Player not found"}
         </h2>
         <Link href="/players" className="btn-primary mt-4 inline-flex">
@@ -120,7 +120,7 @@ export default function PlayerDetailPage() {
           </div>
           <div className="flex-1">
             <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-3xl font-bold text-gray-900">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                 {player.full_name}
               </h1>
               {player.title && (
@@ -129,7 +129,7 @@ export default function PlayerDetailPage() {
                 </span>
               )}
             </div>
-            <div className="mt-2 flex flex-wrap items-center gap-x-6 gap-y-1 text-sm text-gray-500">
+            <div className="mt-2 flex flex-wrap items-center gap-x-6 gap-y-1 text-sm text-gray-500 dark:text-gray-400">
               {player.federation && <span>{player.federation}</span>}
               {player.fide_id && <span>FIDE #{player.fide_id}</span>}
               {player.birth_year && <span>Born {player.birth_year}</span>}
@@ -140,7 +140,7 @@ export default function PlayerDetailPage() {
               </div>
             )}
             {player.bio && (
-              <p className="mt-4 max-w-3xl leading-relaxed text-gray-600">
+              <p className="mt-4 max-w-3xl leading-relaxed text-gray-600 dark:text-gray-400">
                 {player.bio}
               </p>
             )}
@@ -184,7 +184,7 @@ export default function PlayerDetailPage() {
             </div>
             {ps.summary_text && (
               <div className="card mt-4 p-5">
-                <p className="leading-relaxed text-gray-600">
+                <p className="leading-relaxed text-gray-600 dark:text-gray-400">
                   {ps.summary_text}
                 </p>
               </div>

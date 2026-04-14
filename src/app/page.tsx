@@ -30,15 +30,15 @@ function AddOpponentCard() {
   return (
     <Link
       href="/players/new"
-      className="group flex min-h-[200px] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-200 bg-white p-8 text-center transition-all hover:border-brand-300 hover:bg-brand-50/30"
+      className="group flex min-h-[200px] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-200 bg-white p-8 text-center transition-all hover:border-brand-300 hover:bg-brand-50/30 dark:border-gray-600 dark:bg-gray-800 dark:hover:border-brand-600 dark:hover:bg-brand-900/20"
     >
-      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full border-2 border-dashed border-gray-300 text-2xl text-gray-400 transition-colors group-hover:border-brand-400 group-hover:text-brand-500">
+      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full border-2 border-dashed border-gray-300 text-2xl text-gray-400 transition-colors group-hover:border-brand-400 group-hover:text-brand-500 dark:border-gray-600 dark:text-gray-500">
         +
       </div>
-      <p className="text-sm font-semibold text-gray-600 group-hover:text-brand-600">
+      <p className="text-sm font-semibold text-gray-600 group-hover:text-brand-600 dark:text-gray-400 dark:group-hover:text-brand-400">
         Add Opponent
       </p>
-      <p className="mt-1 text-xs text-gray-400">Create a new opponent profile</p>
+      <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Create a new opponent profile</p>
     </Link>
   );
 }
@@ -76,7 +76,7 @@ export default function HomePage() {
           <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-brand-600">
             Scouting
           </p>
-          <h1 className="mt-1 text-3xl font-bold text-gray-900">My Opponents</h1>
+          <h1 className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">My Opponents</h1>
         </div>
         <Link href="/players/new" className="btn-primary">
           + Add Opponent
@@ -99,7 +99,7 @@ export default function HomePage() {
               className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                 ordering === opt.value
                   ? "bg-brand-600 text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
               }`}
             >
               {opt.label}
@@ -143,7 +143,7 @@ export default function HomePage() {
               >
                 Previous
               </button>
-              <span className="px-3 text-sm text-gray-500">
+              <span className="px-3 text-sm text-gray-500 dark:text-gray-400">
                 Page {currentPage} of {totalPages}
               </span>
               <button

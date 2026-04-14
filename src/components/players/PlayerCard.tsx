@@ -45,7 +45,7 @@ export function PlayerCard({ player, showDelete = false, onDeleted }: PlayerCard
 
   return (
     <div className="card group overflow-hidden border-gray-200 p-0 transition-all hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-lg">
-      <div className="border-b border-slate-100 bg-[radial-gradient(circle_at_top,_rgba(12,147,231,0.12),_transparent_55%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] px-6 py-6">
+      <div className="border-b border-slate-100 bg-[radial-gradient(circle_at_top,_rgba(12,147,231,0.12),_transparent_55%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] px-6 py-6 dark:border-gray-700 dark:bg-none dark:bg-gray-800/80">
         <div className="flex items-start justify-between gap-4">
           <div className="flex min-w-0 items-start gap-4">
             <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-brand-100 text-xl font-bold text-brand-700">
@@ -53,7 +53,7 @@ export function PlayerCard({ player, showDelete = false, onDeleted }: PlayerCard
             </div>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <h3 className="truncate text-lg font-semibold text-gray-900">
+                <h3 className="truncate text-lg font-semibold text-gray-900 dark:text-gray-100">
                   {player.full_name}
                 </h3>
                 {player.title && (
@@ -63,7 +63,7 @@ export function PlayerCard({ player, showDelete = false, onDeleted }: PlayerCard
                 )}
               </div>
               <p className="mt-1 text-sm font-medium text-brand-700">{productName}</p>
-              <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
+              <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500 dark:text-gray-400">
                 {player.federation && <span>{player.federation}</span>}
                 {rating && <span>Rating {rating}</span>}
                 {player.games_count ? <span>{player.games_count} games tracked</span> : null}

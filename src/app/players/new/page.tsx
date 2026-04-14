@@ -47,7 +47,7 @@ const PLATFORMS: { id: Platform; label: string; color: string; icon: React.React
 function RatingBadge({ label, value }: { label: string; value?: number }) {
   if (!value) return null;
   return (
-    <span className="inline-flex items-center gap-1 rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600">
+    <span className="inline-flex items-center gap-1 rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600 dark:bg-gray-600 dark:text-gray-300">
       <span className="font-medium text-gray-400">{label}</span>
       {value}
     </span>
@@ -68,10 +68,10 @@ function LookupResultCard({
     <button
       type="button"
       onClick={() => onSelect(result)}
-      className="flex w-full items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 text-left transition hover:border-brand-400 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-500"
+      className="flex w-full items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 text-left transition hover:border-brand-400 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-700 dark:hover:border-brand-500 dark:hover:bg-brand-900/20"
     >
       {/* Avatar */}
-      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-100">
+      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-100 dark:bg-gray-600">
         {result.avatar_url ? (
           <Image
             src={result.avatar_url}
@@ -96,7 +96,7 @@ function LookupResultCard({
               {result.title}
             </span>
           )}
-          <span className="truncate font-medium text-gray-900">{result.display_name}</span>
+          <span className="truncate font-medium text-gray-900 dark:text-gray-100">{result.display_name}</span>
           {result.username && result.username !== result.display_name && (
             <span className="truncate text-sm text-gray-400">@{result.username}</span>
           )}
@@ -168,7 +168,7 @@ function MultiUsernameInput({
 
   return (
     <div>
-      <div className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gray-700">
+      <div className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">
         <span
           className="flex h-4 w-4 items-center justify-center rounded text-white"
           style={{ backgroundColor: color }}
@@ -185,7 +185,7 @@ function MultiUsernameInput({
               type="text"
               value={u}
               onChange={(e) => update(idx, e.target.value)}
-              className="block flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+              className="block flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-500"
               placeholder="username"
               autoComplete="off"
               spellCheck={false}
@@ -340,25 +340,25 @@ const hasChesscom = chesscomUsernames.some((u) => u.trim());
   return (
     <div className="mx-auto max-w-lg">
       {/* Breadcrumb */}
-      <nav className="mb-6 flex items-center gap-2 text-sm text-gray-500">
+      <nav className="mb-6 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
         <Link href="/" className="hover:text-gray-900">My Opponents</Link>
         <span>/</span>
         <span className="text-gray-900">Add Opponent</span>
       </nav>
 
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Add opponent</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Add opponent</h1>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Search by username or name to auto-fill, or fill in the details manually.
         </p>
       </div>
 
       {/* ── Search section ─────────────────────────────────────────────────── */}
       <div className="card mb-4 p-5">
-        <p className="mb-3 text-sm font-medium text-gray-700">Search player</p>
+        <p className="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">Search player</p>
 
         {/* Platform tabs */}
-        <div className="mb-3 flex gap-1 rounded-lg bg-gray-100 p-1">
+        <div className="mb-3 flex gap-1 rounded-lg bg-gray-100 p-1 dark:bg-gray-700">
           {PLATFORMS.map((p) => (
             <button
               key={p.id}
@@ -370,8 +370,8 @@ const hasChesscom = chesscomUsernames.some((u) => u.trim());
               }}
               className={`flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition ${
                 searchPlatform === p.id
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
+                  ? "bg-white text-gray-900 shadow-sm dark:bg-gray-600 dark:text-gray-100"
+                  : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
               }`}
             >
               <span style={{ color: searchPlatform === p.id ? p.color : undefined }}>
@@ -402,7 +402,7 @@ const hasChesscom = chesscomUsernames.some((u) => u.trim());
                 ? "Username, e.g. MagnusCarlsen"
                 : "Username, e.g. DrNykterstein"
             }
-            className="block flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+            className="block flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-500"
             autoComplete="off"
             spellCheck={false}
           />
@@ -450,7 +450,7 @@ const hasChesscom = chesscomUsernames.some((u) => u.trim());
 
       {/* ── Manual form ─────────────────────────────────────────────────────── */}
       <form onSubmit={handleSubmit} className="card space-y-5 p-6">
-        <p className="text-sm font-medium text-gray-700">Player details</p>
+        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Player details</p>
 
         {error && (
           <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -488,8 +488,8 @@ const hasChesscom = chesscomUsernames.some((u) => u.trim());
             onChange={(e) => setFullName(e.target.value)}
             className={`block w-full rounded-lg border px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 ${
               nameLocked
-                ? "border-[#1a56db]/30 bg-blue-50 text-gray-700 focus:border-[#1a56db] focus:ring-[#1a56db] cursor-default select-none"
-                : "border-gray-300 bg-white focus:border-brand-500 focus:ring-brand-500"
+                ? "border-[#1a56db]/30 bg-blue-50 text-gray-700 focus:border-[#1a56db] focus:ring-[#1a56db] cursor-default select-none dark:bg-blue-900/20 dark:text-gray-300"
+                : "border-gray-300 bg-white focus:border-brand-500 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
             }`}
             placeholder="e.g. Magnus Carlsen"
           />
@@ -526,7 +526,7 @@ const hasChesscom = chesscomUsernames.some((u) => u.trim());
         {/* Federation + FIDE ID */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label htmlFor="federation" className="mb-1.5 block text-sm font-medium text-gray-700">
+            <label htmlFor="federation" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Federation
               <span className="ml-1 text-xs font-normal text-gray-400">optional</span>
             </label>
@@ -538,7 +538,7 @@ const hasChesscom = chesscomUsernames.some((u) => u.trim());
           </div>
 
           <div>
-            <label htmlFor="fide-id" className="mb-1.5 block text-sm font-medium text-gray-700">
+            <label htmlFor="fide-id" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
               FIDE ID
               <span className="ml-1 text-xs font-normal text-gray-400">optional</span>
             </label>
@@ -547,7 +547,7 @@ const hasChesscom = chesscomUsernames.some((u) => u.trim());
               type="text"
               value={fideId}
               onChange={(e) => setFideId(e.target.value)}
-              className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+              className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-500"
               placeholder="e.g. 1503014"
             />
           </div>

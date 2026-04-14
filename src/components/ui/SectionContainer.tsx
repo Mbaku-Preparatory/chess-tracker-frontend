@@ -17,9 +17,9 @@ export function SectionContainer({
     <section className={`mb-8 ${className}`}>
       <div className="mb-4 flex items-end justify-between">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">{title}</h2>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{title}</h2>
           {subtitle && (
-            <p className="mt-0.5 text-sm text-gray-500">{subtitle}</p>
+            <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">{subtitle}</p>
           )}
         </div>
         {action}

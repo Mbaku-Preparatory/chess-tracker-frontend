@@ -40,8 +40,8 @@ export default function LoginPage() {
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-600 text-xl font-bold text-white">
             MP
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
-          <p className="mt-1 text-sm text-gray-500">Sign in to your account</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Welcome back</h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Sign in to your account</p>
         </div>
 
         <form onSubmit={handleSubmit} className="card space-y-4 p-6">
@@ -52,7 +52,7 @@ export default function LoginPage() {
           )}
 
           <div>
-            <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-gray-700">
+            <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Email
             </label>
             <input
@@ -62,13 +62,13 @@ export default function LoginPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+              className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-500"
               placeholder="you@example.com"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-gray-700">
+            <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Password
             </label>
             <input
@@ -78,7 +78,7 @@ export default function LoginPage() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+              className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-500"
               placeholder="••••••••"
             />
           </div>
@@ -92,7 +92,7 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="mt-4 text-center text-sm text-gray-500">
+        <p className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
           No account?{" "}
           <Link href="/signup" className="font-medium text-brand-600 hover:text-brand-700">
             Create one
