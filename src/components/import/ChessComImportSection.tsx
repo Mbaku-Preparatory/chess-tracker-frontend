@@ -193,15 +193,6 @@ export function ChessComImportSection({
                   {result.games_imported} game{result.games_imported !== 1 ? "s" : ""} imported successfully
                 </span>
               </div>
-              <Link
-                href={`/players/${slug}/prep`}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
-              >
-                View Prep Report
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
             </div>
 
             <FetchMetaBadges result={result} />
