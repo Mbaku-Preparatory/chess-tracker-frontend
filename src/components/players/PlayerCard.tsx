@@ -90,10 +90,7 @@ export function PlayerCard({ player, showDelete = false, onDeleted }: PlayerCard
       </div>
 
       <div className="flex flex-wrap gap-3 px-6 py-5">
-        <Link href={`/players/${playerRef}/prep`} className="btn-primary flex-1">
-          View Prep
-        </Link>
-        <Link href={`/players/${playerRef}`} className="btn-secondary">
+        <Link href={`/players/${playerRef}`} className="btn-primary flex-1">
           View Profile
         </Link>
       </div>

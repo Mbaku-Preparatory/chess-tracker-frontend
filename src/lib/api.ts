@@ -15,9 +15,9 @@ import type {
   PlayerDetail,
   PlayerInsights,
   PlayerLookupResult,
-  PrepData,
 } from "@/types";
 import { authStorage } from "@/lib/auth";
+import { requestTracker } from "@/lib/request-tracker";
 
 const rawApiBase =
   process.env.NEXT_PUBLIC_API_BASE_URL ||
@@ -34,36 +34,42 @@ async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
   const authHeader: Record<string, string> = token
     ? { Authorization: `Bearer ${token}` }
     : {};
-  const res = await fetch(url, {
-    ...init,
-    headers: {
-      ...authHeader,
-      ...(init?.headers ?? {}),
-    },
-  });
-  if (!res.ok) {
-    const body = await res.json().catch(() => null);
-    const msg = body?.detail || `API error: ${res.status} ${res.statusText}`;
-    const err = new Error(msg);
-    (err as any).status = res.status;
-    (err as any).body = body;
-    throw err;
+  requestTracker.increment();
+  try {
+    const res = await fetch(url, {
+      ...init,
+      headers: {
+        ...authHeader,
+        ...(init?.headers ?? {}),
+      },
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      const msg = body?.detail || `API error: ${res.status} ${res.statusText}`;
+      const err = new Error(msg);
+      (err as any).status = res.status;
+      (err as any).body = body;
+      throw err;
+    }
+    if (res.status === 204) {
+      return undefined as T;
+    }
+    const contentType = res.headers.get("content-type") || "";
+    if (!contentType.includes("application/json")) {
+      return undefined as T;
+    }
+    return res.json();
+  } finally {
+    requestTracker.decrement();
   }
-  if (res.status === 204) {
-    return undefined as T;
-  }
-  const contentType = res.headers.get("content-type") || "";
-  if (!contentType.includes("application/json")) {
-    return undefined as T;
-  }
-  return res.json();
 }
 
 export const api = {
-  getPlayers(search?: string, page?: number): Promise<PaginatedResponse<Player>> {
+  getPlayers(search?: string, page?: number, ordering?: string): Promise<PaginatedResponse<Player>> {
     const params = new URLSearchParams();
     if (search) params.set("search", search);
     if (page && page > 1) params.set("page", String(page));
+    if (ordering) params.set("ordering", ordering);
     return fetchJson(`${API_BASE}/players/?${params}`);
   },
 
@@ -79,19 +85,23 @@ export const api = {
     if (filters?.opening_family) params.set("opening_family", filters.opening_family);
     if (filters?.source) params.set("source", filters.source);
     if (filters?.search) params.set("search", filters.search);
+    if (filters?.year) params.set("year", filters.year);
     if (filters?.page) params.set("page", String(filters.page));
     return fetchJson(`${API_BASE}/players/${slug}/games/?${params}`);
   },
 
-  getPlayerOpenings(slug: string, source?: string): Promise<OpeningStat[]> {
+  getPlayerOpenings(
+    slug: string,
+    source?: string,
+    result?: string,
+    year?: string,
+  ): Promise<OpeningStat[]> {
     const params = new URLSearchParams();
     if (source) params.set("source", source);
+    if (result) params.set("result", result);
+    if (year) params.set("year", year);
     const qs = params.toString();
     return fetchJson(`${API_BASE}/players/${slug}/openings/${qs ? `?${qs}` : ""}`);
-  },
-
-  getPlayerPrep(slug: string): Promise<PrepData> {
-    return fetchJson(`${API_BASE}/players/${slug}/prep/`);
   },
 
   getPlayerSummary(slug: string): Promise<PerformanceSummary> {

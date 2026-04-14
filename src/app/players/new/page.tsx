@@ -410,7 +410,11 @@ export default function NewPlayerPage() {
               }
             }}
             placeholder={
-              searchPlatform === "fide" ? "Search by name, e.g. Magnus Carlsen" : "Enter username"
+              searchPlatform === "fide"
+                ? "Search by name, e.g. Magnus Carlsen"
+                : searchPlatform === "chesscom"
+                ? "Username, e.g. MagnusCarlsen"
+                : "Username, e.g. DrNykterstein"
             }
             className="block flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             autoComplete="off"

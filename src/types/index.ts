@@ -146,18 +146,6 @@ export interface ScoutingSection {
   order: number;
 }
 
-export interface PrepData {
-  player: string;
-  public_id?: string;
-  slug: string;
-  bio: string;
-  performance_summary: PerformanceSummary | null;
-  strengths: Strength[];
-  weaknesses: Weakness[];
-  prep_recommendations: PrepRecommendation[];
-  scouting_sections: ScoutingSection[];
-}
-
 export interface OpeningDistribution {
   white: {
     openings: OpeningStat[];
@@ -183,6 +171,7 @@ export interface GamesFilter {
   opening_family?: string;
   source?: GameSource | "";
   search?: string;
+  year?: string;
   page?: number;
 }
 

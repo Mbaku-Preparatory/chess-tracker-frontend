@@ -3,12 +3,15 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { api } from "@/lib/api";
 import type { Player } from "@/types";
 
+export type PlayerOrdering = "-created_at" | "created_at" | "full_name" | "-standard_rating";
+
 interface PlayersState {
   items: Player[];
   total: number;
   loading: boolean;
   error: string | null;
   searchQuery: string;
+  ordering: PlayerOrdering;
   currentPage: number;
 }
 
@@ -18,13 +21,14 @@ const initialState: PlayersState = {
   loading: false,
   error: null,
   searchQuery: "",
+  ordering: "-created_at",
   currentPage: 1,
 };
 
 export const fetchPlayers = createAsyncThunk(
   "players/fetchPlayers",
-  async ({ search, page }: { search?: string; page?: number } = {}) => {
-    return api.getPlayers(search, page);
+  async ({ search, page, ordering }: { search?: string; page?: number; ordering?: PlayerOrdering } = {}) => {
+    return api.getPlayers(search, page, ordering);
   }
 );
 
@@ -34,6 +38,10 @@ const playersSlice = createSlice({
   reducers: {
     setSearchQuery(state, action) {
       state.searchQuery = action.payload;
+      state.currentPage = 1;
+    },
+    setOrdering(state, action: { payload: PlayerOrdering }) {
+      state.ordering = action.payload;
       state.currentPage = 1;
     },
     setCurrentPage(state, action) {
@@ -58,5 +66,5 @@ const playersSlice = createSlice({
   },
 });
 
-export const { setSearchQuery, setCurrentPage } = playersSlice.actions;
+export const { setSearchQuery, setOrdering, setCurrentPage } = playersSlice.actions;
 export default playersSlice.reducer;

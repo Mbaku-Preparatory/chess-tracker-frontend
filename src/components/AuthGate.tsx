@@ -32,10 +32,14 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   }, [dispatch]);
 
   // Gate 1 — auth: redirect to /login unless path is public.
+  // Also bounce already-authenticated users away from /login and /signup.
   useEffect(() => {
     if (!authInitialized) return;
     if (!token && !isPublicPath(pathname)) {
       router.replace("/login");
+    }
+    if (token && isPublicPath(pathname)) {
+      router.replace("/");
     }
   }, [authInitialized, token, pathname, router]);
 

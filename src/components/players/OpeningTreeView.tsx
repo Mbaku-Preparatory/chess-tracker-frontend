@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { ColorBadge, ResultBadge, EcoBadge } from "@/components/ui/Badge";
 import { GamesTable } from "./GamesTable";
-import type { OpeningStat, Game, GameSource, PaginatedResponse, ColorChoice } from "@/types";
+import type { OpeningStat, Game, GameSource, GameResult, PaginatedResponse, ColorChoice } from "@/types";
 
 interface OpeningTreeViewProps {
   slug: string;
@@ -68,25 +68,27 @@ interface VariationRowProps {
   stat: OpeningStat;
   slug: string;
   sourceFilter: GameSource | "";
+  resultFilter: GameResult | "";
+  yearFilter: string;
   isExpanded: boolean;
   onToggle: () => void;
 }
 
-function VariationRow({ stat, slug, sourceFilter, isExpanded, onToggle }: VariationRowProps) {
+function VariationRow({ stat, slug, sourceFilter, resultFilter, yearFilter, isExpanded, onToggle }: VariationRowProps) {
   const [games, setGames] = useState<Game[] | null>(null);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [error, setError] = useState<string | null>(null);
 
-  // Reset games when sourceFilter changes
+  // Reset games when any filter changes
   useEffect(() => {
     if (isExpanded) {
       setGames(null);
       loadGames(1);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sourceFilter]);
+  }, [sourceFilter, resultFilter, yearFilter]);
 
   async function loadGames(p = 1) {
     setLoading(true);
@@ -96,6 +98,8 @@ function VariationRow({ stat, slug, sourceFilter, isExpanded, onToggle }: Variat
         eco_code: stat.eco_code,
         color_played: stat.color_choice,
         ...(sourceFilter ? { source: sourceFilter } : {}),
+        ...(resultFilter ? { result: resultFilter } : {}),
+        ...(yearFilter ? { year: yearFilter } : {}),
         page: p,
       });
       setGames((prev) => (p === 1 ? data.results : [...(prev ?? []), ...data.results]));
@@ -205,17 +209,19 @@ interface FamilyRowProps {
   group: FamilyGroup;
   slug: string;
   sourceFilter: GameSource | "";
+  resultFilter: GameResult | "";
+  yearFilter: string;
 }
 
-function FamilyRow({ group, slug, sourceFilter }: FamilyRowProps) {
+function FamilyRow({ group, slug, sourceFilter, resultFilter, yearFilter }: FamilyRowProps) {
   const [open, setOpen] = useState(false);
   const [expandedVariations, setExpandedVariations] = useState<Set<string>>(new Set());
 
-  // Collapse everything when source filter changes
+  // Collapse everything when any filter changes
   useEffect(() => {
     setOpen(false);
     setExpandedVariations(new Set());
-  }, [sourceFilter]);
+  }, [sourceFilter, resultFilter, yearFilter]);
 
   function toggleVariation(key: string) {
     setExpandedVariations((prev) => {
@@ -273,6 +279,8 @@ function FamilyRow({ group, slug, sourceFilter }: FamilyRowProps) {
                 stat={stat}
                 slug={slug}
                 sourceFilter={sourceFilter}
+                resultFilter={resultFilter}
+                yearFilter={yearFilter}
                 isExpanded={expandedVariations.has(key)}
                 onToggle={() => toggleVariation(key)}
               />
@@ -292,36 +300,63 @@ const SOURCE_OPTIONS: { value: GameSource | ""; label: string }[] = [
   { value: "manual", label: "Other" },
 ];
 
+const RESULT_OPTIONS: { value: GameResult | ""; label: string }[] = [
+  { value: "", label: "All results" },
+  { value: "win", label: "Wins" },
+  { value: "draw", label: "Draws" },
+  { value: "loss", label: "Losses" },
+];
+
+const CURRENT_YEAR = new Date().getFullYear();
+const YEAR_OPTIONS = [
+  { value: "", label: "All years" },
+  ...Array.from({ length: CURRENT_YEAR - 2009 }, (_, i) => {
+    const y = String(CURRENT_YEAR - i);
+    return { value: y, label: y };
+  }),
+];
+
 export function OpeningTreeView({ slug }: OpeningTreeViewProps) {
   const [families, setFamilies] = useState<FamilyGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [colorFilter, setColorFilter] = useState<"" | ColorChoice>("");
   const [sourceFilter, setSourceFilter] = useState<GameSource | "">("");
+  const [resultFilter, setResultFilter] = useState<GameResult | "">("");
+  const [yearFilter, setYearFilter] = useState("");
 
   useEffect(() => {
     setLoading(true);
     setFamilies([]);
     api
-      .getPlayerOpenings(slug, sourceFilter || undefined)
-      .then((data) => {
-        setFamilies(groupByFamily(data));
-      })
+      .getPlayerOpenings(
+        slug,
+        sourceFilter || undefined,
+        resultFilter || undefined,
+        yearFilter || undefined,
+      )
+      .then((data) => setFamilies(groupByFamily(data)))
       .catch(() => setError("Could not load opening data."))
       .finally(() => setLoading(false));
-  }, [slug, sourceFilter]);
+  }, [slug, sourceFilter, resultFilter, yearFilter]);
 
   const filtered = colorFilter
-    ? families.map((f) => ({
-        ...f,
-        variations: f.variations.filter((v) => v.color_choice === colorFilter),
-      })).filter((f) => f.variations.length > 0)
+    ? families
+        .map((f) => ({
+          ...f,
+          variations: f.variations.filter((v) => v.color_choice === colorFilter),
+        }))
+        .filter((f) => f.variations.length > 0)
     : families;
-  const hasActiveFilters = Boolean(colorFilter || sourceFilter);
+
+  const hasActiveFilters = Boolean(colorFilter || sourceFilter || resultFilter || yearFilter);
+
+  const selectCls =
+    "rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-700 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
 
   return (
     <div>
-      {/* Filters row — always visible so the user can switch filters even when there are no results */}
+      {/* Filters — always visible */}
       <div className="mb-5 flex flex-wrap items-center gap-3">
         {/* Color pills */}
         <div className="flex items-center gap-1.5">
@@ -340,16 +375,45 @@ export function OpeningTreeView({ slug }: OpeningTreeViewProps) {
           ))}
         </div>
 
-        {/* Divider */}
+        <span className="h-4 w-px bg-gray-200" />
+
+        {/* Result pills */}
+        <div className="flex items-center gap-1.5">
+          {RESULT_OPTIONS.map((r) => (
+            <button
+              key={r.value}
+              onClick={() => setResultFilter(r.value)}
+              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                resultFilter === r.value
+                  ? "bg-brand-600 text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              {r.label}
+            </button>
+          ))}
+        </div>
+
         <span className="h-4 w-px bg-gray-200" />
 
         {/* Source selector */}
         <select
           value={sourceFilter}
           onChange={(e) => setSourceFilter(e.target.value as GameSource | "")}
-          className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-700 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+          className={selectCls}
         >
           {SOURCE_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </select>
+
+        {/* Year selector */}
+        <select
+          value={yearFilter}
+          onChange={(e) => setYearFilter(e.target.value)}
+          className={selectCls}
+        >
+          {YEAR_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>{o.label}</option>
           ))}
         </select>
@@ -374,14 +438,21 @@ export function OpeningTreeView({ slug }: OpeningTreeViewProps) {
       ) : filtered.length > 0 ? (
         <div className="space-y-3">
           {filtered.map((group) => (
-            <FamilyRow key={group.family} group={group} slug={slug} sourceFilter={sourceFilter} />
+            <FamilyRow
+              key={group.family}
+              group={group}
+              slug={slug}
+              sourceFilter={sourceFilter}
+              resultFilter={resultFilter}
+              yearFilter={yearFilter}
+            />
           ))}
         </div>
       ) : (
         <div className="rounded-xl border border-dashed border-gray-300 py-16 text-center">
           <p className="text-sm text-gray-500">
             {hasActiveFilters
-              ? "No opening data matches the current filters. Adjust the source or color filters above."
+              ? "No opening data matches the current filters. Adjust the filters above."
               : "No opening data yet. Import some games first."}
           </p>
         </div>

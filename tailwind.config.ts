@@ -4,6 +4,16 @@ const config: Config = {
   content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
   theme: {
     extend: {
+      keyframes: {
+        "global-loader": {
+          "0%": { transform: "translateX(-100%)" },
+          "60%": { transform: "translateX(0%)" },
+          "100%": { transform: "translateX(100%)" },
+        },
+      },
+      animation: {
+        "global-loader": "global-loader 1.2s ease-in-out infinite",
+      },
       colors: {
         brand: {
           50: "#f0f7ff",

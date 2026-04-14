@@ -14,7 +14,6 @@ import { CardSkeleton } from "@/components/ui/LoadingSkeleton";
 import { PerformanceSplitCard } from "@/components/players/PerformanceSplitCard";
 import { OpeningBreakdownCard } from "@/components/players/OpeningBreakdownCard";
 import { StrengthWeaknessCard } from "@/components/players/StrengthWeaknessCard";
-import { PrepRecommendationCard } from "@/components/players/PrepRecommendationCard";
 import { GamesTable } from "@/components/players/GamesTable";
 
 function FideSyncButton({ slug }: { slug: string }) {
@@ -251,13 +250,6 @@ export default function PlayerDetailPage() {
         </SectionContainer>
       )}
 
-      {/* Prep Recommendations */}
-      {player.prep_recommendations.length > 0 && (
-        <SectionContainer title="Preparation Recommendations">
-          <PrepRecommendationCard recommendations={player.prep_recommendations} />
-        </SectionContainer>
-      )}
-
       {/* Recent Games */}
       {player.recent_games.length > 0 && (
         <SectionContainer
@@ -276,10 +268,6 @@ export default function PlayerDetailPage() {
       <div className="no-print mt-8 flex flex-wrap gap-3">
         <Link href={`/players/${slug}/games`} className="btn-primary">
           View All Games
-        </Link>
-
-        <Link href={`/players/${slug}/prep`} className="btn-secondary">
-          View Prep
         </Link>
 
         {/* Import source buttons */}
