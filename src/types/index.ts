@@ -57,6 +57,13 @@ export interface Player {
   profile_image: string | null;
   accounts: PlayerAccount[];
   games_count?: number;
+  game_source_counts?: {
+    chess_results?: number;
+    chess_com?: number;
+    lichess?: number;
+    manual?: number;
+    pgn_import?: number;
+  };
   created_at?: string;
   updated_at?: string;
 }
@@ -134,13 +141,6 @@ export interface PlayerDetail extends Player {
   prep_recommendations: PrepRecommendation[];
   opening_stats: OpeningStat[];
   recent_games: Game[];
-  game_source_counts?: {
-    chess_results?: number;
-    chess_com?: number;
-    lichess?: number;
-    manual?: number;
-    pgn_import?: number;
-  };
 }
 
 export type ScoutingSectionType = "win_condition" | "time_pressure" | "common_mistakes" | "quick_prep";
