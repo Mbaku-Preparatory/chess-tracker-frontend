@@ -36,6 +36,10 @@ type Step =
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function buildImportUrl(t: ChessResultsTournamentOption): string {
+  // Prefer the full original URL from chess-results (includes SNode, fed, etc.
+  // that team/Olympiad events require).  Fall back to a constructed URL for
+  // entries created before this field was added.
+  if (t.url) return t.url;
   return `https://chess-results.com/tnr${t.tnr}.aspx?lan=1&art=9&snr=${t.snr}`;
 }
 

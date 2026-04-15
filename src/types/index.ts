@@ -222,6 +222,7 @@ export interface ChessResultsTournamentOption {
   year?: number | null;
   location?: string | null;
   date?: string | null;
+  url?: string | null;
 }
 
 export interface ChessResultsImportResult {
