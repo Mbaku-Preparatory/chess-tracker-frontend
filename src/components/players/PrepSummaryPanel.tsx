@@ -109,7 +109,7 @@ function InteractivePrepTree({ tree, orientation, totalGames }: InteractivePrepT
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-6">
       {/* ── Left: Board ───────────────────────────────────────────────── */}
-      <div className="w-full sm:w-1/2 sm:sticky sm:top-4">
+      <div className="w-full sm:w-1/2 sm:sticky sm:top-4 sm:max-w-[420px]">
         {/* Current line breadcrumb */}
         <div className="mb-2 flex min-h-[28px] flex-wrap items-center gap-1">
           <button
