@@ -364,6 +364,7 @@ export function PrepSummaryPanel({ data }: { data: PrepSummary }) {
                 <p className="text-center text-sm text-gray-400 py-8">No games as White.</p>
               ) : (
                 <InteractivePrepTree
+                  key="white"
                   tree={as_white.opening_tree}
                   orientation="white"
                   totalGames={as_white.total}
@@ -374,6 +375,7 @@ export function PrepSummaryPanel({ data }: { data: PrepSummary }) {
                 <p className="text-center text-sm text-gray-400 py-8">No games as Black.</p>
               ) : (
                 <InteractivePrepTree
+                  key="black"
                   tree={as_black.opening_tree}
                   orientation="black"
                   totalGames={as_black.total}
