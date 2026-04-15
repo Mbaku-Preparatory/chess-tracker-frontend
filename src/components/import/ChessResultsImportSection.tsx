@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { api } from "@/lib/api";
 import type {
@@ -10,6 +11,7 @@ import type {
 
 interface ChessResultsImportSectionProps {
   slug: string;
+  playerRef: string;
   fideId?: string | null;
   onSuccess?: (result: ChessResultsImportResult) => void;
 }
@@ -48,6 +50,7 @@ function totalImported(results: TournamentResult[]): number {
 
 export function ChessResultsImportSection({
   slug,
+  playerRef,
   fideId,
   onSuccess,
 }: ChessResultsImportSectionProps) {
@@ -283,7 +286,12 @@ export function ChessResultsImportSection({
                   <p className="text-xs text-red-600 dark:text-red-400">{rawUrlError}</p>
                 )}
                 {rawUrlStatus === "done" && (
-                  <p className="text-xs text-emerald-600">Games imported successfully.</p>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-xs text-emerald-600">Games imported successfully.</p>
+                    <Link href={`/players/${playerRef}`} className="btn-secondary text-xs">
+                      View Profile
+                    </Link>
+                  </div>
                 )}
                 <button
                   type="submit"
@@ -392,6 +400,7 @@ export function ChessResultsImportSection({
       {/* ── Step: importing ────────────────────────────────────────────────── */}
       {(step.type === "importing" || step.type === "done") && (
         <ImportProgress
+          playerRef={playerRef}
           selected={step.selected}
           results={step.results}
           onReset={() => setStep({ type: "idle" })}
@@ -502,11 +511,13 @@ function TournamentSelector({
 // ── Import progress sub-component ────────────────────────────────────────────
 
 function ImportProgress({
+  playerRef,
   selected,
   results,
   onReset,
   isDone,
 }: {
+  playerRef: string;
   selected: ChessResultsTournamentOption[];
   results: TournamentResult[];
   onReset: () => void;
@@ -593,19 +604,24 @@ function ImportProgress({
       </div>
 
       {isDone && (
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={onReset}
-            className="text-xs text-gray-500 hover:text-gray-800 dark:hover:text-gray-200"
-          >
-            ← Import more
-          </button>
-          {errorCount > 0 && (
-            <span className="text-xs text-red-600 dark:text-red-400">
-              {errorCount} tournament{errorCount !== 1 ? "s" : ""} failed — check URLs or try again
-            </span>
-          )}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={onReset}
+              className="text-xs text-gray-500 hover:text-gray-800 dark:hover:text-gray-200"
+            >
+              ← Import more
+            </button>
+            {errorCount > 0 && (
+              <span className="text-xs text-red-600 dark:text-red-400">
+                {errorCount} tournament{errorCount !== 1 ? "s" : ""} failed — check URLs or try again
+              </span>
+            )}
+          </div>
+          <Link href={`/players/${playerRef}`} className="btn-secondary text-sm">
+            View Profile
+          </Link>
         </div>
       )}
     </div>

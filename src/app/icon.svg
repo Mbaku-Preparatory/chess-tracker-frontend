@@ -1,0 +1,15 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="4" y="4" width="56" height="56" rx="14" fill="#0074C5"/>
+  <text
+    x="32"
+    y="40"
+    text-anchor="middle"
+    fill="white"
+    font-family="Inter, system-ui, sans-serif"
+    font-size="24"
+    font-weight="700"
+    letter-spacing="-1"
+  >
+    MP
+  </text>
+</svg>

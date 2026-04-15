@@ -239,6 +239,7 @@ export default function PlayerImportPage() {
     .split(" ")
     .map((n) => n[0])
     .join("");
+  const playerRef = player.public_id || player.slug;
 
   // ── Render ───────────────────────────────────────────────────────────────
 
@@ -254,17 +255,22 @@ export default function PlayerImportPage() {
       </nav>
 
       {/* Player badge */}
-      <div className="mb-8 flex items-center gap-4">
-        <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-brand-100 text-lg font-bold text-brand-700">
-          {initials}
+      <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-brand-100 text-lg font-bold text-brand-700">
+            {initials}
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Import Games</h1>
+            <p className="text-sm text-gray-500">
+              Adding games for{" "}
+              <span className="font-medium text-gray-700">{player.full_name}</span>
+            </p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Import Games</h1>
-          <p className="text-sm text-gray-500">
-            Adding games for{" "}
-            <span className="font-medium text-gray-700">{player.full_name}</span>
-          </p>
-        </div>
+        <Link href={`/players/${playerRef}`} className="btn-secondary text-sm">
+          View Profile
+        </Link>
       </div>
 
       {/* Source selector */}
@@ -315,6 +321,7 @@ export default function PlayerImportPage() {
         {activeSource === "chess_results" && (
           <ChessResultsImportSection
             slug={slug}
+            playerRef={playerRef}
             fideId={player.fide_id}
           />
         )}
