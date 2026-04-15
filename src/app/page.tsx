@@ -94,7 +94,7 @@ export default function HomePage() {
   const dispatch = useAppDispatch();
   const { items, total, loading, error, searchQuery, ordering, currentPage } =
     useAppSelector((s) => s.players);
-  const [viewMode, setViewMode] = useState<PlayerViewMode>("card");
+  const [viewMode, setViewMode] = useState<PlayerViewMode>("list");
 
   useEffect(() => {
     dispatch(fetchPlayers({ search: searchQuery || undefined, page: currentPage, ordering }));
