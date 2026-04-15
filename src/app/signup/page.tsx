@@ -28,8 +28,7 @@ export default function SignupPage() {
     try {
       const data = await api.register(email.trim().toLowerCase(), password);
       dispatch(setAuth({ token: data.access, email: data.email }));
-      // Send new users to repertoire setup
-      router.replace("/setup");
+      router.replace("/");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Signup failed.");
     } finally {

@@ -21,9 +21,6 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch();
 
   const { token, initialized: authInitialized } = useAppSelector((s) => s.auth);
-  const { onboardingComplete, initialized: repertoireInitialized } = useAppSelector(
-    (s) => s.repertoire
-  );
 
   // Load auth from localStorage exactly once, client-side.
   useEffect(() => {
@@ -53,16 +50,6 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
       router.replace("/");
     }
   }, [authInitialized, token, pathname, router]);
-
-  // Gate 2 — onboarding: authenticated users who haven't set up a
-  // repertoire are sent to /setup (except from /setup itself or public paths).
-  useEffect(() => {
-    if (!authInitialized || !repertoireInitialized) return;
-    if (!token) return; // already handled by gate 1
-    if (!onboardingComplete && pathname !== "/setup" && !isPublicPath(pathname)) {
-      router.replace("/setup");
-    }
-  }, [authInitialized, repertoireInitialized, token, onboardingComplete, pathname, router]);
 
   return <>{children}</>;
 }
