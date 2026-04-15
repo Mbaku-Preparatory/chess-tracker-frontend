@@ -107,11 +107,11 @@ function InteractivePrepTree({ tree, orientation, totalGames }: InteractivePrepT
   }
 
   return (
-    <div>
-      {/* ── Board ─────────────────────────────────────────────────────── */}
-      <div className="mx-auto w-full max-w-[560px]">
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-6">
+      {/* ── Left: Board ───────────────────────────────────────────────── */}
+      <div className="w-full sm:w-1/2 sm:sticky sm:top-4">
         {/* Current line breadcrumb */}
-        <div className="mb-2 flex min-h-[28px] flex-wrap items-center gap-1 text-sm">
+        <div className="mb-2 flex min-h-[28px] flex-wrap items-center gap-1">
           <button
             onClick={reset}
             className="rounded px-1.5 py-0.5 text-xs text-gray-400 hover:bg-gray-100 hover:text-gray-700"
@@ -152,9 +152,9 @@ function InteractivePrepTree({ tree, orientation, totalGames }: InteractivePrepT
         </div>
       </div>
 
-      {/* ── Move picker ───────────────────────────────────────────────── */}
-      <div className="mx-auto mt-5 w-full max-w-[560px]">
-        {/* Back / depth controls */}
+      {/* ── Right: Move picker ────────────────────────────────────────── */}
+      <div className="w-full sm:w-1/2">
+        {/* Header row */}
         <div className="mb-3 flex items-center justify-between">
           <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">
             {nextMoves.length > 0
@@ -187,12 +187,9 @@ function InteractivePrepTree({ tree, orientation, totalGames }: InteractivePrepT
                   onClick={() => select(node.move)}
                   className="group flex w-full items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-left shadow-sm transition-all hover:border-brand-300 hover:bg-brand-50 hover:shadow-md active:scale-[0.99]"
                 >
-                  {/* Move SAN */}
                   <span className="w-14 shrink-0 font-mono text-base font-bold text-gray-900 group-hover:text-brand-700">
                     {node.move}
                   </span>
-
-                  {/* Frequency bar */}
                   <div className="flex-1">
                     <div className="h-2.5 overflow-hidden rounded-full bg-gray-100">
                       <div
@@ -201,14 +198,10 @@ function InteractivePrepTree({ tree, orientation, totalGames }: InteractivePrepT
                       />
                     </div>
                   </div>
-
-                  {/* Stats */}
                   <div className="shrink-0 text-right">
                     <span className="block text-sm font-semibold text-gray-800">{node.pct}%</span>
                     <span className="block text-xs text-gray-400">{node.count}g</span>
                   </div>
-
-                  {/* Chevron */}
                   <svg
                     className="h-4 w-4 shrink-0 text-gray-300 group-hover:text-brand-400"
                     fill="none"
@@ -228,7 +221,6 @@ function InteractivePrepTree({ tree, orientation, totalGames }: InteractivePrepT
           </div>
         )}
 
-        {/* Total games context */}
         {totalGames > 0 && (
           <p className="mt-3 text-right text-xs text-gray-400">
             {totalGames} total game{totalGames !== 1 ? "s" : ""} · percentages relative to parent node
