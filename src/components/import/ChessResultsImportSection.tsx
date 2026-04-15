@@ -582,7 +582,11 @@ function ImportProgress({
                   {t.name}
                 </p>
 
-                {r.status === "done" && (
+                {r.status === "done" && r.result.fetch_meta?.skipped_reason === "no_moves" ? (
+                  <p className="mt-0.5 text-xs text-amber-600 dark:text-amber-400">
+                    No moves available — skipped (PGNs not uploaded to chess-results)
+                  </p>
+                ) : r.status === "done" && (
                   <div className="mt-1 flex flex-wrap gap-1.5">
                     <span className="rounded-full border border-blue-200 bg-blue-100 px-2 py-0.5 text-xs text-blue-700 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
                       {r.result.games_imported} imported
@@ -592,9 +596,6 @@ function ImportProgress({
                         {r.result.games_skipped} already existed
                       </span>
                     )}
-                    <span className="rounded-full border border-gray-200 bg-gray-100 px-2 py-0.5 text-xs text-gray-500 dark:border-gray-700 dark:bg-gray-700 dark:text-gray-400 capitalize">
-                      {r.result.fetch_meta?.source === "pgn" ? "Full PGN" : "Results only — no moves uploaded"}
-                    </span>
                   </div>
                 )}
 

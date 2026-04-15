@@ -203,6 +203,7 @@ export interface ChessResultsFetchMeta {
   tournament_url: string;
   source: "pgn" | "pairings";
   total_rounds?: number;
+  skipped_reason?: "no_moves";
 }
 
 export interface ChessResultsPlayerCandidate {
