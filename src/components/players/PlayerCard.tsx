@@ -11,9 +11,15 @@ interface PlayerCardProps {
   player: Player;
   showDelete?: boolean;
   onDeleted?: (player: Player) => void;
+  variant?: "card" | "list";
 }
 
-export function PlayerCard({ player, showDelete = false, onDeleted }: PlayerCardProps) {
+export function PlayerCard({
+  player,
+  showDelete = false,
+  onDeleted,
+  variant = "card",
+}: PlayerCardProps) {
   const playerRef = player.public_id || player.slug;
   const initials = player.full_name
     .split(" ")
@@ -41,6 +47,63 @@ export function PlayerCard({ player, showDelete = false, onDeleted }: PlayerCard
     } finally {
       setDeleting(false);
     }
+  }
+
+  if (variant === "list") {
+    return (
+      <div className="card overflow-hidden border-gray-200 px-5 py-4 transition-colors hover:border-brand-200">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex min-w-0 items-center gap-4">
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-brand-100 text-base font-bold text-brand-700">
+              {initials}
+            </div>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="truncate text-base font-semibold text-gray-900 dark:text-gray-100">
+                  {player.full_name}
+                </h3>
+                {player.title && (
+                  <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-bold text-amber-800">
+                    {player.title}
+                  </span>
+                )}
+              </div>
+              <p className="mt-0.5 text-sm font-medium text-brand-700">{productName}</p>
+              <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500 dark:text-gray-400">
+                {player.federation && <span>{player.federation}</span>}
+                {rating && <span>Rating {rating}</span>}
+                {player.games_count ? <span>{player.games_count} games tracked</span> : null}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 md:flex-nowrap">
+            <Link href={`/players/${playerRef}`} className="btn-primary text-sm">
+              View Profile
+            </Link>
+            {showDelete && (
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting}
+                title="Delete player profile"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-red-200 bg-red-50 text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-4 w-4" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3M4 7h16" />
+                </svg>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {deleteError && (
+          <div className="mt-4 rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {deleteError}
+          </div>
+        )}
+      </div>
+    );
   }
 
   return (
