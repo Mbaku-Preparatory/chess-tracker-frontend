@@ -17,6 +17,7 @@ import type {
   PlayerDetail,
   PlayerInsights,
   PlayerLookupResult,
+  PrepSummary,
   RepertoireData,
 } from "@/types";
 import { authStorage } from "@/lib/auth";
@@ -181,6 +182,10 @@ export const api = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
+  },
+
+  getPrepSummary(slug: string): Promise<PrepSummary> {
+    return fetchJson(`${API_BASE}/players/${slug}/prep-summary/`);
   },
 
   getPlayerInsights(slug: string, ecoCodes?: string[]): Promise<PlayerInsights> {

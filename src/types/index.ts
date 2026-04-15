@@ -358,3 +358,63 @@ export interface OpeningResult {
   uci: string;
   epd: string;
 }
+
+// ── Prep Summary ─────────────────────────────────────────────────────────────
+
+export interface PrepMoveFreq {
+  move: string;
+  count: number;
+  pct: number;
+}
+
+export interface PrepLine {
+  line: string;
+  count: number;
+  pct: number;
+}
+
+export interface PrepTreeNode {
+  move: string;
+  count: number;
+  pct: number;
+  children: PrepTreeNode[];
+}
+
+export interface PrepTree {
+  total: number;
+  children: PrepTreeNode[];
+}
+
+export interface PrepTrend {
+  type: string;
+  color: "white" | "black";
+  label: string;
+  move: string;
+  description: string;
+  recent_pct: number;
+  overall_pct: number;
+  delta: number;
+  confidence: "high" | "medium";
+}
+
+export interface PrepSummary {
+  meta: {
+    total_games: number;
+    source_counts: Partial<Record<string, number>>;
+    date_range: { first: string | null; last: string | null };
+  };
+  as_white: {
+    total: number;
+    first_moves: PrepMoveFreq[];
+    common_lines: PrepLine[];
+    opening_tree: PrepTree;
+  };
+  as_black: {
+    total: number;
+    vs_e4: { count: number; responses: PrepMoveFreq[]; common_lines: PrepLine[] };
+    vs_d4: { count: number; responses: PrepMoveFreq[]; common_lines: PrepLine[] };
+    vs_other: { count: number; responses: PrepMoveFreq[] };
+    opening_tree: PrepTree;
+  };
+  trends: PrepTrend[];
+}
