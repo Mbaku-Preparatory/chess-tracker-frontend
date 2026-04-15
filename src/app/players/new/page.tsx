@@ -226,7 +226,6 @@ export default function NewPlayerPage() {
   const router = useRouter();
 
   // ── Search state ────────────────────────────────────────────────────────────
-  const [searchPlatform, setSearchPlatform] = useState<Platform>("fide");
   const [searchQuery, setSearchQuery] = useState("");
   const [searching, setSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<PlayerLookupResult[] | null>(null);
@@ -235,7 +234,6 @@ export default function NewPlayerPage() {
 
   // ── Form state ──────────────────────────────────────────────────────────────
   const [fullName, setFullName] = useState("");
-  const [nameLocked, setNameLocked] = useState(false);
   const [federation, setFederation] = useState("");
   const [fideId, setFideId] = useState("");
   const [chesscomUsernames, setChesscomUsernames] = useState<string[]>([""]);
@@ -253,18 +251,25 @@ export default function NewPlayerPage() {
     setSearching(true);
     setSearchResults(null);
     setSearchError(null);
-    try {
-      const { results } = await api.lookupPlayer(searchPlatform, q);
-      setSearchResults(results);
-      if (results.length === 0) {
-        setSearchError(
-          `No ${PLATFORMS.find((p) => p.id === searchPlatform)?.label} user found for "${q}".`
-        );
-      }
-    } catch (err) {
-      setSearchError(err instanceof Error ? err.message : "Search failed. Try again.");
-    } finally {
-      setSearching(false);
+
+    // Search all 3 platforms simultaneously; show any that succeed
+    const settled = await Promise.allSettled([
+      api.lookupPlayer("fide", q),
+      api.lookupPlayer("chesscom", q),
+      api.lookupPlayer("lichess", q),
+    ]);
+
+    const combined: PlayerLookupResult[] = [];
+    for (const s of settled) {
+      if (s.status === "fulfilled") combined.push(...s.value.results);
+    }
+
+    setSearching(false);
+
+    if (combined.length === 0) {
+      setSearchError(`No results found for "${q}" on FIDE, Chess.com, or Lichess.`);
+    } else {
+      setSearchResults(combined);
     }
   }
 
@@ -274,8 +279,7 @@ export default function NewPlayerPage() {
     username: string
   ) {
     const lower = username.toLowerCase();
-    if (list.map((u) => u.toLowerCase()).includes(lower)) return; // already present
-    // Fill first empty slot or append
+    if (list.map((u) => u.toLowerCase()).includes(lower)) return;
     const emptyIdx = list.findIndex((u) => !u.trim());
     if (emptyIdx !== -1) {
       const next = [...list];
@@ -289,27 +293,39 @@ export default function NewPlayerPage() {
   function handleSelectResult(result: PlayerLookupResult) {
     if (result.platform === "chesscom" && result.username) {
       addUsernameToList(chesscomUsernames, setChesscomUsernames, result.username);
-      if (result.display_name && !nameLocked) setFullName(result.display_name);
+      if (result.display_name && !fullName) setFullName(result.display_name);
     }
     if (result.platform === "lichess" && result.username) {
       addUsernameToList(lichessUsernames, setLichessUsernames, result.username);
-      if (result.display_name && !nameLocked) setFullName(result.display_name);
+      if (result.display_name && !fullName) setFullName(result.display_name);
     }
     if (result.platform === "fide") {
       if (result.fide_id) setFideId(result.fide_id);
       if (result.federation) setFederation(result.federation);
-      if (result.display_name) {
-        setFullName(result.display_name);
-        setNameLocked(true);
-      }
+      if (result.display_name) setFullName(result.display_name);
     }
     setSearchResults(null);
     setSearchQuery("");
   }
 
+  const hasAnyIdentifier =
+    fideId.trim() ||
+    chesscomUsernames.some((u) => u.trim()) ||
+    lichessUsernames.some((u) => u.trim());
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!fullName.trim()) return;
+    if (!hasAnyIdentifier) return;
+
+    // Derive a name if none was set via search
+    const derivedName =
+      fullName.trim() ||
+      chesscomUsernames.find((u) => u.trim()) ||
+      lichessUsernames.find((u) => u.trim()) ||
+      fideId.trim() ||
+      "";
+
+    if (!derivedName) return;
 
     setLoading(true);
     setError(null);
@@ -319,12 +335,12 @@ export default function NewPlayerPage() {
         ...lichessUsernames.filter((u) => u.trim()).map((u) => ({ platform: "lichess" as const, username: u.trim() })),
       ];
       const player = await api.createPlayer({
-        full_name: fullName.trim(),
+        full_name: derivedName,
         ...(federation.trim() ? { federation: federation.trim() } : {}),
         ...(fideId.trim() ? { fide_id: fideId.trim() } : {}),
         ...(accounts.length ? { accounts } : {}),
       });
-const hasChesscom = chesscomUsernames.some((u) => u.trim());
+      const hasChesscom = chesscomUsernames.some((u) => u.trim());
       const hasLichess = lichessUsernames.some((u) => u.trim());
       const source = hasChesscom ? "chesscom" : hasLichess ? "lichess" : "chess_results";
       router.push(`/players/${player.public_id}/import?source=${source}`);
@@ -349,7 +365,7 @@ const hasChesscom = chesscomUsernames.some((u) => u.trim());
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Add opponent</h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Search by username or name to auto-fill, or fill in the details manually.
+          Search by name or username across FIDE, Chess.com, and Lichess — or fill in the details manually.
         </p>
       </div>
 
@@ -357,32 +373,6 @@ const hasChesscom = chesscomUsernames.some((u) => u.trim());
       <div className="card mb-4 p-5">
         <p className="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">Search player</p>
 
-        {/* Platform tabs */}
-        <div className="mb-3 flex gap-1 rounded-lg bg-gray-100 p-1 dark:bg-gray-700">
-          {PLATFORMS.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              onClick={() => {
-                setSearchPlatform(p.id);
-                setSearchResults(null);
-                setSearchError(null);
-              }}
-              className={`flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition ${
-                searchPlatform === p.id
-                  ? "bg-white text-gray-900 shadow-sm dark:bg-gray-600 dark:text-gray-100"
-                  : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-              }`}
-            >
-              <span style={{ color: searchPlatform === p.id ? p.color : undefined }}>
-                {p.icon}
-              </span>
-              {p.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Search input */}
         <form onSubmit={handleSearch} className="flex gap-2">
           <input
             ref={searchInputRef}
@@ -395,16 +385,11 @@ const hasChesscom = chesscomUsernames.some((u) => u.trim());
                 setSearchError(null);
               }
             }}
-            placeholder={
-              searchPlatform === "fide"
-                ? "Search by name, e.g. Magnus Carlsen"
-                : searchPlatform === "chesscom"
-                ? "Username, e.g. MagnusCarlsen"
-                : "Username, e.g. DrNykterstein"
-            }
+            placeholder="Name or username, e.g. Magnus Carlsen"
             className="block flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-500"
             autoComplete="off"
             spellCheck={false}
+            autoFocus
           />
           <button
             type="submit"
@@ -429,6 +414,11 @@ const hasChesscom = chesscomUsernames.some((u) => u.trim());
             )}
           </button>
         </form>
+
+        {/* Platform hint */}
+        <p className="mt-2 text-xs text-gray-400">
+          Searches FIDE, Chess.com, and Lichess simultaneously
+        </p>
 
         {/* Search error */}
         {searchError && (
@@ -457,43 +447,6 @@ const hasChesscom = chesscomUsernames.some((u) => u.trim());
             {error}
           </div>
         )}
-
-        {/* Full name */}
-        <div>
-          <label htmlFor="full-name" className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gray-700">
-            Full name <span className="text-red-500">*</span>
-            {nameLocked && (
-              <span className="ml-auto flex items-center gap-1 text-xs font-normal text-[#1a56db]">
-                <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
-                  <path fillRule="evenodd" d="M8 1a3.5 3.5 0 00-3.5 3.5V6H4a2 2 0 00-2 2v5a2 2 0 002 2h8a2 2 0 002-2V8a2 2 0 00-2-2h-.5V4.5A3.5 3.5 0 008 1zm2 5V4.5a2 2 0 10-4 0V6h4z" clipRule="evenodd" />
-                </svg>
-                From FIDE ·{" "}
-                <button
-                  type="button"
-                  onClick={() => setNameLocked(false)}
-                  className="underline underline-offset-2 hover:text-blue-800"
-                >
-                  unlock
-                </button>
-              </span>
-            )}
-          </label>
-          <input
-            id="full-name"
-            type="text"
-            required
-            autoFocus
-            readOnly={nameLocked}
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            className={`block w-full rounded-lg border px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 ${
-              nameLocked
-                ? "border-[#1a56db]/30 bg-blue-50 text-gray-700 focus:border-[#1a56db] focus:ring-[#1a56db] cursor-default select-none dark:bg-blue-900/20 dark:text-gray-300"
-                : "border-gray-300 bg-white focus:border-brand-500 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
-            }`}
-            placeholder="e.g. Magnus Carlsen"
-          />
-        </div>
 
         {/* Chess.com accounts */}
         <MultiUsernameInput
@@ -556,7 +509,7 @@ const hasChesscom = chesscomUsernames.some((u) => u.trim());
         <div className="flex items-center gap-3 pt-1">
           <button
             type="submit"
-            disabled={loading || !fullName.trim()}
+            disabled={loading || !hasAnyIdentifier}
             className="btn-primary disabled:opacity-60"
           >
             {loading ? "Creating…" : "Create & import games →"}

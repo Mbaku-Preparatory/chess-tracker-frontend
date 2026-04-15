@@ -134,6 +134,13 @@ export interface PlayerDetail extends Player {
   prep_recommendations: PrepRecommendation[];
   opening_stats: OpeningStat[];
   recent_games: Game[];
+  game_source_counts?: {
+    chess_results?: number;
+    chess_com?: number;
+    lichess?: number;
+    manual?: number;
+    pgn_import?: number;
+  };
 }
 
 export type ScoutingSectionType = "win_condition" | "time_pressure" | "common_mistakes" | "quick_prep";
