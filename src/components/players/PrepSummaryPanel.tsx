@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Chess } from "chess.js";
 import { Chessboard } from "react-chessboard";
-import type { PrepSummary, PrepTree, PrepTreeNode } from "@/types";
+import { api } from "@/lib/api";
+import { PgnViewerModal } from "@/components/players/PgnViewerModal";
+import { ColorBadge, ResultBadge } from "@/components/ui/Badge";
+import type { PrepSummary, PrepTree, PrepTreeNode, Game } from "@/types";
 
 // ── Chess helpers ─────────────────────────────────────────────────────────────
 
@@ -75,16 +78,96 @@ function formatDate(iso: string | null) {
   return new Date(iso).toLocaleDateString("en-GB", { year: "numeric", month: "short" });
 }
 
+// ── Game row ─────────────────────────────────────────────────────────────────
+
+function sourceMeta(source: string): { label: string; dot: string } {
+  const map: Record<string, { label: string; dot: string }> = {
+    chess_results: { label: "OTB", dot: "bg-amber-500" },
+    chess_com:     { label: "Chess.com", dot: "bg-emerald-500" },
+    lichess:       { label: "Lichess", dot: "bg-violet-500" },
+    pgn_import:    { label: "PGN", dot: "bg-blue-400" },
+    manual:        { label: "Manual", dot: "bg-gray-400" },
+  };
+  return map[source] ?? { label: source, dot: "bg-gray-400" };
+}
+
+function GameRow({
+  game,
+  onOpenViewer,
+}: {
+  game: Game;
+  onOpenViewer: (g: Game) => void;
+}) {
+  const { label, dot } = sourceMeta(game.source);
+  const isOnline = game.source === "chess_com" || game.source === "lichess";
+  const dateStr = game.date_played
+    ? new Date(game.date_played).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
+    : null;
+
+  const inner = (
+    <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-left transition hover:bg-gray-50">
+      <span className={`h-2 w-2 shrink-0 rounded-full ${dot}`} />
+      <div className="flex-1 min-w-0">
+        <p className="truncate text-sm font-medium text-gray-800">
+          vs {game.opponent_name}
+          {game.opponent_rating && (
+            <span className="ml-1 text-xs font-normal text-gray-400">({game.opponent_rating})</span>
+          )}
+        </p>
+        <p className="text-xs text-gray-400">
+          {label}{dateStr ? ` · ${dateStr}` : ""}{game.opening_name ? ` · ${game.opening_name}` : ""}
+        </p>
+      </div>
+      <div className="flex shrink-0 items-center gap-1.5">
+        <ColorBadge color={game.color_played} />
+        <ResultBadge result={game.result} />
+      </div>
+      {isOnline ? (
+        <svg className="h-4 w-4 shrink-0 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+        </svg>
+      ) : (
+        <svg className="h-4 w-4 shrink-0 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+      )}
+    </div>
+  );
+
+  if (isOnline && game.source_url) {
+    return (
+      <a href={game.source_url} target="_blank" rel="noopener noreferrer">
+        {inner}
+      </a>
+    );
+  }
+
+  return (
+    <button className="w-full" onClick={() => onOpenViewer(game)}>
+      {inner}
+    </button>
+  );
+}
+
 // ── Interactive tree (board + move picker) ───────────────────────────────────
 
 interface InteractivePrepTreeProps {
   tree: PrepTree;
   orientation: "white" | "black";
   totalGames: number;
+  slug: string;
+  color: "white" | "black";
 }
 
-function InteractivePrepTree({ tree, orientation, totalGames }: InteractivePrepTreeProps) {
+function InteractivePrepTree({ tree, orientation, totalGames, slug, color }: InteractivePrepTreeProps) {
   const [path, setPath] = useState<string[]>([]);
+  const [games, setGames] = useState<Game[]>([]);
+  const [gamesTotal, setGamesTotal] = useState(0);
+  const [gamesPage, setGamesPage] = useState(1);
+  const [gamesLoading, setGamesLoading] = useState(false);
+  const [viewerGame, setViewerGame] = useState<Game | null>(null);
+  const [downloading, setDownloading] = useState(false);
+  const fetchRef = useRef(0);
 
   const { fen, lastFrom, lastTo } = computePosition(path);
   const nextMoves = findChildren(tree, path);
@@ -93,6 +176,40 @@ function InteractivePrepTree({ tree, orientation, totalGames }: InteractivePrepT
   const squareStyles: Record<string, React.CSSProperties> = {};
   if (lastFrom) squareStyles[lastFrom] = { backgroundColor: "rgba(255, 214, 10, 0.35)" };
   if (lastTo)   squareStyles[lastTo]   = { backgroundColor: "rgba(255, 214, 10, 0.55)" };
+
+  // Fetch games matching current line whenever path changes
+  useEffect(() => {
+    const id = ++fetchRef.current;
+    setGamesPage(1);
+    setGamesLoading(true);
+    api.getPrepGames(slug, path, color, 1).then((res) => {
+      if (fetchRef.current !== id) return;
+      setGames(res.results);
+      setGamesTotal(res.count);
+      setGamesPage(1);
+    }).catch(() => {}).finally(() => {
+      if (fetchRef.current === id) setGamesLoading(false);
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [path]);
+
+  function loadMoreGames() {
+    const nextPage = gamesPage + 1;
+    setGamesLoading(true);
+    api.getPrepGames(slug, path, color, nextPage).then((res) => {
+      setGames((prev) => [...prev, ...res.results]);
+      setGamesPage(nextPage);
+    }).catch(() => {}).finally(() => setGamesLoading(false));
+  }
+
+  async function handleDownload() {
+    setDownloading(true);
+    try {
+      await api.downloadPrepGamesPgn(slug, path, color);
+    } catch { /* ignore */ } finally {
+      setDownloading(false);
+    }
+  }
 
   function select(move: string) {
     setPath((prev) => [...prev, move]);
@@ -226,7 +343,60 @@ function InteractivePrepTree({ tree, orientation, totalGames }: InteractivePrepT
             {totalGames} total game{totalGames !== 1 ? "s" : ""} · percentages relative to parent node
           </p>
         )}
+
+        {/* ── Games panel ───────────────────────────────────────────── */}
+        <div className="mt-6 border-t border-gray-100 pt-5">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <h4 className="text-sm font-semibold text-gray-800">
+              {gamesLoading && games.length === 0
+                ? "Loading games…"
+                : `${gamesTotal} game${gamesTotal !== 1 ? "s" : ""} in this line`}
+            </h4>
+            {gamesTotal > 0 && (
+              <button
+                onClick={handleDownload}
+                disabled={downloading}
+                className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition hover:bg-gray-50 disabled:opacity-50"
+              >
+                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                {downloading ? "Downloading…" : "Download PGN"}
+              </button>
+            )}
+          </div>
+
+          {games.length > 0 && (
+            <div className="space-y-2">
+              {games.map((game) => (
+                <GameRow
+                  key={game.id}
+                  game={game}
+                  onOpenViewer={setViewerGame}
+                />
+              ))}
+              {games.length < gamesTotal && (
+                <button
+                  onClick={loadMoreGames}
+                  disabled={gamesLoading}
+                  className="w-full rounded-lg border border-dashed border-gray-200 py-2 text-xs text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+                >
+                  {gamesLoading ? "Loading…" : `Show more (${gamesTotal - games.length} remaining)`}
+                </button>
+              )}
+            </div>
+          )}
+
+          {!gamesLoading && games.length === 0 && (
+            <p className="text-xs text-gray-400">No games recorded for this line.</p>
+          )}
+        </div>
       </div>
+
+      {/* PGN viewer modal for OTB / imported games */}
+      {viewerGame && (
+        <PgnViewerModal game={viewerGame} onClose={() => setViewerGame(null)} />
+      )}
     </div>
   );
 }
@@ -277,7 +447,7 @@ function TrendCard({ trend }: { trend: PrepSummary["trends"][number] }) {
 
 // ── Main panel ────────────────────────────────────────────────────────────────
 
-export function PrepSummaryPanel({ data }: { data: PrepSummary }) {
+export function PrepSummaryPanel({ data, slug }: { data: PrepSummary; slug: string }) {
   const { meta, as_white, as_black, trends } = data;
   const [tab, setTab] = useState<"white" | "black">("white");
 
@@ -368,6 +538,8 @@ export function PrepSummaryPanel({ data }: { data: PrepSummary }) {
                   tree={as_white.opening_tree}
                   orientation="white"
                   totalGames={as_white.total}
+                  slug={slug}
+                  color="white"
                 />
               )
             ) : (
@@ -379,6 +551,8 @@ export function PrepSummaryPanel({ data }: { data: PrepSummary }) {
                   tree={as_black.opening_tree}
                   orientation="black"
                   totalGames={as_black.total}
+                  slug={slug}
+                  color="black"
                 />
               )
             )}

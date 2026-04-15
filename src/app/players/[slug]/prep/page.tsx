@@ -65,7 +65,7 @@ export default function PrepPage() {
           {error}
         </div>
       ) : data ? (
-        <PrepSummaryPanel data={data} />
+        <PrepSummaryPanel data={data} slug={slug} />
       ) : null}
     </div>
   );

@@ -188,6 +188,40 @@ export const api = {
     return fetchJson(`${API_BASE}/players/${slug}/prep-summary/`);
   },
 
+  getPrepGames(
+    slug: string,
+    moves: string[],
+    color: "white" | "black" | "",
+    page = 1,
+  ): Promise<{ count: number; page: number; page_size: number; results: import("@/types").Game[] }> {
+    const params = new URLSearchParams();
+    if (moves.length) params.set("moves", moves.join(","));
+    if (color) params.set("color", color);
+    if (page > 1) params.set("page", String(page));
+    return fetchJson(`${API_BASE}/players/${slug}/prep-games/?${params}`);
+  },
+
+  async downloadPrepGamesPgn(slug: string, moves: string[], color: "white" | "black" | ""): Promise<void> {
+    const params = new URLSearchParams();
+    if (moves.length) params.set("moves", moves.join(","));
+    if (color) params.set("color", color);
+    const token = authStorage.getToken();
+    const res = await fetch(`${API_BASE}/players/${slug}/prep-games/pgn/?${params}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) throw new Error("Failed to download PGN");
+    const blob = await res.blob();
+    const disposition = res.headers.get("Content-Disposition") ?? "";
+    const match = disposition.match(/filename="([^"]+)"/);
+    const filename = match?.[1] ?? "games.pgn";
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  },
+
   getPlayerInsights(slug: string, ecoCodes?: string[]): Promise<PlayerInsights> {
     const params = new URLSearchParams();
     if (ecoCodes && ecoCodes.length > 0) {
