@@ -26,13 +26,10 @@ export default function SignupPage() {
     setLoading(true);
     setError(null);
     try {
-      console.log("[signup] Sending register request for:", email.trim().toLowerCase());
       const data = await api.register(email.trim().toLowerCase(), password);
-      console.log("[signup] Register response:", data);
       dispatch(setAuth({ token: data.access, email: data.email }));
       router.replace("/");
     } catch (err) {
-      console.error("[signup] Register error:", err);
       setError(err instanceof Error ? err.message : "Signup failed.");
     } finally {
       setLoading(false);
