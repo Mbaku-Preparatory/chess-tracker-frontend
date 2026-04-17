@@ -16,54 +16,101 @@ import { OpeningBreakdownCard } from "@/components/players/OpeningBreakdownCard"
 import { StrengthWeaknessCard } from "@/components/players/StrengthWeaknessCard";
 import { GamesTable } from "@/components/players/GamesTable";
 
-function FideSyncButton({ slug }: { slug: string }) {
+function FideSection({ slug, fideId }: { slug: string; fideId: string | null }) {
   const dispatch = useAppDispatch();
   const [syncing, setSyncing] = useState(false);
-  const [result, setResult] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [inputId, setInputId] = useState("");
+  const [showInput, setShowInput] = useState(false);
 
-  const handleSync = useCallback(async () => {
+  const doSync = useCallback(async (id?: string) => {
     setSyncing(true);
-    setResult(null);
+    setMessage(null);
     try {
-      const data = await api.syncFide(slug);
+      const data = await api.syncFide(slug, id);
       const fields = data.updated_fields.filter((f) => f !== "updated_at");
-      setResult(fields.length ? `Updated: ${fields.join(", ")}` : "Nothing new to update");
+      setMessage(fields.length ? `Updated: ${fields.join(", ")}` : "Already up to date");
       dispatch(fetchPlayerDetail(slug));
-    } catch (err) {
-      setResult(err instanceof Error ? err.message : "Sync failed");
+      setShowInput(false);
+    } catch (err: any) {
+      setMessage(err?.body?.detail || err?.message || "Sync failed");
     } finally {
       setSyncing(false);
     }
   }, [slug, dispatch]);
 
-  return (
-    <div className="flex items-center gap-2">
+  if (fideId) {
+    return (
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          onClick={() => doSync()}
+          disabled={syncing}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-[#1a3a6b]/30 bg-[#1a3a6b]/5 px-3 py-1.5 text-xs font-semibold text-[#1a3a6b] transition-colors hover:bg-[#1a3a6b]/10 disabled:opacity-50"
+        >
+          {syncing ? (
+            <>
+              <svg className="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+              </svg>
+              Syncing…
+            </>
+          ) : (
+            <>
+              <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Sync from FIDE
+            </>
+          )}
+        </button>
+        {message && <span className="text-xs text-gray-500">{message}</span>}
+      </div>
+    );
+  }
+
+  // No FIDE ID yet — show an inline setter
+  if (!showInput) {
+    return (
       <button
-        onClick={handleSync}
-        disabled={syncing}
-        className="inline-flex items-center gap-1.5 rounded-lg border border-[#1a3a6b]/30 bg-[#1a3a6b]/5 px-3 py-1.5 text-xs font-semibold text-[#1a3a6b] transition-colors hover:bg-[#1a3a6b]/10 disabled:opacity-50"
+        type="button"
+        onClick={() => setShowInput(true)}
+        className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-500 transition hover:border-[#1a3a6b]/40 hover:text-[#1a3a6b] dark:border-gray-600 dark:text-gray-400"
       >
-        {syncing ? (
-          <>
-            <svg className="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-            </svg>
-            Syncing…
-          </>
-        ) : (
-          <>
-            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            Sync from FIDE
-          </>
-        )}
+        + Set FIDE ID
       </button>
-      {result && (
-        <span className="text-xs text-gray-500">{result}</span>
-      )}
-    </div>
+    );
+  }
+
+  return (
+    <form
+      onSubmit={(e) => { e.preventDefault(); if (inputId.trim()) doSync(inputId.trim()); }}
+      className="flex flex-wrap items-center gap-2"
+    >
+      <input
+        type="text"
+        value={inputId}
+        onChange={(e) => setInputId(e.target.value)}
+        placeholder="e.g. 12345678"
+        autoFocus
+        className="w-36 rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs text-gray-900 placeholder-gray-400 focus:border-[#1a3a6b] focus:outline-none focus:ring-1 focus:ring-[#1a3a6b] dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+      />
+      <button
+        type="submit"
+        disabled={syncing || !inputId.trim()}
+        className="inline-flex items-center gap-1 rounded-lg bg-[#1a3a6b] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[#142d54] disabled:opacity-60"
+      >
+        {syncing ? "Syncing…" : "Save & Sync"}
+      </button>
+      <button
+        type="button"
+        onClick={() => { setShowInput(false); setMessage(null); }}
+        className="text-xs text-gray-400 hover:text-gray-600"
+      >
+        Cancel
+      </button>
+      {message && <span className="text-xs text-red-600 dark:text-red-400">{message}</span>}
+    </form>
   );
 }
 
@@ -163,11 +210,9 @@ export default function PlayerDetailPage() {
                 </div>
               );
             })()}
-            {player.fide_id && (
-              <div className="mt-3">
-                <FideSyncButton slug={slug} />
-              </div>
-            )}
+            <div className="mt-3">
+              <FideSection slug={slug} fideId={player.fide_id} />
+            </div>
             {player.bio && (
               <p className="mt-4 max-w-3xl leading-relaxed text-gray-600 dark:text-gray-400">
                 {player.bio}

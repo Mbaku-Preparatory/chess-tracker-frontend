@@ -53,9 +53,20 @@ export default function PrepPage() {
         subtitle="Move-level breakdown of opening tendencies across all imported games"
         actions={
           player && (
-            <Link href={`/players/${slug}`} className="btn-secondary text-sm">
-              Back to profile
-            </Link>
+            <div className="flex flex-wrap items-center gap-2">
+              <Link
+                href={`/players/${slug}/import`}
+                className="btn-secondary inline-flex items-center gap-1.5 text-sm"
+              >
+                <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                  <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                </svg>
+                Import Games
+              </Link>
+              <Link href={`/players/${slug}`} className="btn-secondary text-sm">
+                Back to profile
+              </Link>
+            </div>
           )
         }
       />

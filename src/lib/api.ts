@@ -10,6 +10,7 @@ import type {
   GamesFilter,
   OpeningDistribution,
   OpeningStat,
+  Pairing,
   PaginatedResponse,
   PerformanceSummary,
   Player,
@@ -19,6 +20,8 @@ import type {
   PlayerLookupResult,
   PrepSummary,
   RepertoireData,
+  Tournament,
+  TournamentPlayer,
 } from "@/types";
 import { authStorage } from "@/lib/auth";
 import { requestTracker } from "@/lib/request-tracker";
@@ -296,7 +299,7 @@ export const api = {
 
   // ── Player create ─────────────────────────────────────────────────────────
 
-  syncFide(slug: string): Promise<{
+  syncFide(slug: string, fideId?: string): Promise<{
     updated_fields: string[];
     full_name: string;
     standard_rating: number | null;
@@ -305,7 +308,11 @@ export const api = {
     title: string | null;
     birth_year: number | null;
   }> {
-    return fetchJson(`${API_BASE}/players/${slug}/sync-fide/`, { method: "POST" });
+    return fetchJson(`${API_BASE}/players/${slug}/sync-fide/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(fideId ? { fide_id: fideId } : {}),
+    });
   },
 
   createPlayer(payload: {
@@ -360,5 +367,47 @@ export const api = {
 
   deletePlayer(slug: string): Promise<void> {
     return fetchJson(`${API_BASE}/players/${slug}/`, { method: "DELETE" });
+  },
+
+  // ── Tournament Mode ───────────────────────────────────────────────────────
+
+  getActiveTournament(): Promise<Tournament | null> {
+    return fetchJson(`${API_BASE}/tournaments/active/`);
+  },
+
+  createTournament(payload: { name?: string; url?: string }): Promise<Tournament> {
+    return fetchJson(`${API_BASE}/tournaments/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  },
+
+  updateTournament(id: number, payload: Partial<Pick<Tournament, "name" | "url" | "is_active">>): Promise<Tournament> {
+    return fetchJson(`${API_BASE}/tournaments/${id}/`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  },
+
+  upsertPairing(
+    tournamentId: number,
+    pairing: Pick<Pairing, "round_number" | "opponent_name" | "color" | "result">
+  ): Promise<Pairing> {
+    return fetchJson(`${API_BASE}/tournaments/${tournamentId}/pairings/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(pairing),
+    });
+  },
+
+  getChessResultsTournamentPlayers(url: string): Promise<{ players: TournamentPlayer[]; count: number }> {
+    const params = new URLSearchParams({ url });
+    return fetchJson(`${API_BASE}/chess-results/tournament-players/?${params}`);
+  },
+
+  refreshTournamentPlayers(id: number): Promise<Tournament> {
+    return fetchJson(`${API_BASE}/tournaments/${id}/refresh-players/`, { method: "POST" });
   },
 };

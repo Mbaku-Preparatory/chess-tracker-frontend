@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 
 import { PlayerCard } from "@/components/players/PlayerCard";
+import { TournamentPanel } from "@/components/tournament/TournamentPanel";
 import { CardSkeleton } from "@/components/ui/LoadingSkeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SearchInput } from "@/components/ui/SearchInput";
@@ -131,6 +132,8 @@ export default function HomePage() {
 
   return (
     <div>
+      <TournamentPanel />
+
       {/* Header */}
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
