@@ -156,20 +156,20 @@ export default function HomePage() {
           <div className="inline-flex rounded-full border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-800">
             {([
               {
-                value: "card" as const,
-                label: "Cards",
-                icon: (
-                  <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
-                    <path d="M3 3h6v6H3V3zm8 0h6v6h-6V3zM3 11h6v6H3v-6zm8 0h6v6h-6v-6z" />
-                  </svg>
-                ),
-              },
-              {
                 value: "list" as const,
                 label: "List",
                 icon: (
                   <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
                     <path d="M3 4.5A1.5 1.5 0 114.5 6 1.5 1.5 0 013 4.5zm0 5A1.5 1.5 0 114.5 11 1.5 1.5 0 013 9.5zm0 5A1.5 1.5 0 114.5 16 1.5 1.5 0 013 14.5zM7 5h10v2H7V5zm0 5h10v2H7v-2zm0 5h10v2H7v-2z" />
+                  </svg>
+                ),
+              },
+              {
+                value: "card" as const,
+                label: "Cards",
+                icon: (
+                  <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
+                    <path d="M3 3h6v6H3V3zm8 0h6v6h-6V3zM3 11h6v6H3v-6zm8 0h6v6h-6v-6z" />
                   </svg>
                 ),
               },
