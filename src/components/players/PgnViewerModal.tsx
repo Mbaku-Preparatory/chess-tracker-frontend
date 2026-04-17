@@ -7,6 +7,12 @@ import type { Game } from "@/types";
 import { api } from "@/lib/api";
 import { ColorBadge, ResultBadge } from "@/components/ui/Badge";
 
+function pgnFilename(game: Game): string {
+  const opp = game.opponent_name.replace(/[^a-z0-9]/gi, "_").replace(/_+/g, "_");
+  const date = game.date_played ? game.date_played.replace(/-/g, "") : "unknown";
+  return `${opp}_${date}_${game.result}.pgn`;
+}
+
 interface PgnViewerModalProps {
   game: Game;
   onClose: () => void;
@@ -47,8 +53,38 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
   const [currentIndex, setCurrentIndex] = useState(-1); // -1 = starting position
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const moveListRef = useRef<HTMLDivElement>(null);
   const activeMoveRef = useRef<HTMLButtonElement>(null);
+
+  function handleDownload() {
+    if (!pgn) return;
+    const blob = new Blob([pgn], { type: "application/x-chess-pgn" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = pgnFilename(game);
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function handleShare() {
+    if (!pgn) return;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${game.opponent_name} — ${game.result}`,
+          text: pgn,
+        });
+        return;
+      } catch {
+        // user cancelled or share failed — fall through to clipboard
+      }
+    }
+    await navigator.clipboard.writeText(pgn);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
 
   // Fetch PGN on mount
   useEffect(() => {
@@ -256,6 +292,41 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
                 </div>
               )}
             </div>
+
+            {/* PGN actions */}
+            {pgn && (
+              <div className="shrink-0 flex items-center justify-end gap-2 border-t border-gray-100 px-3 py-2 sm:px-4">
+                <button
+                  onClick={handleDownload}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50"
+                >
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Download PGN
+                </button>
+                <button
+                  onClick={handleShare}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50"
+                >
+                  {copied ? (
+                    <>
+                      <svg className="h-3.5 w-3.5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-green-600">Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                      </svg>
+                      Share PGN
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
 
             {/* Navigation controls */}
             <div className="shrink-0 border-t border-gray-100 px-3 py-3 sm:px-4">
