@@ -138,6 +138,14 @@ export const api = {
     return fetchJson(`${API_BASE}/games/${id}/`, { method: "DELETE" });
   },
 
+  lichessImportProxy(pgn: string): Promise<{ url: string }> {
+    return fetchJson(`${API_BASE}/proxy/lichess-import/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pgn }),
+    });
+  },
+
   importFromChessCom(
     slug: string,
     payload: { username?: string; limit?: number }

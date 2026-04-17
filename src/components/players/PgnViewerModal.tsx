@@ -32,7 +32,8 @@ function ShareSheet({
   onClose: () => void;
 }) {
   const [copied, setCopied] = useState(false);
-  const [importCopied, setImportCopied] = useState<"chesscom" | "lichess" | null>(null);
+  const [importLoading, setImportLoading] = useState<"chesscom" | "lichess" | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
   const textRef = useRef<HTMLTextAreaElement>(null);
 
   async function copyToClipboard() {
@@ -42,14 +43,24 @@ function ShareSheet({
   }
 
   async function handleImport(platform: "chesscom" | "lichess") {
-    await navigator.clipboard.writeText(pgn);
-    setImportCopied(platform);
-    setTimeout(() => setImportCopied(null), 3000);
-    const url =
-      platform === "chesscom"
-        ? "https://www.chess.com/analysis"
-        : "https://lichess.org/paste";
-    window.open(url, "_blank", "noopener");
+    setImportError(null);
+    if (platform === "chesscom") {
+      // Chess.com analysis board accepts ?pgn= URL param directly
+      const url = `https://www.chess.com/analysis?pgn=${encodeURIComponent(pgn)}`;
+      window.open(url, "_blank", "noopener");
+      return;
+    }
+    // Lichess: proxy through our backend to avoid CORS
+    setImportLoading("lichess");
+    try {
+      const data = await api.lichessImportProxy(pgn);
+      window.open(data.url, "_blank", "noopener");
+    } catch (err) {
+      setImportError("Lichess import failed — try again.");
+      console.error(err);
+    } finally {
+      setImportLoading(null);
+    }
   }
 
   const title = `${game.opponent_name} (${game.result}) — ${game.date_played ?? ""}`;
@@ -156,23 +167,43 @@ function ShareSheet({
         <hr className="mb-4 border-gray-100" />
 
         {/* Import row */}
-        <p className="mb-2 text-xs font-medium text-gray-500 uppercase tracking-wide">Import to analysis</p>
-        <div className="mb-5 flex gap-2">
+        <p className="mb-2 text-xs font-medium text-gray-500 uppercase tracking-wide">Open in analysis</p>
+        <div className="mb-4 flex gap-2">
           <button
             onClick={() => handleImport("chesscom")}
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-gray-200 px-3 py-2.5 text-xs font-semibold text-gray-700 transition-colors hover:bg-gray-50"
+            disabled={!!importLoading}
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-gray-200 px-3 py-2.5 text-xs font-semibold text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-60"
           >
             <span className="text-base">♟</span>
-            {importCopied === "chesscom" ? "Copied! Paste on Chess.com" : "Chess.com"}
+            Chess.com
+            <svg className="h-3 w-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
           </button>
           <button
             onClick={() => handleImport("lichess")}
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-gray-200 px-3 py-2.5 text-xs font-semibold text-gray-700 transition-colors hover:bg-gray-50"
+            disabled={!!importLoading}
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-gray-200 px-3 py-2.5 text-xs font-semibold text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-60"
           >
-            <span className="text-base">🏰</span>
-            {importCopied === "lichess" ? "Copied! Paste on Lichess" : "Lichess"}
+            {importLoading === "lichess" ? (
+              <svg className="h-4 w-4 animate-spin text-gray-500" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+              </svg>
+            ) : (
+              <span className="text-base">🏰</span>
+            )}
+            {importLoading === "lichess" ? "Importing…" : "Lichess"}
+            {!importLoading && (
+              <svg className="h-3 w-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            )}
           </button>
         </div>
+        {importError && (
+          <p className="mb-3 text-xs text-red-500">{importError}</p>
+        )}
 
         {/* PGN text + copy */}
         <div className="flex items-stretch gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2">
