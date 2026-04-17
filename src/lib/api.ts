@@ -134,6 +134,10 @@ export const api = {
     return fetchJson(`${API_BASE}/games/${id}/pgn/`);
   },
 
+  deleteGame(id: number): Promise<void> {
+    return fetchJson(`${API_BASE}/games/${id}/`, { method: "DELETE" });
+  },
+
   importFromChessCom(
     slug: string,
     payload: { username?: string; limit?: number }

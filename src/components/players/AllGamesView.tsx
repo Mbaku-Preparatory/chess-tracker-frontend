@@ -36,12 +36,83 @@ const YEAR_OPTIONS = [
 
 const PAGE_SIZE = 20;
 
+// ── Pagination ────────────────────────────────────────────────────────────────
+
+function pageWindow(page: number, totalPages: number): (number | "…")[] {
+  if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
+  const pages: (number | "…")[] = [1];
+  const left = Math.max(2, page - 2);
+  const right = Math.min(totalPages - 1, page + 2);
+  if (left > 2) pages.push("…");
+  for (let i = left; i <= right; i++) pages.push(i);
+  if (right < totalPages - 1) pages.push("…");
+  pages.push(totalPages);
+  return pages;
+}
+
+function Pagination({
+  page,
+  totalPages,
+  onPageChange,
+}: {
+  page: number;
+  totalPages: number;
+  onPageChange: (p: number) => void;
+}) {
+  const btnBase =
+    "min-w-[2rem] rounded-lg px-2 py-1.5 text-xs font-medium transition-colors";
+  const active = `${btnBase} bg-brand-600 text-white`;
+  const inactive = `${btnBase} text-gray-600 hover:bg-gray-100`;
+  const nav = `${btnBase} text-gray-500 hover:bg-gray-100 disabled:opacity-40`;
+
+  return (
+    <div className="mt-4 flex items-center justify-center gap-1">
+      <button
+        onClick={() => onPageChange(page - 1)}
+        disabled={page <= 1}
+        className={nav}
+      >
+        ‹
+      </button>
+
+      {pageWindow(page, totalPages).map((p, i) =>
+        p === "…" ? (
+          <span key={`ellipsis-${i}`} className="px-1 text-xs text-gray-400">
+            …
+          </span>
+        ) : (
+          <button
+            key={p}
+            onClick={() => onPageChange(p)}
+            className={p === page ? active : inactive}
+          >
+            {p}
+          </button>
+        )
+      )}
+
+      <button
+        onClick={() => onPageChange(page + 1)}
+        disabled={page >= totalPages}
+        className={nav}
+      >
+        ›
+      </button>
+    </div>
+  );
+}
+
 const selectCls =
   "rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-700 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
 
 export function AllGamesView({ slug }: AllGamesViewProps) {
   const [games, setGames] = useState<Game[]>([]);
   const [total, setTotal] = useState(0);
+
+  function handleGameDeleted(gameId: number) {
+    setGames((prev) => prev.filter((g) => g.id !== gameId));
+    setTotal((prev) => prev - 1);
+  }
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -173,28 +244,10 @@ export function AllGamesView({ slug }: AllGamesViewProps) {
         </div>
       ) : games.length > 0 ? (
         <>
-          <GamesTable games={games} />
+          <GamesTable games={games} onDeleted={handleGameDeleted} />
 
           {totalPages > 1 && (
-            <div className="mt-4 flex items-center justify-center gap-2">
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page <= 1}
-                className="btn-secondary text-sm disabled:opacity-50"
-              >
-                Previous
-              </button>
-              <span className="px-3 text-sm text-gray-500">
-                Page {page} of {totalPages}
-              </span>
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page >= totalPages}
-                className="btn-secondary text-sm disabled:opacity-50"
-              >
-                Next
-              </button>
-            </div>
+            <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
           )}
         </>
       ) : (

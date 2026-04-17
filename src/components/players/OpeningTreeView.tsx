@@ -81,6 +81,11 @@ function VariationRow({ stat, slug, sourceFilter, resultFilter, yearFilter, isEx
   const [page, setPage] = useState(1);
   const [error, setError] = useState<string | null>(null);
 
+  function handleGameDeleted(gameId: number) {
+    setGames((prev) => prev ? prev.filter((g) => g.id !== gameId) : prev);
+    setTotal((prev) => prev - 1);
+  }
+
   // Reset games when any filter changes
   useEffect(() => {
     if (isExpanded) {
@@ -183,7 +188,7 @@ function VariationRow({ stat, slug, sourceFilter, resultFilter, yearFilter, isEx
             <p className="text-sm text-red-600">{error}</p>
           ) : games && games.length > 0 ? (
             <>
-              <GamesTable games={games} />
+              <GamesTable games={games} onDeleted={handleGameDeleted} />
               {total > games.length && (
                 <div className="mt-3 text-center">
                   <button
