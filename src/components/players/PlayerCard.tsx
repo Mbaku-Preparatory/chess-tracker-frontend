@@ -88,10 +88,10 @@ export function PlayerCard({
 
   if (variant === "list") {
     return (
-      <div className="card overflow-hidden border-gray-200 px-5 py-4 transition-colors hover:border-brand-200">
+      <div className="card overflow-hidden border-gray-200 px-5 py-4 transition-colors hover:border-brand-200 dark:hover:border-brand-700">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex min-w-0 items-center gap-4">
-            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-brand-100 text-base font-bold text-brand-700">
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-brand-100 text-base font-bold text-brand-700 dark:bg-brand-900/50 dark:text-brand-300">
               {initials}
             </div>
             <div className="min-w-0">
@@ -100,12 +100,12 @@ export function PlayerCard({
                   {player.full_name}
                 </h3>
                 {player.title && (
-                  <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-bold text-amber-800">
+                  <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-bold text-amber-800 dark:bg-amber-900/40 dark:text-amber-400">
                     {player.title}
                   </span>
                 )}
               </div>
-              <p className="mt-0.5 text-sm font-medium text-brand-700">{productName}</p>
+              <p className="mt-0.5 text-sm font-medium text-brand-700 dark:text-brand-400">{productName}</p>
               <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500 dark:text-gray-400">
                 {player.federation && <span>{player.federation}</span>}
                 {rating && <span>Rating {rating}</span>}
@@ -124,7 +124,7 @@ export function PlayerCard({
                 onClick={handleDelete}
                 disabled={deleting}
                 title="Delete player profile"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-red-200 bg-red-50 text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-red-200 bg-red-50 text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40"
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-4 w-4" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3M4 7h16" />
@@ -135,7 +135,7 @@ export function PlayerCard({
         </div>
 
         {deleteError && (
-          <div className="mt-4 rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="mt-4 rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-400">
             {deleteError}
           </div>
         )}
@@ -144,11 +144,12 @@ export function PlayerCard({
   }
 
   return (
-    <div className="card group overflow-hidden border-gray-200 p-0 transition-all hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-lg">
-      <div className="border-b border-slate-100 bg-[radial-gradient(circle_at_top,_rgba(12,147,231,0.12),_transparent_55%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] px-6 py-6 dark:border-gray-700 dark:bg-none dark:bg-gray-800/80">
+    <div className="card group overflow-hidden border-gray-200 p-0 transition-all hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-lg dark:hover:border-brand-700 dark:hover:shadow-brand-900/30">
+      {/* Card header — fun gradient adapts to dark */}
+      <div className="border-b border-slate-100 bg-[radial-gradient(circle_at_top,_rgba(12,147,231,0.12),_transparent_55%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] px-6 py-6 dark:border-dark-border dark:bg-[radial-gradient(circle_at_top_left,_rgba(99,102,241,0.18),_transparent_60%),radial-gradient(circle_at_bottom_right,_rgba(12,147,231,0.10),_transparent_60%)]">
         <div className="flex items-start justify-between gap-4">
           <div className="flex min-w-0 items-start gap-4">
-            <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-brand-100 text-xl font-bold text-brand-700">
+            <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-brand-100 text-xl font-bold text-brand-700 dark:bg-gradient-to-br dark:from-brand-800/60 dark:to-indigo-800/60 dark:text-brand-200 dark:ring-1 dark:ring-brand-700/40">
               {initials}
             </div>
             <div className="min-w-0">
@@ -157,12 +158,12 @@ export function PlayerCard({
                   {player.full_name}
                 </h3>
                 {player.title && (
-                  <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-bold text-amber-800">
+                  <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-bold text-amber-800 dark:bg-amber-900/40 dark:text-amber-400">
                     {player.title}
                   </span>
                 )}
               </div>
-              <p className="mt-1 text-sm font-medium text-brand-700">{productName}</p>
+              <p className="mt-1 text-sm font-medium text-brand-700 dark:text-brand-400">{productName}</p>
               <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500 dark:text-gray-400">
                 {player.federation && <span>{player.federation}</span>}
                 {rating && <span>Rating {rating}</span>}
@@ -178,7 +179,7 @@ export function PlayerCard({
                 onClick={handleDelete}
                 disabled={deleting}
                 title="Delete player profile"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-red-200 bg-red-50 text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-red-200 bg-red-50 text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40"
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-4 w-4" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3M4 7h16" />
@@ -196,7 +197,7 @@ export function PlayerCard({
       </div>
 
       {deleteError && (
-        <div className="border-t border-red-100 bg-red-50 px-6 py-3 text-sm text-red-700">
+        <div className="border-t border-red-100 bg-red-50 px-6 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-400">
           {deleteError}
         </div>
       )}

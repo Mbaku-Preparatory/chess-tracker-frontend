@@ -6,7 +6,7 @@ interface EmptyStateProps {
 
 export function EmptyState({ title, description, action }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 px-6 py-16 text-center dark:border-gray-600">
+    <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 px-6 py-16 text-center dark:border-dark-border">
       <svg
         className="mb-4 h-12 w-12 text-gray-300"
         fill="none"

@@ -75,7 +75,7 @@ function FideSection({ slug, fideId }: { slug: string; fideId: string | null }) 
       <button
         type="button"
         onClick={() => setShowInput(true)}
-        className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-500 transition hover:border-[#1a3a6b]/40 hover:text-[#1a3a6b] dark:border-gray-600 dark:text-gray-400"
+        className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-500 transition hover:border-[#1a3a6b]/40 hover:text-[#1a3a6b] dark:border-dark-border dark:text-gray-400"
       >
         + Set FIDE ID
       </button>
@@ -93,7 +93,7 @@ function FideSection({ slug, fideId }: { slug: string; fideId: string | null }) 
         onChange={(e) => setInputId(e.target.value)}
         placeholder="e.g. 12345678"
         autoFocus
-        className="w-36 rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs text-gray-900 placeholder-gray-400 focus:border-[#1a3a6b] focus:outline-none focus:ring-1 focus:ring-[#1a3a6b] dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+        className="w-36 rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs text-gray-900 placeholder-gray-400 focus:border-[#1a3a6b] focus:outline-none focus:ring-1 focus:ring-[#1a3a6b] dark:border-dark-border dark:bg-dark-elevated dark:text-gray-100"
       />
       <button
         type="submit"

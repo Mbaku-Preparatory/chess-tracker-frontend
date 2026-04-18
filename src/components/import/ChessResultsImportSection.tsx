@@ -196,7 +196,7 @@ export function ChessResultsImportSection({
         <div className="space-y-4">
           <form onSubmit={handleSearch} className="space-y-3">
             {/* Mode tabs */}
-            <div className="flex gap-1 rounded-lg bg-gray-100 p-1 dark:bg-gray-700">
+            <div className="flex gap-1 rounded-lg bg-gray-100 p-1 dark:bg-dark-elevated">
               {(["fide_id", "name"] as const).map((mode) => (
                 <button
                   key={mode}
@@ -207,7 +207,7 @@ export function ChessResultsImportSection({
                   }}
                   className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition ${
                     searchMode === mode
-                      ? "bg-white text-gray-900 shadow-sm dark:bg-gray-600 dark:text-gray-100"
+                      ? "bg-white text-gray-900 shadow-sm dark:bg-dark-muted dark:text-gray-100"
                       : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                   }`}
                 >
@@ -223,7 +223,7 @@ export function ChessResultsImportSection({
                 onChange={(e) => setFideInput(e.target.value)}
                 placeholder="e.g. 1503014"
                 autoComplete="off"
-                className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-[#1a3a6b] focus:outline-none focus:ring-1 focus:ring-[#1a3a6b] dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-500"
+                className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-[#1a3a6b] focus:outline-none focus:ring-1 focus:ring-[#1a3a6b] dark:border-dark-border dark:bg-dark-elevated dark:text-gray-100 dark:placeholder-gray-500"
               />
             ) : (
               <input
@@ -232,7 +232,7 @@ export function ChessResultsImportSection({
                 onChange={(e) => setNameInput(e.target.value)}
                 placeholder="e.g. Timothy Mwabu"
                 autoComplete="off"
-                className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-[#1a3a6b] focus:outline-none focus:ring-1 focus:ring-[#1a3a6b] dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-500"
+                className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-[#1a3a6b] focus:outline-none focus:ring-1 focus:ring-[#1a3a6b] dark:border-dark-border dark:bg-dark-elevated dark:text-gray-100 dark:placeholder-gray-500"
               />
             )}
 
@@ -281,7 +281,7 @@ export function ChessResultsImportSection({
                   placeholder="https://chess-results.com/tnr12345.aspx?lan=1&art=9&snr=42"
                   autoComplete="off"
                   spellCheck={false}
-                  className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-[#1a3a6b] focus:outline-none focus:ring-1 focus:ring-[#1a3a6b] dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-500"
+                  className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-[#1a3a6b] focus:outline-none focus:ring-1 focus:ring-[#1a3a6b] dark:border-dark-border dark:bg-dark-elevated dark:text-gray-100 dark:placeholder-gray-500"
                 />
                 {rawUrl && !rawUrl.includes("chess-results.com") && (
                   <p className="text-xs text-red-600">URL must be from chess-results.com</p>
@@ -341,7 +341,7 @@ export function ChessResultsImportSection({
                 key={c.cr_id}
                 type="button"
                 onClick={() => loadTournaments(c.cr_id, c.name)}
-                className="flex w-full items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 text-left transition hover:border-[#1a3a6b]/40 hover:bg-blue-50/40 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-[#1a3a6b]/60 dark:hover:bg-blue-950/30"
+                className="flex w-full items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 text-left transition hover:border-[#1a3a6b]/40 hover:bg-blue-50/40 dark:border-dark-border dark:bg-dark-surface dark:hover:border-[#1a3a6b]/60 dark:hover:bg-blue-950/30"
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
@@ -477,7 +477,7 @@ function TournamentSelector({
                 className={`flex cursor-pointer items-start gap-3 rounded-lg border px-3 py-2.5 transition ${
                   checked
                     ? "border-[#1a3a6b]/40 bg-blue-50/60 dark:border-[#1a3a6b]/50 dark:bg-blue-950/30"
-                    : "border-gray-200 bg-white hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600"
+                    : "border-gray-200 bg-white hover:border-gray-300 dark:border-dark-border dark:bg-dark-surface dark:hover:border-gray-600"
                 }`}
               >
                 <input
@@ -552,12 +552,12 @@ function ImportProgress({
           return (
             <div
               key={`${t.tnr}-${t.snr}`}
-              className="flex items-start gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2.5 dark:border-gray-700 dark:bg-gray-800"
+              className="flex items-start gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2.5 dark:border-dark-border dark:bg-dark-surface"
             >
               {/* Status icon */}
               <div className="mt-0.5 shrink-0">
                 {r.status === "pending" && (
-                  <div className="h-4 w-4 rounded-full border-2 border-gray-300 dark:border-gray-600" />
+                  <div className="h-4 w-4 rounded-full border-2 border-gray-300 dark:border-dark-border" />
                 )}
                 {r.status === "importing" && (
                   <svg className="h-4 w-4 animate-spin text-[#1a3a6b]" fill="none" viewBox="0 0 24 24">
@@ -592,7 +592,7 @@ function ImportProgress({
                       {r.result.games_imported} imported
                     </span>
                     {r.result.games_skipped > 0 && (
-                      <span className="rounded-full border border-gray-200 bg-gray-100 px-2 py-0.5 text-xs text-gray-500 dark:border-gray-700 dark:bg-gray-700 dark:text-gray-400">
+                      <span className="rounded-full border border-gray-200 bg-gray-100 px-2 py-0.5 text-xs text-gray-500 dark:border-dark-border dark:bg-dark-elevated dark:text-gray-400">
                         {r.result.games_skipped} already existed
                       </span>
                     )}

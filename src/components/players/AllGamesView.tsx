@@ -62,8 +62,8 @@ function Pagination({
   const btnBase =
     "min-w-[2rem] rounded-lg px-2 py-1.5 text-xs font-medium transition-colors";
   const active = `${btnBase} bg-brand-600 text-white`;
-  const inactive = `${btnBase} text-gray-600 hover:bg-gray-100`;
-  const nav = `${btnBase} text-gray-500 hover:bg-gray-100 disabled:opacity-40`;
+  const inactive = `${btnBase} text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-dark-elevated`;
+  const nav = `${btnBase} text-gray-500 hover:bg-gray-100 disabled:opacity-40 dark:text-gray-400 dark:hover:bg-dark-elevated`;
 
   return (
     <div className="mt-4 flex items-center justify-center gap-1">
@@ -103,7 +103,7 @@ function Pagination({
 }
 
 const selectCls =
-  "rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-700 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
+  "rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-700 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-dark-border dark:bg-dark-elevated dark:text-gray-200 dark:focus:border-brand-500";
 
 export function AllGamesView({ slug }: AllGamesViewProps) {
   const [games, setGames] = useState<Game[]>([]);
@@ -164,7 +164,7 @@ export function AllGamesView({ slug }: AllGamesViewProps) {
               className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                 colorFilter === c
                   ? "bg-brand-600 text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-dark-elevated dark:text-gray-300 dark:hover:bg-dark-muted"
               }`}
             >
               {c === "" ? "All colors" : c === "white" ? "As White" : "As Black"}
@@ -172,7 +172,7 @@ export function AllGamesView({ slug }: AllGamesViewProps) {
           ))}
         </div>
 
-        <span className="h-4 w-px bg-gray-200" />
+        <span className="h-4 w-px bg-gray-200 dark:bg-dark-border" />
 
         {/* Result pills */}
         <div className="flex items-center gap-1.5">
@@ -183,7 +183,7 @@ export function AllGamesView({ slug }: AllGamesViewProps) {
               className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                 resultFilter === r.value
                   ? "bg-brand-600 text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-dark-elevated dark:text-gray-300 dark:hover:bg-dark-muted"
               }`}
             >
               {r.label}
@@ -191,7 +191,7 @@ export function AllGamesView({ slug }: AllGamesViewProps) {
           ))}
         </div>
 
-        <span className="h-4 w-px bg-gray-200" />
+        <span className="h-4 w-px bg-gray-200 dark:bg-dark-border" />
 
         {/* Source selector */}
         <select
@@ -225,7 +225,7 @@ export function AllGamesView({ slug }: AllGamesViewProps) {
         />
 
         {!loading && (
-          <span className="ml-auto text-xs text-gray-400">
+          <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">
             {total} game{total !== 1 ? "s" : ""}
           </span>
         )}
@@ -239,7 +239,7 @@ export function AllGamesView({ slug }: AllGamesViewProps) {
       ) : loading ? (
         <div className="space-y-2">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="h-12 animate-pulse rounded-xl bg-gray-200" />
+            <div key={i} className="h-12 animate-pulse rounded-xl bg-gray-200 dark:bg-dark-elevated" />
           ))}
         </div>
       ) : games.length > 0 ? (
@@ -251,8 +251,8 @@ export function AllGamesView({ slug }: AllGamesViewProps) {
           )}
         </>
       ) : (
-        <div className="rounded-xl border border-dashed border-gray-300 py-16 text-center">
-          <p className="text-sm text-gray-500">
+        <div className="rounded-xl border border-dashed border-gray-300 py-16 text-center dark:border-dark-border">
+          <p className="text-sm text-gray-500 dark:text-gray-500">
             {hasActiveFilters
               ? "No games match the current filters."
               : "No games found."}

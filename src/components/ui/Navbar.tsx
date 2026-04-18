@@ -28,7 +28,7 @@ export function Navbar() {
     href === "/" ? pathname === "/" : pathname.startsWith(href);
 
   return (
-    <nav className="no-print sticky top-0 z-50 border-b border-gray-200 bg-white/80 backdrop-blur-md dark:border-gray-700 dark:bg-gray-900/80">
+    <nav className="no-print sticky top-0 z-50 border-b border-gray-200 bg-white/80 backdrop-blur-md dark:border-dark-border dark:bg-dark-bg/80">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600 text-lg font-bold text-white">
@@ -44,7 +44,7 @@ export function Navbar() {
             className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
               isActive("/")
                 ? "bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400"
-                : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-100"
+                : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100"
             }`}
           >
             My Opponents
@@ -54,7 +54,7 @@ export function Navbar() {
           {initialized && onboardingComplete && (
             <Link
               href="/setup"
-              className="rounded-lg px-3 py-2 text-sm font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-100"
+              className="rounded-lg px-3 py-2 text-sm font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100"
               title="Edit your opening repertoire"
             >
               My Repertoire
@@ -64,7 +64,7 @@ export function Navbar() {
           {/* Theme toggle */}
           <button
             onClick={() => dispatch(toggleTheme())}
-            className="ml-1 rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-100"
+            className="ml-1 rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100"
             title={themeMode === "dark" ? "Switch to light mode" : "Switch to dark mode"}
           >
             {themeMode === "dark" ? (
@@ -80,7 +80,7 @@ export function Navbar() {
 
           {/* Auth state */}
           {token ? (
-            <div className="ml-2 flex items-center gap-2 border-l border-gray-200 pl-3 dark:border-gray-700">
+            <div className="ml-2 flex items-center gap-2 border-l border-gray-200 pl-3 dark:border-dark-border">
               {email && (
                 <span className="hidden max-w-[140px] truncate text-xs text-gray-400 dark:text-gray-500 sm:inline">
                   {email}
@@ -88,16 +88,16 @@ export function Navbar() {
               )}
               <button
                 onClick={handleLogout}
-                className="rounded-lg px-3 py-2 text-sm font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+                className="rounded-lg px-3 py-2 text-sm font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-200"
               >
                 Logout
               </button>
             </div>
           ) : (
-            <div className="ml-2 flex items-center gap-1 border-l border-gray-200 pl-3 dark:border-gray-700">
+            <div className="ml-2 flex items-center gap-1 border-l border-gray-200 pl-3 dark:border-dark-border">
               <Link
                 href="/login"
-                className="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-100"
+                className="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100"
               >
                 Login
               </Link>

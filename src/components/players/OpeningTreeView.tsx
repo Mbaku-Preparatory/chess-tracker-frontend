@@ -56,10 +56,10 @@ function ScoreBar({ score }: { score: number }) {
     pct >= 60 ? "bg-emerald-500" : pct >= 45 ? "bg-amber-400" : "bg-red-400";
   return (
     <div className="flex items-center gap-2">
-      <div className="h-1.5 w-16 overflow-hidden rounded-full bg-gray-100">
+      <div className="h-1.5 w-16 overflow-hidden rounded-full bg-gray-100 dark:bg-dark-elevated">
         <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
       </div>
-      <span className="text-xs text-gray-500">{pct}%</span>
+      <span className="text-xs text-gray-500 dark:text-gray-400">{pct}%</span>
     </div>
   );
 }
@@ -132,15 +132,15 @@ function VariationRow({ stat, slug, sourceFilter, resultFilter, yearFilter, isEx
   })();
 
   return (
-    <div className="border-t border-gray-100 first:border-t-0">
+    <div className="border-t border-gray-100 first:border-t-0 dark:border-dark-border">
       {/* Variation header row */}
       <button
         onClick={handleToggle}
-        className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-gray-50 active:bg-gray-100"
+        className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-gray-50 active:bg-gray-100 dark:hover:bg-dark-elevated dark:active:bg-dark-muted"
       >
         {/* Expand indicator */}
         <svg
-          className={`h-3.5 w-3.5 shrink-0 text-gray-400 transition-transform ${isExpanded ? "rotate-90" : ""}`}
+          className={`h-3.5 w-3.5 shrink-0 text-gray-400 dark:text-gray-500 transition-transform ${isExpanded ? "rotate-90" : ""}`}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -153,7 +153,7 @@ function VariationRow({ stat, slug, sourceFilter, resultFilter, yearFilter, isEx
         <EcoBadge code={stat.eco_code} />
 
         {/* Variation name */}
-        <span className="flex-1 truncate text-sm text-gray-700">
+        <span className="flex-1 truncate text-sm text-gray-700 dark:text-gray-300">
           {variationLabel || stat.opening_name}
         </span>
 
@@ -161,7 +161,7 @@ function VariationRow({ stat, slug, sourceFilter, resultFilter, yearFilter, isEx
         <ColorBadge color={stat.color_choice} />
 
         {/* Games count */}
-        <span className="w-16 text-right text-xs text-gray-500">
+        <span className="w-16 text-right text-xs text-gray-500 dark:text-gray-400">
           {stat.games_count} game{stat.games_count !== 1 ? "s" : ""}
         </span>
 
@@ -177,11 +177,11 @@ function VariationRow({ stat, slug, sourceFilter, resultFilter, yearFilter, isEx
 
       {/* Games panel */}
       {isExpanded && (
-        <div className="border-t border-gray-100 bg-gray-50/60 px-4 pb-4 pt-3">
+        <div className="border-t border-gray-100 bg-gray-50/60 px-4 pb-4 pt-3 dark:border-dark-border dark:bg-dark-bg/40">
           {loading && games === null ? (
             <div className="space-y-2">
               {[...Array(3)].map((_, i) => (
-                <div key={i} className="h-10 animate-pulse rounded bg-gray-200" />
+                <div key={i} className="h-10 animate-pulse rounded bg-gray-200 dark:bg-dark-elevated" />
               ))}
             </div>
           ) : error ? (
@@ -238,14 +238,14 @@ function FamilyRow({ group, slug, sourceFilter, resultFilter, yearFilter }: Fami
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-dark-border dark:bg-dark-surface">
       {/* Family header */}
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center gap-3 px-5 py-4 text-left transition-colors hover:bg-gray-50"
+        className="flex w-full items-center gap-3 px-5 py-4 text-left transition-colors hover:bg-gray-50 dark:hover:bg-dark-elevated"
       >
         <svg
-          className={`h-4 w-4 shrink-0 text-gray-400 transition-transform ${open ? "rotate-90" : ""}`}
+          className={`h-4 w-4 shrink-0 text-gray-400 dark:text-gray-500 transition-transform ${open ? "rotate-90" : ""}`}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -254,13 +254,13 @@ function FamilyRow({ group, slug, sourceFilter, resultFilter, yearFilter }: Fami
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
         </svg>
 
-        <span className="flex-1 font-semibold text-gray-900">{group.family}</span>
+        <span className="flex-1 font-semibold text-gray-900 dark:text-gray-100">{group.family}</span>
 
-        <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
+        <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600 dark:bg-dark-elevated dark:text-gray-300">
           {group.totalGames} game{group.totalGames !== 1 ? "s" : ""}
         </span>
 
-        <span className="ml-1 w-12 text-right text-xs text-gray-400">
+        <span className="ml-1 w-12 text-right text-xs text-gray-400 dark:text-gray-500">
           {group.variations.length} line{group.variations.length !== 1 ? "s" : ""}
         </span>
 
@@ -275,7 +275,7 @@ function FamilyRow({ group, slug, sourceFilter, resultFilter, yearFilter }: Fami
 
       {/* Variations list */}
       {open && (
-        <div className="border-t border-gray-100">
+        <div className="border-t border-gray-100 dark:border-dark-border">
           {group.variations.map((stat, idx) => {
             const key = `${stat.color_choice}-${stat.eco_code}-${idx}`;
             const toggleKey = `${stat.color_choice}-${stat.eco_code}`;
@@ -369,7 +369,7 @@ export function OpeningTreeView({ slug }: OpeningTreeViewProps) {
   const hasActiveFilters = Boolean(colorFilter || sourceFilter || resultFilter || yearFilter || openingSearch);
 
   const selectCls =
-    "rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-700 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
+    "rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-700 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-dark-border dark:bg-dark-elevated dark:text-gray-200 dark:focus:border-brand-500";
 
   return (
     <div>
@@ -384,7 +384,7 @@ export function OpeningTreeView({ slug }: OpeningTreeViewProps) {
               className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                 colorFilter === c
                   ? "bg-brand-600 text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-dark-elevated dark:text-gray-300 dark:hover:bg-dark-muted"
               }`}
             >
               {c === "" ? "All colors" : c === "white" ? "As White" : "As Black"}
@@ -392,7 +392,7 @@ export function OpeningTreeView({ slug }: OpeningTreeViewProps) {
           ))}
         </div>
 
-        <span className="h-4 w-px bg-gray-200" />
+        <span className="h-4 w-px bg-gray-200 dark:bg-dark-border" />
 
         {/* Result pills */}
         <div className="flex items-center gap-1.5">
@@ -403,7 +403,7 @@ export function OpeningTreeView({ slug }: OpeningTreeViewProps) {
               className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                 resultFilter === r.value
                   ? "bg-brand-600 text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-dark-elevated dark:text-gray-300 dark:hover:bg-dark-muted"
               }`}
             >
               {r.label}
@@ -411,7 +411,7 @@ export function OpeningTreeView({ slug }: OpeningTreeViewProps) {
           ))}
         </div>
 
-        <span className="h-4 w-px bg-gray-200" />
+        <span className="h-4 w-px bg-gray-200 dark:bg-dark-border" />
 
         {/* Source selector */}
         <select
@@ -445,7 +445,7 @@ export function OpeningTreeView({ slug }: OpeningTreeViewProps) {
         />
 
         {!loading && (
-          <span className="ml-auto text-xs text-gray-400">
+          <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">
             {filtered.length} opening family{filtered.length !== 1 ? "s" : ""}
           </span>
         )}
@@ -458,7 +458,7 @@ export function OpeningTreeView({ slug }: OpeningTreeViewProps) {
       ) : loading ? (
         <div className="space-y-3">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-14 animate-pulse rounded-xl bg-gray-200" />
+            <div key={i} className="h-14 animate-pulse rounded-xl bg-gray-200 dark:bg-dark-elevated" />
           ))}
         </div>
       ) : filtered.length > 0 ? (
@@ -475,8 +475,8 @@ export function OpeningTreeView({ slug }: OpeningTreeViewProps) {
           ))}
         </div>
       ) : (
-        <div className="rounded-xl border border-dashed border-gray-300 py-16 text-center">
-          <p className="text-sm text-gray-500">
+        <div className="rounded-xl border border-dashed border-gray-300 py-16 text-center dark:border-dark-border">
+          <p className="text-sm text-gray-500 dark:text-gray-500">
             {hasActiveFilters
               ? "No opening data matches the current filters. Adjust the filters above."
               : "No opening data yet. Import some games first."}

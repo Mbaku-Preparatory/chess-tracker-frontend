@@ -34,9 +34,9 @@ function AddOpponentCard() {
   return (
     <Link
       href="/players/new"
-      className="group flex min-h-[200px] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-200 bg-white p-8 text-center transition-all hover:border-brand-300 hover:bg-brand-50/30 dark:border-gray-600 dark:bg-gray-800 dark:hover:border-brand-600 dark:hover:bg-brand-900/20"
+      className="group flex min-h-[200px] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-200 bg-white p-8 text-center transition-all hover:border-brand-300 hover:bg-brand-50/30 dark:border-dark-border dark:bg-dark-surface dark:hover:border-brand-600 dark:hover:bg-brand-900/20"
     >
-      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full border-2 border-dashed border-gray-300 text-2xl text-gray-400 transition-colors group-hover:border-brand-400 group-hover:text-brand-500 dark:border-gray-600 dark:text-gray-500">
+      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full border-2 border-dashed border-gray-300 text-2xl text-gray-400 transition-colors group-hover:border-brand-400 group-hover:text-brand-500 dark:border-dark-border dark:text-gray-500">
         +
       </div>
       <p className="text-sm font-semibold text-gray-600 group-hover:text-brand-600 dark:text-gray-400 dark:group-hover:text-brand-400">
@@ -51,10 +51,10 @@ function AddOpponentListRow() {
   return (
     <Link
       href="/players/new"
-      className="group flex items-center justify-between rounded-xl border border-dashed border-gray-300 bg-white px-5 py-4 transition-all hover:border-brand-300 hover:bg-brand-50/30 dark:border-gray-600 dark:bg-gray-800 dark:hover:border-brand-600 dark:hover:bg-brand-900/20"
+      className="group flex items-center justify-between rounded-xl border border-dashed border-gray-300 bg-white px-5 py-4 transition-all hover:border-brand-300 hover:bg-brand-50/30 dark:border-dark-border dark:bg-dark-surface dark:hover:border-brand-600 dark:hover:bg-brand-900/20"
     >
       <div className="flex items-center gap-4">
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-dashed border-gray-300 text-2xl text-gray-400 transition-colors group-hover:border-brand-400 group-hover:text-brand-500 dark:border-gray-600 dark:text-gray-500">
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-dashed border-gray-300 text-2xl text-gray-400 transition-colors group-hover:border-brand-400 group-hover:text-brand-500 dark:border-dark-border dark:text-gray-500">
           +
         </div>
         <div>
@@ -78,14 +78,14 @@ function ListSkeleton() {
     <div className="card border-gray-200 px-5 py-4">
       <div className="flex items-center justify-between gap-4">
         <div className="flex min-w-0 items-center gap-4">
-          <div className="h-12 w-12 animate-pulse rounded-xl bg-gray-200 dark:bg-gray-700" />
+          <div className="h-12 w-12 animate-pulse rounded-xl bg-gray-200 dark:bg-dark-elevated" />
           <div className="min-w-0 space-y-2">
-            <div className="h-4 w-40 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
-            <div className="h-3 w-24 animate-pulse rounded bg-gray-100 dark:bg-gray-800" />
-            <div className="h-3 w-56 animate-pulse rounded bg-gray-100 dark:bg-gray-800" />
+            <div className="h-4 w-40 animate-pulse rounded bg-gray-200 dark:bg-dark-elevated" />
+            <div className="h-3 w-24 animate-pulse rounded bg-gray-100 dark:bg-dark-surface" />
+            <div className="h-3 w-56 animate-pulse rounded bg-gray-100 dark:bg-dark-surface" />
           </div>
         </div>
-        <div className="h-10 w-28 animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700" />
+        <div className="h-10 w-28 animate-pulse rounded-lg bg-gray-200 dark:bg-dark-elevated" />
       </div>
     </div>
   );
@@ -156,7 +156,7 @@ export default function HomePage() {
           className="max-w-xl flex-1"
         />
         <div className="flex flex-col gap-3 sm:items-end">
-          <div className="inline-flex rounded-full border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-800">
+          <div className="inline-flex rounded-full border border-gray-200 bg-white p-1 dark:border-dark-border dark:bg-dark-surface">
             {([
               {
                 value: "list" as const,
@@ -184,7 +184,7 @@ export default function HomePage() {
                 className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                   viewMode === option.value
                     ? "bg-brand-600 text-white"
-                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-200"
                 }`}
               >
                 {option.icon}
@@ -201,7 +201,7 @@ export default function HomePage() {
                 className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                   ordering === opt.value
                     ? "bg-brand-600 text-white"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-dark-elevated dark:text-gray-300 dark:hover:bg-dark-muted"
                 }`}
               >
                 {opt.label}

@@ -287,7 +287,7 @@ export default function PlayerImportPage() {
                 className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-semibold transition-all ${
                   isActive
                     ? tab.activeClass
-                    : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+                    : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50 dark:border-dark-border dark:bg-dark-elevated dark:text-gray-200 dark:hover:bg-dark-muted"
                 }`}
               >
                 <span className={isActive ? "text-white" : ""}>

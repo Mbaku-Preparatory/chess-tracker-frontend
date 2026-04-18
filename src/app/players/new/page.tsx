@@ -26,7 +26,7 @@ const PLATFORM_META = {
 function RatingBadge({ label, value }: { label: string; value?: number }) {
   if (!value) return null;
   return (
-    <span className="inline-flex items-center gap-1 rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600 dark:bg-gray-600 dark:text-gray-300">
+    <span className="inline-flex items-center gap-1 rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600 dark:bg-dark-muted dark:text-gray-300">
       <span className="font-medium text-gray-400">{label}</span>
       {value}
     </span>
@@ -47,9 +47,9 @@ function LookupResultCard({
     <button
       type="button"
       onClick={() => onSelect(result)}
-      className="flex w-full items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 text-left transition hover:border-brand-400 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-700 dark:hover:border-brand-500 dark:hover:bg-brand-900/20"
+      className="flex w-full items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 text-left transition hover:border-brand-400 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-500 dark:border-dark-border dark:bg-dark-elevated dark:hover:border-brand-500 dark:hover:bg-brand-900/20"
     >
-      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-100 dark:bg-gray-600">
+      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-100 dark:bg-dark-muted">
         {result.avatar_url ? (
           <Image
             src={result.avatar_url}
@@ -198,7 +198,7 @@ function PlatformUsernameSection({
                   value={u}
                   onChange={(e) => update(idx, e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); lookup(idx); } }}
-                  className="block flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-500"
+                  className="block flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-dark-border dark:bg-dark-elevated dark:text-gray-100 dark:placeholder-gray-500"
                   placeholder={placeholder}
                   autoComplete="off"
                   spellCheck={false}
@@ -208,7 +208,7 @@ function PlatformUsernameSection({
                   type="button"
                   onClick={() => lookup(idx)}
                   disabled={!u.trim() || state?.loading}
-                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:border-gray-300 hover:text-gray-600 disabled:opacity-40 dark:border-gray-600 dark:hover:border-gray-500"
+                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:border-gray-300 hover:text-gray-600 disabled:opacity-40 dark:border-dark-border dark:hover:border-gray-500"
                   aria-label={`Look up on ${label}`}
                   title={`Look up on ${label}`}
                 >
@@ -228,7 +228,7 @@ function PlatformUsernameSection({
                   <button
                     type="button"
                     onClick={() => remove(idx)}
-                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:border-gray-600"
+                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:border-dark-border"
                     aria-label="Remove"
                   >
                     <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5">
@@ -452,7 +452,7 @@ export default function NewPlayerPage() {
                 if (fideResults || fideError) { setFideResults(null); setFideError(null); }
               }}
               placeholder="e.g. Magnus Carlsen"
-              className="block flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-500"
+              className="block flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-dark-border dark:bg-dark-elevated dark:text-gray-100 dark:placeholder-gray-500"
               autoComplete="off"
               spellCheck={false}
               autoFocus
@@ -557,7 +557,7 @@ export default function NewPlayerPage() {
               type="text"
               value={fideId}
               onChange={(e) => setFideId(e.target.value)}
-              className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-500"
+              className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-dark-border dark:bg-dark-elevated dark:text-gray-100 dark:placeholder-gray-500"
               placeholder="e.g. 1503014"
             />
           </div>

@@ -57,7 +57,7 @@ function CreateTournamentForm() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-500 transition hover:border-brand-400 hover:text-brand-600 dark:border-gray-600 dark:text-gray-400 dark:hover:border-brand-500 dark:hover:text-brand-400"
+        className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-500 transition hover:border-brand-400 hover:text-brand-600 dark:border-dark-border dark:text-gray-400 dark:hover:border-brand-500 dark:hover:text-brand-400"
       >
         <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
           <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
@@ -91,7 +91,7 @@ function CreateTournamentForm() {
             onChange={(e) => setUrl(e.target.value)}
             placeholder="https://chess-results.com/tnr…"
             autoFocus
-            className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-500"
+            className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-dark-border dark:bg-dark-elevated dark:text-gray-100 dark:placeholder-gray-500"
           />
           {url && url.includes("chess-results.com") && (
             <p className="mt-1 text-xs text-brand-600 dark:text-brand-400">
@@ -172,7 +172,7 @@ function PairingForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-3 space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800/60">
+    <form onSubmit={handleSubmit} className="mt-3 space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-dark-border dark:bg-dark-surface/60">
       <div className="flex gap-2">
         <div className="w-20 shrink-0">
           <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Round</label>
@@ -181,7 +181,7 @@ function PairingForm({
             min="1"
             value={round}
             onChange={(e) => setRound(e.target.value)}
-            className="block w-full rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+            className="block w-full rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-dark-border dark:bg-dark-elevated dark:text-gray-100"
           />
         </div>
         <div className="flex-1">
@@ -192,7 +192,7 @@ function PairingForm({
             onChange={(e) => setOpponent(e.target.value)}
             placeholder="Opponent name"
             autoFocus
-            className="block w-full rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-500"
+            className="block w-full rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-dark-border dark:bg-dark-elevated dark:text-gray-100 dark:placeholder-gray-500"
           />
         </div>
         <div className="w-28 shrink-0">
@@ -200,7 +200,7 @@ function PairingForm({
           <select
             value={color}
             onChange={(e) => setColor(e.target.value as "white" | "black" | "")}
-            className="block w-full rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+            className="block w-full rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-dark-border dark:bg-dark-elevated dark:text-gray-100"
           >
             <option value="">Unknown</option>
             <option value="white">White</option>
@@ -341,7 +341,7 @@ function ActiveTournamentView() {
                         className={`inline-block h-2.5 w-2.5 rounded-full border border-gray-300 ${
                           nextPairing.color === "white"
                             ? "bg-white dark:bg-gray-200"
-                            : "bg-gray-800 dark:bg-gray-900"
+                            : "bg-gray-800 dark:bg-dark-bg"
                         }`}
                       />
                       {COLOR_LABEL[nextPairing.color]}

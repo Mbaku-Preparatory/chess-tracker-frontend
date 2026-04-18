@@ -16,6 +16,13 @@ const config: Config = {
         "global-loader": "global-loader 1.2s ease-in-out infinite",
       },
       colors: {
+        dark: {
+          bg:       "#0b0b0f",
+          surface:  "#14141c",
+          elevated: "#1d1d28",
+          border:   "#2c2c3e",
+          muted:    "#35354a",
+        },
         brand: {
           50: "#f0f7ff",
           100: "#e0effe",

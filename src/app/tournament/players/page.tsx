@@ -23,7 +23,7 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
 function ratingBadge(rating: number | null) {
   if (!rating) return null;
   return (
-    <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium tabular-nums text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+    <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium tabular-nums text-gray-600 dark:bg-dark-elevated dark:text-gray-300">
       {rating}
     </span>
   );
@@ -75,7 +75,7 @@ function PlayerRow({
   preparing: boolean;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
+    <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 dark:border-dark-border dark:bg-dark-surface">
       {player.rank != null && (
         <span className="w-7 shrink-0 text-right text-sm font-medium tabular-nums text-gray-400 dark:text-gray-500">
           {player.rank}
@@ -210,7 +210,7 @@ export default function TournamentPlayersPage() {
           type="button"
           onClick={refresh}
           disabled={loading}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50 disabled:opacity-60 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50 disabled:opacity-60 dark:border-dark-border dark:bg-dark-surface dark:text-gray-300 dark:hover:bg-dark-elevated"
         >
           {loading ? (
             <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -251,7 +251,7 @@ export default function TournamentPlayersPage() {
           {Array.from({ length: 8 }).map((_, i) => (
             <div
               key={i}
-              className="h-16 animate-pulse rounded-xl border border-gray-200 bg-gray-100 dark:border-gray-700 dark:bg-gray-800"
+              className="h-16 animate-pulse rounded-xl border border-gray-200 bg-gray-100 dark:border-dark-border dark:bg-dark-surface"
             />
           ))}
         </div>
@@ -267,12 +267,12 @@ export default function TournamentPlayersPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by name or federation…"
-              className="max-w-sm flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-500"
+              className="max-w-sm flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-dark-border dark:bg-dark-elevated dark:text-gray-100 dark:placeholder-gray-500"
             />
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortOption)}
-              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-dark-border dark:bg-dark-elevated dark:text-gray-100"
             >
               {SORT_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -313,7 +313,7 @@ export default function TournamentPlayersPage() {
           <button
             type="button"
             onClick={refresh}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50 dark:border-dark-border dark:bg-dark-surface dark:text-gray-300"
           >
             Refresh now
           </button>
