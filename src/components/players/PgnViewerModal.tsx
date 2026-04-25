@@ -32,35 +32,12 @@ function ShareSheet({
   onClose: () => void;
 }) {
   const [copied, setCopied] = useState(false);
-  const [importLoading, setImportLoading] = useState<"chesscom" | "lichess" | null>(null);
-  const [importError, setImportError] = useState<string | null>(null);
   const textRef = useRef<HTMLTextAreaElement>(null);
 
   async function copyToClipboard() {
     await navigator.clipboard.writeText(pgn);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  }
-
-  async function handleImport(platform: "chesscom" | "lichess") {
-    setImportError(null);
-    if (platform === "chesscom") {
-      // Chess.com analysis board accepts ?pgn= URL param directly
-      const url = `https://www.chess.com/analysis?pgn=${encodeURIComponent(pgn)}`;
-      window.open(url, "_blank", "noopener");
-      return;
-    }
-    // Lichess: proxy through our backend to avoid CORS
-    setImportLoading("lichess");
-    try {
-      const data = await api.lichessImportProxy(pgn);
-      window.open(data.url, "_blank", "noopener");
-    } catch (err) {
-      setImportError("Lichess import failed — try again.");
-      console.error(err);
-    } finally {
-      setImportLoading(null);
-    }
   }
 
   const title = `${game.opponent_name} (${game.result}) — ${game.date_played ?? ""}`;
@@ -166,45 +143,6 @@ function ShareSheet({
 
         <hr className="mb-4 border-gray-100" />
 
-        {/* Import row */}
-        <p className="mb-2 text-xs font-medium text-gray-500 uppercase tracking-wide">Open in analysis</p>
-        <div className="mb-4 flex gap-2">
-          <button
-            onClick={() => handleImport("chesscom")}
-            disabled={!!importLoading}
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-gray-200 px-3 py-2.5 text-xs font-semibold text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-60"
-          >
-            <span className="text-base">♟</span>
-            Chess.com
-            <svg className="h-3 w-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-            </svg>
-          </button>
-          <button
-            onClick={() => handleImport("lichess")}
-            disabled={!!importLoading}
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-gray-200 px-3 py-2.5 text-xs font-semibold text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-60"
-          >
-            {importLoading === "lichess" ? (
-              <svg className="h-4 w-4 animate-spin text-gray-500" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-              </svg>
-            ) : (
-              <span className="text-base">🏰</span>
-            )}
-            {importLoading === "lichess" ? "Importing…" : "Lichess"}
-            {!importLoading && (
-              <svg className="h-3 w-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-            )}
-          </button>
-        </div>
-        {importError && (
-          <p className="mb-3 text-xs text-red-500">{importError}</p>
-        )}
-
         {/* PGN text + copy */}
         <div className="flex items-stretch gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2">
           <textarea
@@ -268,6 +206,7 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showShare, setShowShare] = useState(false);
+  const [analysisLoading, setAnalysisLoading] = useState<"lichess" | null>(null);
   const moveListRef = useRef<HTMLDivElement>(null);
   const activeMoveRef = useRef<HTMLButtonElement>(null);
 
@@ -280,6 +219,23 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
     a.download = pgnFilename(game);
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  async function handleAnalysis(platform: "chesscom" | "lichess") {
+    if (!pgn) return;
+    if (platform === "chesscom") {
+      window.open(`https://www.chess.com/analysis?pgn=${encodeURIComponent(pgn)}`, "_blank", "noopener");
+      return;
+    }
+    setAnalysisLoading("lichess");
+    try {
+      const data = await api.lichessImportProxy(pgn);
+      window.open(data.url, "_blank", "noopener");
+    } catch {
+      // silent — user can retry
+    } finally {
+      setAnalysisLoading(null);
+    }
   }
 
   // Fetch PGN on mount
@@ -496,23 +452,57 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
             {/* PGN actions */}
             {pgn && (
               <div className="shrink-0 flex items-center justify-end gap-2 border-t border-gray-100 px-3 py-2 sm:px-4">
+                {/* Download — icon only */}
                 <button
                   onClick={handleDownload}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50"
+                  aria-label="Download PGN"
+                  title="Download PGN"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50"
                 >
                   <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                   </svg>
-                  Download PGN
                 </button>
+
+                {/* Chess.com analysis */}
+                <button
+                  onClick={() => handleAnalysis("chesscom")}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:border-[#7fa650]/40 hover:bg-[#7fa650]/5"
+                >
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5 text-[#7fa650]">
+                    <path d="M10 2a1 1 0 00-1 1v1H8a3 3 0 00-3 3v1H4a1 1 0 000 2h1v1a3 3 0 003 3h.17l-1.9 4.55A1 1 0 007.2 20h9.6a1 1 0 00.93-1.45L15.83 14H16a3 3 0 003-3v-1h1a1 1 0 000-2h-1V7a3 3 0 00-3-3h-1V3a1 1 0 00-1-1h-4z" />
+                  </svg>
+                  Chess.com
+                </button>
+
+                {/* Lichess analysis */}
+                <button
+                  onClick={() => handleAnalysis("lichess")}
+                  disabled={analysisLoading === "lichess"}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:border-[#b05000]/40 hover:bg-[#b05000]/5 disabled:opacity-60"
+                >
+                  {analysisLoading === "lichess" ? (
+                    <svg className="h-3.5 w-3.5 animate-spin text-[#b05000]" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5 text-[#b05000]">
+                      <path d="M19 22H5v-2h14v2M13 2a3 3 0 00-3 3c0 .88.39 1.67 1 2.22V8l-3 1-2 4h2v1H6l-1 3h14l-1-3h-2v-1h2l-2-4-3-1V7.22c.61-.55 1-1.34 1-2.22a3 3 0 00-1-2.24V2h-1z" />
+                    </svg>
+                  )}
+                  {analysisLoading === "lichess" ? "Opening…" : "Lichess"}
+                </button>
+
+                {/* Share */}
                 <button
                   onClick={() => setShowShare(true)}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50"
                 >
                   <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                   </svg>
-                  Share PGN
+                  Share
                 </button>
               </div>
             )}
