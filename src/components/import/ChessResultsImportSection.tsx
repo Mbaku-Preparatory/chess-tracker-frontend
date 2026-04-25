@@ -593,7 +593,7 @@ function ImportProgress({
                     </span>
                     {r.result.games_skipped > 0 && (
                       <span className="rounded-full border border-gray-200 bg-gray-100 px-2 py-0.5 text-xs text-gray-500 dark:border-dark-border dark:bg-dark-elevated dark:text-gray-400">
-                        {r.result.games_skipped} already existed
+                        {r.result.games_skipped} skipped
                       </span>
                     )}
                   </div>
