@@ -49,7 +49,7 @@ export default function PrepPage() {
   return (
     <div>
       <PageHeader
-        title={player ? `${player.full_name} — Prep Summary` : "Prep Summary"}
+        title={player ? `${player.full_name} — Opening Tree` : "Opening Tree"}
         subtitle="Move-level breakdown of opening tendencies across all imported games"
         actions={
           player && (

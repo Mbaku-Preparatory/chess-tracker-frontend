@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { ConnectedAccountManager } from "./ConnectedAccountManager";
@@ -28,31 +28,41 @@ export function ChessComImportSection({
   const [status, setStatus] = useState<Status>("idle");
   const [result, setResult] = useState<ChessComImportResult | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   const canSubmit = username.trim().length > 0 && status !== "loading";
+
+  function handleCancel() {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    setStatus("idle");
+    setErrorMsg(null);
+  }
 
   async function handleImport(e: React.FormEvent) {
     e.preventDefault();
     if (!canSubmit) return;
 
+    const controller = new AbortController();
+    abortRef.current = controller;
     setStatus("loading");
     setResult(null);
     setErrorMsg(null);
 
     try {
-      const data = await api.importFromChessCom(slug, {
-        username: username.trim(),
-        limit,
-      });
+      const data = await api.importFromChessCom(slug, { username: username.trim(), limit }, controller.signal);
       setResult(data);
       setStatus("success");
       onSuccess?.(data);
       await onUpdated?.();
     } catch (err: unknown) {
+      if (err instanceof Error && err.name === "AbortError") return;
       setErrorMsg(
         err instanceof Error ? err.message : "Import failed. Check the username and try again."
       );
       setStatus("error");
+    } finally {
+      abortRef.current = null;
     }
   }
 
@@ -163,6 +173,15 @@ export function ChessComImportSection({
               )}
               {status === "loading" ? "Fetching games…" : "Import from Chess.com"}
             </button>
+            {status === "loading" && (
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="text-sm text-gray-500 hover:text-gray-800 dark:hover:text-gray-200"
+              >
+                Cancel
+              </button>
+            )}
           </div>
 
           {/* Loading hint */}

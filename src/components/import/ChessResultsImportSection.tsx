@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { api } from "@/lib/api";
 import type {
   ChessResultsImportResult,
@@ -68,6 +68,7 @@ export function ChessResultsImportSection({
   const [rawUrl, setRawUrl] = useState("");
   const [rawUrlStatus, setRawUrlStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [rawUrlError, setRawUrlError] = useState<string | null>(null);
+  const cancelledRef = useRef(false);
 
   // ── Search ──────────────────────────────────────────────────────────────────
 
@@ -123,14 +124,21 @@ export function ChessResultsImportSection({
 
   // ── Import ──────────────────────────────────────────────────────────────────
 
+  function handleCancelImport() {
+    cancelledRef.current = true;
+  }
+
   async function handleImport(tournaments: ChessResultsTournamentOption[]) {
     const toImport = tournaments.filter((t) => selected.has(`${t.tnr}-${t.snr}`));
     if (toImport.length === 0) return;
 
+    cancelledRef.current = false;
     const results: TournamentResult[] = toImport.map(() => ({ status: "pending" }));
     setStep({ type: "importing", selected: toImport, results: [...results] });
 
     for (let i = 0; i < toImport.length; i++) {
+      if (cancelledRef.current) break;
+
       results[i] = { status: "importing" };
       setStep({ type: "importing", selected: toImport, results: [...results] });
 
@@ -408,6 +416,7 @@ export function ChessResultsImportSection({
           selected={step.selected}
           results={step.results}
           onReset={() => setStep({ type: "idle" })}
+          onCancel={step.type === "importing" ? handleCancelImport : undefined}
           isDone={step.type === "done"}
         />
       )}
@@ -519,12 +528,14 @@ function ImportProgress({
   selected,
   results,
   onReset,
+  onCancel,
   isDone,
 }: {
   playerRef: string;
   selected: ChessResultsTournamentOption[];
   results: TournamentResult[];
   onReset: () => void;
+  onCancel?: () => void;
   isDone: boolean;
 }) {
   const imported = totalImported(results);
@@ -607,6 +618,18 @@ function ImportProgress({
           );
         })}
       </div>
+
+      {!isDone && onCancel && (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="text-xs text-gray-500 hover:text-gray-800 dark:hover:text-gray-200"
+          >
+            Cancel import
+          </button>
+        </div>
+      )}
 
       {isDone && (
         <div className="flex flex-wrap items-center justify-between gap-3">

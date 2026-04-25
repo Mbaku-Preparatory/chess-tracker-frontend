@@ -153,23 +153,27 @@ export const api = {
 
   importFromChessCom(
     slug: string,
-    payload: { username?: string; limit?: number }
+    payload: { username?: string; limit?: number },
+    signal?: AbortSignal,
   ): Promise<ChessComImportResult> {
     return fetchJson(`${API_BASE}/players/${slug}/import-chesscom/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
+      signal,
     });
   },
 
   importFromLichess(
     slug: string,
-    payload: { username?: string; limit?: number }
+    payload: { username?: string; limit?: number },
+    signal?: AbortSignal,
   ): Promise<LichessImportResult> {
     return fetchJson(`${API_BASE}/players/${slug}/import-lichess/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
+      signal,
     });
   },
 

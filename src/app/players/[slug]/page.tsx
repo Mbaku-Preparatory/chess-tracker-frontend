@@ -222,6 +222,30 @@ export default function PlayerDetailPage() {
         </div>
       </div>
 
+      {/* Quick action buttons */}
+      <div className="no-print mb-6 flex flex-wrap gap-3">
+        <Link href={`/players/${slug}/games`} className="btn-primary">
+          View All Games
+        </Link>
+
+        <Link href={`/players/${slug}/prep`} className="btn-secondary inline-flex items-center gap-2">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+          Opening Tree
+        </Link>
+
+        <Link
+          href={`/players/${slug}/import?source=chess_results`}
+          className="btn-secondary inline-flex items-center gap-2"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
+          Import Games
+        </Link>
+      </div>
+
       {/* Ratings Row */}
       <div className="mb-8 grid gap-4 sm:grid-cols-3">
         <StatCard
@@ -338,29 +362,6 @@ export default function PlayerDetailPage() {
         </SectionContainer>
       )}
 
-      {/* CTA Buttons */}
-      <div className="no-print mt-8 flex flex-wrap gap-3">
-        <Link href={`/players/${slug}/games`} className="btn-primary">
-          View All Games
-        </Link>
-
-        <Link href={`/players/${slug}/prep`} className="btn-secondary inline-flex items-center gap-2">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-          </svg>
-          Prep Summary
-        </Link>
-
-        <Link
-          href={`/players/${slug}/import?source=chess_results`}
-          className="btn-secondary inline-flex items-center gap-2"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-          </svg>
-          Import Games
-        </Link>
-      </div>
     </div>
   );
 }
