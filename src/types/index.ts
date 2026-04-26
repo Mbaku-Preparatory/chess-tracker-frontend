@@ -359,6 +359,19 @@ export interface OpeningResult {
   epd: string;
 }
 
+// ── Opening Study Suggestions ─────────────────────────────────────────────────
+
+export interface OpeningStudySuggestion {
+  eco_code: string;
+  opening_name: string;
+  color: "white" | "black";
+  games: number;
+  score_percent: number;
+  priority: number;
+  lichess_opening_url: string;
+  lichess_study_url: string;
+}
+
 // ── Prep Summary ─────────────────────────────────────────────────────────────
 
 export interface PrepMoveFreq {

@@ -10,6 +10,7 @@ import type {
   GamesFilter,
   OpeningDistribution,
   OpeningStat,
+  OpeningStudySuggestion,
   Pairing,
   PaginatedResponse,
   PerformanceSummary,
@@ -250,6 +251,11 @@ export const api = {
     }
     const qs = params.toString();
     return fetchJson(`${API_BASE}/players/${slug}/insights/${qs ? `?${qs}` : ""}`);
+  },
+
+  getOpeningStudies(slug: string, limit?: number): Promise<{ suggestions: OpeningStudySuggestion[] }> {
+    const qs = limit ? `?limit=${limit}` : "";
+    return fetchJson(`${API_BASE}/players/${slug}/opening-studies/${qs}`);
   },
 
   getRepertoire(): Promise<RepertoireData> {

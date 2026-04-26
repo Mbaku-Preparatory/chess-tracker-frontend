@@ -10,6 +10,7 @@ import { api } from "@/lib/api";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { CardSkeleton } from "@/components/ui/LoadingSkeleton";
 import { PrepSummaryPanel } from "@/components/players/PrepSummaryPanel";
+import { OpeningStudyPlan } from "@/components/players/OpeningStudyPlan";
 import type { PrepSummary } from "@/types";
 
 export default function PrepPage() {
@@ -70,6 +71,8 @@ export default function PrepPage() {
           )
         }
       />
+
+      <OpeningStudyPlan slug={slug} />
 
       {error ? (
         <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
