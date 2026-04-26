@@ -11,6 +11,7 @@ import type {
   OpeningDistribution,
   OpeningStat,
   OpeningStudySuggestion,
+  OpeningExplorerData,
   Pairing,
   PaginatedResponse,
   PerformanceSummary,
@@ -256,6 +257,16 @@ export const api = {
   getOpeningStudies(slug: string, limit?: number): Promise<{ suggestions: OpeningStudySuggestion[] }> {
     const qs = limit ? `?limit=${limit}` : "";
     return fetchJson(`${API_BASE}/players/${slug}/opening-studies/${qs}`);
+  },
+
+  getOpeningExplorer(
+    slug: string,
+    eco_code: string,
+    opening_name?: string,
+  ): Promise<OpeningExplorerData> {
+    const qs = new URLSearchParams({ eco_code });
+    if (opening_name) qs.set("opening_name", opening_name);
+    return fetchJson(`${API_BASE}/players/${slug}/opening-explorer/?${qs}`);
   },
 
   getRepertoire(): Promise<RepertoireData> {

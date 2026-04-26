@@ -372,6 +372,51 @@ export interface OpeningStudySuggestion {
   lichess_study_url: string;
 }
 
+// ── Opening Explorer ─────────────────────────────────────────────────────────
+
+export interface ExplorerDbStats {
+  total: number;
+  white_wins: number;
+  draws: number;
+  black_wins: number;
+  white_pct: number;
+  draw_pct: number;
+  black_pct: number;
+}
+
+export interface ExplorerEngineMove {
+  san: string;
+  uci: string;
+  score: number | null;
+  rank: number | null;
+  winrate: string | null;
+  note: string;
+}
+
+export interface ExplorerDbGame {
+  id: number;
+  player_name: string;
+  opponent_name: string;
+  color_played: ColorChoice;
+  result: GameResult;
+  date_played: string | null;
+  event: string;
+  round: string;
+  opening_name: string;
+  opponent_rating: number | null;
+  pgn_available: boolean;
+}
+
+export interface OpeningExplorerData {
+  eco_code: string;
+  opening_name: string;
+  fen: string | null;
+  db_stats: ExplorerDbStats;
+  top_games: ExplorerDbGame[];
+  engine_moves: ExplorerEngineMove[];
+  lichess_opening_url: string;
+}
+
 // ── Prep Summary ─────────────────────────────────────────────────────────────
 
 export interface PrepMoveFreq {

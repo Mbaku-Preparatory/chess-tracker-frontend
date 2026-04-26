@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { OpeningExplorer } from "@/components/players/OpeningExplorer";
 import type { OpeningStudySuggestion } from "@/types";
 
 // ── ECO family colour map ─────────────────────────────────────────────────────
@@ -62,14 +63,26 @@ function SkeletonRow() {
 
 // ── Single suggestion row ─────────────────────────────────────────────────────
 
-function SuggestionRow({ item }: { item: OpeningStudySuggestion }) {
+function SuggestionRow({
+  item,
+  isExplorerOpen,
+  onToggleExplorer,
+}: {
+  item: OpeningStudySuggestion;
+  isExplorerOpen: boolean;
+  onToggleExplorer: () => void;
+}) {
   const colors = ecoColors(item.eco_code);
   const tier = scoreTier(item.score_percent);
   const badge = PRIORITY_BADGE[tier];
   const barColor = SCORE_BAR_COLOR[tier];
 
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-white px-3 py-2.5 dark:border-dark-border dark:bg-dark-surface">
+    <div className={`flex items-center gap-3 px-3 py-2.5 ${
+      isExplorerOpen
+        ? "rounded-t-lg border border-b-0 border-brand-200/60 bg-white dark:border-brand-800/40 dark:bg-dark-surface"
+        : "rounded-lg border border-gray-100 bg-white dark:border-dark-border dark:bg-dark-surface"
+    }`}>
       {/* ECO badge */}
       <span
         className={`inline-flex h-7 w-10 shrink-0 items-center justify-center rounded-md border text-xs font-bold ${colors.bg} ${colors.text} ${colors.border}`}
@@ -122,6 +135,29 @@ function SuggestionRow({ item }: { item: OpeningStudySuggestion }) {
         {badge.label}
       </span>
 
+      {/* Explore toggle */}
+      <button
+        onClick={onToggleExplorer}
+        title={isExplorerOpen ? "Close explorer" : "Explore stats & theory"}
+        className={`flex shrink-0 items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium transition-colors ${
+          isExplorerOpen
+            ? "border-brand-300 bg-brand-50 text-brand-700 dark:border-brand-700/60 dark:bg-brand-900/30 dark:text-brand-400"
+            : "border-gray-200 text-gray-500 hover:border-gray-300 hover:bg-gray-50 dark:border-dark-border dark:text-gray-400 dark:hover:bg-dark-elevated"
+        }`}
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-3.5 w-3.5">
+          <circle cx="11" cy="11" r="8" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35" />
+        </svg>
+        <svg
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          className={`h-3 w-3 transition-transform ${isExplorerOpen ? "rotate-180" : ""}`}
+        >
+          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+        </svg>
+      </button>
+
       {/* Study button */}
       <a
         href={item.lichess_opening_url}
@@ -131,7 +167,6 @@ function SuggestionRow({ item }: { item: OpeningStudySuggestion }) {
         style={{ borderColor: "#b05000", color: "#b05000" }}
         title={`Open ${item.opening_name} on Lichess`}
       >
-        {/* Lichess knight SVG */}
         <svg viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5" aria-hidden="true">
           <path d="M19 22H5v-2h14v2M13 2a3 3 0 00-3 3c0 .88.39 1.67 1 2.22V8l-3 1-2 4h2v1H6l-1 3h14l-1-3h-2v-1h2l-2-4-3-1V7.22c.61-.55 1-1.34 1-2.22a3 3 0 00-1-2.24V2h-1z" />
         </svg>
@@ -153,6 +188,7 @@ export function OpeningStudyPlan({ slug }: { slug: string }) {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<ColorTab>("all");
   const [expanded, setExpanded] = useState(false);
+  const [openExplorerKey, setOpenExplorerKey] = useState<string | null>(null);
 
   useEffect(() => {
     if (!slug) return;
@@ -200,7 +236,7 @@ export function OpeningStudyPlan({ slug }: { slug: string }) {
           return (
             <button
               key={t}
-              onClick={() => { setTab(t); setExpanded(false); }}
+              onClick={() => { setTab(t); setExpanded(false); setOpenExplorerKey(null); }}
               className={`flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-medium transition-all ${
                 tab === t
                   ? "bg-gray-100 text-gray-900 dark:bg-dark-elevated dark:text-gray-100"
@@ -236,9 +272,31 @@ export function OpeningStudyPlan({ slug }: { slug: string }) {
           </p>
         ) : (
           <>
-            {visible.map((item, i) => (
-              <SuggestionRow key={`${item.eco_code}-${item.color}-${i}`} item={item} />
-            ))}
+            {visible.map((item, i) => {
+              const explorerKey = `${item.eco_code}-${item.color}`;
+              const isOpen = openExplorerKey === explorerKey;
+              return (
+                <div key={explorerKey + i}>
+                  <SuggestionRow
+                    item={item}
+                    isExplorerOpen={isOpen}
+                    onToggleExplorer={() =>
+                      setOpenExplorerKey(isOpen ? null : explorerKey)
+                    }
+                  />
+                  {isOpen && (
+                    <div className="rounded-b-lg border border-t border-brand-200/60 bg-gray-50/70 dark:border-brand-800/40 dark:bg-dark-elevated">
+                      <OpeningExplorer
+                        slug={slug}
+                        ecoCode={item.eco_code}
+                        openingName={item.opening_name}
+                        playerColor={item.color}
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
 
             {/* Show all / collapse toggle */}
             {hiddenCount > 0 && !expanded && (
