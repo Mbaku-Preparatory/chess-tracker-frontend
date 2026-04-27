@@ -21,6 +21,11 @@ export const GetPlayersQuery = (
         federation
         profileImage
         createdAt
+        gameSourceCounts {
+          chessResults
+          chessCom
+          lichess
+        }
       }
     }
   }
