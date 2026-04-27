@@ -2,8 +2,9 @@ import axios from "axios";
 
 import { authStorage } from "@/lib/auth";
 
-const GRAPHQL_API =
-  process.env.NEXT_PUBLIC_GRAPHQL_API ?? "http://localhost:8000/graphql/";
+// Derive the GraphQL URL from the REST API base so both stay in sync automatically.
+const API_BASE = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api").replace(/\/api\/?$/, "");
+const GRAPHQL_API = process.env.NEXT_PUBLIC_GRAPHQL_API ?? `${API_BASE}/graphql/`;
 
 const graphqlClient = axios.create({
   baseURL: GRAPHQL_API,
