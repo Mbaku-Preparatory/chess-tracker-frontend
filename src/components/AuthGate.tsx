@@ -3,9 +3,9 @@
 import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { loadAuthFromStorage } from "@/store/slices/authSlice";
-import { fetchRepertoire, setInitialized } from "@/store/slices/repertoireSlice";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { loadAuthFromStorage } from "@/redux/actions/auth";
+import { fetchRepertoire, setInitialized } from "@/redux/actions/repertoire";
 
 /**
  * Paths that are publicly accessible without a login.

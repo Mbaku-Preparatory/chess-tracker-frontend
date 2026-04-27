@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 import { api } from "@/lib/api";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { fetchTeams } from "@/store/slices/teamsSlice";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { fetchTeams } from "@/redux/actions/teams";
 import type { Team } from "@/types";
 
 function CreateTeamModal({

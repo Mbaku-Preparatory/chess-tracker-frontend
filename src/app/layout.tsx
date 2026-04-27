@@ -4,7 +4,7 @@ import { AuthGate } from "@/components/AuthGate";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { GlobalLoader } from "@/components/ui/GlobalLoader";
 import { Navbar } from "@/components/ui/Navbar";
-import { StoreProvider } from "@/store/provider";
+import { StoreProvider } from "@/redux/provider";
 
 import "./globals.css";
 

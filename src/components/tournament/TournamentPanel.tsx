@@ -4,13 +4,13 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
   fetchActiveTournament,
   createTournament,
   upsertPairing,
   closeTournament,
-} from "@/store/slices/tournamentSlice";
+} from "@/redux/actions/tournament";
 import { getPreparedPlayerImportHref, prepareOpponent } from "@/lib/prepareOpponent";
 import type { Pairing } from "@/types";
 
@@ -152,7 +152,8 @@ function PairingForm({
     setSubmitting(true);
     setErr(null);
     try {
-      await dispatch(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result: any = await dispatch(
         upsertPairing({
           tournamentId,
           pairing: {
@@ -162,10 +163,14 @@ function PairingForm({
             result: "",
           },
         })
-      ).unwrap();
-      onClose();
-    } catch (e: any) {
-      setErr(e?.message ?? "Failed to save pairing");
+      );
+      if (result?.errors) {
+        setErr(String(result.errors));
+      } else {
+        onClose();
+      }
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : "Failed to save pairing");
     } finally {
       setSubmitting(false);
     }

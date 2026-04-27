@@ -1,31 +1,56 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { clearAuth } from "@/store/slices/authSlice";
-import { toggleTheme } from "@/store/slices/themeSlice";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { clearAuth, setProfilePic } from "@/redux/actions/auth";
+import { toggleTheme } from "@/redux/actions/theme";
 
 export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  const { token, email } = useAppSelector((s) => s.auth);
+  const { token, email, profilePic } = useAppSelector((s) => s.auth);
   const { onboardingComplete, initialized } = useAppSelector((s) => s.repertoire);
   const themeMode = useAppSelector((s) => s.theme.mode);
 
-  // Hide navbar on auth pages and setup page
-  if (pathname === "/setup" || pathname === "/login" || pathname === "/signup") return null;
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  if (pathname === "/setup" || pathname === "/login" || pathname === "/signup" || pathname === "/") return null;
 
   function handleLogout() {
     dispatch(clearAuth());
     router.replace("/login");
   }
 
-  const isActive = (href: string) =>
-    href === "/" ? pathname === "/" : pathname.startsWith(href);
+  function handleProfilePicChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      dispatch(setProfilePic(ev.target?.result as string));
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  }
+
+  const initials = email ? email[0].toUpperCase() : "?";
+
+  const isActive = (href: string) => pathname.startsWith(href);
 
   return (
     <nav className="no-print sticky top-0 z-50 border-b border-gray-200 bg-white/80 backdrop-blur-md dark:border-dark-border dark:bg-dark-bg/80">
@@ -40,9 +65,9 @@ export function Navbar() {
         <div className="flex items-center gap-1">
           {/* Main nav link */}
           <Link
-            href="/"
+            href="/players"
             className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-              isActive("/")
+              isActive("/players")
                 ? "bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400"
                 : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100"
             }`}
@@ -92,18 +117,76 @@ export function Navbar() {
 
           {/* Auth state */}
           {token ? (
-            <div className="ml-2 flex items-center gap-2 border-l border-gray-200 pl-3 dark:border-dark-border">
-              {email && (
-                <span className="hidden max-w-[140px] truncate text-xs text-gray-400 dark:text-gray-500 sm:inline">
-                  {email}
-                </span>
-              )}
+            <div ref={profileRef} className="relative ml-2 border-l border-gray-200 pl-3 dark:border-dark-border">
+              {/* Profile avatar button */}
               <button
-                onClick={handleLogout}
-                className="rounded-lg px-3 py-2 text-sm font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-200"
+                onClick={() => setDropdownOpen((o) => !o)}
+                className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full ring-2 ring-brand-600/20 transition-all hover:ring-brand-600/50 focus:outline-none"
+                title="Profile"
               >
-                Logout
+                {profilePic ? (
+                  <img src={profilePic} alt="Profile" className="h-full w-full object-cover" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-brand-600 text-sm font-bold text-white">
+                    {initials}
+                  </div>
+                )}
               </button>
+
+              {/* Profile dropdown */}
+              {dropdownOpen && (
+                <div className="absolute right-0 top-12 z-50 w-56 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg dark:border-dark-border dark:bg-dark-elevated">
+                  {/* Avatar + upload */}
+                  <div className="flex flex-col items-center px-4 pt-5 pb-4">
+                    <div
+                      className="group relative h-16 w-16 cursor-pointer"
+                      onClick={() => fileInputRef.current?.click()}
+                      title="Change profile picture"
+                    >
+                      {profilePic ? (
+                        <img src={profilePic} alt="Profile" className="h-full w-full rounded-full object-cover" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center rounded-full bg-brand-600 text-2xl font-bold text-white">
+                          {initials}
+                        </div>
+                      )}
+                      {/* Camera overlay on hover */}
+                      <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-6 w-6 text-white">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
+                        </svg>
+                      </div>
+                    </div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleProfilePicChange}
+                    />
+                    <p className="mt-1.5 text-xs text-gray-400">Tap to change photo</p>
+                    {email && (
+                      <p className="mt-1 max-w-full truncate text-sm font-medium text-gray-700 dark:text-gray-200">
+                        {email}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Logout */}
+                  <div className="border-t border-gray-100 dark:border-dark-border">
+                    <button
+                      onClick={() => { setDropdownOpen(false); handleLogout(); }}
+                      className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-medium text-red-500 transition-colors hover:bg-red-50 dark:hover:bg-red-900/20"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                      </svg>
+                      Logout
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="ml-2 flex items-center gap-1 border-l border-gray-200 pl-3 dark:border-dark-border">

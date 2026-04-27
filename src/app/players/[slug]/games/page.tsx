@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { fetchPlayerDetail } from "@/store/slices/playerDetailSlice";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { fetchPlayerDetail } from "@/redux/actions/playerDetail";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { OpeningTreeView } from "@/components/players/OpeningTreeView";
 import { AllGamesView } from "@/components/players/AllGamesView";

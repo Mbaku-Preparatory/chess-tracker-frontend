@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-import { useAppSelector } from "@/store/hooks";
+import { useAppSelector } from "@/redux/hooks";
 import { api } from "@/lib/api";
 import { getPreparedPlayerImportHref, prepareOpponent } from "@/lib/prepareOpponent";
 import type { TournamentPlayer } from "@/types";

@@ -342,8 +342,8 @@ export interface PlayerInsights {
 }
 
 export interface RepertoireData {
-  white: import("@/store/slices/repertoireSlice").RepertoireOpening[];
-  black: import("@/store/slices/repertoireSlice").RepertoireOpening[];
+  white: import("@/redux/actions/repertoire").RepertoireOpening[];
+  black: import("@/redux/actions/repertoire").RepertoireOpening[];
   onboarding_complete: boolean;
   updated_at?: string;
 }

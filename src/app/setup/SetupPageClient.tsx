@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { api } from "@/lib/api";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
   addOpening,
   completeOnboarding,
@@ -12,7 +12,7 @@ import {
   saveRepertoire,
   type RepertoireOpening,
   type RepertoireSection,
-} from "@/store/slices/repertoireSlice";
+} from "@/redux/actions/repertoire";
 import type { OpeningResult } from "@/types";
 
 const SECTIONS: { key: RepertoireSection; label: string; hint: string }[] = [

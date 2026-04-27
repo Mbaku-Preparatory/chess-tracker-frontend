@@ -2,8 +2,8 @@
 
 import { useEffect } from "react";
 
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { loadThemeFromStorage } from "@/store/slices/themeSlice";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { loadThemeFromStorage } from "@/redux/actions/theme";
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch();
