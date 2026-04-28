@@ -1,15 +1,11 @@
 "use client";
 
 import { cpToWhitePct, formatScore } from "@/hooks/useStockfish";
+import type { StockfishResult } from "@/hooks/useStockfish";
 
-interface EvalBarProps {
-  score: number | null;
-  mate: number | null;
-  depth: number;
-  isAnalyzing: boolean;
-}
+type EvalBarProps = Pick<StockfishResult, "score" | "mate" | "depth" | "isAnalyzing" | "source">;
 
-export function EvalBar({ score, mate, depth, isAnalyzing }: EvalBarProps) {
+export function EvalBar({ score, mate, depth, isAnalyzing, source }: EvalBarProps) {
   const whitePct = cpToWhitePct(score, mate);
   const label    = formatScore(score, mate);
   const isWhiteAhead = mate !== null ? mate > 0 : (score ?? 0) >= 0;
@@ -35,11 +31,15 @@ export function EvalBar({ score, mate, depth, isAnalyzing }: EvalBarProps) {
         />
       </div>
 
-      {/* Analyzing indicator */}
-      <span className="h-1.5 w-1.5 rounded-full leading-none">
-        {isAnalyzing && (
-          <span className="block h-1.5 w-1.5 animate-pulse rounded-full bg-brand-400" />
-        )}
+      {/* Source / analyzing indicator */}
+      <span className="h-2 w-2 leading-none flex items-center justify-center">
+        {isAnalyzing ? (
+          <span className="block h-1.5 w-1.5 animate-pulse rounded-full bg-brand-400" title="Analysing…" />
+        ) : source === "lichess" ? (
+          <span className="block h-1.5 w-1.5 rounded-full bg-amber-400" title="Lichess cloud eval" />
+        ) : source === "local" ? (
+          <span className="block h-1.5 w-1.5 rounded-full bg-emerald-400" title="Local Stockfish" />
+        ) : null}
       </span>
     </div>
   );

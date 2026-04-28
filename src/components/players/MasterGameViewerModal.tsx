@@ -269,6 +269,7 @@ export function MasterGameViewerModal({ game, onClose }: { game: MasterGame; onC
                 mate={engine.mate}
                 depth={engine.depth}
                 isAnalyzing={engine.isAnalyzing}
+                source={engine.source}
               />
               <div className="w-full max-w-[min(45vw,420px)] sm:w-[min(45vw,420px)]" style={{ minWidth: 220 }}>
                 <Chessboard
