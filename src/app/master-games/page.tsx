@@ -272,7 +272,7 @@ function BroadcastGameRow({ game, onClick }: { game: ParsedBroadcastGame; onClic
 type Tab = "lichess" | "twic";
 
 export default function MasterGamesPage() {
-  const [tab, setTab] = useState<Tab>("lichess");
+  const [tab, setTab] = useState<Tab>("twic");
 
   // TWIC
   const [search, setSearch]             = useState("");
@@ -373,9 +373,9 @@ export default function MasterGamesPage() {
         {/* Tab bar — scrollable on very narrow screens */}
         <div className="mb-5 flex gap-1 overflow-x-auto rounded-xl border border-gray-200 bg-gray-50 p-1 dark:border-dark-border dark:bg-dark-elevated" style={{ width: "fit-content", maxWidth: "100%" }}>
           {([
-            { id: "lichess" as Tab, label: "Live", sublabel: "Lichess", dot: <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#b05000]" /> },
-            { id: "twic"    as Tab, label: "Archived", sublabel: "TWIC",    dot: <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-sky-500" /> },
-          ]).map(({ id, label, sublabel, dot }) => (
+            { id: "twic"    as Tab, label: "Archived", sublabel: "TWIC",    dot: <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-sky-500" />, beta: false },
+            { id: "lichess" as Tab, label: "Live",     sublabel: "Lichess", dot: <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#b05000]" />, beta: true },
+          ]).map(({ id, label, sublabel, dot, beta }) => (
             <button
               key={id}
               onClick={() => setTab(id)}
@@ -388,6 +388,11 @@ export default function MasterGamesPage() {
               {dot}
               <span>{label}</span>
               <span className="hidden text-gray-400 sm:inline">· {sublabel}</span>
+              {beta && (
+                <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                  Beta
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -395,9 +400,15 @@ export default function MasterGamesPage() {
         {/* ── TWIC tab ─────────────────────────────────────────────────────── */}
         {tab === "twic" && (
           <>
-            {/* Search — only show on list view on mobile */}
+            {/* Description + search — only show on list view on mobile */}
             {!twicShowDetail && (
               <div className="mb-4">
+                <div className="mb-3 rounded-xl border border-sky-100 bg-sky-50 px-4 py-3 dark:border-sky-900/40 dark:bg-sky-900/10">
+                  <p className="text-sm font-medium text-sky-800 dark:text-sky-300">What is TWIC?</p>
+                  <p className="mt-0.5 text-xs leading-relaxed text-sky-700 dark:text-sky-400">
+                    <span className="font-semibold">The Week in Chess</span> is a free weekly publication covering major chess tournaments worldwide since 1994. This library contains {totalGames.toLocaleString()} GM classical games (both players rated ≥ 2500) from the 2024–2026 archives, searchable by tournament.
+                  </p>
+                </div>
                 <SearchInput
                   placeholder="Search — Tata Steel, Candidates, Bundesliga…"
                   onSearch={handleSearch}
@@ -405,7 +416,7 @@ export default function MasterGamesPage() {
                   className="w-full max-w-xl"
                 />
                 <p className="mt-1.5 text-xs text-gray-400 dark:text-gray-600">
-                  {totalGames.toLocaleString()} GM games · {tournaments.length} tournaments · TWIC 2024–2026
+                  {tournaments.length} tournaments · updated weekly
                 </p>
               </div>
             )}
