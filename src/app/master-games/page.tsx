@@ -92,6 +92,39 @@ function EmptyPanel({ label }: { label: string }) {
   );
 }
 
+function LoadMoreBar({
+  shown, total, onLoadMore,
+}: {
+  shown: number; total: number; onLoadMore: () => void;
+}) {
+  const remaining = total - shown;
+  if (remaining <= 0) return null;
+  return (
+    <div className="flex items-center gap-3 pt-1">
+      <div className="h-px flex-1 bg-gray-100 dark:bg-dark-border" />
+      <button
+        onClick={onLoadMore}
+        className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-4 py-1.5 text-xs font-medium text-gray-600 transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 dark:border-dark-border dark:bg-dark-surface dark:text-gray-400 dark:hover:border-brand-700 dark:hover:bg-brand-900/20 dark:hover:text-brand-400"
+      >
+        Show {Math.min(20, remaining)} more
+        <span className="rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-500 dark:bg-dark-elevated dark:text-gray-500">
+          {remaining} left
+        </span>
+      </button>
+      <div className="h-px flex-1 bg-gray-100 dark:bg-dark-border" />
+    </div>
+  );
+}
+
+function ListCount({ shown, total, label }: { shown: number; total: number; label: string }) {
+  return (
+    <p className="mb-2 text-xs text-gray-400 dark:text-gray-600">
+      Showing <span className="font-medium text-gray-600 dark:text-gray-400">{shown}</span> of{" "}
+      <span className="font-medium text-gray-600 dark:text-gray-400">{total}</span> {label}
+    </p>
+  );
+}
+
 // ── TWIC components ───────────────────────────────────────────────────────────
 
 function TwicTournamentCard({ t, selected, onClick }: { t: TournamentSummary; selected: boolean; onClick: () => void }) {
@@ -274,17 +307,21 @@ type Tab = "lichess" | "twic";
 export default function MasterGamesPage() {
   const [tab, setTab] = useState<Tab>("twic");
 
+  const PAGE_SIZE = 20;
+
   // TWIC
-  const [search, setSearch]             = useState("");
-  const [tournaments, setTournaments]   = useState<TournamentSummary[]>([]);
-  const [tourLoading, setTourLoading]   = useState(true);
-  const [selectedTwic, setSelectedTwic] = useState<TournamentSummary | null>(null);
-  const [twicGames, setTwicGames]       = useState<MasterGame[]>([]);
-  const [twicLoading, setTwicLoading]   = useState(false);
+  const [search, setSearch]               = useState("");
+  const [tournaments, setTournaments]     = useState<TournamentSummary[]>([]);
+  const [tourLoading, setTourLoading]     = useState(true);
+  const [twicVisible, setTwicVisible]     = useState(PAGE_SIZE);
+  const [selectedTwic, setSelectedTwic]   = useState<TournamentSummary | null>(null);
+  const [twicGames, setTwicGames]         = useState<MasterGame[]>([]);
+  const [twicLoading, setTwicLoading]     = useState(false);
 
   // Lichess
   const [broadcasts, setBroadcasts]       = useState<LichessBroadcastEntry[]>([]);
   const [bcastLoading, setBcastLoading]   = useState(true);
+  const [bcastVisible, setBcastVisible]   = useState(PAGE_SIZE);
   const [selectedBcast, setSelectedBcast] = useState<LichessBroadcastEntry | null>(null);
   const [rounds, setRounds]               = useState<LichessRound[]>([]);
   const [roundsLoading, setRoundsLoading] = useState(false);
@@ -337,7 +374,7 @@ export default function MasterGamesPage() {
       .finally(() => setRoundLoading(false));
   }, [selectedRound]);
 
-  const handleSearch = useCallback((q: string) => { setSearch(q); setSelectedTwic(null); }, []);
+  const handleSearch = useCallback((q: string) => { setSearch(q); setSelectedTwic(null); setTwicVisible(PAGE_SIZE); }, []);
 
   function toViewable(g: ParsedBroadcastGame): MasterGame {
     return {
@@ -424,17 +461,26 @@ export default function MasterGamesPage() {
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
               {/* Tournament list — hidden on mobile when detail is open */}
               <div className={`${twicShowDetail ? "hidden lg:flex" : "flex"} w-full flex-col gap-2 lg:w-80 lg:shrink-0 xl:w-96`}>
-                {tourLoading
-                  ? <Skeleton rows={7} />
-                  : tournaments.length === 0
-                    ? <EmptyPanel label="No tournaments found." />
-                    : tournaments.map((t) => (
-                        <TwicTournamentCard key={t.event} t={t}
-                          selected={selectedTwic?.event === t.event}
-                          onClick={() => setSelectedTwic(t)}
-                        />
-                      ))
-                }
+                {tourLoading ? (
+                  <Skeleton rows={7} />
+                ) : tournaments.length === 0 ? (
+                  <EmptyPanel label="No tournaments found." />
+                ) : (
+                  <>
+                    <ListCount shown={Math.min(twicVisible, tournaments.length)} total={tournaments.length} label="tournaments" />
+                    {tournaments.slice(0, twicVisible).map((t) => (
+                      <TwicTournamentCard key={t.event} t={t}
+                        selected={selectedTwic?.event === t.event}
+                        onClick={() => setSelectedTwic(t)}
+                      />
+                    ))}
+                    <LoadMoreBar
+                      shown={Math.min(twicVisible, tournaments.length)}
+                      total={tournaments.length}
+                      onLoadMore={() => setTwicVisible((v) => v + 20)}
+                    />
+                  </>
+                )}
               </div>
 
               {/* Game panel — hidden on mobile when nothing selected */}
@@ -473,18 +519,24 @@ export default function MasterGamesPage() {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
             {/* Broadcast list — hidden on mobile when a broadcast is selected */}
             <div className={`${lichessShowDetail ? "hidden lg:flex" : "flex"} w-full flex-col gap-2 lg:w-80 lg:shrink-0 xl:w-96`}>
-              <p className="mb-1 text-xs text-gray-400 dark:text-gray-600">
-                Live and recent major broadcasts from Lichess
-              </p>
-              {bcastLoading
-                ? <Skeleton rows={7} h="h-20" />
-                : broadcasts.map((entry) => (
+              {bcastLoading ? (
+                <Skeleton rows={7} h="h-20" />
+              ) : (
+                <>
+                  <ListCount shown={Math.min(bcastVisible, broadcasts.length)} total={broadcasts.length} label="broadcasts" />
+                  {broadcasts.slice(0, bcastVisible).map((entry) => (
                     <BroadcastCard key={entry.tour.id} entry={entry}
                       selected={selectedBcast?.tour.id === entry.tour.id}
                       onClick={() => { setSelectedBcast(entry); setSelectedRound(null); }}
                     />
-                  ))
-              }
+                  ))}
+                  <LoadMoreBar
+                    shown={Math.min(bcastVisible, broadcasts.length)}
+                    total={broadcasts.length}
+                    onLoadMore={() => setBcastVisible((v) => v + 20)}
+                  />
+                </>
+              )}
             </div>
 
             {/* Detail panel — rounds + games */}
