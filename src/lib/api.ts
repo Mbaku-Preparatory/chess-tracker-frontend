@@ -217,18 +217,21 @@ export const api = {
     moves: string[],
     color: "white" | "black" | "",
     page = 1,
+    source?: string,
   ): Promise<{ count: number; page: number; page_size: number; results: import("@/types").Game[] }> {
     const params = new URLSearchParams();
     if (moves.length) params.set("moves", moves.join(","));
     if (color) params.set("color", color);
     if (page > 1) params.set("page", String(page));
+    if (source) params.set("source", source);
     return fetchJson(`${API_BASE}/players/${slug}/prep-games/?${params}`);
   },
 
-  async downloadPrepGamesPgn(slug: string, moves: string[], color: "white" | "black" | ""): Promise<void> {
+  async downloadPrepGamesPgn(slug: string, moves: string[], color: "white" | "black" | "", source?: string): Promise<void> {
     const params = new URLSearchParams();
     if (moves.length) params.set("moves", moves.join(","));
     if (color) params.set("color", color);
+    if (source) params.set("source", source);
     const token = authStorage.getToken();
     const res = await fetch(`${API_BASE}/players/${slug}/prep-games/pgn/?${params}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},

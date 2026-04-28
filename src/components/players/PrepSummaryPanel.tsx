@@ -157,9 +157,10 @@ interface InteractivePrepTreeProps {
   totalGames: number;
   slug: string;
   color: "white" | "black";
+  source?: string;
 }
 
-function InteractivePrepTree({ tree, orientation, totalGames, slug, color }: InteractivePrepTreeProps) {
+function InteractivePrepTree({ tree, orientation, totalGames, slug, color, source }: InteractivePrepTreeProps) {
   const [path, setPath] = useState<string[]>([]);
   const [games, setGames] = useState<Game[]>([]);
   const [gamesTotal, setGamesTotal] = useState(0);
@@ -182,7 +183,7 @@ function InteractivePrepTree({ tree, orientation, totalGames, slug, color }: Int
     const id = ++fetchRef.current;
     setGamesPage(1);
     setGamesLoading(true);
-    api.getPrepGames(slug, path, color, 1).then((res) => {
+    api.getPrepGames(slug, path, color, 1, source).then((res) => {
       if (fetchRef.current !== id) return;
       setGames(res.results);
       setGamesTotal(res.count);
@@ -196,7 +197,7 @@ function InteractivePrepTree({ tree, orientation, totalGames, slug, color }: Int
   function loadMoreGames() {
     const nextPage = gamesPage + 1;
     setGamesLoading(true);
-    api.getPrepGames(slug, path, color, nextPage).then((res) => {
+    api.getPrepGames(slug, path, color, nextPage, source).then((res) => {
       setGames((prev) => [...prev, ...res.results]);
       setGamesPage(nextPage);
     }).catch(() => {}).finally(() => setGamesLoading(false));
@@ -205,7 +206,7 @@ function InteractivePrepTree({ tree, orientation, totalGames, slug, color }: Int
   async function handleDownload() {
     setDownloading(true);
     try {
-      await api.downloadPrepGamesPgn(slug, path, color);
+      await api.downloadPrepGamesPgn(slug, path, color, source);
     } catch { /* ignore */ } finally {
       setDownloading(false);
     }
@@ -617,6 +618,7 @@ export function PrepSummaryPanel({ slug }: { slug: string }) {
                   totalGames={as_white.total}
                   slug={slug}
                   color="white"
+                  source={sourceFilter === "otb" ? "chess_results" : undefined}
                 />
               )
             ) : (
@@ -630,6 +632,7 @@ export function PrepSummaryPanel({ slug }: { slug: string }) {
                   totalGames={as_black.total}
                   slug={slug}
                   color="black"
+                  source={sourceFilter === "otb" ? "chess_results" : undefined}
                 />
               )
             )}
