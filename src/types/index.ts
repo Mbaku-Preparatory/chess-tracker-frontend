@@ -386,6 +386,7 @@ export interface MasterGame {
   event: string;
   site: string;
   year: number | null;
+  moves: string;
 }
 
 // ── Opening Explorer ─────────────────────────────────────────────────────────

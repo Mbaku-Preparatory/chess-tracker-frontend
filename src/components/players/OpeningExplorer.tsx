@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { PgnViewerModal } from "@/components/players/PgnViewerModal";
+import { MasterGameViewerModal } from "@/components/players/MasterGameViewerModal";
 import type {
   OpeningExplorerData,
   ExplorerEngineMove,
@@ -299,12 +300,22 @@ const RESULT_LABEL: Record<string, string> = {
   "1-0": "1-0", "0-1": "0-1", "1/2-1/2": "½-½",
 };
 
-function MasterGameRow({ game }: { game: MasterGame }) {
+function MasterGameRow({ game, onOpen }: { game: MasterGame; onOpen: (g: MasterGame) => void }) {
   const resultCls = RESULT_COLOR[game.result] ?? "text-gray-500";
   const resultLabel = RESULT_LABEL[game.result] ?? game.result;
+  const hasMoves = Boolean(game.moves?.trim());
 
   return (
-    <div className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-white dark:hover:bg-dark-surface">
+    <button
+      onClick={() => hasMoves && onOpen(game)}
+      disabled={!hasMoves}
+      className={`group flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs transition-colors ${
+        hasMoves
+          ? "hover:bg-white dark:hover:bg-dark-surface cursor-pointer"
+          : "cursor-default opacity-60"
+      }`}
+      title={hasMoves ? `View ${game.white} vs ${game.black}` : "No moves recorded"}
+    >
       {/* Result */}
       <span className={`w-7 shrink-0 font-mono font-bold ${resultCls}`}>
         {resultLabel}
@@ -330,7 +341,15 @@ function MasterGameRow({ game }: { game: MasterGame }) {
       {game.year && (
         <span className="shrink-0 text-gray-400">{game.year}</span>
       )}
-    </div>
+
+      {/* View indicator */}
+      {hasMoves && (
+        <svg className="h-3.5 w-3.5 shrink-0 text-gray-300 group-hover:text-brand-500 transition-colors dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      )}
+    </button>
   );
 }
 
@@ -354,6 +373,7 @@ export function OpeningExplorer({
   const [viewingGame, setViewingGame] = useState<Game | null>(null);
   const [masterGames, setMasterGames] = useState<MasterGame[]>([]);
   const [masterLoading, setMasterLoading] = useState(true);
+  const [viewingMasterGame, setViewingMasterGame] = useState<MasterGame | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -400,6 +420,9 @@ export function OpeningExplorer({
     <>
       {viewingGame && (
         <PgnViewerModal game={viewingGame} onClose={() => setViewingGame(null)} />
+      )}
+      {viewingMasterGame && (
+        <MasterGameViewerModal game={viewingMasterGame} onClose={() => setViewingMasterGame(null)} />
       )}
 
       <div className="space-y-5 px-4 pb-5 pt-4">
@@ -502,7 +525,7 @@ export function OpeningExplorer({
                 {masterGames.map((g, i) => (
                   <div key={g.id}>
                     {i > 0 && <div className="mx-3 border-t border-gray-100 dark:border-dark-border" />}
-                    <MasterGameRow game={g} />
+                    <MasterGameRow game={g} onOpen={setViewingMasterGame} />
                   </div>
                 ))}
               </div>
