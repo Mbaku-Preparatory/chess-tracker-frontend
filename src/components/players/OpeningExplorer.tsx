@@ -11,6 +11,7 @@ import type {
   ColorChoice,
   GameResult,
   GameSource,
+  MasterGame,
 } from "@/types";
 
 // ── W/D/B segmented bar ───────────────────────────────────────────────────────
@@ -286,6 +287,53 @@ function toGameObject(g: ExplorerDbGame): Game {
   };
 }
 
+// ── Master game row ───────────────────────────────────────────────────────────
+
+const RESULT_COLOR: Record<string, string> = {
+  "1-0":     "text-emerald-600 dark:text-emerald-400",
+  "0-1":     "text-red-500    dark:text-red-400",
+  "1/2-1/2": "text-amber-600  dark:text-amber-400",
+};
+
+const RESULT_LABEL: Record<string, string> = {
+  "1-0": "1-0", "0-1": "0-1", "1/2-1/2": "½-½",
+};
+
+function MasterGameRow({ game }: { game: MasterGame }) {
+  const resultCls = RESULT_COLOR[game.result] ?? "text-gray-500";
+  const resultLabel = RESULT_LABEL[game.result] ?? game.result;
+
+  return (
+    <div className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-white dark:hover:bg-dark-surface">
+      {/* Result */}
+      <span className={`w-7 shrink-0 font-mono font-bold ${resultCls}`}>
+        {resultLabel}
+      </span>
+
+      {/* Players */}
+      <div className="min-w-0 flex-1">
+        <span className="font-medium text-gray-800 dark:text-gray-200">
+          {game.white}
+          {game.white_elo ? <span className="ml-0.5 font-normal text-gray-400">({game.white_elo})</span> : null}
+        </span>
+        <span className="mx-1 text-gray-300 dark:text-gray-600">vs</span>
+        <span className="font-medium text-gray-800 dark:text-gray-200">
+          {game.black}
+          {game.black_elo ? <span className="ml-0.5 font-normal text-gray-400">({game.black_elo})</span> : null}
+        </span>
+      </div>
+
+      {/* Event + year */}
+      <span className="hidden shrink-0 max-w-[110px] truncate text-gray-400 sm:block" title={game.event}>
+        {game.event || game.site}
+      </span>
+      {game.year && (
+        <span className="shrink-0 text-gray-400">{game.year}</span>
+      )}
+    </div>
+  );
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 export function OpeningExplorer({
@@ -304,6 +352,8 @@ export function OpeningExplorer({
   const [error, setError] = useState<string | null>(null);
   const [showAllMoves, setShowAllMoves] = useState(false);
   const [viewingGame, setViewingGame] = useState<Game | null>(null);
+  const [masterGames, setMasterGames] = useState<MasterGame[]>([]);
+  const [masterLoading, setMasterLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -317,6 +367,18 @@ export function OpeningExplorer({
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [slug, ecoCode, openingName]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setMasterLoading(true);
+    setMasterGames([]);
+    api
+      .getMasterGames(ecoCode, 10)
+      .then((games) => { if (!cancelled) setMasterGames(games); })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setMasterLoading(false); });
+    return () => { cancelled = true; };
+  }, [ecoCode]);
 
   if (loading) return <ExplorerSkeleton />;
 
@@ -424,6 +486,34 @@ export function OpeningExplorer({
             </svg>
           </a>
         </div>
+
+        {/* ── GM master games ───────────────────────────────────────────────── */}
+        {(masterLoading || masterGames.length > 0) && (
+          <div>
+            <SectionHeader label="GM reference games" count={masterLoading ? "…" : masterGames.length} />
+            {masterLoading ? (
+              <div className="space-y-1 animate-pulse">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="h-7 rounded-lg bg-gray-100 dark:bg-dark-elevated" />
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-lg border border-gray-100 bg-gray-50/60 dark:border-dark-border dark:bg-dark-elevated">
+                {masterGames.map((g, i) => (
+                  <div key={g.id}>
+                    {i > 0 && <div className="mx-3 border-t border-gray-100 dark:border-dark-border" />}
+                    <MasterGameRow game={g} />
+                  </div>
+                ))}
+              </div>
+            )}
+            {!masterLoading && masterGames.length === 0 && (
+              <p className="text-xs text-gray-400 dark:text-gray-600">
+                No GM games imported for this opening yet.
+              </p>
+            )}
+          </div>
+        )}
 
       </div>
     </>

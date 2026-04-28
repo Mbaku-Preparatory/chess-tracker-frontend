@@ -246,6 +246,11 @@ export const api = {
     URL.revokeObjectURL(url);
   },
 
+  getMasterGames(eco: string, limit = 10): Promise<import("@/types").MasterGame[]> {
+    const params = new URLSearchParams({ eco, limit: String(limit) });
+    return fetchJson(`${API_BASE}/openings/master-games/?${params}`);
+  },
+
   getPlayerInsights(slug: string, ecoCodes?: string[]): Promise<PlayerInsights> {
     const params = new URLSearchParams();
     if (ecoCodes && ecoCodes.length > 0) {

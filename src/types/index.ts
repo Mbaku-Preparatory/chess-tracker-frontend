@@ -372,6 +372,22 @@ export interface OpeningStudySuggestion {
   lichess_study_url: string;
 }
 
+// ── Master Games ─────────────────────────────────────────────────────────────
+
+export interface MasterGame {
+  id: number;
+  white: string;
+  black: string;
+  white_elo: number | null;
+  black_elo: number | null;
+  result: "1-0" | "0-1" | "1/2-1/2";
+  eco: string;
+  opening_name: string;
+  event: string;
+  site: string;
+  year: number | null;
+}
+
 // ── Opening Explorer ─────────────────────────────────────────────────────────
 
 export interface ExplorerDbStats {
