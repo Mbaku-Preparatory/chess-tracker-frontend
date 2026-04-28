@@ -145,7 +145,7 @@ function SuggestionRow({
             : "border-gray-200 text-gray-500 hover:border-gray-300 hover:bg-gray-50 dark:border-dark-border dark:text-gray-400 dark:hover:bg-dark-elevated"
         }`}
       >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-3.5 w-3.5">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="hidden h-3.5 w-3.5 sm:block">
           <circle cx="11" cy="11" r="8" />
           <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35" />
         </svg>
@@ -167,11 +167,11 @@ function SuggestionRow({
         style={{ borderColor: "#b05000", color: "#b05000" }}
         title={`Open ${item.opening_name} on Lichess`}
       >
-        <svg viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="currentColor" className="hidden h-3.5 w-3.5 sm:block" aria-hidden="true">
           <path d="M19 22H5v-2h14v2M13 2a3 3 0 00-3 3c0 .88.39 1.67 1 2.22V8l-3 1-2 4h2v1H6l-1 3h14l-1-3h-2v-1h2l-2-4-3-1V7.22c.61-.55 1-1.34 1-2.22a3 3 0 00-1-2.24V2h-1z" />
         </svg>
         Study
-        <svg viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3" aria-hidden="true">
+        <svg viewBox="0 0 20 20" fill="currentColor" className="hidden h-3 w-3 sm:block" aria-hidden="true">
           <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
         </svg>
       </a>
