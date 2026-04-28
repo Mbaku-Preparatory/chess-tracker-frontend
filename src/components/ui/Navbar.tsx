@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { clearAuth, setProfilePic } from "@/redux/actions/auth";
 import { toggleTheme } from "@/redux/actions/theme";
+import { ThemePicker } from "./ThemePicker";
 
 export function Navbar() {
   const pathname = usePathname();
@@ -171,6 +172,11 @@ export function Navbar() {
                         {email}
                       </p>
                     )}
+                  </div>
+
+                  {/* Theme picker */}
+                  <div className="border-t border-gray-100 px-4 py-3 dark:border-dark-border">
+                    <ThemePicker />
                   </div>
 
                   {/* Logout */}

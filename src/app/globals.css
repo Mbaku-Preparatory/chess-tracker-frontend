@@ -2,6 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Default brand palette (Ocean Blue) — overridden by ThemeProvider ─────── */
+:root {
+  --brand-50:  240 247 255;
+  --brand-100: 224 239 254;
+  --brand-200: 186 224 253;
+  --brand-300: 124 200 251;
+  --brand-400:  54 173 246;
+  --brand-500:  12 147 231;
+  --brand-600:   0 116 197;
+  --brand-700:   1  93 160;
+  --brand-800:   6  79 132;
+  --brand-900:  11  66 110;
+  --brand-950:   7  42  73;
+}
+
 @layer base {
   body {
     @apply bg-gray-50 text-gray-900 antialiased dark:bg-dark-bg dark:text-gray-100;
