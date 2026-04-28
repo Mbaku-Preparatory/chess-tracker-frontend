@@ -6,6 +6,8 @@ import { Chessboard } from "react-chessboard";
 import type { Game } from "@/types";
 import { api } from "@/lib/api";
 import { ColorBadge, ResultBadge } from "@/components/ui/Badge";
+import { EvalBar } from "@/components/ui/EvalBar";
+import { useStockfish, parseUciMove } from "@/hooks/useStockfish";
 
 function pgnFilename(game: Game): string {
   const opp = game.opponent_name.replace(/[^a-z0-9]/gi, "_").replace(/_+/g, "_");
@@ -303,6 +305,10 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
       ? "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
       : moves[currentIndex].fen;
 
+  // Stockfish analysis
+  const engine = useStockfish(currentFen, !loading && !error);
+  const bestMoveSquares = parseUciMove(engine.bestMove);
+
   // Build highlighted squares for last move using verbose history
   const highlightSquares: Record<string, React.CSSProperties> = {};
   if (currentIndex >= 0 && pgn) {
@@ -374,8 +380,14 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
 
         {/* Body */}
         <div className="flex min-h-0 flex-1 flex-col sm:flex-row">
-          {/* Board */}
-          <div className="flex shrink-0 items-center justify-center bg-gray-50 p-3 sm:p-5">
+          {/* Board + eval bar */}
+          <div className="flex shrink-0 items-center justify-center gap-2 bg-gray-50 p-3 sm:p-5">
+            <EvalBar
+              score={engine.score}
+              mate={engine.mate}
+              depth={engine.depth}
+              isAnalyzing={engine.isAnalyzing}
+            />
             <div className="w-full max-w-[min(45vw,420px)] sm:w-[min(45vw,420px)]" style={{ minWidth: 220 }}>
               {loading ? (
                 <div className="aspect-square w-full animate-pulse rounded-lg bg-gray-200" />
@@ -385,7 +397,18 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
                     position: currentFen,
                     boardOrientation: game.color_played === "black" ? "black" : "white",
                     allowDragging: false,
-                    squareStyles: highlightSquares,
+                    squareStyles: {
+                      ...highlightSquares,
+                      ...(bestMoveSquares
+                        ? {
+                            [bestMoveSquares[0]]: { backgroundColor: "rgba(0,200,80,0.35)" },
+                            [bestMoveSquares[1]]: { backgroundColor: "rgba(0,200,80,0.55)" },
+                          }
+                        : {}),
+                    },
+                    arrows: bestMoveSquares
+                      ? [{ startSquare: bestMoveSquares[0], endSquare: bestMoveSquares[1], color: "rgba(0,180,80,0.8)" }]
+                      : [],
                     boardStyle: {
                       borderRadius: "8px",
                       boxShadow: "0 4px 24px rgba(0,0,0,0.12)",
