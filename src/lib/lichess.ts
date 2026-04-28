@@ -72,10 +72,22 @@ export async function fetchTopBroadcasts(nb = 30): Promise<LichessBroadcastEntry
   });
   if (!resp.ok) throw new Error("Failed to fetch broadcasts");
   const data = await resp.json();
-  // Combine active + slice of past into one flat list
-  const active: LichessBroadcastEntry[]  = data.active  ?? [];
-  const past: LichessBroadcastEntry[]    = data.past?.results ?? [];
-  return [...active, ...past].slice(0, nb);
+
+  const now = Date.now();
+
+  // Filter out upcoming broadcasts whose current round hasn't started yet.
+  // Lichess marks scheduled-but-not-started tournaments as "active" — we
+  // only want ones that are live right now or have already begun.
+  const active: LichessBroadcastEntry[] = (data.active ?? []).filter(
+    (e: LichessBroadcastEntry) =>
+      e.round.ongoing === true ||
+      (e.round.startsAt !== undefined && e.round.startsAt <= now)
+  );
+
+  const past: LichessBroadcastEntry[] = data.past?.results ?? [];
+
+  // Past first (always have games), then active that have started
+  return [...past, ...active].slice(0, nb);
 }
 
 export async function fetchBroadcastDetail(tourId: string): Promise<LichessBroadcastDetail> {
