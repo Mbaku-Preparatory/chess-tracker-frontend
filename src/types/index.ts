@@ -372,6 +372,15 @@ export interface OpeningStudySuggestion {
   lichess_study_url: string;
 }
 
+// ── Tournament Summary ────────────────────────────────────────────────────────
+
+export interface TournamentSummary {
+  event: string;
+  game_count: number;
+  year_min: number | null;
+  year_max: number | null;
+}
+
 // ── Master Games ─────────────────────────────────────────────────────────────
 
 export interface MasterGame {

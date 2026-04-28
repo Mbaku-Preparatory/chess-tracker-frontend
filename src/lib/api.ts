@@ -249,9 +249,18 @@ export const api = {
     URL.revokeObjectURL(url);
   },
 
-  getMasterGames(eco: string, limit = 10): Promise<import("@/types").MasterGame[]> {
-    const params = new URLSearchParams({ eco, limit: String(limit) });
-    return fetchJson(`${API_BASE}/openings/master-games/?${params}`);
+  getMasterGames(params: { eco?: string; event?: string; limit?: number }): Promise<import("@/types").MasterGame[]> {
+    const qs = new URLSearchParams();
+    if (params.eco)   qs.set("eco",   params.eco);
+    if (params.event) qs.set("event", params.event);
+    qs.set("limit", String(params.limit ?? 10));
+    return fetchJson(`${API_BASE}/openings/master-games/?${qs}`);
+  },
+
+  getTournamentList(q?: string, limit = 50): Promise<import("@/types").TournamentSummary[]> {
+    const qs = new URLSearchParams({ limit: String(limit) });
+    if (q) qs.set("q", q);
+    return fetchJson(`${API_BASE}/openings/tournaments/?${qs}`);
   },
 
   getPlayerInsights(slug: string, ecoCodes?: string[]): Promise<PlayerInsights> {

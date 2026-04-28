@@ -394,7 +394,7 @@ export function OpeningExplorer({
     setMasterLoading(true);
     setMasterGames([]);
     api
-      .getMasterGames(ecoCode, 10)
+      .getMasterGames({ eco: ecoCode, limit: 10 })
       .then((games) => { if (!cancelled) setMasterGames(games); })
       .catch(() => {})
       .finally(() => { if (!cancelled) setMasterLoading(false); });
