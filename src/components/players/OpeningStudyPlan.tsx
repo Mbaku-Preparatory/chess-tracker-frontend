@@ -121,7 +121,7 @@ function SuggestionRow({
                 style={{ width: `${Math.min(100, Math.max(0, item.score_percent))}%` }}
               />
             </div>
-            <span className="w-8 shrink-0 text-right text-xs font-medium text-gray-600 dark:text-gray-400">
+            <span className="hidden w-8 shrink-0 text-right text-xs font-medium text-gray-600 sm:block dark:text-gray-400">
               {Math.round(item.score_percent)}%
             </span>
           </div>
@@ -130,7 +130,7 @@ function SuggestionRow({
 
       {/* Priority badge */}
       <span
-        className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${badge.cls}`}
+        className={`hidden shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold sm:inline-flex ${badge.cls}`}
       >
         {badge.label}
       </span>
