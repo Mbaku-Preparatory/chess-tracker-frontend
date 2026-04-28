@@ -84,7 +84,7 @@ export function MasterGameViewerModal({ game, onClose }: Props) {
     >
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
 
-      <div className="relative z-10 flex w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-dark-surface sm:flex-row">
+      <div className="relative z-10 flex w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-dark-surface sm:flex-row sm:max-h-[90vh]">
 
         {/* ── Left: board ─────────────────────────────────────────── */}
         <div className="w-full sm:w-[52%]">
@@ -158,7 +158,7 @@ export function MasterGameViewerModal({ game, onClose }: Props) {
         </div>
 
         {/* ── Right: move list ─────────────────────────────────────── */}
-        <div className="flex w-full flex-col border-t border-gray-100 sm:w-[48%] sm:border-l sm:border-t-0 dark:border-dark-border">
+        <div className="flex min-h-0 w-full flex-col overflow-hidden border-t border-gray-100 sm:w-[48%] sm:border-l sm:border-t-0 dark:border-dark-border">
           {/* Player info */}
           <div className="border-b border-gray-100 px-4 py-3 dark:border-dark-border">
             <div className="flex items-center justify-between text-sm">
@@ -179,7 +179,7 @@ export function MasterGameViewerModal({ game, onClose }: Props) {
           </div>
 
           {/* Moves */}
-          <div ref={moveListRef} className="flex-1 overflow-y-auto p-3">
+          <div ref={moveListRef} className="min-h-0 flex-1 overflow-y-auto p-3">
             {moves.length === 0 ? (
               <p className="text-center text-xs text-gray-400 dark:text-gray-600">No moves available</p>
             ) : (
