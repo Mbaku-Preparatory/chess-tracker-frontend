@@ -445,11 +445,81 @@ function TrendCard({ trend }: { trend: PrepSummary["trends"][number] }) {
   );
 }
 
+// ── Source filter ─────────────────────────────────────────────────────────────
+
+type SourceFilter = "all" | "otb";
+
+function SourceFilterToggle({
+  value,
+  onChange,
+}: {
+  value: SourceFilter;
+  onChange: (v: SourceFilter) => void;
+}) {
+  return (
+    <div className="flex gap-1 rounded-lg border border-gray-200 bg-gray-50 p-0.5 dark:border-dark-border dark:bg-dark-elevated">
+      {(["all", "otb"] as SourceFilter[]).map((opt) => (
+        <button
+          key={opt}
+          onClick={() => onChange(opt)}
+          className={`rounded-md px-3 py-1 text-xs font-medium transition-all ${
+            value === opt
+              ? "bg-white shadow text-gray-900 dark:bg-dark-surface dark:text-gray-100 dark:shadow-black/40"
+              : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          }`}
+        >
+          {opt === "all" ? "All games" : (
+            <span className="flex items-center gap-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+              OTB only
+            </span>
+          )}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 // ── Main panel ────────────────────────────────────────────────────────────────
 
-export function PrepSummaryPanel({ data, slug }: { data: PrepSummary; slug: string }) {
+export function PrepSummaryPanel({ slug }: { slug: string }) {
+  const [data, setData] = useState<PrepSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [sourceFilter, setSourceFilter] = useState<SourceFilter>("all");
+  const [colorTab, setColorTab] = useState<"white" | "black">("white");
+
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+    const source = sourceFilter === "otb" ? "chess_results" : undefined;
+    api
+      .getPrepSummary(slug, source)
+      .then(setData)
+      .catch((err) => setError(err.message ?? "Failed to load."))
+      .finally(() => setLoading(false));
+  }, [slug, sourceFilter]);
+
+  if (loading) {
+    return (
+      <div className="space-y-4 animate-pulse">
+        <div className="h-20 rounded-xl bg-gray-100 dark:bg-dark-elevated" />
+        <div className="h-64 rounded-xl bg-gray-100 dark:bg-dark-elevated" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        {error}
+      </div>
+    );
+  }
+
+  if (!data) return null;
+
   const { meta, as_white, as_black, trends } = data;
-  const [tab, setTab] = useState<"white" | "black">("white");
 
   const sourcesEntries = Object.entries(meta.source_counts).sort(
     ([, a], [, b]) => (b ?? 0) - (a ?? 0)
@@ -457,7 +527,7 @@ export function PrepSummaryPanel({ data, slug }: { data: PrepSummary; slug: stri
 
   return (
     <div className="space-y-6">
-      {/* Meta strip */}
+      {/* Meta strip + source filter */}
       <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-dark-border dark:bg-dark-surface">
         <div className="flex flex-wrap items-center gap-4">
           <div>
@@ -477,36 +547,43 @@ export function PrepSummaryPanel({ data, slug }: { data: PrepSummary; slug: stri
               ))}
             </div>
           )}
-          {(meta.date_range.first || meta.date_range.last) && (
-            <div className="ml-auto text-right">
-              <p className="text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500">Date range</p>
-              <p className="text-sm text-gray-700 dark:text-gray-300">
-                {formatDate(meta.date_range.first)} – {formatDate(meta.date_range.last)}
-              </p>
-            </div>
-          )}
+          <div className="ml-auto flex flex-wrap items-center gap-3">
+            <SourceFilterToggle value={sourceFilter} onChange={setSourceFilter} />
+            {(meta.date_range.first || meta.date_range.last) && (
+              <div className="text-right">
+                <p className="text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500">Date range</p>
+                <p className="text-sm text-gray-700 dark:text-gray-300">
+                  {formatDate(meta.date_range.first)} – {formatDate(meta.date_range.last)}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* No data */}
       {meta.total_games === 0 && (
         <div className="rounded-xl border border-dashed border-gray-300 py-16 text-center dark:border-dark-border">
-          <p className="text-sm text-gray-500 dark:text-gray-500">No move data yet. Import games with move text first.</p>
+          <p className="text-sm text-gray-500 dark:text-gray-500">
+            {sourceFilter === "otb"
+              ? "No OTB games with move data. Try switching to All games."
+              : "No move data yet. Import games with move text first."}
+          </p>
         </div>
       )}
 
       {meta.total_games > 0 && (
         <>
-          {/* Tabs */}
+          {/* Color tabs */}
           <div className="flex gap-1 rounded-xl border border-gray-200 bg-gray-50 p-1 w-fit dark:border-dark-border dark:bg-dark-elevated">
             {(["white", "black"] as const).map((color) => {
               const count = color === "white" ? as_white.total : as_black.total;
               return (
                 <button
                   key={color}
-                  onClick={() => setTab(color)}
+                  onClick={() => setColorTab(color)}
                   className={`flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-medium transition-all ${
-                    tab === color
+                    colorTab === color
                       ? "bg-white shadow text-gray-900 dark:bg-dark-surface dark:text-gray-100 dark:shadow-black/40"
                       : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                   }`}
@@ -529,12 +606,12 @@ export function PrepSummaryPanel({ data, slug }: { data: PrepSummary; slug: stri
 
           {/* Board + tree */}
           <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-dark-border dark:bg-dark-surface">
-            {tab === "white" ? (
+            {colorTab === "white" ? (
               as_white.total === 0 ? (
                 <p className="text-center text-sm text-gray-400 py-8 dark:text-gray-600">No games as White.</p>
               ) : (
                 <InteractivePrepTree
-                  key="white"
+                  key={`white-${sourceFilter}`}
                   tree={as_white.opening_tree}
                   orientation="white"
                   totalGames={as_white.total}
@@ -547,7 +624,7 @@ export function PrepSummaryPanel({ data, slug }: { data: PrepSummary; slug: stri
                 <p className="text-center text-sm text-gray-400 py-8 dark:text-gray-600">No games as Black.</p>
               ) : (
                 <InteractivePrepTree
-                  key="black"
+                  key={`black-${sourceFilter}`}
                   tree={as_black.opening_tree}
                   orientation="black"
                   totalGames={as_black.total}

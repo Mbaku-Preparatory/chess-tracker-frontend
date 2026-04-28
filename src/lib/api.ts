@@ -207,8 +207,9 @@ export const api = {
     });
   },
 
-  getPrepSummary(slug: string): Promise<PrepSummary> {
-    return fetchJson(`${API_BASE}/players/${slug}/prep-summary/`);
+  getPrepSummary(slug: string, source?: string): Promise<PrepSummary> {
+    const qs = source ? `?source=${encodeURIComponent(source)}` : "";
+    return fetchJson(`${API_BASE}/players/${slug}/prep-summary/${qs}`);
   },
 
   getPrepGames(
