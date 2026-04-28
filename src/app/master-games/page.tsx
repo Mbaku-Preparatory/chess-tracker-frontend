@@ -18,7 +18,7 @@ import { SearchInput } from "@/components/ui/SearchInput";
 import { MasterGameViewerModal } from "@/components/players/MasterGameViewerModal";
 import type { MasterGame, TournamentSummary } from "@/types";
 
-// ── Shared result helpers ─────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 const RESULT_COLOR: Record<string, string> = {
   "1-0":     "text-emerald-600 dark:text-emerald-400",
@@ -27,38 +27,75 @@ const RESULT_COLOR: Record<string, string> = {
   "*":       "text-gray-400 dark:text-gray-600",
 };
 const RESULT_LABEL: Record<string, string> = {
-  "1-0": "1-0", "0-1": "0-1", "1/2-1/2": "½-½", "*": "live",
+  "1-0": "1-0", "0-1": "0-1", "1/2-1/2": "½-½", "*": "·",
 };
 
-// ── Source badge ──────────────────────────────────────────────────────────────
+// ── Reusable bits ─────────────────────────────────────────────────────────────
 
 function SourceBadge({ source }: { source: "twic" | "lichess" }) {
   return source === "twic" ? (
-    <span className="rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[10px] font-semibold text-sky-700 dark:border-sky-800/60 dark:bg-sky-900/20 dark:text-sky-400">
+    <span className="shrink-0 rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[10px] font-semibold text-sky-700 dark:border-sky-800/60 dark:bg-sky-900/20 dark:text-sky-400">
       TWIC
     </span>
   ) : (
-    <span className="rounded-full border px-2 py-0.5 text-[10px] font-semibold" style={{ borderColor: "#b05000", color: "#b05000", background: "rgba(176,80,0,0.07)" }}>
+    <span className="shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold" style={{ borderColor: "#b05000", color: "#b05000", background: "rgba(176,80,0,0.07)" }}>
       Lichess
     </span>
   );
 }
 
-// ── TWIC tab ──────────────────────────────────────────────────────────────────
+function BackButton({ onClick, label = "Back" }: { onClick: () => void; label?: string }) {
+  return (
+    <button
+      onClick={onClick}
+      className="mb-4 flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 lg:hidden"
+    >
+      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+      </svg>
+      {label}
+    </button>
+  );
+}
 
-function TwicTournamentCard({
-  t,
-  selected,
-  onClick,
-}: {
-  t: TournamentSummary;
-  selected: boolean;
-  onClick: () => void;
-}) {
-  const yearLabel = t.year_min === t.year_max
-    ? String(t.year_max ?? "")
-    : `${t.year_min ?? ""}–${t.year_max ?? ""}`;
+function PanelHeader({ title, subtitle, onClose }: { title: string; subtitle?: string; onClose: () => void }) {
+  return (
+    <div className="mb-4 flex items-start justify-between gap-3">
+      <div className="min-w-0">
+        <h2 className="truncate text-base font-bold text-gray-900 dark:text-gray-100 sm:text-lg">{title}</h2>
+        {subtitle && <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400 sm:text-sm">{subtitle}</p>}
+      </div>
+      <button onClick={onClose} className="hidden shrink-0 rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-dark-elevated lg:block">
+        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  );
+}
 
+function Skeleton({ rows = 5, h = "h-14" }: { rows?: number; h?: string }) {
+  return (
+    <div className="space-y-2">
+      {Array.from({ length: rows }).map((_, i) => (
+        <div key={i} className={`${h} animate-pulse rounded-xl bg-gray-100 dark:bg-dark-elevated`} />
+      ))}
+    </div>
+  );
+}
+
+function EmptyPanel({ label }: { label: string }) {
+  return (
+    <div className="flex h-48 items-center justify-center rounded-2xl border border-dashed border-gray-200 dark:border-dark-border sm:h-64">
+      <p className="px-4 text-center text-sm text-gray-400 dark:text-gray-600">{label}</p>
+    </div>
+  );
+}
+
+// ── TWIC components ───────────────────────────────────────────────────────────
+
+function TwicTournamentCard({ t, selected, onClick }: { t: TournamentSummary; selected: boolean; onClick: () => void }) {
+  const yearLabel = t.year_min === t.year_max ? String(t.year_max ?? "") : `${t.year_min}–${t.year_max}`;
   return (
     <button
       onClick={onClick}
@@ -74,10 +111,10 @@ function TwicTournamentCard({
         </p>
         <SourceBadge source="twic" />
       </div>
-      <div className="mt-1 flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+      <div className="mt-1 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
         <span>{yearLabel}</span>
         <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-600 dark:bg-dark-elevated dark:text-gray-400">
-          {t.game_count} games
+          {t.game_count}g
         </span>
       </div>
     </button>
@@ -90,28 +127,30 @@ function TwicGameRow({ game, onClick }: { game: MasterGame; onClick: () => void 
     <button
       onClick={onClick}
       disabled={!hasMoves}
-      className={`group flex w-full items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-left text-sm transition-all dark:border-dark-border dark:bg-dark-surface ${
+      className={`group flex w-full items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-3 text-left transition-all dark:border-dark-border dark:bg-dark-surface sm:gap-3 sm:px-4 ${
         hasMoves ? "hover:border-brand-200 hover:bg-brand-50/30 dark:hover:border-brand-800 dark:hover:bg-brand-900/10" : "cursor-default opacity-60"
       }`}
     >
-      <span className={`w-7 shrink-0 font-mono text-xs font-bold ${RESULT_COLOR[game.result] ?? "text-gray-500"}`}>
+      <span className={`w-6 shrink-0 font-mono text-xs font-bold sm:w-7 ${RESULT_COLOR[game.result] ?? "text-gray-500"}`}>
         {RESULT_LABEL[game.result] ?? game.result}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="truncate font-medium text-gray-900 dark:text-gray-100">
+        <p className="truncate text-xs font-medium text-gray-900 dark:text-gray-100 sm:text-sm">
           {game.white}
-          {game.white_elo ? <span className="ml-1 text-xs font-normal text-gray-400">({game.white_elo})</span> : null}
-          <span className="mx-2 text-gray-300 dark:text-gray-600">vs</span>
+          <span className="hidden sm:inline">{game.white_elo ? ` (${game.white_elo})` : ""}</span>
+          <span className="mx-1.5 text-gray-300 dark:text-gray-600">vs</span>
           {game.black}
-          {game.black_elo ? <span className="ml-1 text-xs font-normal text-gray-400">({game.black_elo})</span> : null}
+          <span className="hidden sm:inline">{game.black_elo ? ` (${game.black_elo})` : ""}</span>
         </p>
-        <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
-          {game.eco}{game.opening_name ? ` · ${game.opening_name}` : ""}
-        </p>
+        {game.opening_name && (
+          <p className="mt-0.5 truncate text-[11px] text-gray-400 dark:text-gray-500">
+            {game.eco}{game.opening_name ? ` · ${game.opening_name}` : ""}
+          </p>
+        )}
       </div>
-      {game.year && <span className="shrink-0 text-xs text-gray-400">{game.year}</span>}
+      {game.year && <span className="hidden shrink-0 text-xs text-gray-400 sm:block">{game.year}</span>}
       {hasMoves && (
-        <svg className="h-4 w-4 shrink-0 text-gray-300 group-hover:text-brand-500 transition-colors dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="h-4 w-4 shrink-0 text-gray-300 transition-colors group-hover:text-brand-500 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
           <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
@@ -120,22 +159,13 @@ function TwicGameRow({ game, onClick }: { game: MasterGame; onClick: () => void 
   );
 }
 
-// ── Lichess tab ───────────────────────────────────────────────────────────────
+// ── Lichess components ────────────────────────────────────────────────────────
 
-function BroadcastCard({
-  entry,
-  selected,
-  onClick,
-}: {
-  entry: LichessBroadcastEntry;
-  selected: boolean;
-  onClick: () => void;
-}) {
+function BroadcastCard({ entry, selected, onClick }: { entry: LichessBroadcastEntry; selected: boolean; onClick: () => void }) {
   const { tour, round } = entry;
   const tier = tierLabel(tour.tier);
   const dateRange = formatBroadcastRange(tour.dates);
   const isLive = round.ongoing;
-
   return (
     <button
       onClick={onClick}
@@ -159,29 +189,19 @@ function BroadcastCard({
           <SourceBadge source="lichess" />
         </div>
       </div>
-      <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+      <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
         {dateRange && <span>{dateRange}</span>}
         {tier && (
           <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-900/20 dark:text-amber-400">
             {tier}
           </span>
         )}
-        {tour.info?.format && <span className="truncate">{tour.info.format}</span>}
       </div>
     </button>
   );
 }
 
-function RoundRow({
-  round,
-  selected,
-  onClick,
-}: {
-  round: LichessRound;
-  selected: boolean;
-  onClick: () => void;
-}) {
-  const date = round.startsAt ? formatBroadcastDate(round.startsAt) : "";
+function RoundRow({ round, selected, onClick }: { round: LichessRound; selected: boolean; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
@@ -199,7 +219,9 @@ function RoundRow({
             Live
           </span>
         )}
-        {date && <span className="text-xs text-gray-400">{date}</span>}
+        {round.startsAt && !round.ongoing && (
+          <span className="text-xs text-gray-400">{formatBroadcastDate(round.startsAt)}</span>
+        )}
       </div>
     </button>
   );
@@ -212,33 +234,31 @@ function BroadcastGameRow({ game, onClick }: { game: ParsedBroadcastGame; onClic
     <button
       onClick={onClick}
       disabled={!hasMoves}
-      className={`group flex w-full items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-left text-sm transition-all dark:border-dark-border dark:bg-dark-surface ${
+      className={`group flex w-full items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-3 text-left transition-all dark:border-dark-border dark:bg-dark-surface sm:gap-3 sm:px-4 ${
         hasMoves ? "hover:border-brand-200 hover:bg-brand-50/30 dark:hover:border-brand-800 dark:hover:bg-brand-900/10" : "cursor-default opacity-70"
       }`}
     >
-      <span className={`w-9 shrink-0 font-mono text-xs font-bold ${RESULT_COLOR[game.result] ?? "text-gray-400"}`}>
-        {isLive ? (
-          <span className="flex items-center gap-1">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-400" />
-          </span>
-        ) : (RESULT_LABEL[game.result] ?? game.result)}
+      <span className={`w-6 shrink-0 sm:w-9 ${RESULT_COLOR[game.result] ?? "text-gray-400"}`}>
+        {isLive ? <span className="block h-1.5 w-1.5 animate-pulse rounded-full bg-red-400" /> : (
+          <span className="font-mono text-xs font-bold">{RESULT_LABEL[game.result] ?? game.result}</span>
+        )}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="truncate font-medium text-gray-900 dark:text-gray-100">
+        <p className="truncate text-xs font-medium text-gray-900 dark:text-gray-100 sm:text-sm">
           {game.white}
-          {game.whiteElo ? <span className="ml-1 text-xs font-normal text-gray-400">({game.whiteElo})</span> : null}
-          <span className="mx-2 text-gray-300 dark:text-gray-600">vs</span>
+          <span className="hidden sm:inline">{game.whiteElo ? ` (${game.whiteElo})` : ""}</span>
+          <span className="mx-1.5 text-gray-300 dark:text-gray-600">vs</span>
           {game.black}
-          {game.blackElo ? <span className="ml-1 text-xs font-normal text-gray-400">({game.blackElo})</span> : null}
+          <span className="hidden sm:inline">{game.blackElo ? ` (${game.blackElo})` : ""}</span>
         </p>
         {game.openingName && (
-          <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
+          <p className="mt-0.5 truncate text-[11px] text-gray-400 dark:text-gray-500">
             {game.eco}{game.openingName ? ` · ${game.openingName}` : ""}
           </p>
         )}
       </div>
       {hasMoves && (
-        <svg className="h-4 w-4 shrink-0 text-gray-300 group-hover:text-brand-500 transition-colors dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="h-4 w-4 shrink-0 text-gray-300 transition-colors group-hover:text-brand-500 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
           <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
@@ -247,50 +267,35 @@ function BroadcastGameRow({ game, onClick }: { game: ParsedBroadcastGame; onClic
   );
 }
 
-// ── Empty state ───────────────────────────────────────────────────────────────
-
-function SelectPrompt({ label }: { label: string }) {
-  return (
-    <div className="flex h-64 items-center justify-center rounded-2xl border border-dashed border-gray-200 dark:border-dark-border">
-      <div className="text-center">
-        <svg className="mx-auto mb-3 h-10 w-10 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
-        </svg>
-        <p className="text-sm text-gray-400 dark:text-gray-600">{label}</p>
-      </div>
-    </div>
-  );
-}
-
 // ── Main page ─────────────────────────────────────────────────────────────────
 
-type Tab = "twic" | "lichess";
+type Tab = "lichess" | "twic";
 
 export default function MasterGamesPage() {
   const [tab, setTab] = useState<Tab>("lichess");
 
-  // ── TWIC state ──────────────────────────────────────────────────────────────
-  const [search, setSearch]           = useState("");
-  const [tournaments, setTournaments] = useState<TournamentSummary[]>([]);
-  const [tourLoading, setTourLoading] = useState(true);
-  const [selectedTwic, setSelectedTwic]   = useState<TournamentSummary | null>(null);
-  const [twicGames, setTwicGames]         = useState<MasterGame[]>([]);
-  const [twicGamesLoading, setTwicGamesLoading] = useState(false);
+  // TWIC
+  const [search, setSearch]             = useState("");
+  const [tournaments, setTournaments]   = useState<TournamentSummary[]>([]);
+  const [tourLoading, setTourLoading]   = useState(true);
+  const [selectedTwic, setSelectedTwic] = useState<TournamentSummary | null>(null);
+  const [twicGames, setTwicGames]       = useState<MasterGame[]>([]);
+  const [twicLoading, setTwicLoading]   = useState(false);
 
-  // ── Lichess state ───────────────────────────────────────────────────────────
-  const [broadcasts, setBroadcasts]     = useState<LichessBroadcastEntry[]>([]);
-  const [bcastLoading, setBcastLoading] = useState(true);
+  // Lichess
+  const [broadcasts, setBroadcasts]       = useState<LichessBroadcastEntry[]>([]);
+  const [bcastLoading, setBcastLoading]   = useState(true);
   const [selectedBcast, setSelectedBcast] = useState<LichessBroadcastEntry | null>(null);
-  const [rounds, setRounds]             = useState<LichessRound[]>([]);
+  const [rounds, setRounds]               = useState<LichessRound[]>([]);
   const [roundsLoading, setRoundsLoading] = useState(false);
   const [selectedRound, setSelectedRound] = useState<LichessRound | null>(null);
-  const [roundGames, setRoundGames]     = useState<ParsedBroadcastGame[]>([]);
-  const [roundLoading, setRoundLoading] = useState(false);
+  const [roundGames, setRoundGames]       = useState<ParsedBroadcastGame[]>([]);
+  const [roundLoading, setRoundLoading]   = useState(false);
 
-  // ── Shared viewer ───────────────────────────────────────────────────────────
+  // Shared viewer
   const [viewingGame, setViewingGame] = useState<MasterGame | null>(null);
 
-  // ── TWIC effects ────────────────────────────────────────────────────────────
+  // TWIC effects
   useEffect(() => {
     setTourLoading(true);
     api.getTournamentList(search || undefined, 80)
@@ -300,13 +305,13 @@ export default function MasterGamesPage() {
 
   useEffect(() => {
     if (!selectedTwic) { setTwicGames([]); return; }
-    setTwicGamesLoading(true);
+    setTwicLoading(true);
     api.getMasterGames({ event: selectedTwic.event, limit: 100 })
       .then(setTwicGames).catch(() => setTwicGames([]))
-      .finally(() => setTwicGamesLoading(false));
+      .finally(() => setTwicLoading(false));
   }, [selectedTwic]);
 
-  // ── Lichess effects ─────────────────────────────────────────────────────────
+  // Lichess effects
   useEffect(() => {
     if (tab !== "lichess") return;
     setBcastLoading(true);
@@ -334,19 +339,12 @@ export default function MasterGamesPage() {
 
   const handleSearch = useCallback((q: string) => { setSearch(q); setSelectedTwic(null); }, []);
 
-  // Convert a ParsedBroadcastGame → MasterGame for the viewer modal
   function toViewable(g: ParsedBroadcastGame): MasterGame {
     return {
-      id: 0,
-      white: g.white,
-      black: g.black,
-      white_elo: g.whiteElo,
-      black_elo: g.blackElo,
+      id: 0, white: g.white, black: g.black,
+      white_elo: g.whiteElo, black_elo: g.blackElo,
       result: (["1-0","0-1","1/2-1/2"].includes(g.result) ? g.result : "1/2-1/2") as MasterGame["result"],
-      eco: g.eco,
-      opening_name: g.openingName,
-      event: g.event,
-      site: "",
+      eco: g.eco, opening_name: g.openingName, event: g.event, site: "",
       year: g.date ? parseInt(g.date.slice(0, 4)) || null : null,
       moves: g.moves,
     };
@@ -354,39 +352,42 @@ export default function MasterGamesPage() {
 
   const totalGames = tournaments.reduce((s, t) => s + t.game_count, 0);
 
+  // Mobile drill-down — which side to show when screen is narrow
+  const twicShowDetail    = !!selectedTwic;
+  const lichessShowDetail = !!selectedBcast;
+
   return (
     <>
-      {viewingGame && (
-        <MasterGameViewerModal game={viewingGame} onClose={() => setViewingGame(null)} />
-      )}
+      {viewingGame && <MasterGameViewerModal game={viewingGame} onClose={() => setViewingGame(null)} />}
 
       <div>
         {/* Header */}
-        <div className="mb-6">
+        <div className="mb-5">
           <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-brand-600">GM Library</p>
-          <h1 className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">Tournaments</h1>
+          <h1 className="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">Tournaments</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             Browse major chess tournaments and play through GM games
           </p>
         </div>
 
-        {/* Tab bar */}
-        <div className="mb-6 flex gap-1 rounded-xl border border-gray-200 bg-gray-50 p-1 w-fit dark:border-dark-border dark:bg-dark-elevated">
+        {/* Tab bar — scrollable on very narrow screens */}
+        <div className="mb-5 flex gap-1 overflow-x-auto rounded-xl border border-gray-200 bg-gray-50 p-1 dark:border-dark-border dark:bg-dark-elevated" style={{ width: "fit-content", maxWidth: "100%" }}>
           {([
-            { id: "lichess" as Tab, label: "Live · Lichess", dot: <span className="h-1.5 w-1.5 rounded-full bg-[#b05000]" /> },
-            { id: "twic"    as Tab, label: `Archived · TWIC`, dot: <span className="h-1.5 w-1.5 rounded-full bg-sky-500" /> },
-          ]).map(({ id, label, dot }) => (
+            { id: "lichess" as Tab, label: "Live", sublabel: "Lichess", dot: <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#b05000]" /> },
+            { id: "twic"    as Tab, label: "Archived", sublabel: "TWIC",    dot: <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-sky-500" /> },
+          ]).map(({ id, label, sublabel, dot }) => (
             <button
               key={id}
               onClick={() => setTab(id)}
-              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all ${
+              className={`flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all sm:px-4 ${
                 tab === id
                   ? "bg-white shadow text-gray-900 dark:bg-dark-surface dark:text-gray-100 dark:shadow-black/40"
                   : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
               }`}
             >
               {dot}
-              {label}
+              <span>{label}</span>
+              <span className="hidden text-gray-400 sm:inline">· {sublabel}</span>
             </button>
           ))}
         </div>
@@ -394,61 +395,62 @@ export default function MasterGamesPage() {
         {/* ── TWIC tab ─────────────────────────────────────────────────────── */}
         {tab === "twic" && (
           <>
-            <div className="mb-6">
-              <SearchInput
-                placeholder="Search tournaments — Tata Steel, Candidates, Bundesliga…"
-                onSearch={handleSearch}
-                defaultValue={search}
-                className="max-w-xl"
-              />
-              <p className="mt-1.5 text-xs text-gray-400 dark:text-gray-600">
-                {totalGames.toLocaleString()} GM classical games across {tournaments.length} tournaments · imported from TWIC 2024–2026
-              </p>
-            </div>
+            {/* Search — only show on list view on mobile */}
+            {!twicShowDetail && (
+              <div className="mb-4">
+                <SearchInput
+                  placeholder="Search — Tata Steel, Candidates, Bundesliga…"
+                  onSearch={handleSearch}
+                  defaultValue={search}
+                  className="w-full max-w-xl"
+                />
+                <p className="mt-1.5 text-xs text-gray-400 dark:text-gray-600">
+                  {totalGames.toLocaleString()} GM games · {tournaments.length} tournaments · TWIC 2024–2026
+                </p>
+              </div>
+            )}
 
-            <div className="flex gap-6 lg:items-start">
-              {/* Tournament list */}
-              <div className="w-full shrink-0 space-y-2 lg:w-80 xl:w-96">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
+              {/* Tournament list — hidden on mobile when detail is open */}
+              <div className={`${twicShowDetail ? "hidden lg:flex" : "flex"} w-full flex-col gap-2 lg:w-80 lg:shrink-0 xl:w-96`}>
                 {tourLoading
-                  ? Array.from({ length: 8 }).map((_, i) => <div key={i} className="h-16 animate-pulse rounded-xl bg-gray-100 dark:bg-dark-elevated" />)
+                  ? <Skeleton rows={7} />
                   : tournaments.length === 0
-                    ? <p className="py-8 text-center text-sm text-gray-400">No tournaments found.</p>
+                    ? <EmptyPanel label="No tournaments found." />
                     : tournaments.map((t) => (
-                        <TwicTournamentCard key={t.event} t={t} selected={selectedTwic?.event === t.event} onClick={() => setSelectedTwic(t)} />
+                        <TwicTournamentCard key={t.event} t={t}
+                          selected={selectedTwic?.event === t.event}
+                          onClick={() => setSelectedTwic(t)}
+                        />
                       ))
                 }
               </div>
 
-              {/* Games */}
-              <div className="min-w-0 flex-1">
+              {/* Game panel — hidden on mobile when nothing selected */}
+              <div className={`${twicShowDetail ? "flex" : "hidden lg:flex"} w-full min-w-0 flex-col lg:flex-1`}>
                 {!selectedTwic ? (
-                  <SelectPrompt label="Select a tournament to view its games" />
+                  <EmptyPanel label="Select a tournament to view its games" />
                 ) : (
-                  <div>
-                    <div className="mb-4 flex items-center justify-between">
-                      <div>
-                        <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">{selectedTwic.event}</h2>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          {selectedTwic.year_min === selectedTwic.year_max ? selectedTwic.year_max : `${selectedTwic.year_min}–${selectedTwic.year_max}`}
-                          {" · "}{selectedTwic.game_count} games
-                        </p>
-                      </div>
-                      <button onClick={() => setSelectedTwic(null)} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-dark-elevated">
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                      </button>
-                    </div>
-                    {twicGamesLoading
-                      ? <div className="space-y-2">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-16 animate-pulse rounded-xl bg-gray-100 dark:bg-dark-elevated" />)}</div>
+                  <>
+                    <BackButton onClick={() => setSelectedTwic(null)} label="All tournaments" />
+                    <PanelHeader
+                      title={selectedTwic.event}
+                      subtitle={`${selectedTwic.year_min === selectedTwic.year_max ? selectedTwic.year_max : `${selectedTwic.year_min}–${selectedTwic.year_max}`} · ${selectedTwic.game_count} games`}
+                      onClose={() => setSelectedTwic(null)}
+                    />
+                    {twicLoading ? <Skeleton rows={6} />
                       : twicGames.length === 0
-                        ? <div className="rounded-xl border border-dashed border-gray-200 py-12 text-center dark:border-dark-border"><p className="text-sm text-gray-400">No games found.</p></div>
+                        ? <EmptyPanel label="No games found for this tournament." />
                         : <div className="space-y-2">
                             {twicGames.map((g) => (
                               <TwicGameRow key={g.id} game={g} onClick={() => g.moves?.trim() && setViewingGame(g)} />
                             ))}
-                            {twicGames.length >= 100 && <p className="pt-2 text-center text-xs text-gray-400">Showing top 100 games by rating.</p>}
+                            {twicGames.length >= 100 && (
+                              <p className="pt-1 text-center text-xs text-gray-400">Showing top 100 by rating.</p>
+                            )}
                           </div>
                     }
-                  </div>
+                  </>
                 )}
               </div>
             </div>
@@ -457,18 +459,16 @@ export default function MasterGamesPage() {
 
         {/* ── Lichess tab ──────────────────────────────────────────────────── */}
         {tab === "lichess" && (
-          <div className="flex gap-6 lg:items-start">
-            {/* Broadcast list */}
-            <div className="w-full shrink-0 space-y-2 lg:w-80 xl:w-96">
-              <p className="mb-3 text-xs text-gray-400 dark:text-gray-600">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
+            {/* Broadcast list — hidden on mobile when a broadcast is selected */}
+            <div className={`${lichessShowDetail ? "hidden lg:flex" : "flex"} w-full flex-col gap-2 lg:w-80 lg:shrink-0 xl:w-96`}>
+              <p className="mb-1 text-xs text-gray-400 dark:text-gray-600">
                 Live and recent major broadcasts from Lichess
               </p>
               {bcastLoading
-                ? Array.from({ length: 8 }).map((_, i) => <div key={i} className="h-20 animate-pulse rounded-xl bg-gray-100 dark:bg-dark-elevated" />)
+                ? <Skeleton rows={7} h="h-20" />
                 : broadcasts.map((entry) => (
-                    <BroadcastCard
-                      key={entry.tour.id}
-                      entry={entry}
+                    <BroadcastCard key={entry.tour.id} entry={entry}
                       selected={selectedBcast?.tour.id === entry.tour.id}
                       onClick={() => { setSelectedBcast(entry); setSelectedRound(null); }}
                     />
@@ -476,32 +476,29 @@ export default function MasterGamesPage() {
               }
             </div>
 
-            {/* Right panel: rounds + games */}
-            <div className="min-w-0 flex-1">
+            {/* Detail panel — rounds + games */}
+            <div className={`${lichessShowDetail ? "flex" : "hidden lg:flex"} w-full min-w-0 flex-col space-y-5 lg:flex-1`}>
               {!selectedBcast ? (
-                <SelectPrompt label="Select a tournament to view its rounds" />
+                <EmptyPanel label="Select a tournament to view its rounds" />
               ) : (
-                <div className="space-y-4">
-                  {/* Tournament header */}
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">{selectedBcast.tour.name}</h2>
-                      <div className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                        {formatBroadcastRange(selectedBcast.tour.dates) && <span>{formatBroadcastRange(selectedBcast.tour.dates)}</span>}
-                        {selectedBcast.tour.info?.location && <span>· {selectedBcast.tour.info.location}</span>}
-                        {selectedBcast.tour.info?.format && <span>· {selectedBcast.tour.info.format}</span>}
-                      </div>
-                    </div>
-                    <button onClick={() => { setSelectedBcast(null); setSelectedRound(null); }} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-elevated">
-                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                    </button>
-                  </div>
+                <>
+                  <BackButton onClick={() => { setSelectedBcast(null); setSelectedRound(null); }} label="All tournaments" />
+
+                  <PanelHeader
+                    title={selectedBcast.tour.name}
+                    subtitle={[
+                      formatBroadcastRange(selectedBcast.tour.dates),
+                      selectedBcast.tour.info?.location,
+                      selectedBcast.tour.info?.format,
+                    ].filter(Boolean).join(" · ")}
+                    onClose={() => { setSelectedBcast(null); setSelectedRound(null); }}
+                  />
 
                   {/* Rounds */}
                   <div>
                     <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-600">Rounds</p>
                     {roundsLoading
-                      ? <div className="space-y-1.5">{Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-10 animate-pulse rounded-lg bg-gray-100 dark:bg-dark-elevated" />)}</div>
+                      ? <Skeleton rows={3} h="h-10" />
                       : <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
                           {rounds.map((r) => (
                             <RoundRow key={r.id} round={r} selected={selectedRound?.id === r.id} onClick={() => setSelectedRound(r)} />
@@ -514,27 +511,23 @@ export default function MasterGamesPage() {
                   {selectedRound && (
                     <div>
                       <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-600">
-                        Games · {selectedRound.name}
+                        {selectedRound.name} · Games
                       </p>
                       {roundLoading
-                        ? <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-16 animate-pulse rounded-xl bg-gray-100 dark:bg-dark-elevated" />)}</div>
+                        ? <Skeleton rows={5} />
                         : roundGames.length === 0
-                          ? <div className="rounded-xl border border-dashed border-gray-200 py-10 text-center dark:border-dark-border"><p className="text-sm text-gray-400">No games available for this round yet.</p></div>
+                          ? <EmptyPanel label="No games available for this round yet." />
                           : <div className="space-y-2">
                               {roundGames.map((g, i) => (
-                                <BroadcastGameRow
-                                  key={i}
-                                  game={g}
-                                  onClick={() => {
-                                    if (g.moves?.trim() && g.result !== "*") setViewingGame(toViewable(g));
-                                  }}
+                                <BroadcastGameRow key={i} game={g}
+                                  onClick={() => { if (g.moves?.trim() && g.result !== "*") setViewingGame(toViewable(g)); }}
                                 />
                               ))}
                             </div>
                       }
                     </div>
                   )}
-                </div>
+                </>
               )}
             </div>
           </div>
