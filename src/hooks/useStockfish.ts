@@ -38,8 +38,8 @@ export function parseUciMove(uci: string | null): [string, string] | null {
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
 
-const ANALYSIS_DEPTH = 20;
-const DEBOUNCE_MS = 200; // wait before sending new position after navigation
+const ANALYSIS_MOVETIME_MS = 800; // analyse for 800 ms then return best result
+const DEBOUNCE_MS = 50;           // short pause before sending position after navigation
 
 export function useStockfish(fen: string, enabled = true): StockfishResult {
   const [result, setResult] = useState<StockfishResult>({
@@ -53,7 +53,7 @@ export function useStockfish(fen: string, enabled = true): StockfishResult {
   function sendPosition(worker: Worker, positionFen: string) {
     worker.postMessage("stop");
     worker.postMessage(`position fen ${positionFen}`);
-    worker.postMessage(`go depth ${ANALYSIS_DEPTH}`);
+    worker.postMessage(`go movetime ${ANALYSIS_MOVETIME_MS}`);
   }
 
   // Initialise the Web Worker once

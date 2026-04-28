@@ -35,9 +35,11 @@ export function EvalBar({ score, mate, depth, isAnalyzing }: EvalBarProps) {
         />
       </div>
 
-      {/* Depth indicator */}
-      <span className="text-[9px] font-mono text-gray-400 dark:text-gray-600 leading-none">
-        {isAnalyzing ? `d${depth}` : depth > 0 ? `d${depth}` : ""}
+      {/* Analyzing indicator */}
+      <span className="h-1.5 w-1.5 rounded-full leading-none">
+        {isAnalyzing && (
+          <span className="block h-1.5 w-1.5 animate-pulse rounded-full bg-brand-400" />
+        )}
       </span>
     </div>
   );
