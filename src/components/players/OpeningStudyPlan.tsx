@@ -204,7 +204,6 @@ export function OpeningStudyPlan({ slug }: { slug: string }) {
   const filtered =
     tab === "all" ? suggestions : suggestions.filter((s) => s.color === tab);
 
-  // If not loading and nothing to show, render nothing
   if (!loading && suggestions.length === 0) return null;
 
   const visible = expanded ? filtered : filtered.slice(0, DEFAULT_VISIBLE);
@@ -287,7 +286,7 @@ export function OpeningStudyPlan({ slug }: { slug: string }) {
                   {isOpen && (
                     <div className="rounded-b-lg border border-t border-brand-200/60 bg-gray-50/70 dark:border-brand-800/40 dark:bg-dark-elevated">
                       <OpeningExplorer
-                        slug={slug}
+                        slug={slug ?? ""}
                         ecoCode={item.eco_code}
                         openingName={item.opening_name}
                         playerColor={item.color}

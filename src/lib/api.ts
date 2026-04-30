@@ -277,7 +277,7 @@ export const api = {
     return fetchJson(`${API_BASE}/players/${slug}/opening-studies/${qs}`);
   },
 
-  getOpeningExplorer(
+getOpeningExplorer(
     slug: string,
     eco_code: string,
     opening_name?: string,
