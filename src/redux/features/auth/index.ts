@@ -10,6 +10,7 @@ import {
 
 interface AuthState {
   token: string | null;
+  refreshToken: string | null;
   email: string | null;
   profilePic: string | null;
   initialized: boolean;
@@ -19,6 +20,7 @@ interface AuthState {
 
 const initialState: AuthState = {
   token: null,
+  refreshToken: null,
   email: null,
   profilePic: null,
   initialized: false,
@@ -33,6 +35,7 @@ const authReducer = (state = initialState, action: any): AuthState => {
       return {
         ...state,
         token: authStorage.getToken(),
+        refreshToken: authStorage.getRefreshToken(),
         email: authStorage.getEmail(),
         profilePic: authStorage.getProfilePic(),
         initialized: true,
@@ -40,10 +43,12 @@ const authReducer = (state = initialState, action: any): AuthState => {
 
     case SET_AUTH:
       authStorage.setToken(action.payload.token);
+      if (action.payload.refreshToken) authStorage.setRefreshToken(action.payload.refreshToken);
       authStorage.setEmail(action.payload.email);
       return {
         ...state,
         token: action.payload.token,
+        refreshToken: action.payload.refreshToken ?? state.refreshToken,
         email: action.payload.email,
         initialized: true,
       };
@@ -66,11 +71,13 @@ const authReducer = (state = initialState, action: any): AuthState => {
         return { ...state, loading: false, error: String(action.errors) };
       }
       authStorage.setToken(action.payload.token);
+      if (action.payload.refreshToken) authStorage.setRefreshToken(action.payload.refreshToken);
       authStorage.setEmail(action.payload.email);
       return {
         ...state,
         loading: false,
         token: action.payload.token,
+        refreshToken: action.payload.refreshToken ?? state.refreshToken,
         email: action.payload.email,
         initialized: true,
       };

@@ -29,6 +29,7 @@ import type {
 } from "@/types";
 import { authStorage } from "@/lib/auth";
 import { handleAuthFailure } from "@/lib/handleAuthFailure";
+import { refreshAccessToken } from "@/lib/refreshAccessToken";
 import { requestTracker } from "@/lib/request-tracker";
 
 const rawApiBase =
@@ -41,7 +42,7 @@ const API_BASE = normalizedApiBase.endsWith("/api")
   ? normalizedApiBase
   : `${normalizedApiBase}/api`;
 
-async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
+async function fetchJson<T>(url: string, init?: RequestInit, _retriedAfterRefresh = false): Promise<T> {
   const token = authStorage.getToken();
   const authHeader: Record<string, string> = token
     ? { Authorization: `Bearer ${token}` }
@@ -56,14 +57,20 @@ async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
       },
     });
     if (!res.ok) {
-      const body = await res.json().catch(() => null);
-      const msg = body?.detail || `API error: ${res.status} ${res.statusText}`;
-      // Every REST endpoint here uses SimpleJWT auth with no refresh flow, so a
-      // 401 always means "this token is no longer good" - log the user out
-      // instead of leaving them staring at a stale, still-"logged in" screen.
+      // A 401 means this access token is no longer good. Try a silent
+      // refresh and retry once before giving up and logging the user out -
+      // that's the whole point of holding a refresh token.
       if (res.status === 401 && authStorage.getToken()) {
+        if (!_retriedAfterRefresh) {
+          const newToken = await refreshAccessToken();
+          if (newToken) {
+            return fetchJson<T>(url, init, true);
+          }
+        }
         void handleAuthFailure();
       }
+      const body = await res.json().catch(() => null);
+      const msg = body?.detail || `API error: ${res.status} ${res.statusText}`;
       const err = new Error(msg);
       (err as any).status = res.status;
       (err as any).body = body;
@@ -332,6 +339,14 @@ getOpeningExplorer(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
+    });
+  },
+
+  logout(refreshToken: string): Promise<void> {
+    return fetchJson(`${API_BASE}/auth/logout/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh: refreshToken }),
     });
   },
 

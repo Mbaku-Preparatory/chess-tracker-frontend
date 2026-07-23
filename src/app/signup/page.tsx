@@ -28,7 +28,7 @@ export default function SignupPage() {
     setError(null);
     try {
       const data = await api.register(email.trim().toLowerCase(), password);
-      dispatch(setAuth({ token: data.access, email: data.email }));
+      dispatch(setAuth({ token: data.access, refreshToken: data.refresh, email: data.email }));
       router.replace("/");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Signup failed.");

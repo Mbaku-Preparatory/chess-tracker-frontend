@@ -9,7 +9,7 @@ import {
 
 export const loadAuthFromStorage = () => ({ type: LOAD_AUTH });
 
-export const setAuth = (payload: { token: string; email: string }) => ({
+export const setAuth = (payload: { token: string; refreshToken?: string; email: string }) => ({
   type: SET_AUTH,
   payload,
 });

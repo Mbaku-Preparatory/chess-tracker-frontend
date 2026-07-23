@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
+import { api } from "@/lib/api";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { clearAuth, setProfilePic } from "@/redux/actions/auth";
 import { toggleTheme } from "@/redux/actions/theme";
@@ -17,7 +18,7 @@ export function Navbar() {
   const profileRef = useRef<HTMLDivElement>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  const { token, email, profilePic } = useAppSelector((s) => s.auth);
+  const { token, refreshToken, email, profilePic } = useAppSelector((s) => s.auth);
   const { onboardingComplete, initialized } = useAppSelector((s) => s.repertoire);
   const themeMode = useAppSelector((s) => s.theme.mode);
 
@@ -33,7 +34,16 @@ export function Navbar() {
 
   if (pathname === "/setup" || pathname === "/login" || pathname === "/signup" || pathname === "/") return null;
 
-  function handleLogout() {
+  async function handleLogout() {
+    if (refreshToken) {
+      // Best-effort: blacklist the refresh token server-side so it can't be
+      // replayed. Still log out locally even if this call fails.
+      try {
+        await api.logout(refreshToken);
+      } catch {
+        // ignore
+      }
+    }
     dispatch(clearAuth());
     router.replace("/login");
   }

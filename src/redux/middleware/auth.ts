@@ -12,7 +12,7 @@ const handleAuth = async (action: any, queryFn: (email: string, password: string
       action.errors = result.data.errors[0]?.message ?? "Authentication failed";
     } else {
       const data = result.data.data.login ?? result.data.data.register;
-      action.payload = { token: data.token, email: data.email };
+      action.payload = { token: data.token, refreshToken: data.refreshToken, email: data.email };
     }
   } catch (err) {
     action.errors = err instanceof Error ? err.message : "Authentication failed";
