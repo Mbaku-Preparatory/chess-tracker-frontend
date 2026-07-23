@@ -28,6 +28,7 @@ import type {
   TournamentPlayer,
 } from "@/types";
 import { authStorage } from "@/lib/auth";
+import { handleAuthFailure } from "@/lib/handleAuthFailure";
 import { requestTracker } from "@/lib/request-tracker";
 
 const rawApiBase =
@@ -57,6 +58,12 @@ async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
     if (!res.ok) {
       const body = await res.json().catch(() => null);
       const msg = body?.detail || `API error: ${res.status} ${res.statusText}`;
+      // Every REST endpoint here uses SimpleJWT auth with no refresh flow, so a
+      // 401 always means "this token is no longer good" - log the user out
+      // instead of leaving them staring at a stale, still-"logged in" screen.
+      if (res.status === 401 && authStorage.getToken()) {
+        void handleAuthFailure();
+      }
       const err = new Error(msg);
       (err as any).status = res.status;
       (err as any).body = body;
