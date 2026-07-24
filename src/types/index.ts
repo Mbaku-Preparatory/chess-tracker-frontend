@@ -513,23 +513,6 @@ export interface Tournament {
   created_at: string;
 }
 
-// ── Teams ─────────────────────────────────────────────────────────────────────
-
-export interface Team {
-  id: number;
-  public_id: string;
-  name: string;
-  slug: string;
-  description: string;
-  player_count: number;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface TeamDetail extends Team {
-  players: Player[];
-}
-
 export interface PrepSummary {
   meta: {
     total_games: number;

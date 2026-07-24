@@ -5,7 +5,6 @@ import gamesReducer from "./slices/gamesSlice";
 import playerDetailReducer from "./slices/playerDetailSlice";
 import playersReducer from "./slices/playersSlice";
 import repertoireReducer from "./slices/repertoireSlice";
-import teamsReducer from "./slices/teamsSlice";
 import themeReducer from "./slices/themeSlice";
 import tournamentReducer from "./slices/tournamentSlice";
 
@@ -16,7 +15,6 @@ export const store = configureStore({
     playerDetail: playerDetailReducer,
     games: gamesReducer,
     repertoire: repertoireReducer,
-    teams: teamsReducer,
     theme: themeReducer,
     tournament: tournamentReducer,
   },

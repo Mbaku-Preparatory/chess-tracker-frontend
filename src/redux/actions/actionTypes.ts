@@ -37,10 +37,6 @@ export const COMPLETE_ONBOARDING = "repertoire/completeOnboarding";
 export const RESET_REPERTOIRE = "repertoire/reset";
 export const SET_REPERTOIRE_INITIALIZED = "repertoire/setInitialized";
 
-// ── Teams ─────────────────────────────────────────────
-export const FETCH_TEAMS = "teams/fetch";
-export const FETCH_TEAMS_PENDING = "teams/fetch_pending";
-
 // ── Tournament ────────────────────────────────────────
 export const FETCH_ACTIVE_TOURNAMENT = "tournament/fetchActive";
 export const FETCH_ACTIVE_TOURNAMENT_PENDING = "tournament/fetchActive_pending";

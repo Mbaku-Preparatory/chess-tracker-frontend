@@ -22,8 +22,6 @@ import type {
   PlayerLookupResult,
   PrepSummary,
   RepertoireData,
-  Team,
-  TeamDetail,
   Tournament,
   TournamentPlayer,
 } from "@/types";
@@ -472,47 +470,5 @@ getOpeningExplorer(
 
   refreshTournamentPlayers(id: number): Promise<Tournament> {
     return fetchJson(`${API_BASE}/tournaments/${id}/refresh-players/`, { method: "POST" });
-  },
-
-  // ── Teams ─────────────────────────────────────────────────────────────────
-
-  getTeams(): Promise<Team[]> {
-    return fetchJson(`${API_BASE}/teams/`);
-  },
-
-  createTeam(payload: { name: string; description?: string }): Promise<Team> {
-    return fetchJson(`${API_BASE}/teams/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-  },
-
-  getTeam(slug: string): Promise<TeamDetail> {
-    return fetchJson(`${API_BASE}/teams/${slug}/`);
-  },
-
-  updateTeam(slug: string, payload: { name?: string; description?: string }): Promise<TeamDetail> {
-    return fetchJson(`${API_BASE}/teams/${slug}/`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-  },
-
-  deleteTeam(slug: string): Promise<void> {
-    return fetchJson(`${API_BASE}/teams/${slug}/`, { method: "DELETE" });
-  },
-
-  addPlayerToTeam(teamSlug: string, playerSlug: string): Promise<TeamDetail> {
-    return fetchJson(`${API_BASE}/teams/${teamSlug}/players/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ player_slug: playerSlug }),
-    });
-  },
-
-  removePlayerFromTeam(teamSlug: string, playerRef: string): Promise<void> {
-    return fetchJson(`${API_BASE}/teams/${teamSlug}/players/${playerRef}/`, { method: "DELETE" });
   },
 };
