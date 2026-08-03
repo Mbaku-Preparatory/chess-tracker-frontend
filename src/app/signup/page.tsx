@@ -5,11 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { api } from "@/lib/api";
-import { useAppDispatch } from "@/redux/hooks";
-import { setAuth } from "@/redux/actions/auth";
 
 export default function SignupPage() {
-  const dispatch = useAppDispatch();
   const router = useRouter();
 
   const [email, setEmail] = useState("");
@@ -27,9 +24,9 @@ export default function SignupPage() {
     setLoading(true);
     setError(null);
     try {
-      const data = await api.register(email.trim().toLowerCase(), password);
-      dispatch(setAuth({ token: data.access, refreshToken: data.refresh, email: data.email }));
-      router.replace("/");
+      const normalizedEmail = email.trim().toLowerCase();
+      await api.register(normalizedEmail, password);
+      router.replace(`/verify-email?email=${encodeURIComponent(normalizedEmail)}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Signup failed.");
     } finally {

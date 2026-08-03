@@ -9,10 +9,10 @@ import { fetchRepertoire, setInitialized } from "@/redux/actions/repertoire";
 
 /**
  * Paths that are publicly accessible without a login.
- * - /login, /signup — auth pages themselves
+ * - /login, /signup, /verify-email — auth pages themselves
  */
 function isPublicPath(pathname: string): boolean {
-  return pathname === "/login" || pathname === "/signup";
+  return pathname === "/login" || pathname === "/signup" || pathname === "/verify-email";
 }
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
