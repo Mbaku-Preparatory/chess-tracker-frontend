@@ -9,6 +9,9 @@ import { api } from "@/lib/api";
 export default function SignupPage() {
   const router = useRouter();
 
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -25,7 +28,13 @@ export default function SignupPage() {
     setError(null);
     try {
       const normalizedEmail = email.trim().toLowerCase();
-      await api.register(normalizedEmail, password);
+      await api.register(
+        normalizedEmail,
+        password,
+        username.trim(),
+        firstName.trim(),
+        lastName.trim()
+      );
       router.replace(`/verify-email?email=${encodeURIComponent(normalizedEmail)}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Signup failed.");
@@ -54,6 +63,57 @@ export default function SignupPage() {
               {error}
             </div>
           )}
+
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <label htmlFor="firstName" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                First name
+              </label>
+              <input
+                id="firstName"
+                type="text"
+                autoComplete="given-name"
+                required
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-dark-border dark:bg-dark-elevated dark:text-gray-100 dark:placeholder-gray-500"
+                placeholder="Ada"
+              />
+            </div>
+            <div className="flex-1">
+              <label htmlFor="lastName" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Last name
+              </label>
+              <input
+                id="lastName"
+                type="text"
+                autoComplete="family-name"
+                required
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-dark-border dark:bg-dark-elevated dark:text-gray-100 dark:placeholder-gray-500"
+                placeholder="Lovelace"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="username" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Username
+              <span className="ml-1 text-xs font-normal text-gray-400">(min 3 chars)</span>
+            </label>
+            <input
+              id="username"
+              type="text"
+              autoComplete="username"
+              required
+              minLength={3}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-dark-border dark:bg-dark-elevated dark:text-gray-100 dark:placeholder-gray-500"
+              placeholder="ada_lovelace"
+            />
+          </div>
 
           <div>
             <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">

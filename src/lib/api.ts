@@ -317,12 +317,21 @@ getOpeningExplorer(
 
   register(
     email: string,
-    password: string
+    password: string,
+    username: string,
+    firstName: string,
+    lastName: string
   ): Promise<{ detail: string; email: string }> {
     return fetchJson(`${API_BASE}/auth/register/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({
+        email,
+        password,
+        username,
+        first_name: firstName,
+        last_name: lastName,
+      }),
     });
   },
 
