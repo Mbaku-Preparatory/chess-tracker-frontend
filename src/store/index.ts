@@ -6,7 +6,6 @@ import playerDetailReducer from "./slices/playerDetailSlice";
 import playersReducer from "./slices/playersSlice";
 import repertoireReducer from "./slices/repertoireSlice";
 import themeReducer from "./slices/themeSlice";
-import tournamentReducer from "./slices/tournamentSlice";
 
 export const store = configureStore({
   reducer: {
@@ -16,7 +15,6 @@ export const store = configureStore({
     games: gamesReducer,
     repertoire: repertoireReducer,
     theme: themeReducer,
-    tournament: tournamentReducer,
   },
   // No preloadedState — store always starts with defaults on both server and
   // client. Repertoire is fetched from the API via fetchRepertoire once auth resolves.

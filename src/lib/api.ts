@@ -12,7 +12,6 @@ import type {
   OpeningStat,
   OpeningStudySuggestion,
   OpeningExplorerData,
-  Pairing,
   PaginatedResponse,
   PerformanceSummary,
   Player,
@@ -22,8 +21,6 @@ import type {
   PlayerLookupResult,
   PrepSummary,
   RepertoireData,
-  Tournament,
-  TournamentPlayer,
 } from "@/types";
 import { authStorage } from "@/lib/auth";
 import { handleAuthFailure } from "@/lib/handleAuthFailure";
@@ -428,47 +425,5 @@ getOpeningExplorer(
 
   deletePlayer(slug: string): Promise<void> {
     return fetchJson(`${API_BASE}/players/${slug}/`, { method: "DELETE" });
-  },
-
-  // ── Tournament Mode ───────────────────────────────────────────────────────
-
-  getActiveTournament(): Promise<Tournament | null> {
-    return fetchJson(`${API_BASE}/tournaments/active/`);
-  },
-
-  createTournament(payload: { name?: string; url?: string }): Promise<Tournament> {
-    return fetchJson(`${API_BASE}/tournaments/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-  },
-
-  updateTournament(id: number, payload: Partial<Pick<Tournament, "name" | "url" | "is_active">>): Promise<Tournament> {
-    return fetchJson(`${API_BASE}/tournaments/${id}/`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-  },
-
-  upsertPairing(
-    tournamentId: number,
-    pairing: Pick<Pairing, "round_number" | "opponent_name" | "color" | "result">
-  ): Promise<Pairing> {
-    return fetchJson(`${API_BASE}/tournaments/${tournamentId}/pairings/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(pairing),
-    });
-  },
-
-  getChessResultsTournamentPlayers(url: string): Promise<{ players: TournamentPlayer[]; count: number }> {
-    const params = new URLSearchParams({ url });
-    return fetchJson(`${API_BASE}/chess-results/tournament-players/?${params}`);
-  },
-
-  refreshTournamentPlayers(id: number): Promise<Tournament> {
-    return fetchJson(`${API_BASE}/tournaments/${id}/refresh-players/`, { method: "POST" });
   },
 };
