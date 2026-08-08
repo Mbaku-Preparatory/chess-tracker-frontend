@@ -8,11 +8,21 @@ import { loadAuthFromStorage } from "@/redux/actions/auth";
 import { fetchRepertoire, setInitialized } from "@/redux/actions/repertoire";
 
 /**
- * Paths that are publicly accessible without a login.
- * - /login, /signup, /verify-email — auth pages themselves
+ * The auth pages themselves. Signed-out users may see these; signed-in users
+ * get bounced off them, since "log in" is meaningless once you already are.
+ */
+function isAuthPath(pathname: string): boolean {
+  return pathname === "/login" || pathname === "/signup" || pathname === "/verify-email";
+}
+
+/**
+ * Paths readable without a login. A superset of the auth pages: /privacy must
+ * also be reachable by *anyone*, including Google Play's reviewers, who open
+ * the policy URL with no account — but unlike an auth page it must stay
+ * readable while signed in too, so it deliberately isn't an isAuthPath.
  */
 function isPublicPath(pathname: string): boolean {
-  return pathname === "/login" || pathname === "/signup" || pathname === "/verify-email";
+  return isAuthPath(pathname) || pathname === "/privacy";
 }
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
@@ -46,7 +56,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     if (!token && !isPublicPath(pathname)) {
       router.replace("/login");
     }
-    if (token && isPublicPath(pathname)) {
+    if (token && isAuthPath(pathname)) {
       router.replace("/");
     }
   }, [authInitialized, token, pathname, router]);
