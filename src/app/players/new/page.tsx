@@ -306,8 +306,10 @@ export default function NewPlayerPage() {
       } else {
         setFideResults(results);
       }
-    } catch {
-      setFideError("FIDE search failed. Try again.");
+    } catch (err) {
+      // The API explains short queries and FIDE outages — pass that through
+      // rather than flattening both to "try again".
+      setFideError(err instanceof Error ? err.message : "FIDE search failed. Try again.");
     } finally {
       setFideSearching(false);
     }
