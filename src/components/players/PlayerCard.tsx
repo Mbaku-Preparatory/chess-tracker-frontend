@@ -6,6 +6,7 @@ import { useState } from "react";
 import { api } from "@/lib/api";
 import { getPrepProductName, getPrimaryRating } from "@/lib/marketplace";
 import type { Player } from "@/types";
+import { userMessage } from "@/lib/apiError";
 
 function GameSourcePills({ player }: { player: Player }) {
   const sc = player.game_source_counts;
@@ -80,7 +81,7 @@ export function PlayerCard({
       await api.deletePlayer(playerRef);
       onDeleted?.(player);
     } catch (err: unknown) {
-      setDeleteError(err instanceof Error ? err.message : "Failed to delete player.");
+      setDeleteError(userMessage(err, "Failed to delete player."));
     } finally {
       setDeleting(false);
     }

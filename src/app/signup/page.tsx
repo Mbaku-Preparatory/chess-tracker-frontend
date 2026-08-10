@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { api } from "@/lib/api";
+import { userMessage } from "@/lib/apiError";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -37,7 +38,7 @@ export default function SignupPage() {
       );
       router.replace(`/verify-email?email=${encodeURIComponent(normalizedEmail)}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Signup failed.");
+      setError(userMessage(err, "Signup failed."));
     } finally {
       setLoading(false);
     }

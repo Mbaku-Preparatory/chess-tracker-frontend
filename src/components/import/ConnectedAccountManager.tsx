@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { api } from "@/lib/api";
 import type { PlayerAccount } from "@/types";
+import { userMessage } from "@/lib/apiError";
 
 interface ConnectedAccountManagerProps {
   slug: string;
@@ -40,7 +41,7 @@ export function ConnectedAccountManager({
       await action();
       await onUpdated?.();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Action failed.");
+      setError(userMessage(err, "Action failed."));
     } finally {
       setBusyKey(null);
     }

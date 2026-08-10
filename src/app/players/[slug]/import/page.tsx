@@ -10,6 +10,7 @@ import { ChessResultsImportSection } from "@/components/import/ChessResultsImpor
 import { LichessImportSection } from "@/components/import/LichessImportSection";
 import { ImportResultPanel } from "@/components/import/ImportResultPanel";
 import type { PlayerDetail, PGNImportResult } from "@/types";
+import { userMessage } from "@/lib/apiError";
 
 type Color = "auto" | "white" | "black";
 type ImportSource = "chesscom" | "lichess" | "chess_results" | "pgn";
@@ -199,7 +200,7 @@ export default function PlayerImportPage() {
       setResult(data);
     } catch (err: unknown) {
       setError(
-        err instanceof Error ? err.message : "Import failed. Check your PGN and try again."
+        userMessage(err, "Import failed. Check your PGN and try again.")
       );
     } finally {
       setLoading(false);

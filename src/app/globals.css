@@ -42,3 +42,35 @@
     display: none !important;
   }
 }
+
+/*
+  Import progress: a wave that sweeps across the pawns and repeats.
+
+  The real numbers ("3 of 20 · 46 games") are the source of truth underneath.
+  This exists because a single-tournament import sits on one unchanged figure
+  for fifteen-plus seconds, and a frozen bar reads as a broken app.
+*/
+@keyframes pawn-wave {
+  0%,
+  60%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+
+.pawn-wave {
+  animation: pawn-wave 1.6s ease-in-out infinite;
+}
+
+/* Someone who has asked for less motion gets the honest static bar. */
+@media (prefers-reduced-motion: reduce) {
+  .pawn-wave {
+    animation: none;
+    opacity: 0.4;
+  }
+}

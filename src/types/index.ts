@@ -503,3 +503,47 @@ export interface PrepSummary {
   };
   trends: PrepTrend[];
 }
+
+// ── Background import jobs ───────────────────────────────────────────────────
+
+export type ImportJobStatus =
+  | "pending"
+  | "running"
+  | "succeeded"
+  | "failed"
+  | "cancelled";
+
+export interface ImportJobTournamentResult {
+  name: string;
+  status: "done" | "error";
+  games_imported?: number;
+  games_skipped?: number;
+  skipped_reason?: string | null;
+  message?: string;
+}
+
+/**
+ * Mirrors _serialize_import_job in players/views.py. Note there is no `error`
+ * field: the backend deliberately withholds it because it holds exception text.
+ */
+export interface ImportJob {
+  id: string;
+  status: ImportJobStatus;
+  total: number;
+  completed: number;
+  games_imported: number;
+  results: ImportJobTournamentResult[];
+  cancel_requested: boolean;
+  /** Imports the worker must finish first. null once this one is running. */
+  queue_ahead: number | null;
+  notify_email: boolean;
+  created_at: string;
+  started_at: string | null;
+  finished_at: string | null;
+}
+
+/** An unfinished job as returned by /import-jobs/active/, for the app-shell pill. */
+export interface ActiveImportJob extends ImportJob {
+  player_name: string;
+  player_slug: string;
+}

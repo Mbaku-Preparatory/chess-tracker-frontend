@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { FederationSelect } from "@/components/ui/FederationSelect";
 import type { PlayerLookupResult } from "@/types";
+import { userMessage } from "@/lib/apiError";
 
 // ── Platform metadata ────────────────────────────────────────────────────────
 
@@ -309,7 +310,7 @@ export default function NewPlayerPage() {
     } catch (err) {
       // The API explains short queries and FIDE outages — pass that through
       // rather than flattening both to "try again".
-      setFideError(err instanceof Error ? err.message : "FIDE search failed. Try again.");
+      setFideError(userMessage(err, "FIDE search failed. Try again."));
     } finally {
       setFideSearching(false);
     }
@@ -375,7 +376,7 @@ export default function NewPlayerPage() {
       const source = hasChesscom ? "chesscom" : hasLichess ? "lichess" : "chess_results";
       router.push(`/players/${player.public_id}/import?source=${source}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not create player. Try again.");
+      setError(userMessage(err, "Could not create player. Try again."));
     } finally {
       setLoading(false);
     }

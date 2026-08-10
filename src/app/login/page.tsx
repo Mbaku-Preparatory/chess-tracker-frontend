@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAppDispatch } from "@/redux/hooks";
 import { setAuth } from "@/redux/actions/auth";
+import { userMessage } from "@/lib/apiError";
 
 export default function LoginPage() {
   const dispatch = useAppDispatch();
@@ -27,7 +28,7 @@ export default function LoginPage() {
       dispatch(setAuth({ token: data.access, refreshToken: data.refresh, email: data.email }));
       router.replace("/");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed.");
+      setError(userMessage(err, "Login failed."));
     } finally {
       setLoading(false);
     }

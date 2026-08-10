@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { ConnectedAccountManager } from "./ConnectedAccountManager";
 import { ImportResultPanel } from "./ImportResultPanel";
 import type { ChessComImportResult, PlayerAccount, PGNImportResult } from "@/types";
+import { userMessage } from "@/lib/apiError";
 
 interface ChessComImportSectionProps {
   slug: string;
@@ -58,7 +59,7 @@ export function ChessComImportSection({
     } catch (err: unknown) {
       if (err instanceof Error && err.name === "AbortError") return;
       setErrorMsg(
-        err instanceof Error ? err.message : "Import failed. Check the username and try again."
+        userMessage(err, "Import failed. Check the username and try again.")
       );
       setStatus("error");
     } finally {

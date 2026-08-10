@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAppDispatch } from "@/redux/hooks";
 import { setAuth } from "@/redux/actions/auth";
+import { userMessage } from "@/lib/apiError";
 
 function VerifyEmailForm() {
   const dispatch = useAppDispatch();
@@ -28,7 +29,7 @@ function VerifyEmailForm() {
       dispatch(setAuth({ token: data.access, refreshToken: data.refresh, email: data.email }));
       router.replace("/");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Verification failed.");
+      setError(userMessage(err, "Verification failed."));
     } finally {
       setLoading(false);
     }
@@ -41,7 +42,7 @@ function VerifyEmailForm() {
       await api.resendVerification(email);
       setResent(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Couldn't resend the code.");
+      setError(userMessage(err, "Couldn't resend the code."));
     }
   }
 

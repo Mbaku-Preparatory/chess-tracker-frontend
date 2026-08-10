@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import { ActiveImportsIndicator } from "@/components/import/ActiveImportsIndicator";
+import { ActiveImportsProvider } from "@/components/import/ActiveImportsProvider";
 import { AuthGate } from "@/components/AuthGate";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { GlobalLoader } from "@/components/ui/GlobalLoader";
@@ -26,10 +28,17 @@ export default function RootLayout({
           <ThemeProvider>
             <GlobalLoader />
             <AuthGate>
-              <Navbar />
-              <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-                {children}
-              </main>
+              {/*
+                Inside AuthGate: the poller needs a signed-in user, and there
+                is nothing to report on the login screen.
+              */}
+              <ActiveImportsProvider>
+                <Navbar />
+                <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+                  {children}
+                </main>
+                <ActiveImportsIndicator />
+              </ActiveImportsProvider>
             </AuthGate>
           </ThemeProvider>
         </StoreProvider>
