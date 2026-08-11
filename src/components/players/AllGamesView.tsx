@@ -34,6 +34,23 @@ const YEAR_OPTIONS = [
   }),
 ];
 
+// Opponent-rating bands. `value` is "<min>-<max>", either side may be blank.
+const RATING_OPTIONS = [
+  { value: "", label: "All ratings" },
+  { value: "-1599", label: "Under 1600" },
+  { value: "1600-1799", label: "1600–1799" },
+  { value: "1800-1999", label: "1800–1999" },
+  { value: "2000-2199", label: "2000–2199" },
+  { value: "2200-2399", label: "2200–2399" },
+  { value: "2400-", label: "2400+" },
+];
+
+function ratingParams(band: string): { min_rating?: string; max_rating?: string } {
+  if (!band) return {};
+  const [min, max] = band.split("-");
+  return { ...(min ? { min_rating: min } : {}), ...(max ? { max_rating: max } : {}) };
+}
+
 const PAGE_SIZE = 20;
 
 // ── Pagination ────────────────────────────────────────────────────────────────
@@ -121,12 +138,13 @@ export function AllGamesView({ slug }: AllGamesViewProps) {
   const [resultFilter, setResultFilter] = useState<GameResult | "">("");
   const [sourceFilter, setSourceFilter] = useState<GameSource | "">("");
   const [yearFilter, setYearFilter] = useState("");
+  const [ratingFilter, setRatingFilter] = useState("");
   const [search, setSearch] = useState("");
 
   // Reset to page 1 when any filter changes
   useEffect(() => {
     setPage(1);
-  }, [colorFilter, resultFilter, sourceFilter, yearFilter, search]);
+  }, [colorFilter, resultFilter, sourceFilter, yearFilter, ratingFilter, search]);
 
   useEffect(() => {
     setLoading(true);
@@ -137,6 +155,7 @@ export function AllGamesView({ slug }: AllGamesViewProps) {
         ...(resultFilter ? { result: resultFilter } : {}),
         ...(sourceFilter ? { source: sourceFilter } : {}),
         ...(yearFilter ? { year: yearFilter } : {}),
+        ...ratingParams(ratingFilter),
         ...(search ? { search } : {}),
         page,
       })
@@ -146,10 +165,12 @@ export function AllGamesView({ slug }: AllGamesViewProps) {
       })
       .catch(() => setError("Failed to load games."))
       .finally(() => setLoading(false));
-  }, [slug, colorFilter, resultFilter, sourceFilter, yearFilter, search, page]);
+  }, [slug, colorFilter, resultFilter, sourceFilter, yearFilter, ratingFilter, search, page]);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
-  const hasActiveFilters = Boolean(colorFilter || resultFilter || sourceFilter || yearFilter || search);
+  const hasActiveFilters = Boolean(
+    colorFilter || resultFilter || sourceFilter || yearFilter || ratingFilter || search
+  );
 
   return (
     <div>
@@ -211,6 +232,18 @@ export function AllGamesView({ slug }: AllGamesViewProps) {
           className={selectCls}
         >
           {YEAR_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </select>
+
+        {/* Opponent rating selector */}
+        <select
+          value={ratingFilter}
+          onChange={(e) => setRatingFilter(e.target.value)}
+          className={selectCls}
+          title="Opponent rating"
+        >
+          {RATING_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>{o.label}</option>
           ))}
         </select>
