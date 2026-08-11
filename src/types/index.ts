@@ -547,3 +547,23 @@ export interface ActiveImportJob extends ImportJob {
   player_name: string;
   player_slug: string;
 }
+
+// ── Payments ─────────────────────────────────────────────────────────────────
+
+export type PaymentStatus = "pending" | "completed" | "failed";
+
+/** Mirrors _serialize_payment in payments/views.py. */
+export interface Payment {
+  id: number;
+  status: PaymentStatus;
+  amount: string;
+  currency: string;
+  phone_number: string;
+  mpesa_receipt: string | null;
+  /** Our wording, derived from Daraja's result code. Null unless failed. */
+  failure_reason: string | null;
+  created_at: string;
+  completed_at: string | null;
+  /** Present on create: true when an in-flight payment was returned instead. */
+  reused_existing?: boolean;
+}
