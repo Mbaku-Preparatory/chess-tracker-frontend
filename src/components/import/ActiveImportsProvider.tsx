@@ -22,6 +22,7 @@ import {
   useState,
 } from "react";
 import { api } from "@/lib/api";
+import { useAppSelector } from "@/redux/hooks";
 import type { ActiveImportJob } from "@/types";
 
 const POLL_INTERVAL_MS = 3000;
@@ -42,6 +43,11 @@ export function useActiveImports() {
 }
 
 export function ActiveImportsProvider({ children }: { children: React.ReactNode }) {
+  // /privacy is readable signed out — Google Play's reviewers open it with no
+  // account — so this provider does render for anonymous visitors. Polling an
+  // authenticated endpoint from there is a 401 every three seconds forever.
+  const token = useAppSelector((s) => s.auth.token);
+
   const [jobs, setJobs] = useState<ActiveImportJob[]>([]);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const stoppedRef = useRef(false);
@@ -70,6 +76,10 @@ export function ActiveImportsProvider({ children }: { children: React.ReactNode 
   const refresh = useCallback(() => schedule(0), [schedule]);
 
   useEffect(() => {
+    if (!token) {
+      setJobs([]);
+      return;
+    }
     stoppedRef.current = false;
     void poll();
     schedule(POLL_INTERVAL_MS);
@@ -87,7 +97,7 @@ export function ActiveImportsProvider({ children }: { children: React.ReactNode 
       if (timerRef.current) clearTimeout(timerRef.current);
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [poll, schedule, refresh]);
+  }, [token, poll, schedule, refresh]);
 
   return (
     <ActiveImportsContext.Provider value={{ jobs, refresh }}>
