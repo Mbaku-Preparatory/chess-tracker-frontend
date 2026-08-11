@@ -32,7 +32,7 @@ export function ActiveImportsIndicator() {
     ? `/players/${single.player_slug}/import?source=chess_results`
     : "/players";
   const label = single ? single.player_name : `${jobs.length} imports`;
-  const queued = jobs.every((j) => j.status === "pending");
+  const queued = jobs.every((j) => j.status === "pending" && j.completed === 0);
 
   return (
     <Link

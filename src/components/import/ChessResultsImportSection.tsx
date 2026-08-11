@@ -875,7 +875,10 @@ function ImportProgress({
 }) {
   const finished = isTerminal(job);
   const errorCount = job.results.filter((r) => r.status === "error").length;
-  const queued = job.status === "pending";
+  // Pending *and* nothing done yet. A long import returns to pending between
+  // slices to let other people's imports through, and showing "Starting your
+  // import…" over 40 finished tournaments would be a lie.
+  const queued = job.status === "pending" && job.completed === 0;
   // Someone else's import is on the worker. Say so — an unexplained wait is
   // what makes people click Import a second time.
   const ahead = job.queue_ahead ?? 0;
