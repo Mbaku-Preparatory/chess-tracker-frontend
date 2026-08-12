@@ -133,6 +133,18 @@ export const api = {
     return fetchJson(`${API_BASE}/players/${slug}/openings/${qs ? `?${qs}` : ""}`);
   },
 
+  /**
+   * Ask a natural-language question about one opponent. Answered only from the
+   * data we hold on them — the backend never lets the model invent a statistic.
+   */
+  askAboutPlayer(slug: string, question: string): Promise<{ answer: string }> {
+    return fetchJson(`${API_BASE}/players/${slug}/ask/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question }),
+    });
+  },
+
   getPlayerSummary(slug: string): Promise<PerformanceSummary> {
     return fetchJson(`${API_BASE}/players/${slug}/summary/`);
   },
