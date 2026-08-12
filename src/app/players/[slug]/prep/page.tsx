@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { fetchPlayerDetail } from "@/redux/actions/playerDetail";
@@ -18,7 +18,12 @@ export default function PrepPage() {
   const { slug } = useParams<{ slug: string }>();
   const dispatch = useAppDispatch();
   const { player, loading: playerLoading } = useAppSelector((s) => s.playerDetail);
-  const [tab, setTab] = useState<PrepTab>("tree");
+  // ?tab=ask lets the profile page deep-link straight into Mbaku.
+  const searchParams = useSearchParams();
+  const requested = searchParams.get("tab");
+  const [tab, setTab] = useState<PrepTab>(
+    requested === "ask" || requested === "studies" ? requested : "tree",
+  );
 
   useEffect(() => {
     if (slug) dispatch(fetchPlayerDetail(slug));

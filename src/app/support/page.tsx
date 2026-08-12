@@ -1,37 +1,17 @@
-import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
-import { TipForm } from "@/components/TipForm";
-
-export const metadata: Metadata = {
-  title: "Support — Mbaku Preparatory",
-  description: "Buy the developer a coffee and keep Mbaku Preparatory running.",
-};
-
+/**
+ * Support (tipping) is hidden until M-Pesa go-live.
+ *
+ * The tip flow works, but MPESA_SHORTCODE is still Safaricom's shared sandbox
+ * paybill — money paid here would go to their test account, not to us. Removing
+ * the navbar link alone would leave the page reachable by URL, so the route
+ * redirects instead.
+ *
+ * The UI lives on in src/components/TipForm.tsx. To bring this back: restore
+ * the page body from git history, re-add the navbar link, and only then flip
+ * MPESA_ENV to production.
+ */
 export default function SupportPage() {
-  return (
-    <div className="mx-auto max-w-2xl">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-        Buy the developer a coffee
-      </h1>
-      <p className="mt-2 max-w-prose text-sm leading-relaxed text-gray-600 dark:text-gray-300">
-        Mbaku Preparatory is built and paid for by one person in Nairobi. Servers,
-        the database, and the tournament imports all cost money whether anyone tips
-        or not — so this is genuinely optional, and nothing in the app is locked
-        behind it.
-      </p>
-      <p className="mt-2 max-w-prose text-sm leading-relaxed text-gray-600 dark:text-gray-300">
-        If it has saved you an evening of prep, a coffee is a kind way to say so.
-      </p>
-
-      <div className="mt-8 rounded-xl border border-gray-200 bg-white p-6 dark:border-dark-border dark:bg-dark-surface">
-        <TipForm />
-      </div>
-
-      <p className="mt-6 text-xs text-gray-500 dark:text-gray-400">
-        Payments are handled by Safaricom M-Pesa. We never see or store your PIN —
-        only the amount, the number the prompt was sent to, and Safaricom&apos;s
-        receipt.
-      </p>
-    </div>
-  );
+  redirect("/players");
 }

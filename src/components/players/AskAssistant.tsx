@@ -4,13 +4,17 @@ import { useState } from "react";
 import { api } from "@/lib/api";
 
 /**
- * Ask a question about one opponent, answered from the games we hold on them.
+ * Ask Mbaku about one opponent, answered from the games we hold on them.
  *
- * The suggested questions are not decoration — they are the categories from
- * AI-ASSISTANT-EVALS.md, including the deliberately unanswerable one. Asking
- * "what's her rating trend" and getting "we don't store rating history" back is
- * the assistant working correctly, and having that a tap away makes the
- * behaviour easy to keep checking as the prompt is tuned.
+ * The thread is held server-side: we send a conversation id and the backend
+ * replays the earlier turns, so "why did you say that?" has something to refer
+ * back to. The client never tells the server what Mbaku said last turn, which
+ * is what stops a forged assistant turn steering the answer.
+ *
+ * The suggested questions are the categories from AI-ASSISTANT-EVALS.md,
+ * including the deliberately unanswerable one — asking about a rating trend and
+ * getting "we don't store rating history" back is Mbaku working correctly, and
+ * keeping it one tap away makes that easy to re-check as the prompt is tuned.
  */
 
 // Provisional — the backend carries the same name in ASSISTANT_NAME.
@@ -28,6 +32,11 @@ const SUGGESTED = [
 // rejects anything longer, so stop it here rather than round-tripping a 400.
 const MAX_QUESTION = 500;
 
+interface Turn {
+  role: "user" | "assistant";
+  content: string;
+}
+
 interface AskAssistantProps {
   slug: string;
   playerName?: string;
@@ -35,8 +44,8 @@ interface AskAssistantProps {
 
 export function AskAssistant({ slug, playerName }: AskAssistantProps) {
   const [question, setQuestion] = useState("");
-  const [answer, setAnswer] = useState<string | null>(null);
-  const [asked, setAsked] = useState<string | null>(null);
+  const [turns, setTurns] = useState<Turn[]>([]);
+  const [conversationId, setConversationId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -46,12 +55,13 @@ export function AskAssistant({ slug, playerName }: AskAssistantProps) {
 
     setLoading(true);
     setError(null);
-    setAnswer(null);
-    setAsked(trimmed);
+    setQuestion("");
+    setTurns((prev) => [...prev, { role: "user", content: trimmed }]);
 
     try {
-      const result = await api.askAboutPlayer(slug, trimmed);
-      setAnswer(result.answer);
+      const result = await api.askAboutPlayer(slug, trimmed, conversationId);
+      setConversationId(result.conversation_id);
+      setTurns((prev) => [...prev, { role: "assistant", content: result.answer }]);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Something went wrong. Try again."
@@ -61,27 +71,87 @@ export function AskAssistant({ slug, playerName }: AskAssistantProps) {
     }
   }
 
+  function reset() {
+    setTurns([]);
+    setConversationId(null);
+    setError(null);
+  }
+
   return (
     <div className="card overflow-hidden border-2 border-brand-200 shadow-sm dark:border-dark-border">
-      <div className="bg-gradient-to-r from-brand-600 to-brand-700 px-6 py-5">
-        <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 text-lg text-white">
-            &#128172;
-          </span>
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-brand-100">
-              Ask {ASSISTANT_NAME}
-            </p>
-            <h3 className="text-lg font-bold text-white">
-              {playerName
-                ? `${ASSISTANT_NAME} on ${playerName}`
-                : `Ask ${ASSISTANT_NAME} about this player`}
-            </h3>
-          </div>
+      <div className="flex items-center gap-3 bg-gradient-to-r from-brand-600 to-brand-700 px-6 py-5">
+        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 text-lg text-white">
+          &#128172;
+        </span>
+        <div className="flex-1">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-brand-100">
+            Ask {ASSISTANT_NAME}
+          </p>
+          <h3 className="text-lg font-bold text-white">
+            {playerName
+              ? `${ASSISTANT_NAME} on ${playerName}`
+              : `Ask ${ASSISTANT_NAME} about this player`}
+          </h3>
         </div>
+        {turns.length > 0 && (
+          <button
+            type="button"
+            onClick={reset}
+            className="rounded-lg px-3 py-1.5 text-xs font-medium text-brand-100 transition-colors hover:bg-white/10"
+          >
+            New chat
+          </button>
+        )}
       </div>
 
       <div className="space-y-4 p-6">
+        {turns.length > 0 && (
+          <div className="space-y-3">
+            {turns.map((turn, i) =>
+              turn.role === "user" ? (
+                <p
+                  key={i}
+                  className="ml-auto max-w-[85%] rounded-2xl rounded-br-sm bg-brand-600 px-4 py-2.5 text-sm font-medium text-white"
+                >
+                  {turn.content}
+                </p>
+              ) : (
+                <div
+                  key={i}
+                  className="max-w-[95%] space-y-3 rounded-2xl rounded-bl-sm bg-brand-50/60 px-4 py-3 dark:bg-dark-elevated"
+                >
+                  {/* Mbaku writes prose with blank lines between paragraphs;
+                      render those as paragraphs rather than a wall of text. */}
+                  {turn.content
+                    .split(/\n{2,}/)
+                    .filter((p) => p.trim())
+                    .map((para, j) => (
+                      <p
+                        key={j}
+                        className="whitespace-pre-line text-sm leading-relaxed text-gray-800 dark:text-gray-200"
+                      >
+                        {para.trim()}
+                      </p>
+                    ))}
+                </div>
+              )
+            )}
+          </div>
+        )}
+
+        {loading && (
+          <div className="flex items-center gap-2 rounded-xl bg-gray-50 p-4 text-sm text-gray-500 dark:bg-dark-elevated dark:text-gray-400">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-brand-500" />
+            Reading {playerName ? `${playerName}'s` : "their"} games…
+          </div>
+        )}
+
+        {error && (
+          <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-300">
+            {error}
+          </div>
+        )}
+
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -100,7 +170,11 @@ export function AskAssistant({ slug, playerName }: AskAssistantProps) {
               }
             }}
             rows={2}
-            placeholder={`Ask ${ASSISTANT_NAME} — e.g. which opening do they score worst with?`}
+            placeholder={
+              turns.length
+                ? "Ask a follow-up…"
+                : `Ask ${ASSISTANT_NAME} — e.g. which opening do they score worst with?`
+            }
             disabled={loading}
             className="input w-full resize-none"
           />
@@ -118,65 +192,25 @@ export function AskAssistant({ slug, playerName }: AskAssistantProps) {
           </div>
         </form>
 
-        <div className="flex flex-wrap gap-2">
-          {SUGGESTED.map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => {
-                setQuestion(s);
-                ask(s);
-              }}
-              disabled={loading}
-              className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 disabled:opacity-50 dark:border-dark-border dark:bg-dark-elevated dark:text-gray-300 dark:hover:bg-dark-surface"
-            >
-              {s}
-            </button>
-          ))}
-        </div>
-
-        {loading && (
-          <div className="rounded-xl bg-gray-50 p-4 dark:bg-dark-elevated">
-            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-brand-500" />
-              Reading {playerName ? `${playerName}'s` : "their"} games…
-            </div>
+        {turns.length === 0 && (
+          <div className="flex flex-wrap gap-2">
+            {SUGGESTED.map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => ask(s)}
+                disabled={loading}
+                className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 disabled:opacity-50 dark:border-dark-border dark:bg-dark-elevated dark:text-gray-300 dark:hover:bg-dark-surface"
+              >
+                {s}
+              </button>
+            ))}
           </div>
         )}
 
-        {error && (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-300">
-            {error}
-          </div>
-        )}
-
-        {answer && !loading && (
-          <div className="space-y-2">
-            {asked && (
-              <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                {asked}
-              </p>
-            )}
-            {/* The model writes plain prose with blank lines between paragraphs;
-                render those as paragraphs rather than one wall of text. */}
-            <div className="space-y-3 rounded-xl bg-brand-50/50 p-4 dark:bg-dark-elevated">
-              {answer
-                .split(/\n{2,}/)
-                .filter((p) => p.trim())
-                .map((para, i) => (
-                  <p
-                    key={i}
-                    className="whitespace-pre-line text-sm leading-relaxed text-gray-800 dark:text-gray-200"
-                  >
-                    {para.trim()}
-                  </p>
-                ))}
-            </div>
-            <p className="text-xs text-gray-400 dark:text-gray-500">
-              Answered only from the games imported for this player.
-            </p>
-          </div>
-        )}
+        <p className="text-xs text-gray-400 dark:text-gray-500">
+          Answered only from the games imported for this player.
+        </p>
       </div>
     </div>
   );
