@@ -13,6 +13,9 @@ import { api } from "@/lib/api";
  * behaviour easy to keep checking as the prompt is tuned.
  */
 
+// Provisional — the backend carries the same name in ASSISTANT_NAME.
+const ASSISTANT_NAME = "Mbaku";
+
 const SUGGESTED = [
   "Which openings does this player play most?",
   "Where do they score worst?",
@@ -67,10 +70,12 @@ export function AskAssistant({ slug, playerName }: AskAssistantProps) {
           </span>
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-brand-100">
-              Ask the assistant
+              Ask {ASSISTANT_NAME}
             </p>
             <h3 className="text-lg font-bold text-white">
-              {playerName ? `Questions about ${playerName}` : "Ask about this player"}
+              {playerName
+                ? `${ASSISTANT_NAME} on ${playerName}`
+                : `Ask ${ASSISTANT_NAME} about this player`}
             </h3>
           </div>
         </div>
@@ -95,7 +100,7 @@ export function AskAssistant({ slug, playerName }: AskAssistantProps) {
               }
             }}
             rows={2}
-            placeholder="e.g. which opening do they score worst with?"
+            placeholder={`Ask ${ASSISTANT_NAME} — e.g. which opening do they score worst with?`}
             disabled={loading}
             className="input w-full resize-none"
           />
