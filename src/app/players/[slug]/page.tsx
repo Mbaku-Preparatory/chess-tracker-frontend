@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { fetchPlayerDetail } from "@/redux/actions/playerDetail";
@@ -116,12 +116,20 @@ function FideSection({ slug, fideId }: { slug: string; fideId: string | null }) 
 
 export default function PlayerDetailPage() {
   const { slug } = useParams<{ slug: string }>();
+  const router = useRouter();
   const dispatch = useAppDispatch();
   const { player, loading, error } = useAppSelector((s) => s.playerDetail);
 
   useEffect(() => {
     if (slug) dispatch(fetchPlayerDetail(slug));
   }, [dispatch, slug]);
+
+  // Your own record has a home, and this is not it. Old links and anything
+  // that guessed the slug land here; send them to /me rather than render the
+  // viewer to themselves as though they were an opponent being scouted.
+  useEffect(() => {
+    if (player?.is_self) router.replace("/me");
+  }, [player?.is_self, router]);
 
   if (loading) {
     return (

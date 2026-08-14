@@ -225,16 +225,18 @@ export default function MyProfilePage() {
         </SectionContainer>
       )}
 
+      {/* Under /me, not /players/<slug>. Your profile is not a scouting
+          report on a stranger and should not read like one in the URL bar. */}
       {gamesCount > 0 && (
         <div className="flex flex-wrap gap-2">
-          <Link href={`/players/${player.slug}`} className="btn-secondary">
-            Full profile
-          </Link>
-          <Link href={`/players/${player.slug}/games`} className="btn-secondary">
+          <Link href="/me/games" className="btn-secondary">
             All games
           </Link>
-          <Link href={`/players/${player.slug}/prep`} className="btn-secondary">
-            Prep
+          <Link href="/me/prep" className="btn-secondary">
+            Openings &amp; study plan
+          </Link>
+          <Link href="/me/prep?tab=ask" className="btn-secondary">
+            Ask Mbaku
           </Link>
         </div>
       )}
