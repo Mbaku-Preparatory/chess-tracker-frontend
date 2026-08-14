@@ -113,6 +113,31 @@ export function TipForm({ returnedReference }: { returnedReference: string | nul
       );
     }
 
+    if (state === "unavailable") {
+      // This browser cannot see the payment: no session, or it is not theirs.
+      // The overwhelmingly common cause is paying from the phone app, since
+      // Paystack sends every payer to this same page. Saying "signed out"
+      // would be technically true and useless.
+      return (
+        <div className={`${CARD} text-center`}>
+          <p className="text-base font-semibold text-gray-900 dark:text-gray-100">
+            You&apos;re back from Paystack
+          </p>
+          <p className="mx-auto mt-1 max-w-sm text-sm text-gray-600 dark:text-gray-300">
+            If you paid from the phone app, switch back to it — it&apos;s confirming
+            now. Otherwise sign in here to see this payment. Either way, Paystack
+            emails a receipt.
+          </p>
+          <a
+            href="/login"
+            className="mt-4 inline-block text-sm font-medium text-brand-600 hover:underline dark:text-brand-400"
+          >
+            Sign in
+          </a>
+        </div>
+      );
+    }
+
     // Gave up, or settled with nothing to show. Honest rather than hopeful:
     // the payment may well have succeeded, and the receipt is the thing that
     // actually answers the question.

@@ -21,6 +21,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { api } from "@/lib/api";
+import type { AppError } from "@/lib/apiError";
 import type { Payment } from "@/types";
 
 const POLL_INTERVAL_MS = 2500;
@@ -33,7 +34,19 @@ const POLL_INTERVAL_MS = 2500;
  */
 const POLL_CEILING_MS = 120_000;
 
-export type PollState = "idle" | "polling" | "settled" | "gave-up";
+/**
+ * "unavailable" means this browser is not allowed to see this payment — no
+ * session, or the payment belongs to somebody else. Distinct from "gave-up"
+ * because it is an answer, and a final one: retrying cannot change it.
+ *
+ * It is a routine outcome, not an error. Paystack sends every payer back to
+ * this page, including one who paid from the phone app, where this browser has
+ * no session at all.
+ */
+export type PollState = "idle" | "polling" | "settled" | "gave-up" | "unavailable";
+
+/** Statuses that mean "asking again will not help". */
+const TERMINAL_STATUSES = [401, 403, 404];
 
 export function usePaymentStatus(reference: string | null) {
   const [payment, setPayment] = useState<Payment | null>(null);
@@ -60,9 +73,18 @@ export function usePaymentStatus(reference: string | null) {
           setState("settled");
           return;
         }
-      } catch {
-        // Deliberately ignored — see the note above. Keep asking until the
-        // ceiling rather than reporting a failure that has not happened.
+      } catch (err) {
+        if (cancelled) return;
+        const status = (err as AppError).status;
+        if (status !== undefined && TERMINAL_STATUSES.includes(status)) {
+          // An answer, not a blip. Polling for two minutes would only make
+          // the page look broken to somebody who paid perfectly well.
+          setState("unavailable");
+          return;
+        }
+        // Anything else is deliberately ignored — see the note above. Keep
+        // asking until the ceiling rather than reporting a failure that has
+        // not happened.
       }
       if (cancelled) return;
       if (Date.now() - startedAt.current > POLL_CEILING_MS) {
