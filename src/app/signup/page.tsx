@@ -149,8 +149,11 @@ export default function SignupPage() {
               placeholder="1503014"
             />
             <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-              We&apos;ll pull in your rating and your recent tournament games, so
-              Mbaku can talk about your own play. You can add this later.
+              We&apos;ll pull in your rating and your recent tournament games so
+              <strong className="font-semibold"> Mbaku-bot</strong>, the coach
+              built into the app, can talk about your own play — which openings
+              you score worst with, who you struggle against. You can add this
+              later.
             </p>
           </div>
 

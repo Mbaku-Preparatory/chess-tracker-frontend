@@ -40,5 +40,5 @@ export default function MyPrepPage() {
       </div>
     );
   }
-  return <PlayerPrepView slug={slug} />;
+  return <PlayerPrepView slug={slug} isSelf />;
 }

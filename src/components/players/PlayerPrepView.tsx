@@ -14,7 +14,14 @@ import { AskAssistant } from "@/components/players/AskAssistant";
 
 type PrepTab = "tree" | "studies" | "ask";
 
-export function PlayerPrepView({ slug }: { slug: string }) {
+export function PlayerPrepView({
+  slug,
+  isSelf = false,
+}: {
+  slug: string;
+  /** Set on /me/prep so the assistant asks in the first person. */
+  isSelf?: boolean;
+}) {
   const dispatch = useAppDispatch();
   const { player, loading: playerLoading } = useAppSelector((s) => s.playerDetail);
   // ?tab=ask lets the profile page deep-link straight into Mbaku.
@@ -100,7 +107,7 @@ export function PlayerPrepView({ slug }: { slug: string }) {
       {tab === "tree" && <PrepSummaryPanel slug={slug} />}
       {tab === "studies" && <OpeningStudyPlan slug={slug} />}
       {tab === "ask" && (
-        <AskAssistant slug={slug} playerName={player?.full_name} />
+        <AskAssistant slug={slug} playerName={player?.full_name} isSelf={isSelf} />
       )}
     </div>
   );
