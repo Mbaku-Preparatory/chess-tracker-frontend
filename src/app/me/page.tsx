@@ -196,6 +196,35 @@ export default function MyProfilePage() {
         </SectionContainer>
       )}
 
+      {/* The signup import takes the 20 most recent events. Anyone with a
+          longer career needs a way to ask for the rest, and this is the only
+          place they would look for it. */}
+      {!!player.fide_id && !inFlight && gamesCount > 0 && (
+        <SectionContainer title="Older games">
+          <p className="text-sm text-gray-600 dark:text-gray-300">
+            Signing up imported your 20 most recent tournaments. If you have
+            played longer than that, pull in the rest.
+          </p>
+          <button
+            onClick={async () => {
+              if (!player.fide_id) return;
+              setSaving(true);
+              try {
+                setMe(await api.setMyFideId(player.fide_id, true));
+              } catch (err) {
+                setError(userMessage(err, "Couldn't start the import."));
+              } finally {
+                setSaving(false);
+              }
+            }}
+            disabled={saving}
+            className="btn-secondary mt-3"
+          >
+            {saving ? "Starting…" : "Import my full history"}
+          </button>
+        </SectionContainer>
+      )}
+
       {gamesCount > 0 && (
         <div className="flex flex-wrap gap-2">
           <Link href={`/players/${player.slug}`} className="btn-secondary">
