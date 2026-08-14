@@ -184,6 +184,21 @@ export function Navbar() {
                     )}
                   </div>
 
+                  {/* My profile — the account holder as a player. Above the
+                      theme picker because it is a destination, not a setting. */}
+                  <div className="border-t border-gray-100 dark:border-dark-border">
+                    <Link
+                      href="/me"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-dark-surface"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                      </svg>
+                      My profile
+                    </Link>
+                  </div>
+
                   {/* Theme picker */}
                   <div className="border-t border-gray-100 px-4 py-3 dark:border-dark-border">
                     <ThemePicker />

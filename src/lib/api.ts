@@ -19,6 +19,7 @@ import type {
   PerformanceSummary,
   Player,
   PlayerAccount,
+  MyPlayer,
   PlayerDetail,
   PlayerInsights,
   PlayerLookupResult,
@@ -102,6 +103,32 @@ export const api = {
 
   getPlayerDetail(slug: string): Promise<PlayerDetail> {
     return fetchJson(`${API_BASE}/players/${slug}/`);
+  },
+
+  /**
+   * The signed-in user's own profile.
+   *
+   * Returns a PlayerDetail — the same shape as any other player — so every
+   * card, panel and the assistant work on it unchanged. `import_job` is the
+   * most recent import for it, or null if they have never run one.
+   */
+  getMyPlayer(): Promise<MyPlayer> {
+    return fetchJson(`${API_BASE}/me/player/`);
+  },
+
+  /**
+   * Save a FIDE ID and queue the import of their recent games.
+   *
+   * Returns immediately: finding the games means two round trips to
+   * chess-results, which happen in the worker. Poll `import_job` with
+   * getImportJob() to follow it.
+   */
+  setMyFideId(fideId: string): Promise<MyPlayer> {
+    return fetchJson(`${API_BASE}/me/player/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fide_id: fideId }),
+    });
   },
 
   getPlayerGames(slug: string, filters?: GamesFilter): Promise<PaginatedResponse<Game>> {
@@ -404,7 +431,8 @@ getOpeningExplorer(
     password: string,
     username: string,
     firstName: string,
-    lastName: string
+    lastName: string,
+    fideId = ""
   ): Promise<{ detail: string; email: string }> {
     return fetchJson(`${API_BASE}/auth/register/`, {
       method: "POST",
@@ -413,6 +441,7 @@ getOpeningExplorer(
         email,
         password,
         username,
+        fide_id: fideId,
         first_name: firstName,
         last_name: lastName,
       }),

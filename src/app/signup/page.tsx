@@ -15,6 +15,7 @@ export default function SignupPage() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fideId, setFideId] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +35,8 @@ export default function SignupPage() {
         password,
         username.trim(),
         firstName.trim(),
-        lastName.trim()
+        lastName.trim(),
+        fideId.trim()
       );
       router.replace(`/verify-email?email=${encodeURIComponent(normalizedEmail)}`);
     } catch (err) {
@@ -130,6 +132,26 @@ export default function SignupPage() {
               className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-dark-border dark:bg-dark-elevated dark:text-gray-100 dark:placeholder-gray-500"
               placeholder="you@example.com"
             />
+          </div>
+
+          <div>
+            <label htmlFor="fideId" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              FIDE ID
+              <span className="ml-1 text-xs font-normal text-gray-400">(optional)</span>
+            </label>
+            <input
+              id="fideId"
+              type="text"
+              inputMode="numeric"
+              value={fideId}
+              onChange={(e) => setFideId(e.target.value)}
+              className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-dark-border dark:bg-dark-elevated dark:text-gray-100 dark:placeholder-gray-500"
+              placeholder="1503014"
+            />
+            <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+              We&apos;ll pull in your rating and your recent tournament games, so
+              Mbaku can talk about your own play. You can add this later.
+            </p>
           </div>
 
           <div>
