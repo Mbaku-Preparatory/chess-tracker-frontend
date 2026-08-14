@@ -179,8 +179,12 @@ export default function MyProfilePage() {
       )}
 
       {/* Finished, but found nothing. Saying so is the whole reason the payload
-          carries the most recent job rather than only a running one. */}
-      {!inFlight && job && job.total === 0 && player.fide_id && (
+          carries the most recent job rather than only a running one.
+          `games_imported === 0` and not `total === 0`: an import that visited
+          twenty tournaments and extracted nothing from any of them is the same
+          outcome to the person reading this page, and gating on total left
+          exactly that case showing nothing at all. */}
+      {!inFlight && job && job.games_imported === 0 && player.fide_id && (
         <SectionContainer title="No games found">
           <p className="text-sm text-gray-600 dark:text-gray-300">
             We couldn&apos;t find tournaments for FIDE ID {player.fide_id} on
@@ -196,14 +200,17 @@ export default function MyProfilePage() {
         </SectionContainer>
       )}
 
-      {/* The signup import takes the 20 most recent events. Anyone with a
-          longer career needs a way to ask for the rest, and this is the only
-          place they would look for it. */}
-      {!!player.fide_id && !inFlight && gamesCount > 0 && (
-        <SectionContainer title="Older games">
+      {/* Runs a fresh import. Deliberately NOT gated on having games already:
+          the first version was, which meant somebody whose import found
+          nothing — the exact person who needs to retry — was shown no way to
+          do it. A profile with a FIDE ID, nothing running, and no button was
+          a dead end. */}
+      {!!player.fide_id && !inFlight && (
+        <SectionContainer title={gamesCount > 0 ? "Older games" : "Fetch your games"}>
           <p className="text-sm text-gray-600 dark:text-gray-300">
-            Signing up imported your 20 most recent tournaments. If you have
-            played longer than that, pull in the rest.
+            {gamesCount > 0
+              ? "Signing up imported your 20 most recent tournaments. If you have played longer than that, pull in the rest."
+              : "Search chess-results for every tournament under your FIDE ID and import the games."}
           </p>
           <button
             onClick={async () => {
@@ -220,7 +227,7 @@ export default function MyProfilePage() {
             disabled={saving}
             className="btn-secondary mt-3"
           >
-            {saving ? "Starting…" : "Import my full history"}
+            {saving ? "Starting…" : gamesCount > 0 ? "Import my full history" : "Import my games"}
           </button>
         </SectionContainer>
       )}

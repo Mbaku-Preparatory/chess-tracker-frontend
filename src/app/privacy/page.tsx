@@ -6,7 +6,7 @@ export const metadata: Metadata = {
     "How Mbaku Preparatory collects, uses, stores, and deletes your data across the web app and the Android app.",
 };
 
-const LAST_UPDATED = "9 August 2026";
+const LAST_UPDATED = "13 August 2026";
 const CONTACT_EMAIL = "bakutarb@gmail.com";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -56,14 +56,29 @@ export default function PrivacyPolicyPage() {
           The titles, notes, dates and times of the prep sessions you schedule, and whether you
           marked them complete.
         </p>
+        <p>
+          <strong className="font-medium text-gray-900 dark:text-gray-100">
+            Your conversations with Mbaku.
+          </strong>{" "}
+          The questions you ask the in-app assistant and the answers it gives are stored against
+          your account, so a conversation can be continued later. See{" "}
+          <em>The Mbaku assistant</em> below for who else sees them.
+        </p>
+        <p>
+          <strong className="font-medium text-gray-900 dark:text-gray-100">
+            Crash reports.
+          </strong>{" "}
+          When the Android app hits an error, it sends a diagnostic report. See{" "}
+          <em>Crash reporting</em> below for exactly what that contains.
+        </p>
       </Section>
 
       <Section title="What we do not collect">
         <p>
-          The app contains no analytics, advertising, crash-reporting or tracking SDKs of any kind.
-          We do not collect your location, contacts, calendar, call logs, or the contents of your
-          device storage. We do not sell or share your data with third parties for advertising, and
-          we do not use your data to build advertising profiles.
+          The app contains no advertising or tracking SDKs, and shows no ads. We do not collect your
+          location, contacts, calendar, call logs, or the contents of your device storage. We do not
+          sell your data, we do not share it with anyone for advertising, and we do not use it to
+          build advertising profiles.
         </p>
         <p>
           <strong className="font-medium text-gray-900 dark:text-gray-100">Profile photo.</strong>{" "}
@@ -82,6 +97,43 @@ export default function PrivacyPolicyPage() {
         </p>
       </Section>
 
+      <Section title="Crash reporting">
+        <p>
+          The Android app uses Sentry to report crashes and errors, so that a bug which only happens
+          on someone else&apos;s phone can still be found and fixed. A report contains the error and
+          its stack trace, your device model and Android version, the app version, and a trail of
+          the screens you visited and buttons you pressed just beforehand. It does{" "}
+          <strong className="font-medium text-gray-900 dark:text-gray-100">not</strong> contain the
+          contents of anything you typed &mdash; not your questions to Mbaku, not your notes, not
+          your opponents&apos; names.
+        </p>
+        <p>
+          If you are signed in, your email address is attached to the report. That is a deliberate
+          choice and we would rather say so plainly than bury it: during this early review period it
+          lets us tell one person&apos;s crash from another&apos;s and ask what you were doing when
+          it happened. Sentry processes this on our behalf and it is never used for marketing.
+        </p>
+        <p>
+          Crash reporting is off entirely in development builds, and no performance or session
+          tracking is enabled.
+        </p>
+      </Section>
+
+      <Section title="The Mbaku assistant">
+        <p>
+          Mbaku answers questions about an opponent in plain language. To do that, your question and
+          a summary of the data we already hold about that opponent &mdash; their name, ratings,
+          game results, openings, and your head-to-head record &mdash; are sent to Anthropic, which
+          operates the language model that writes the answer.
+        </p>
+        <p>
+          The summary is built from the chess data described above, which is public game data plus
+          what you entered yourself. Your email address, your password, and your prep session notes
+          are never included. Anthropic processes this on our behalf to generate the reply and does
+          not use it to train models.
+        </p>
+      </Section>
+
       <Section title="How we use your data">
         <p>
           Your data is used only to operate the features you are using: authenticating you,
@@ -93,8 +145,30 @@ export default function PrivacyPolicyPage() {
       <Section title="Where your data is stored">
         <p>
           Application data is stored in a PostgreSQL database hosted by Railway. The web app is
-          hosted by Vercel. These providers process data on our behalf as infrastructure suppliers.
-          Traffic between the apps and our backend is encrypted in transit over HTTPS.
+          hosted by Vercel. Traffic between the apps and our backend is encrypted in transit over
+          HTTPS.
+        </p>
+        <p>
+          Three other companies process data on our behalf, each for one purpose and nothing else:
+        </p>
+        <ul className="ml-5 list-disc space-y-1">
+          <li>
+            <strong className="font-medium text-gray-900 dark:text-gray-100">Railway</strong> and{" "}
+            <strong className="font-medium text-gray-900 dark:text-gray-100">Vercel</strong> &mdash;
+            hosting and database.
+          </li>
+          <li>
+            <strong className="font-medium text-gray-900 dark:text-gray-100">Sentry</strong> &mdash;
+            crash reports from the Android app, as described above.
+          </li>
+          <li>
+            <strong className="font-medium text-gray-900 dark:text-gray-100">Anthropic</strong>{" "}
+            &mdash; the questions you ask Mbaku and the opponent summary sent with them.
+          </li>
+        </ul>
+        <p>
+          These are infrastructure suppliers, not partners we share data with commercially. None of
+          them receives your password, which exists only as a hash on our own database.
         </p>
       </Section>
 
