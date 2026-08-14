@@ -56,7 +56,7 @@ export default function SignupPage() {
           </div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Create your account</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Build your repertoire and start scouting opponents.
+            Track your own games and start scouting opponents.
           </p>
         </div>
 

@@ -5,7 +5,6 @@ import { useRouter, usePathname } from "next/navigation";
 
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { loadAuthFromStorage } from "@/redux/actions/auth";
-import { fetchRepertoire, setInitialized } from "@/redux/actions/repertoire";
 
 /**
  * The auth pages themselves. Signed-out users may see these; signed-in users
@@ -36,18 +35,6 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     dispatch(loadAuthFromStorage());
   }, [dispatch]);
-
-  // Once auth is resolved, either fetch repertoire from the API (authenticated)
-  // or mark it as initialized with empty defaults (unauthenticated).
-  useEffect(() => {
-    if (!authInitialized) return;
-    if (token) {
-      dispatch(fetchRepertoire());
-    } else {
-      dispatch(setInitialized());
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authInitialized]);
 
   // Gate 1 — auth: redirect to /login unless path is public.
   // Also bounce already-authenticated users away from /login and /signup.

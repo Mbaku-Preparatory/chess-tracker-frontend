@@ -56,15 +56,6 @@ function SeverityDot({ severity }: { severity: string }) {
   );
 }
 
-function RepertoirePip({ match }: { match: string }) {
-  if (!match) return null;
-  return (
-    <span className="ml-1.5 rounded-full bg-brand-100 px-1.5 py-0.5 text-[10px] font-semibold text-brand-700">
-      {match === "exact" ? "In your repertoire" : "Related line"}
-    </span>
-  );
-}
-
 function RiskBadge({ level }: { level: string }) {
   return (
     <span
@@ -125,7 +116,6 @@ function RecommendedLines({ lines }: { lines: InsightRecommendedLine[] }) {
                 <span className="text-xs text-gray-400">
                   opp. has {rec.color}
                 </span>
-                <RepertoirePip match={rec.repertoire_match} />
                 {rec.recommendation_strength === "strong" && (
                   <span className="rounded-full bg-emerald-200 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
                     Strong target
@@ -173,7 +163,6 @@ function Weaknesses({ weaknesses }: { weaknesses: InsightWeakness[] }) {
                     Critical
                   </span>
                 )}
-                <RepertoirePip match={w.repertoire_match} />
               </div>
               <p className="mt-0.5 text-xs text-gray-500">{w.description}</p>
             </div>
@@ -213,11 +202,6 @@ function DangerZones({ zones }: { zones: InsightDangerZone[] }) {
                 </span>
                 <span className="text-xs text-gray-400">as {dz.color}</span>
                 <RiskBadge level={dz.risk_level} />
-                {dz.in_your_repertoire && (
-                  <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">
-                    In your repertoire
-                  </span>
-                )}
               </div>
               <p className="mt-0.5 text-xs text-gray-600">{dz.advice}</p>
             </div>
@@ -327,7 +311,6 @@ function DataQualityBanner({ quality }: { quality: string }) {
 
 export function InsightsPanel({ insights }: InsightsPanelProps) {
   const { meta, confidence, executive_summary, recommended_lines, weaknesses, danger_zones, match_plan } = insights;
-  const hasRepertoire = meta.repertoire_codes_provided.length > 0;
 
   return (
     <div className="space-y-6">
@@ -339,11 +322,6 @@ export function InsightsPanel({ insights }: InsightsPanelProps) {
             {meta.games_analyzed} game{meta.games_analyzed !== 1 ? "s" : ""} analysed
             {" · "}
             {meta.openings_tracked} opening{meta.openings_tracked !== 1 ? "s" : ""} tracked
-            {hasRepertoire && (
-              <>
-                {" · "}Repertoire: {meta.repertoire_codes_provided.join(", ")}
-              </>
-            )}
           </p>
         </div>
         <ConfidenceBadge confidence={confidence} />
@@ -358,13 +336,6 @@ export function InsightsPanel({ insights }: InsightsPanelProps) {
         </p>
         <p className="text-sm leading-relaxed text-gray-800">{executive_summary}</p>
       </div>
-
-      {!hasRepertoire && (
-        <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
-          No repertoire provided — showing generic weaknesses only. Pass your ECO codes for personalised
-          recommendations.
-        </div>
-      )}
 
       <RecommendedLines lines={recommended_lines} />
       <Weaknesses weaknesses={weaknesses} />

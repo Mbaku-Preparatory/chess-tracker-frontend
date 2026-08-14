@@ -19,7 +19,6 @@ export function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const { token, refreshToken, email, profilePic } = useAppSelector((s) => s.auth);
-  const { onboardingComplete, initialized } = useAppSelector((s) => s.repertoire);
   const themeMode = useAppSelector((s) => s.theme.mode);
 
   useEffect(() => {
@@ -32,7 +31,7 @@ export function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  if (pathname === "/setup" || pathname === "/login" || pathname === "/signup" || pathname === "/") return null;
+  if (pathname === "/login" || pathname === "/signup" || pathname === "/") return null;
 
   async function handleLogout() {
     if (refreshToken) {
@@ -98,16 +97,19 @@ export function Navbar() {
             GM Library
           </Link>
 
-          {/* My Repertoire — only shown after onboarding */}
-          {initialized && onboardingComplete && (
-            <Link
-              href="/setup"
-              className="rounded-lg px-3 py-2 text-sm font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100"
-              title="Edit your opening repertoire"
-            >
-              My Repertoire
-            </Link>
-          )}
+          {/* My Profile — you as a player, in the slot the repertoire used to
+              hold. Unconditional: everyone has a profile from the moment they
+              register, which is the whole reason the row is created eagerly. */}
+          <Link
+            href="/me"
+            className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+              isActive("/me")
+                ? "bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400"
+                : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100"
+            }`}
+          >
+            My Profile
+          </Link>
 
           {/* Theme toggle */}
           <button
@@ -182,21 +184,6 @@ export function Navbar() {
                         {email}
                       </p>
                     )}
-                  </div>
-
-                  {/* My profile — the account holder as a player. Above the
-                      theme picker because it is a destination, not a setting. */}
-                  <div className="border-t border-gray-100 dark:border-dark-border">
-                    <Link
-                      href="/me"
-                      onClick={() => setDropdownOpen(false)}
-                      className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-dark-surface"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                      </svg>
-                      My profile
-                    </Link>
                   </div>
 
                   {/* Theme picker */}

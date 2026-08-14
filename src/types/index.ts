@@ -135,6 +135,8 @@ export interface Game {
 }
 
 export interface PlayerDetail extends Player {
+  /** True when this record is the viewer themselves, not somebody they scout. */
+  is_self?: boolean;
   performance_summary: PerformanceSummary | null;
   strengths: Strength[];
   weaknesses: Weakness[];
@@ -341,13 +343,6 @@ export interface PlayerInsights {
   danger_zones: InsightDangerZone[];
   match_plan: InsightMatchPlanItem[];
   evidence: InsightEvidence;
-}
-
-export interface RepertoireData {
-  white: import("@/redux/actions/repertoire").RepertoireOpening[];
-  black: import("@/redux/actions/repertoire").RepertoireOpening[];
-  onboarding_complete: boolean;
-  updated_at?: string;
 }
 
 export interface OpeningResult {

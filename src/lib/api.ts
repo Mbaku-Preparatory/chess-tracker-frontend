@@ -24,7 +24,6 @@ import type {
   PlayerInsights,
   PlayerLookupResult,
   PrepSummary,
-  RepertoireData,
 } from "@/types";
 import { buildApiError, buildNetworkError } from "@/lib/apiError";
 import { authStorage } from "@/lib/auth";
@@ -405,18 +404,6 @@ getOpeningExplorer(
     const qs = new URLSearchParams({ eco_code });
     if (opening_name) qs.set("opening_name", opening_name);
     return fetchJson(`${API_BASE}/players/${slug}/opening-explorer/?${qs}`);
-  },
-
-  getRepertoire(): Promise<RepertoireData> {
-    return fetchJson(`${API_BASE}/repertoire/`);
-  },
-
-  saveRepertoire(data: Omit<RepertoireData, "updated_at">): Promise<RepertoireData> {
-    return fetchJson(`${API_BASE}/repertoire/`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
   },
 
   searchOpenings(query: string, limit = 20): Promise<import("@/types").OpeningResult[]> {
