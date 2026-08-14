@@ -24,6 +24,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { StatCard } from "@/components/ui/StatCard";
 import { SectionContainer } from "@/components/ui/SectionContainer";
 import { CardSkeleton } from "@/components/ui/LoadingSkeleton";
+import { ChessFactTicker } from "@/components/ui/ChessFactTicker";
 
 /** Statuses in which the worker still has something to do for us. */
 const IN_FLIGHT = ["pending", "running"];
@@ -172,9 +173,21 @@ export default function MyProfilePage() {
               ? `Tournament ${job.completed} of ${job.total} — ${job.games_imported} games so far.`
               : "Looking you up on chess-results…"}
           </p>
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          {/* A bar that only moves every few seconds needs a second thing to
+              read, or the honest advice below ("go away, we'll email you")
+              becomes the only sensible response to it. */}
+          {job.total > 0 && (
+            <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-dark-elevated">
+              <div
+                className="h-full rounded-full bg-brand-600 transition-all duration-500"
+                style={{ width: `${Math.round((job.completed / job.total) * 100)}%` }}
+              />
+            </div>
+          )}
+          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
             You can close this page. We&apos;ll email you when it&apos;s done.
           </p>
+          <ChessFactTicker />
         </SectionContainer>
       )}
 
