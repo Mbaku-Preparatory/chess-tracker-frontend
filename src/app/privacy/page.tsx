@@ -6,7 +6,7 @@ export const metadata: Metadata = {
     "How Mbaku Preparatory collects, uses, stores, and deletes your data across the web app and the Android app.",
 };
 
-const LAST_UPDATED = "13 August 2026";
+const LAST_UPDATED = "14 August 2026";
 const CONTACT_EMAIL = "bakutarb@gmail.com";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -134,6 +134,40 @@ export default function PrivacyPolicyPage() {
         </p>
       </Section>
 
+      <Section title="Supporting the project (web only)">
+        <p>
+          The web app has a page where you can send the developer a tip. It buys you nothing &mdash;
+          every feature is available whether or not you ever use it &mdash; and it is entirely
+          optional. <strong className="font-medium text-gray-900 dark:text-gray-100">The Android
+          app does not include this.</strong>
+        </p>
+        <p>
+          Tips are handled by Paystack, which processes the payment. When you start one we send
+          Paystack the email address on your account, because they require one per transaction, plus
+          the amount and an internal reference. You enter your M-Pesa number or card details on
+          Paystack&rsquo;s own page, not ours &mdash; we never see them and they never reach our
+          servers.
+        </p>
+        <p>
+          We keep a record of the payment: our reference, the amount, whether it succeeded, and
+          which account started it. Paystack keeps its own records as the payment processor and is
+          responsible for them under its own privacy policy.
+        </p>
+      </Section>
+
+      <Section title="Your FIDE ID">
+        <p>
+          You can give us your FIDE ID when you register, or later on your profile. It is optional
+          and the app works without it.
+        </p>
+        <p>
+          If you provide one we use it to look up your public rating record on FIDE and to find your
+          published tournament games on chess-results.org, so the app can show your own play back to
+          you. Both sources are public. We send them your FIDE ID and nothing else about you &mdash;
+          not your name as we hold it, not your email.
+        </p>
+      </Section>
+
       <Section title="How we use your data">
         <p>
           Your data is used only to operate the features you are using: authenticating you,
@@ -149,7 +183,7 @@ export default function PrivacyPolicyPage() {
           HTTPS.
         </p>
         <p>
-          Three other companies process data on our behalf, each for one purpose and nothing else:
+          Four other companies process data on our behalf, each for one purpose and nothing else:
         </p>
         <ul className="ml-5 list-disc space-y-1">
           <li>
@@ -164,6 +198,10 @@ export default function PrivacyPolicyPage() {
           <li>
             <strong className="font-medium text-gray-900 dark:text-gray-100">Anthropic</strong>{" "}
             &mdash; the questions you ask Mbaku and the opponent summary sent with them.
+          </li>
+          <li>
+            <strong className="font-medium text-gray-900 dark:text-gray-100">Paystack</strong>{" "}
+            &mdash; the email address and amount for a tip you choose to send, on the web app only.
           </li>
         </ul>
         <p>
