@@ -189,6 +189,23 @@ export function Navbar() {
                     <ThemePicker />
                   </div>
 
+                  {/* Support — in the dropdown rather than the main nav, on
+                      purpose. Asking for money should be something you find,
+                      not the thing that greets you. The mobile app puts it in
+                      the same place, at the bottom of the account screen. */}
+                  <div className="border-t border-gray-100 dark:border-dark-border">
+                    <Link
+                      href="/support"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-dark-surface"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                      </svg>
+                      Support this project
+                    </Link>
+                  </div>
+
                   {/* Logout */}
                   <div className="border-t border-gray-100 dark:border-dark-border">
                     <button
