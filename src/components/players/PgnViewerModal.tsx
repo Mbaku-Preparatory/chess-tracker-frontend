@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Chess } from "chess.js";
 import { Chessboard } from "react-chessboard";
 import type { Game } from "@/types";
@@ -179,6 +179,82 @@ interface ParsedMove {
   color: "w" | "b";
 }
 
+// ── Who is sitting on each side of the board ──────────────────────────────────
+
+interface SidePlayer {
+  name: string;
+  rating: string | null;
+}
+
+/**
+ * Names for both sides, keyed by colour rather than by "us"/"them" — the plates
+ * are placed by board orientation, so the caller only ever asks for a colour.
+ *
+ * The PGN's tag roster is the real source: it names both players, which the
+ * `Game` record cannot (it only stores the opponent). Imports without those
+ * tags fall back to the record for the opponent and to the colour word for the
+ * scouted player, which is honest rather than guessing at a name.
+ */
+function boardPlayers(pgn: string | null, game: Game): Record<"white" | "black", SidePlayer> {
+  let headers: Record<string, string> = {};
+  if (pgn) {
+    try {
+      const chess = new Chess();
+      chess.loadPgn(pgn);
+      headers = chess.getHeaders();
+    } catch {
+      // Unparseable PGN — the fallbacks below still produce usable plates.
+    }
+  }
+
+  const playerColor = game.color_played === "black" ? "black" : "white";
+  // PGN writers use "?" for an unknown tag, which is worse than no tag at all.
+  const tag = (key: string) => {
+    const value = headers[key]?.trim();
+    return value && value !== "?" ? value : null;
+  };
+
+  const build = (color: "white" | "black"): SidePlayer => {
+    const prefix = color === "white" ? "White" : "Black";
+    const isOpponent = color !== playerColor;
+    return {
+      name:
+        tag(prefix) ??
+        (isOpponent ? game.opponent_name : prefix),
+      rating:
+        tag(`${prefix}Elo`) ??
+        (isOpponent && game.opponent_rating ? String(game.opponent_rating) : null),
+    };
+  };
+
+  return { white: build("white"), black: build("black") };
+}
+
+/**
+ * One name plate. Sized to the board it sits against, so long names truncate
+ * instead of widening the column on a narrow phone.
+ */
+function PlayerPlate({ player, color }: { player: SidePlayer; color: "white" | "black" }) {
+  return (
+    <div className="flex min-w-0 items-center gap-1.5 px-0.5">
+      <span
+        className={`h-2.5 w-2.5 shrink-0 rounded-full border ${
+          color === "white" ? "border-gray-300 bg-white" : "border-gray-600 bg-gray-800"
+        }`}
+        aria-hidden
+      />
+      <span className="min-w-0 flex-1 truncate text-xs font-semibold text-gray-900 sm:text-sm">
+        {player.name}
+      </span>
+      {player.rating && (
+        <span className="shrink-0 text-[11px] font-normal tabular-nums text-gray-400 sm:text-xs">
+          {player.rating}
+        </span>
+      )}
+    </div>
+  );
+}
+
 function parsePgn(pgn: string): ParsedMove[] {
   const chess = new Chess();
   try {
@@ -211,6 +287,11 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
   const [analysisLoading, setAnalysisLoading] = useState<"lichess" | null>(null);
   const moveListRef = useRef<HTMLDivElement>(null);
   const activeMoveRef = useRef<HTMLButtonElement>(null);
+
+  // The board is drawn from the scouted player's side, so that colour is the
+  // one on the bottom plate and its opponent goes on top.
+  const orientation: "white" | "black" = game.color_played === "black" ? "black" : "white";
+  const players = useMemo(() => boardPlayers(pgn, game), [pgn, game]);
 
   function handleDownload() {
     if (!pgn) return;
@@ -389,14 +470,23 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
               isAnalyzing={engine.isAnalyzing}
               source={engine.source}
             />
-            <div className="w-full max-w-[min(45vw,420px)] sm:w-[min(45vw,420px)]" style={{ minWidth: 220 }}>
+            {/* 45vw is a side-by-side desktop measure; below `sm` the modal
+                stacks, so the board takes the width the phone actually has. */}
+            <div
+              className="flex w-full max-w-[min(86vw,420px)] flex-col gap-1.5 sm:w-[min(45vw,420px)] sm:max-w-[min(45vw,420px)]"
+              style={{ minWidth: 220 }}
+            >
+              <PlayerPlate
+                player={players[orientation === "white" ? "black" : "white"]}
+                color={orientation === "white" ? "black" : "white"}
+              />
               {loading ? (
                 <div className="aspect-square w-full animate-pulse rounded-lg bg-gray-200" />
               ) : (
                 <Chessboard
                   options={{
                     position: currentFen,
-                    boardOrientation: game.color_played === "black" ? "black" : "white",
+                    boardOrientation: orientation,
                     allowDragging: false,
                     squareStyles: {
                       ...highlightSquares,
@@ -420,6 +510,7 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
                   }}
                 />
               )}
+              <PlayerPlate player={players[orientation]} color={orientation} />
             </div>
           </div>
 

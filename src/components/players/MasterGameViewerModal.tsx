@@ -33,6 +33,44 @@ function pgnFilename(game: MasterGame): string {
   return `${w}_vs_${b}_${game.year ?? "?"}_${game.result.replace("/", "-")}.pgn`;
 }
 
+// ── Board name plates ─────────────────────────────────────────────────────────
+
+/**
+ * One name plate, sized to the board it sits against so long GM names truncate
+ * instead of widening the column on a narrow phone. The board here is always
+ * drawn from white's side, so white takes the bottom plate.
+ */
+function PlayerPlate({
+  name,
+  rating,
+  color,
+}: {
+  name: string;
+  rating?: number | null;
+  color: "white" | "black";
+}) {
+  return (
+    <div className="flex min-w-0 items-center gap-1.5 px-0.5">
+      <span
+        className={`h-2.5 w-2.5 shrink-0 rounded-full border ${
+          color === "white"
+            ? "border-gray-300 bg-white"
+            : "border-gray-600 bg-gray-800 dark:border-gray-500"
+        }`}
+        aria-hidden
+      />
+      <span className="min-w-0 flex-1 truncate text-xs font-semibold text-gray-900 dark:text-gray-100 sm:text-sm">
+        {name}
+      </span>
+      {rating && (
+        <span className="shrink-0 text-[11px] font-normal tabular-nums text-gray-400 sm:text-xs">
+          {rating}
+        </span>
+      )}
+    </div>
+  );
+}
+
 // ── Move parser ───────────────────────────────────────────────────────────────
 
 interface ParsedMove {
@@ -271,7 +309,13 @@ export function MasterGameViewerModal({ game, onClose }: { game: MasterGame; onC
                 isAnalyzing={engine.isAnalyzing}
                 source={engine.source}
               />
-              <div className="w-full max-w-[min(45vw,420px)] sm:w-[min(45vw,420px)]" style={{ minWidth: 220 }}>
+              {/* 45vw is a side-by-side desktop measure; below `sm` the modal
+                  stacks, so the board takes the width the phone actually has. */}
+              <div
+                className="flex w-full max-w-[min(86vw,420px)] flex-col gap-1.5 sm:w-[min(45vw,420px)] sm:max-w-[min(45vw,420px)]"
+                style={{ minWidth: 220 }}
+              >
+                <PlayerPlate name={game.black} rating={game.black_elo} color="black" />
                 <Chessboard
                   options={{
                     position: currentFen,
@@ -295,6 +339,7 @@ export function MasterGameViewerModal({ game, onClose }: { game: MasterGame; onC
                     animationDurationInMs: 150,
                   }}
                 />
+                <PlayerPlate name={game.white} rating={game.white_elo} color="white" />
               </div>
             </div>
 
