@@ -32,56 +32,6 @@ const SORT_OPTIONS: { value: PlayerOrdering; label: string }[] = [
   { value: "-standard_rating", label: "Highest rated" },
 ];
 
-// ── Accordion ─────────────────────────────────────────────────────────────────
-
-function Accordion({
-  label,
-  badge,
-  defaultOpen = true,
-  action,
-  children,
-}: {
-  label: string;
-  badge?: number;
-  defaultOpen?: boolean;
-  action?: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  const [open, setOpen] = useState(defaultOpen);
-
-  return (
-    <div className="mb-6">
-      <div className="flex items-center justify-between gap-3">
-        <button
-          type="button"
-          onClick={() => setOpen((o) => !o)}
-          className="flex min-w-0 flex-1 items-center gap-2 py-1 text-left"
-        >
-          <svg
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            className={`h-4 w-4 shrink-0 text-gray-400 transition-transform duration-200 ${open ? "rotate-90" : ""}`}
-          >
-            <path
-              fillRule="evenodd"
-              d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
-              clipRule="evenodd"
-            />
-          </svg>
-          <span className="text-lg font-bold text-gray-900 dark:text-gray-100">{label}</span>
-          {badge !== undefined && (
-            <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500 dark:bg-dark-elevated dark:text-gray-400">
-              {badge}
-            </span>
-          )}
-        </button>
-        {action && <div className="shrink-0">{action}</div>}
-      </div>
-      {open && <div className="mt-4">{children}</div>}
-    </div>
-  );
-}
-
 // ── Opponent list helpers ──────────────────────────────────────────────────────
 
 function AddOpponentCard() {
@@ -203,17 +153,24 @@ export default function HomePage() {
         <h1 className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">Dashboard</h1>
       </div>
 
-      {/* Players accordion — open by default */}
-      <Accordion
-        label="My Opponents"
-        badge={total || undefined}
-        defaultOpen={true}
-        action={
-          <Link href="/players/new" className="btn-primary text-sm py-1.5 px-3">
+      {/* Opponents — a plain heading. The list is the point of the page, so
+          there is nothing to collapse it into. */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex min-w-0 flex-1 items-center gap-2 py-1">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">My Opponents</h2>
+            {total > 0 && (
+              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500 dark:bg-dark-elevated dark:text-gray-400">
+                {total}
+              </span>
+            )}
+          </div>
+          <Link href="/players/new" className="btn-primary shrink-0 text-sm py-1.5 px-3">
             + Add Opponent
           </Link>
-        }
-      >
+        </div>
+
+        <div className="mt-4">
         {/* Search + sort */}
         <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center">
           <SearchInput
@@ -359,7 +316,8 @@ export default function HomePage() {
             }
           />
         )}
-      </Accordion>
+        </div>
+      </div>
     </div>
   );
 }
