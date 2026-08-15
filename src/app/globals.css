@@ -74,3 +74,14 @@
     opacity: 0.4;
   }
 }
+
+/* react-chessboard draws its rank/file labels as absolutely positioned spans
+   inside each square, while a piece at rest is an ordinary in-flow div. CSS
+   paints positioned elements above in-flow ones whatever the DOM order, so the
+   labels landed on top of the pieces. The library already lifts a piece to
+   z-index 10 *while it animates* — this gives every piece the same stacking at
+   rest, staying below 10 so the animation still wins. */
+[data-piece] {
+  position: relative;
+  z-index: 1;
+}
