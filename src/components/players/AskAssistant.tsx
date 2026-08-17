@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { api } from "@/lib/api";
+import { Markdown } from "@/components/ui/Markdown";
 
 /**
  * Ask Mbaku about one opponent, answered from the games we hold on them.
@@ -136,19 +137,8 @@ export function AskAssistant({ slug, playerName, isSelf = false }: AskAssistantP
                   key={i}
                   className="max-w-[95%] space-y-3 rounded-2xl rounded-bl-sm bg-brand-50/60 px-4 py-3 dark:bg-dark-elevated"
                 >
-                  {/* Mbaku writes prose with blank lines between paragraphs;
-                      render those as paragraphs rather than a wall of text. */}
-                  {turn.content
-                    .split(/\n{2,}/)
-                    .filter((p) => p.trim())
-                    .map((para, j) => (
-                      <p
-                        key={j}
-                        className="whitespace-pre-line text-sm leading-relaxed text-gray-800 dark:text-gray-200"
-                      >
-                        {para.trim()}
-                      </p>
-                    ))}
+                  {/* Mbaku answers in markdown — bold, lists and tables. */}
+                  <Markdown content={turn.content} />
                 </div>
               )
             )}
