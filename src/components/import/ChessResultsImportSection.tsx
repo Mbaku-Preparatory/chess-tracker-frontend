@@ -28,6 +28,9 @@ type Step =
   | { type: "searching" }
   | { type: "selecting-player"; candidates: ChessResultsPlayerCandidate[] }
   | { type: "loading-tournaments"; crId: string; name: string }
+  // Picking a player with a FIDE ID starts the import there and then, so there
+  // is a moment between the click and the job existing.
+  | { type: "starting"; name: string }
   | { type: "choose-mode"; playerName: string; tournaments: ChessResultsTournamentOption[] }
   | { type: "selecting-tournaments"; playerName: string; tournaments: ChessResultsTournamentOption[] }
   // The import itself no longer lives in this component — it is a row in the
@@ -181,14 +184,42 @@ export function ChessResultsImportSection({
       }
 
       if (results.length === 1) {
-        // Skip candidate selection — load tournaments directly
-        await loadTournaments(results[0].cr_id, results[0].name);
+        // Only one person it could be — don't make them confirm it.
+        await selectCandidate(results[0]);
       } else {
         setStep({ type: "selecting-player", candidates: results });
       }
     } catch (err) {
       setStep({ type: "idle" });
       setSearchError(userMessage(err, "Search failed. Try again."));
+    }
+  }
+
+  // The fork in the flow. A player with a FIDE ID can be imported whole in one
+  // request, which is fast enough that asking "all of them, or which ones?"
+  // would be asking someone to optimise something that no longer costs
+  // anything. Without an ID there is nothing to look them up by in the game
+  // database, so those players still go through the tournament list — and
+  // matching a scout target on surname alone would risk importing a namesake's
+  // games, which is worse than being slow.
+  async function selectCandidate(candidate: ChessResultsPlayerCandidate) {
+    if (candidate.fide_id) {
+      await importCareer(candidate.fide_id, candidate.name);
+    } else {
+      await loadTournaments(candidate.cr_id, candidate.name);
+    }
+  }
+
+  async function importCareer(fideId: string, name: string) {
+    setStep({ type: "starting", name });
+    setJobError(null);
+    try {
+      const job = await api.createCareerImportJob(slug, fideId, notifyEmail);
+      setStep({ type: "job", job });
+      refreshActiveImports();
+    } catch (err) {
+      setStep({ type: "idle" });
+      setSearchError(userMessage(err, "Could not start the import."));
     }
   }
 
@@ -455,7 +486,7 @@ export function ChessResultsImportSection({
               <button
                 key={c.cr_id}
                 type="button"
-                onClick={() => loadTournaments(c.cr_id, c.name)}
+                onClick={() => selectCandidate(c)}
                 className="flex w-full items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 text-left transition hover:border-[#1a3a6b]/40 hover:bg-blue-50/40 dark:border-dark-border dark:bg-dark-surface dark:hover:border-[#1a3a6b]/60 dark:hover:bg-blue-950/30"
               >
                 <div className="min-w-0 flex-1">
@@ -483,14 +514,16 @@ export function ChessResultsImportSection({
         </div>
       )}
 
-      {/* ── Step: loading-tournaments ──────────────────────────────────────── */}
-      {step.type === "loading-tournaments" && (
+      {/* ── Step: loading-tournaments / starting ───────────────────────────── */}
+      {(step.type === "loading-tournaments" || step.type === "starting") && (
         <div className="flex items-center gap-2 py-2 text-sm text-gray-500 dark:text-gray-400">
           <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
-          Loading tournaments for {step.name}…
+          {step.type === "starting"
+            ? `Fetching games for ${step.name}…`
+            : `Loading tournaments for ${step.name}…`}
         </div>
       )}
 
