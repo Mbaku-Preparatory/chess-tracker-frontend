@@ -284,9 +284,14 @@ export function ChessResultsImportSection({
     setRawUrlStatus("loading");
     setRawUrlError(null);
     try {
-      const result = await api.importFromChessResults(slug, { url: rawUrl.trim() });
-      setRawUrlStatus("done");
-      onSuccess?.(result);
+      // This endpoint queues now rather than importing inline, so it returns a
+      // job like every other path here. Hand it to the state machine above and
+      // the existing polling reports it — the fallback stops being a special
+      // case that reports its own result.
+      const job = await api.importFromChessResults(slug, { url: rawUrl.trim() });
+      setRawUrlStatus("idle");
+      setStep({ type: "job", job });
+      refreshActiveImports();
     } catch (err) {
       setRawUrlError(userMessage(err, "Import failed."));
       setRawUrlStatus("error");
