@@ -6,6 +6,7 @@ import { ColorBadge, EcoBadge, ResultBadge, SourceBadge } from "@/components/ui/
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PgnViewerModal } from "./PgnViewerModal";
 import { api } from "@/lib/api";
+import { gameRef } from "@/lib/gameRef";
 
 interface GamesTableProps {
   games: Game[];
@@ -120,14 +121,14 @@ export function GamesTable({ games, loading, onDeleted }: GamesTableProps) {
                       className="whitespace-nowrap px-2 py-3 text-right"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      {confirmId === game.public_id ? (
+                      {confirmId === gameRef(game) ? (
                         <div className="flex items-center justify-end gap-1">
                           <button
-                            onClick={(e) => handleDelete(e, game.public_id)}
-                            disabled={deletingId === game.public_id}
+                            onClick={(e) => handleDelete(e, gameRef(game))}
+                            disabled={deletingId === gameRef(game)}
                             className="rounded px-2 py-1 text-xs font-semibold text-white bg-red-500 hover:bg-red-600 disabled:opacity-50"
                           >
-                            {deletingId === game.public_id ? "…" : "Confirm"}
+                            {deletingId === gameRef(game) ? "…" : "Confirm"}
                           </button>
                           <button
                             onClick={(e) => { e.stopPropagation(); setConfirmId(null); }}
@@ -138,8 +139,8 @@ export function GamesTable({ games, loading, onDeleted }: GamesTableProps) {
                         </div>
                       ) : (
                         <button
-                          onClick={(e) => handleDelete(e, game.public_id)}
-                          disabled={deletingId === game.public_id}
+                          onClick={(e) => handleDelete(e, gameRef(game))}
+                          disabled={deletingId === gameRef(game)}
                           title="Delete game"
                           className="rounded p-1 text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50 dark:text-gray-600 dark:hover:text-red-400 dark:hover:bg-red-900/20"
                         >

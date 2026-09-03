@@ -5,6 +5,7 @@ import { Chess } from "chess.js";
 import { Chessboard } from "react-chessboard";
 import type { Game } from "@/types";
 import { api } from "@/lib/api";
+import { gameRef } from "@/lib/gameRef";
 import { ColorBadge, ResultBadge } from "@/components/ui/Badge";
 import { EvalBar } from "@/components/ui/EvalBar";
 import { useStockfish, parseUciMove } from "@/hooks/useStockfish";
@@ -327,7 +328,7 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
     setLoading(true);
     setError(null);
     api
-      .getGamePgn(game.public_id)
+      .getGamePgn(gameRef(game))
       .then((data) => {
         if (cancelled) return;
         const parsed = parsePgn(data.pgn_text);

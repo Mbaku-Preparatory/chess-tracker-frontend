@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { gameRef } from "@/lib/gameRef";
 import { ColorBadge, ResultBadge, EcoBadge } from "@/components/ui/Badge";
 import { GamesTable } from "./GamesTable";
 import type { OpeningStat, Game, GameSource, GameResult, PaginatedResponse, ColorChoice } from "@/types";
@@ -82,7 +83,7 @@ function VariationRow({ stat, slug, sourceFilter, resultFilter, yearFilter, isEx
   const [error, setError] = useState<string | null>(null);
 
   function handleGameDeleted(gameId: string) {
-    setGames((prev) => prev ? prev.filter((g) => g.public_id !== gameId) : prev);
+    setGames((prev) => prev ? prev.filter((g) => gameRef(g) !== gameId) : prev);
     setTotal((prev) => prev - 1);
   }
 

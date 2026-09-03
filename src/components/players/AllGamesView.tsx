@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { gameRef } from "@/lib/gameRef";
 import { GamesTable } from "./GamesTable";
 import type { Game, GameResult, GameSource, ColorChoice, PaginatedResponse } from "@/types";
 
@@ -127,7 +128,7 @@ export function AllGamesView({ slug }: AllGamesViewProps) {
   const [total, setTotal] = useState(0);
 
   function handleGameDeleted(gameId: string) {
-    setGames((prev) => prev.filter((g) => g.public_id !== gameId));
+    setGames((prev) => prev.filter((g) => gameRef(g) !== gameId));
     setTotal((prev) => prev - 1);
   }
   const [page, setPage] = useState(1);
