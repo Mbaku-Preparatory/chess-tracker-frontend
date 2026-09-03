@@ -330,9 +330,12 @@ export function MasterGameViewerModal({ game, onClose }: { game: MasterGame; onC
                           }
                         : {}),
                     },
-                    arrows: bestMoveSquares
-                      ? [{ startSquare: bestMoveSquares[0], endSquare: bestMoveSquares[1], color: "rgba(0,180,80,0.8)" }]
-                      : [],
+                    // The engine's suggested move is not drawn. An arrow on
+                    // the board reads as something that happened in the game
+                    // rather than a suggestion, which is confusing next to the
+                    // yellow last-move highlight. The engine still drives the
+                    // eval bar. Restore by passing bestMoveSquares here.
+                    arrows: [],
                     boardStyle: { borderRadius: "8px", boxShadow: "0 4px 24px rgba(0,0,0,0.12)" },
                     darkSquareStyle: { backgroundColor: "#4a7c59" },
                     lightSquareStyle: { backgroundColor: "#f0d9b5" },
