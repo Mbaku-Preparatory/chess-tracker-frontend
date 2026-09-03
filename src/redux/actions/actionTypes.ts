@@ -30,4 +30,3 @@ export const RESET_GAMES_FILTERS = "games/resetFilters";
 // ── Theme ─────────────────────────────────────────────
 export const LOAD_THEME = "theme/load";
 export const TOGGLE_THEME = "theme/toggle";
-export const SET_COLOR_SCHEME = "theme/setColorScheme";
