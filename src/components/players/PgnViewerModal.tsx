@@ -5,6 +5,11 @@ import { Chess } from "chess.js";
 import { Chessboard } from "react-chessboard";
 import type { Game } from "@/types";
 import { api } from "@/lib/api";
+import {
+  scoresFromPlayerResult,
+  scoresFromResultTag,
+  type SideScores,
+} from "@/lib/chessScore";
 import { gameRef } from "@/lib/gameRef";
 import { ColorBadge, ResultBadge } from "@/components/ui/Badge";
 import { EvalBar } from "@/components/ui/EvalBar";
@@ -144,7 +149,7 @@ function ShareSheet({
           ))}
         </div>
 
-        <hr className="mb-4 border-gray-100" />
+        <hr className="mb-4 border-gray-100 dark:border-dark-border" />
 
         {/* PGN text + copy */}
         <div className="flex items-stretch gap-2 rounded-xl border border-gray-200 dark:border-dark-border bg-gray-50 dark:bg-dark-elevated px-3 py-2">
@@ -201,36 +206,10 @@ function sideScores(
   resultTag: string | null,
   gameResult: string,
   playerColor: "white" | "black",
-): Record<"white" | "black", string | null> {
-  switch (resultTag) {
-    case "1-0":
-      return { white: "1", black: "0" };
-    case "0-1":
-      return { white: "0", black: "1" };
-    case "1/2-1/2":
-      return { white: "½", black: "½" };
-  }
-
-  const other = playerColor === "white" ? "black" : "white";
-  const map: Record<string, [string, string]> = {
-    win: ["1", "0"],
-    loss: ["0", "1"],
-    draw: ["½", "½"],
-  };
-  const pair = map[gameResult];
-  if (!pair) return { white: null, black: null };
-  return { [playerColor]: pair[0], [other]: pair[1] } as Record<"white" | "black", string | null>;
+): SideScores {
+  return scoresFromResultTag(resultTag) ?? scoresFromPlayerResult(gameResult, playerColor);
 }
 
-/**
- * Names for both sides, keyed by colour rather than by "us"/"them" — the plates
- * are placed by board orientation, so the caller only ever asks for a colour.
- *
- * The PGN's tag roster is the real source: it names both players, which the
- * `Game` record cannot (it only stores the opponent). Imports without those
- * tags fall back to the record for the opponent and to the colour word for the
- * scouted player, which is honest rather than guessing at a name.
- */
 function boardPlayers(pgn: string | null, game: Game): Record<"white" | "black", SidePlayer> {
   let headers: Record<string, string> = {};
   if (pgn) {
@@ -286,19 +265,19 @@ function PlayerPlate({ player, color }: { player: SidePlayer; color: "white" | "
         }`}
         aria-hidden
       />
-      <span className="min-w-0 flex-1 truncate text-xs font-semibold text-gray-900 dark:text-gray-100 sm:text-sm">
+      <span className="min-w-0 truncate text-xs font-semibold text-gray-900 dark:text-gray-100 sm:text-sm">
         {player.name}
       </span>
       {player.score && (
         <span
-          className="shrink-0 rounded px-1.5 py-0.5 text-[11px] font-bold tabular-nums text-gray-900 dark:text-gray-100 bg-gray-100 dark:bg-dark-elevated sm:text-xs"
+          className="shrink-0 text-xs font-bold tabular-nums text-gray-900 dark:text-gray-100 sm:text-sm"
           title="Final score"
         >
           {player.score}
         </span>
       )}
       {player.rating && (
-        <span className="shrink-0 text-[11px] font-normal tabular-nums text-gray-400 dark:text-gray-500 sm:text-xs">
+        <span className="ml-auto shrink-0 text-[11px] font-normal tabular-nums text-gray-400 dark:text-gray-500 sm:text-xs">
           {player.rating}
         </span>
       )}
@@ -479,7 +458,7 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
       {/* Modal */}
       <div className="relative flex max-h-[95dvh] w-full flex-col overflow-hidden rounded-t-2xl bg-white dark:bg-dark-surface shadow-2xl sm:max-h-[90dvh] sm:max-w-5xl sm:rounded-2xl">
         {/* Header */}
-        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-gray-100 px-4 py-3 sm:px-6">
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-gray-100 dark:border-dark-border px-4 py-3 sm:px-6">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-semibold text-gray-900 dark:text-gray-100 truncate">
@@ -532,7 +511,7 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
                 color={orientation === "white" ? "black" : "white"}
               />
               {loading ? (
-                <div className="aspect-square w-full animate-pulse rounded-lg bg-gray-200" />
+                <div className="aspect-square w-full animate-pulse rounded-lg bg-gray-200 dark:bg-dark-muted" />
               ) : (
                 <Chessboard
                   options={{
@@ -607,7 +586,7 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
                         className={`rounded px-1 py-0.5 transition-colors ${
                           idx === currentIndex
                             ? "bg-brand-600 text-white"
-                            : "text-gray-800 hover:bg-gray-100 dark:hover:bg-dark-muted"
+                            : "text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-dark-muted"
                         }`}
                       >
                         {mv.san}
@@ -620,7 +599,7 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
 
             {/* PGN actions */}
             {pgn && (
-              <div className="shrink-0 flex items-center justify-end gap-2 border-t border-gray-100 px-3 py-2 sm:px-4">
+              <div className="shrink-0 flex items-center justify-end gap-2 border-t border-gray-100 dark:border-dark-border px-3 py-2 sm:px-4">
                 {/* Download — icon only */}
                 <button
                   onClick={handleDownload}
@@ -677,7 +656,7 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
             )}
 
             {/* Navigation controls */}
-            <div className="shrink-0 border-t border-gray-100 px-3 py-3 sm:px-4">
+            <div className="shrink-0 border-t border-gray-100 dark:border-dark-border px-3 py-3 sm:px-4">
               <div className="flex items-center justify-center gap-2">
                 <NavBtn
                   label="Start"

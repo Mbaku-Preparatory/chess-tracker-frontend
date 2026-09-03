@@ -5,6 +5,7 @@ import { Chess } from "chess.js";
 import { Chessboard } from "react-chessboard";
 import type { MasterGame } from "@/types";
 import { api } from "@/lib/api";
+import { NO_SCORES, scoresFromResultTag } from "@/lib/chessScore";
 import { EvalBar } from "@/components/ui/EvalBar";
 import { useStockfish, parseUciMove } from "@/hooks/useStockfish";
 
@@ -44,10 +45,12 @@ function PlayerPlate({
   name,
   rating,
   color,
+  score,
 }: {
   name: string;
   rating?: number | null;
   color: "white" | "black";
+  score?: string | null;
 }) {
   return (
     <div className="flex min-w-0 items-center gap-1.5 px-0.5">
@@ -59,11 +62,21 @@ function PlayerPlate({
         }`}
         aria-hidden
       />
-      <span className="min-w-0 flex-1 truncate text-xs font-semibold text-gray-900 dark:text-gray-100 sm:text-sm">
+      <span className="min-w-0 truncate text-xs font-semibold text-gray-900 dark:text-gray-100 sm:text-sm">
         {name}
       </span>
+      {score && (
+        <span
+          className="shrink-0 text-xs font-bold tabular-nums text-gray-900 dark:text-gray-100 sm:text-sm"
+          title="Final score"
+        >
+          {score}
+        </span>
+      )}
+      {/* ml-auto keeps the rating on the right edge; without it the score
+          would be pushed out there with it, away from the name. */}
       {rating && (
-        <span className="shrink-0 text-[11px] font-normal tabular-nums text-gray-400 sm:text-xs">
+        <span className="ml-auto shrink-0 text-[11px] font-normal tabular-nums text-gray-400 dark:text-gray-500 sm:text-xs">
           {rating}
         </span>
       )}
@@ -191,6 +204,10 @@ function NavBtn({ label, icon, disabled, onClick }: { label: string; icon: React
 export function MasterGameViewerModal({ game, onClose }: { game: MasterGame; onClose: () => void }) {
   const pgn = buildFullPgn(game);
   const moves = parsePgn(pgn);
+  // A master game's `result` is already the PGN token ("1-0"), so it needs no
+  // colour to read — unlike a scouted Game, whose result is stored relative to
+  // the player being scouted.
+  const scores = scoresFromResultTag(game.result) ?? NO_SCORES;
 
   const [currentIndex, setCurrentIndex] = useState(-1);
   const [showShare, setShowShare] = useState(false);
@@ -315,7 +332,7 @@ export function MasterGameViewerModal({ game, onClose }: { game: MasterGame; onC
                 className="flex w-full max-w-[min(86vw,420px)] flex-col gap-1.5 sm:w-[min(45vw,420px)] sm:max-w-[min(45vw,420px)]"
                 style={{ minWidth: 220 }}
               >
-                <PlayerPlate name={game.black} rating={game.black_elo} color="black" />
+                <PlayerPlate name={game.black} rating={game.black_elo} color="black" score={scores.black} />
                 <Chessboard
                   options={{
                     position: currentFen,
@@ -342,7 +359,7 @@ export function MasterGameViewerModal({ game, onClose }: { game: MasterGame; onC
                     animationDurationInMs: 150,
                   }}
                 />
-                <PlayerPlate name={game.white} rating={game.white_elo} color="white" />
+                <PlayerPlate name={game.white} rating={game.white_elo} color="white" score={scores.white} />
               </div>
             </div>
 
