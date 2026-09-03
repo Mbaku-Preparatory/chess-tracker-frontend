@@ -70,7 +70,7 @@ function PlayerPlate({
           className="shrink-0 text-xs font-bold tabular-nums text-gray-900 dark:text-gray-100 sm:text-sm"
           title="Final score"
         >
-          {score}
+          ({score})
         </span>
       )}
       {/* ml-auto keeps the rating on the right edge; without it the score

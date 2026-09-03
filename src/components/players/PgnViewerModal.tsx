@@ -273,7 +273,7 @@ function PlayerPlate({ player, color }: { player: SidePlayer; color: "white" | "
           className="shrink-0 text-xs font-bold tabular-nums text-gray-900 dark:text-gray-100 sm:text-sm"
           title="Final score"
         >
-          {player.score}
+          ({player.score})
         </span>
       )}
       {player.rating && (
