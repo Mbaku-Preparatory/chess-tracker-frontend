@@ -112,13 +112,13 @@ function ShareSheet({
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
 
       {/* Sheet */}
-      <div className="relative z-10 w-full max-w-md rounded-t-2xl bg-white px-5 pb-8 pt-5 shadow-2xl sm:rounded-2xl">
+      <div className="relative z-10 w-full max-w-md rounded-t-2xl bg-white dark:bg-dark-surface px-5 pb-8 pt-5 shadow-2xl sm:rounded-2xl">
         {/* Header */}
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-base font-semibold text-gray-900">Share PGN</h3>
+          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">Share PGN</h3>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+            className="rounded-lg p-1.5 text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-dark-muted hover:text-gray-600 transition-colors"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -137,7 +137,7 @@ function ShareSheet({
               <span className={`flex h-12 w-12 items-center justify-center rounded-full text-white ${p.bg}`}>
                 {p.icon}
               </span>
-              <span className="text-[11px] text-gray-600">
+              <span className="text-[11px] text-gray-600 dark:text-gray-400">
                 {p.label === "Copy" && copied ? "Copied!" : p.label}
               </span>
             </button>
@@ -147,13 +147,13 @@ function ShareSheet({
         <hr className="mb-4 border-gray-100" />
 
         {/* PGN text + copy */}
-        <div className="flex items-stretch gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2">
+        <div className="flex items-stretch gap-2 rounded-xl border border-gray-200 dark:border-dark-border bg-gray-50 dark:bg-dark-elevated px-3 py-2">
           <textarea
             ref={textRef}
             readOnly
             value={pgn}
             rows={2}
-            className="min-w-0 flex-1 resize-none bg-transparent font-mono text-[11px] text-gray-500 focus:outline-none"
+            className="min-w-0 flex-1 resize-none bg-transparent font-mono text-[11px] text-gray-500 dark:text-gray-400 focus:outline-none"
             onClick={() => textRef.current?.select()}
           />
           <button
@@ -185,6 +185,41 @@ interface ParsedMove {
 interface SidePlayer {
   name: string;
   rating: string | null;
+  /** "1", "0" or "½" — this side's score. null when the game has no result. */
+  score: string | null;
+}
+
+/**
+ * Each side's score, preferring the PGN's Result tag.
+ *
+ * The tag is authoritative because it is written from the board's point of
+ * view and names both sides. `game.result` is stored relative to the player
+ * being scouted, so using it means knowing which colour they had — fine as a
+ * fallback, wrong to prefer when the PGN says it outright.
+ */
+function sideScores(
+  resultTag: string | null,
+  gameResult: string,
+  playerColor: "white" | "black",
+): Record<"white" | "black", string | null> {
+  switch (resultTag) {
+    case "1-0":
+      return { white: "1", black: "0" };
+    case "0-1":
+      return { white: "0", black: "1" };
+    case "1/2-1/2":
+      return { white: "½", black: "½" };
+  }
+
+  const other = playerColor === "white" ? "black" : "white";
+  const map: Record<string, [string, string]> = {
+    win: ["1", "0"],
+    loss: ["0", "1"],
+    draw: ["½", "½"],
+  };
+  const pair = map[gameResult];
+  if (!pair) return { white: null, black: null };
+  return { [playerColor]: pair[0], [other]: pair[1] } as Record<"white" | "black", string | null>;
 }
 
 /**
@@ -215,6 +250,8 @@ function boardPlayers(pgn: string | null, game: Game): Record<"white" | "black",
     return value && value !== "?" ? value : null;
   };
 
+  const scores = sideScores(tag("Result"), game.result, playerColor);
+
   const build = (color: "white" | "black"): SidePlayer => {
     const prefix = color === "white" ? "White" : "Black";
     const isOpponent = color !== playerColor;
@@ -225,6 +262,7 @@ function boardPlayers(pgn: string | null, game: Game): Record<"white" | "black",
       rating:
         tag(`${prefix}Elo`) ??
         (isOpponent && game.opponent_rating ? String(game.opponent_rating) : null),
+      score: scores[color],
     };
   };
 
@@ -240,15 +278,27 @@ function PlayerPlate({ player, color }: { player: SidePlayer; color: "white" | "
     <div className="flex min-w-0 items-center gap-1.5 px-0.5">
       <span
         className={`h-2.5 w-2.5 shrink-0 rounded-full border ${
-          color === "white" ? "border-gray-300 bg-white" : "border-gray-600 bg-gray-800"
+          // Semantic, not decorative: this dot *is* the piece colour, so it
+          // stays white-on-dark and dark-on-light in both themes.
+          color === "white"
+            ? "border-gray-300 bg-white dark:border-gray-500"
+            : "border-gray-600 bg-gray-800 dark:border-gray-500 dark:bg-black"
         }`}
         aria-hidden
       />
-      <span className="min-w-0 flex-1 truncate text-xs font-semibold text-gray-900 sm:text-sm">
+      <span className="min-w-0 flex-1 truncate text-xs font-semibold text-gray-900 dark:text-gray-100 sm:text-sm">
         {player.name}
       </span>
+      {player.score && (
+        <span
+          className="shrink-0 rounded px-1.5 py-0.5 text-[11px] font-bold tabular-nums text-gray-900 dark:text-gray-100 bg-gray-100 dark:bg-dark-elevated sm:text-xs"
+          title="Final score"
+        >
+          {player.score}
+        </span>
+      )}
       {player.rating && (
-        <span className="shrink-0 text-[11px] font-normal tabular-nums text-gray-400 sm:text-xs">
+        <span className="shrink-0 text-[11px] font-normal tabular-nums text-gray-400 dark:text-gray-500 sm:text-xs">
           {player.rating}
         </span>
       )}
@@ -427,15 +477,15 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       {/* Modal */}
-      <div className="relative flex max-h-[95dvh] w-full flex-col overflow-hidden rounded-t-2xl bg-white shadow-2xl sm:max-h-[90dvh] sm:max-w-5xl sm:rounded-2xl">
+      <div className="relative flex max-h-[95dvh] w-full flex-col overflow-hidden rounded-t-2xl bg-white dark:bg-dark-surface shadow-2xl sm:max-h-[90dvh] sm:max-w-5xl sm:rounded-2xl">
         {/* Header */}
         <div className="flex shrink-0 items-start justify-between gap-3 border-b border-gray-100 px-4 py-3 sm:px-6">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="font-semibold text-gray-900 truncate">
+              <span className="font-semibold text-gray-900 dark:text-gray-100 truncate">
                 {game.opponent_name}
                 {game.opponent_rating && (
-                  <span className="ml-1 text-sm font-normal text-gray-400">
+                  <span className="ml-1 text-sm font-normal text-gray-400 dark:text-gray-500">
                     ({game.opponent_rating})
                   </span>
                 )}
@@ -443,7 +493,7 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
               <ColorBadge color={game.color_played} />
               <ResultBadge result={game.result} />
             </div>
-            <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-gray-500">
+            <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-gray-500 dark:text-gray-400">
               {dateStr && <span>{dateStr}</span>}
               {game.event && <span className="truncate">{game.event}{game.round ? ` · R${game.round}` : ""}</span>}
               {game.opening_name && <span className="truncate text-brand-600">{game.opening_name}</span>}
@@ -451,7 +501,7 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
           </div>
           <button
             onClick={onClose}
-            className="shrink-0 rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
+            className="shrink-0 rounded-lg p-1.5 text-gray-400 dark:text-gray-500 transition-colors hover:bg-gray-100 dark:hover:bg-dark-muted hover:text-gray-700"
             aria-label="Close"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -463,7 +513,7 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
         {/* Body */}
         <div className="flex min-h-0 flex-1 flex-col sm:flex-row">
           {/* Board + eval bar */}
-          <div className="flex shrink-0 items-center justify-center gap-2 bg-gray-50 p-3 sm:p-5">
+          <div className="flex shrink-0 items-center justify-center gap-2 bg-gray-50 dark:bg-dark-elevated p-3 sm:p-5">
             <EvalBar
               score={engine.score}
               mate={engine.mate}
@@ -528,7 +578,7 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
               {loading && (
                 <div className="space-y-2 pt-2">
                   {[...Array(8)].map((_, i) => (
-                    <div key={i} className="h-4 animate-pulse rounded bg-gray-100" />
+                    <div key={i} className="h-4 animate-pulse rounded bg-gray-100 dark:bg-dark-elevated" />
                   ))}
                 </div>
               )}
@@ -538,7 +588,7 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
                 </div>
               )}
               {!loading && !error && moves.length === 0 && (
-                <div className="flex h-full items-center justify-center text-sm text-gray-400">
+                <div className="flex h-full items-center justify-center text-sm text-gray-400 dark:text-gray-500">
                   No moves available
                 </div>
               )}
@@ -547,7 +597,7 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
                   {moves.map((mv, idx) => (
                     <span key={idx} className="inline-flex items-baseline">
                       {mv.color === "w" && (
-                        <span className="mr-0.5 select-none text-gray-400">
+                        <span className="mr-0.5 select-none text-gray-400 dark:text-gray-500">
                           {mv.moveNumber}.
                         </span>
                       )}
@@ -557,7 +607,7 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
                         className={`rounded px-1 py-0.5 transition-colors ${
                           idx === currentIndex
                             ? "bg-brand-600 text-white"
-                            : "text-gray-800 hover:bg-gray-100"
+                            : "text-gray-800 hover:bg-gray-100 dark:hover:bg-dark-muted"
                         }`}
                       >
                         {mv.san}
@@ -576,7 +626,7 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
                   onClick={handleDownload}
                   aria-label="Download PGN"
                   title="Download PGN"
-                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 dark:border-dark-border text-gray-600 dark:text-gray-400 transition-colors hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-dark-elevated dark:hover:border-dark-muted dark:hover:bg-dark-elevated"
                 >
                   <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -586,7 +636,7 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
                 {/* Chess.com analysis */}
                 <button
                   onClick={() => handleAnalysis("chesscom")}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:border-[#7fa650]/40 hover:bg-[#7fa650]/5"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-dark-border px-2.5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 transition-colors hover:border-[#7fa650]/40 hover:bg-[#7fa650]/5"
                 >
                   <svg viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5 text-[#7fa650]">
                     <path d="M10 2a1 1 0 00-1 1v1H8a3 3 0 00-3 3v1H4a1 1 0 000 2h1v1a3 3 0 003 3h.17l-1.9 4.55A1 1 0 007.2 20h9.6a1 1 0 00.93-1.45L15.83 14H16a3 3 0 003-3v-1h1a1 1 0 000-2h-1V7a3 3 0 00-3-3h-1V3a1 1 0 00-1-1h-4z" />
@@ -598,7 +648,7 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
                 <button
                   onClick={() => handleAnalysis("lichess")}
                   disabled={analysisLoading === "lichess"}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:border-[#b05000]/40 hover:bg-[#b05000]/5 disabled:opacity-60"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-dark-border px-2.5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 transition-colors hover:border-[#b05000]/40 hover:bg-[#b05000]/5 disabled:opacity-60"
                 >
                   {analysisLoading === "lichess" ? (
                     <svg className="h-3.5 w-3.5 animate-spin text-[#b05000]" fill="none" viewBox="0 0 24 24">
@@ -616,7 +666,7 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
                 {/* Share */}
                 <button
                   onClick={() => setShowShare(true)}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-dark-border px-2.5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 transition-colors hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-dark-elevated dark:hover:border-dark-muted dark:hover:bg-dark-elevated"
                 >
                   <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
@@ -653,7 +703,7 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
                     </svg>
                   }
                 />
-                <span className="min-w-[4rem] text-center text-xs tabular-nums text-gray-500">
+                <span className="min-w-[4rem] text-center text-xs tabular-nums text-gray-500 dark:text-gray-400">
                   {currentIndex === -1
                     ? "Start"
                     : `${moves[currentIndex]?.moveNumber ?? ""}${moves[currentIndex]?.color === "w" ? "." : "..."}`}
@@ -683,7 +733,7 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
                   }
                 />
               </div>
-              <p className="mt-1.5 text-center text-[10px] text-gray-400">
+              <p className="mt-1.5 text-center text-[10px] text-gray-400 dark:text-gray-500">
                 ← → arrow keys to navigate
               </p>
             </div>
@@ -711,7 +761,7 @@ function NavBtn({
       aria-label={label}
       disabled={disabled}
       onClick={onClick}
-      className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-30"
+      className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 dark:border-dark-border text-gray-600 dark:text-gray-400 transition-colors hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-dark-elevated dark:hover:border-dark-muted dark:hover:bg-dark-elevated disabled:cursor-not-allowed disabled:opacity-30"
     >
       {icon}
     </button>
