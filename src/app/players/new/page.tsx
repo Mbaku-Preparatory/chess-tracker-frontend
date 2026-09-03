@@ -6,7 +6,6 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 import { api } from "@/lib/api";
-import { FederationSelect } from "@/components/ui/FederationSelect";
 import type { PlayerLookupResult } from "@/types";
 import { userMessage } from "@/lib/apiError";
 
@@ -281,9 +280,16 @@ export default function NewPlayerPage() {
   const [fideError, setFideError] = useState<string | null>(null);
   const [fideSelected, setFideSelected] = useState<PlayerLookupResult | null>(null);
   const fideInputRef = useRef<HTMLInputElement>(null);
+  // Name searches the FIDE index; ID reads one profile. Explicit rather than
+  // guessed from the input looking numeric — searching a number by name is a
+  // reasonable thing to do by mistake.
+  const [fideMode, setFideMode] = useState<"name" | "id">("name");
 
   // ── Form state ───────────────────────────────────────────────────────────
   const [fullName, setFullName] = useState("");
+  // No longer typed by hand — the FIDE search above sets both when a player
+  // is picked, and both are still sent on create. Kept as state rather than
+  // read off fideSelected because clearFideSelection resets them together.
   const [federation, setFederation] = useState("");
   const [fideId, setFideId] = useState("");
   const [chesscomUsernames, setChesscomUsernames] = useState<string[]>([""]);
@@ -301,9 +307,13 @@ export default function NewPlayerPage() {
     setFideResults(null);
     setFideError(null);
     try {
-      const { results } = await api.lookupPlayer("fide", q);
+      const { results } = await api.lookupPlayer("fide", q, fideMode);
       if (results.length === 0) {
-        setFideError(`No FIDE player found for "${q}".`);
+        setFideError(
+          fideMode === "id"
+            ? `No FIDE player has ID ${q}.`
+            : `No FIDE player found for "${q}".`
+        );
       } else {
         setFideResults(results);
       }
@@ -396,7 +406,8 @@ export default function NewPlayerPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Add opponent</h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Search FIDE by name, or enter their Chess.com / Lichess username directly.
+          Search FIDE by name or ID, or enter their Chess.com / Lichess username
+          directly.
         </p>
       </div>
 
@@ -409,8 +420,43 @@ export default function NewPlayerPage() {
             </svg>
           </span>
           FIDE search
-          <span className="text-xs font-normal text-gray-400">by name</span>
         </div>
+
+        {/* Name / FIDE ID toggle. A segmented control rather than a dropdown:
+            there are two options and both fit. */}
+        {!fideSelected && (
+          <div
+            role="tablist"
+            aria-label="Search FIDE by"
+            className="mb-3 inline-flex rounded-lg border border-gray-200 p-0.5 dark:border-dark-border"
+          >
+            {(["name", "id"] as const).map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                role="tab"
+                aria-selected={fideMode === mode}
+                onClick={() => {
+                  if (mode === fideMode) return;
+                  setFideMode(mode);
+                  // The old query means nothing in the other mode, and a stale
+                  // result list under a changed tab reads as a fresh answer.
+                  setFideQuery("");
+                  setFideResults(null);
+                  setFideError(null);
+                  setTimeout(() => fideInputRef.current?.focus(), 0);
+                }}
+                className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+                  fideMode === mode
+                    ? "bg-brand-600 text-white"
+                    : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-dark-elevated"
+                }`}
+              >
+                {mode === "name" ? "By name" : "By FIDE ID"}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Selected FIDE player indicator */}
         {fideSelected ? (
@@ -454,7 +500,9 @@ export default function NewPlayerPage() {
                 setFideQuery(e.target.value);
                 if (fideResults || fideError) { setFideResults(null); setFideError(null); }
               }}
-              placeholder="e.g. Magnus Carlsen"
+              placeholder={fideMode === "id" ? "e.g. 1503014" : "e.g. Magnus Carlsen"}
+              inputMode={fideMode === "id" ? "numeric" : "text"}
+              aria-label={fideMode === "id" ? "FIDE ID" : "Player name"}
               className="block flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-dark-border dark:bg-dark-elevated dark:text-gray-100 dark:placeholder-gray-500"
               autoComplete="off"
               spellCheck={false}
@@ -540,31 +588,6 @@ export default function NewPlayerPage() {
           onChange={setLichessUsernames}
           onFound={handlePlatformFound}
         />
-
-        {/* Federation + FIDE ID */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="federation" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Federation
-              <span className="ml-1 text-xs font-normal text-gray-400">optional</span>
-            </label>
-            <FederationSelect id="federation" value={federation} onChange={setFederation} />
-          </div>
-          <div>
-            <label htmlFor="fide-id" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              FIDE ID
-              <span className="ml-1 text-xs font-normal text-gray-400">optional</span>
-            </label>
-            <input
-              id="fide-id"
-              type="text"
-              value={fideId}
-              onChange={(e) => setFideId(e.target.value)}
-              className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-dark-border dark:bg-dark-elevated dark:text-gray-100 dark:placeholder-gray-500"
-              placeholder="e.g. 1503014"
-            />
-          </div>
-        </div>
 
         <div className="flex items-center gap-3 pt-1">
           <button

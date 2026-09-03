@@ -501,11 +501,17 @@ getOpeningExplorer(
 
   // ── Player lookup (search to pre-fill add-opponent form) ─────────────────
 
+  /**
+   * `by: "id"` reads one FIDE profile directly instead of searching the name
+   * index, which cannot answer a number. Same result shape either way.
+   */
   lookupPlayer(
     platform: "chesscom" | "lichess" | "fide",
-    q: string
+    q: string,
+    by?: "name" | "id"
   ): Promise<{ platform: string; results: PlayerLookupResult[] }> {
     const params = new URLSearchParams({ platform, q });
+    if (by === "id") params.set("by", "id");
     return fetchJson(`${API_BASE}/players/lookup/?${params}`);
   },
 
