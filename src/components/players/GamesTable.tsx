@@ -10,15 +10,16 @@ import { api } from "@/lib/api";
 interface GamesTableProps {
   games: Game[];
   loading?: boolean;
-  onDeleted?: (gameId: number) => void;
+  onDeleted?: (gameId: string) => void;
 }
 
 export function GamesTable({ games, loading, onDeleted }: GamesTableProps) {
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
-  const [deletingId, setDeletingId] = useState<number | null>(null);
-  const [confirmId, setConfirmId] = useState<number | null>(null);
+  // Keyed on public_id, which is what the delete call takes.
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmId, setConfirmId] = useState<string | null>(null);
 
-  async function handleDelete(e: React.MouseEvent, gameId: number) {
+  async function handleDelete(e: React.MouseEvent, gameId: string) {
     e.stopPropagation();
     if (confirmId !== gameId) {
       setConfirmId(gameId);
@@ -119,14 +120,14 @@ export function GamesTable({ games, loading, onDeleted }: GamesTableProps) {
                       className="whitespace-nowrap px-2 py-3 text-right"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      {confirmId === game.id ? (
+                      {confirmId === game.public_id ? (
                         <div className="flex items-center justify-end gap-1">
                           <button
-                            onClick={(e) => handleDelete(e, game.id)}
-                            disabled={deletingId === game.id}
+                            onClick={(e) => handleDelete(e, game.public_id)}
+                            disabled={deletingId === game.public_id}
                             className="rounded px-2 py-1 text-xs font-semibold text-white bg-red-500 hover:bg-red-600 disabled:opacity-50"
                           >
-                            {deletingId === game.id ? "…" : "Confirm"}
+                            {deletingId === game.public_id ? "…" : "Confirm"}
                           </button>
                           <button
                             onClick={(e) => { e.stopPropagation(); setConfirmId(null); }}
@@ -137,8 +138,8 @@ export function GamesTable({ games, loading, onDeleted }: GamesTableProps) {
                         </div>
                       ) : (
                         <button
-                          onClick={(e) => handleDelete(e, game.id)}
-                          disabled={deletingId === game.id}
+                          onClick={(e) => handleDelete(e, game.public_id)}
+                          disabled={deletingId === game.public_id}
                           title="Delete game"
                           className="rounded p-1 text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50 dark:text-gray-600 dark:hover:text-red-400 dark:hover:bg-red-900/20"
                         >

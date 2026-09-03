@@ -327,7 +327,7 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
     setLoading(true);
     setError(null);
     api
-      .getGamePgn(game.id)
+      .getGamePgn(game.public_id)
       .then((data) => {
         if (cancelled) return;
         const parsed = parsePgn(data.pgn_text);

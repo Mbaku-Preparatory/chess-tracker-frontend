@@ -1,5 +1,7 @@
 export interface PlayerAccount {
+  /** Legacy sequential id. Prefer public_id for anything that goes in a URL. */
   id: number;
+  public_id: string;
   platform: "chesscom" | "lichess";
   username: string;
 }
@@ -113,7 +115,9 @@ export interface PrepRecommendation {
 }
 
 export interface Game {
+  /** Legacy sequential id. Prefer public_id for anything that goes in a URL. */
   id: number;
+  public_id: string;
   event: string;
   site: string;
   round: string;
@@ -418,6 +422,7 @@ export interface ExplorerEngineMove {
 
 export interface ExplorerDbGame {
   id: number;
+  public_id: string;
   player_name: string;
   opponent_name: string;
   color_played: ColorChoice;

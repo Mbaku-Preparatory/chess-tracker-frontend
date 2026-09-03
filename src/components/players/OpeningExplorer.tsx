@@ -268,6 +268,7 @@ function SectionHeader({ label, count }: { label: string; count?: number | strin
 function toGameObject(g: ExplorerDbGame): Game {
   return {
     id: g.id,
+    public_id: g.public_id,
     event: g.event,
     site: "",
     round: g.round,

@@ -126,8 +126,8 @@ export function AllGamesView({ slug }: AllGamesViewProps) {
   const [games, setGames] = useState<Game[]>([]);
   const [total, setTotal] = useState(0);
 
-  function handleGameDeleted(gameId: number) {
-    setGames((prev) => prev.filter((g) => g.id !== gameId));
+  function handleGameDeleted(gameId: string) {
+    setGames((prev) => prev.filter((g) => g.public_id !== gameId));
     setTotal((prev) => prev - 1);
   }
   const [page, setPage] = useState(1);

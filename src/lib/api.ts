@@ -198,12 +198,15 @@ export const api = {
     });
   },
 
-  getGamePgn(id: number): Promise<{ id: number; pgn_text: string }> {
-    return fetchJson(`${API_BASE}/games/${id}/pgn/`);
+  // These take a game's public_id, not its sequential id. The backend still
+  // accepts either while clients migrate, but a sequential id in a URL
+  // publishes how many games exist and how fast that grows.
+  getGamePgn(publicId: string): Promise<{ id: number; public_id: string; pgn_text: string }> {
+    return fetchJson(`${API_BASE}/games/${publicId}/pgn/`);
   },
 
-  deleteGame(id: number): Promise<void> {
-    return fetchJson(`${API_BASE}/games/${id}/`, { method: "DELETE" });
+  deleteGame(publicId: string): Promise<void> {
+    return fetchJson(`${API_BASE}/games/${publicId}/`, { method: "DELETE" });
   },
 
   lichessImportProxy(pgn: string): Promise<{ url: string }> {
@@ -553,7 +556,7 @@ getOpeningExplorer(
 
   removeAccount(
     slug: string,
-    accountId: number,
+    accountId: string,
     options?: { deleteGames?: boolean }
   ): Promise<AccountDelinkResult> {
     const params = new URLSearchParams();
@@ -567,7 +570,7 @@ getOpeningExplorer(
 
   deleteImportedGamesForAccount(
     slug: string,
-    accountId: number
+    accountId: string
   ): Promise<AccountGamesDeleteResult> {
     return fetchJson(`${API_BASE}/players/${slug}/accounts/${accountId}/games/`, {
       method: "DELETE",

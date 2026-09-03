@@ -81,8 +81,8 @@ function VariationRow({ stat, slug, sourceFilter, resultFilter, yearFilter, isEx
   const [page, setPage] = useState(1);
   const [error, setError] = useState<string | null>(null);
 
-  function handleGameDeleted(gameId: number) {
-    setGames((prev) => prev ? prev.filter((g) => g.id !== gameId) : prev);
+  function handleGameDeleted(gameId: string) {
+    setGames((prev) => prev ? prev.filter((g) => g.public_id !== gameId) : prev);
     setTotal((prev) => prev - 1);
   }
 
