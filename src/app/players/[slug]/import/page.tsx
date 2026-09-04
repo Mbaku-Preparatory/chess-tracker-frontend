@@ -229,7 +229,7 @@ export default function PlayerImportPage() {
     return (
       <div className="py-16 text-center">
         <p className="text-gray-500">{playerError ?? "Player not found."}</p>
-        <Link href="/players" className="btn-primary mt-4 inline-flex">
+        <Link href="/home" className="btn-primary mt-4 inline-flex">
           Back to players
         </Link>
       </div>

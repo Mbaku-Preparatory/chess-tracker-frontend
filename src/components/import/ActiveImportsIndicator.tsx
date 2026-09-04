@@ -30,7 +30,7 @@ export function ActiveImportsIndicator() {
   const ahead = single?.queue_ahead ?? 0;
   const href = single
     ? `/players/${single.player_slug}/import?source=chess_results`
-    : "/players";
+    : "/home";
   const label = single ? single.player_name : `${jobs.length} imports`;
   const queued = jobs.every((j) => j.status === "pending" && j.completed === 0);
 

@@ -151,7 +151,7 @@ export default function PlayerDetailPage() {
         <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
           {error || "Player not found"}
         </h2>
-        <Link href="/players" className="btn-primary mt-4 inline-flex">
+        <Link href="/home" className="btn-primary mt-4 inline-flex">
           Back to players
         </Link>
       </div>
