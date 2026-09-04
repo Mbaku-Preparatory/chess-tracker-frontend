@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { api } from "@/lib/api";
 import { userMessage } from "@/lib/apiError";
+import { Logo } from "@/components/ui/Logo";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -51,9 +52,7 @@ export default function SignupPage() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-600 text-xl font-bold text-white">
-            MP
-          </div>
+          <Logo size={48} variant="tile" className="mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Create your account</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             Track your own games and start scouting opponents.

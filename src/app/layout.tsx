@@ -11,7 +11,7 @@ import { StoreProvider } from "@/redux/provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Mbaku Preparatory - Opponent Intelligence",
+  title: "Chess Preparatory - Opponent Intelligence",
   description:
     "Search your opponent, unlock prep, and walk in with a practical match plan.",
 };

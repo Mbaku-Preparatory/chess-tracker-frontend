@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy - Mbaku Preparatory",
+  title: "Privacy Policy - Chess Preparatory",
   description:
-    "How Mbaku Preparatory collects, uses, stores, and deletes your data across the web app and the Android app.",
+    "How Chess Preparatory collects, uses, stores, and deletes your data across the web app and the Android app.",
 };
 
 const LAST_UPDATED = "14 August 2026";
@@ -29,7 +29,7 @@ export default function PrivacyPolicyPage() {
       </p>
 
       <p className="mt-6 text-sm leading-relaxed text-gray-600 dark:text-gray-300">
-        Mbaku Preparatory (&ldquo;the app&rdquo;) helps chess players prepare for opponents by
+        Chess Preparatory (&ldquo;the app&rdquo;) helps chess players prepare for opponents by
         collecting published game records and organising preparation sessions. This policy covers
         both the web app and the Android app, which share one account and one backend.
       </p>

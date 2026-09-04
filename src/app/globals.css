@@ -2,19 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Default brand palette (Ocean Blue) — overridden by ThemeProvider ─────── */
+/* ── Brand palette (Board Green) ───────────────────────────────────────────
+   Tuned to the Chess Preparatory mark: --brand-500 is the knight's green
+   (#7cac42) exactly, so the logo and the UI share one colour.
+   The button step is deliberately NOT the logo green. #7cac42 carries white
+   text at only 2.7:1, so bg-brand-600 steps down to #5c7a33, which clears AA
+   at 4.9:1 — the vivid green stays where it is read as an accent, not as a
+   surface behind text. */
 :root {
-  --brand-50:  240 247 255;
-  --brand-100: 224 239 254;
-  --brand-200: 186 224 253;
-  --brand-300: 124 200 251;
-  --brand-400:  54 173 246;
-  --brand-500:  12 147 231;
-  --brand-600:   0 116 197;
-  --brand-700:   1  93 160;
-  --brand-800:   6  79 132;
-  --brand-900:  11  66 110;
-  --brand-950:   7  42  73;
+  --brand-50:  243 248 234;
+  --brand-100: 228 241 207;
+  --brand-200: 203 227 166;
+  --brand-300: 174 209 119;
+  --brand-400: 147 190  82;   /* dark-mode accent text — 9.0:1 on the canvas */
+  --brand-500: 124 172  66;   /* the mark's green (#7cac42)                  */
+  --brand-600:  92 122  51;   /* filled buttons — 4.9:1 with white           */
+  --brand-700:  74  99  41;
+  --brand-800:  59  79  33;
+  --brand-900:  47  64  27;
+  --brand-950:  27  37  16;
 }
 
 @layer base {

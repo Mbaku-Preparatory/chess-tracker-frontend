@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 import { api } from "@/lib/api";
+import { Logo } from "@/components/ui/Logo";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { clearAuth, setProfilePic } from "@/redux/actions/auth";
 import { toggleTheme } from "@/redux/actions/theme";
@@ -65,10 +66,8 @@ export function Navbar() {
     <nav className="no-print sticky top-0 z-50 border-b border-gray-200 bg-white/80 backdrop-blur-md dark:border-dark-border dark:bg-dark-bg/80">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600 text-lg font-bold text-white">
-            MP
-          </div>
-          <span className="hidden text-lg font-bold text-gray-900 dark:text-gray-100 sm:inline">Mbaku Preparatory</span>
+          <Logo size={36} />
+          <span className="hidden text-lg font-bold text-gray-900 dark:text-gray-100 sm:inline">Chess Preparatory</span>
         </Link>
 
         <div className="flex items-center gap-1">
