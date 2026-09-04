@@ -127,6 +127,19 @@ export default function HomePage() {
     window.localStorage.setItem(PLAYER_ORDERING_STORAGE_KEY, ordering);
   }, [ordering]);
 
+  // The query is redux state, so it outlives this page: search for someone,
+  // open their profile, come back, and you would land on a filtered list with
+  // nothing on screen explaining why the rest of your opponents are missing.
+  // Clear it on the way out — setSearchQuery resets the page number too.
+  //
+  // Deliberately no dependency on searchQuery: this must fire when the page
+  // unmounts, not on every keystroke.
+  useEffect(() => {
+    return () => {
+      dispatch(setSearchQuery(""));
+    };
+  }, [dispatch]);
+
   const handleSearch = useCallback(
     (query: string) => {
       dispatch(setSearchQuery(query));
