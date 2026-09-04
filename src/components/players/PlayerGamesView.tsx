@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { OpeningTreeView } from "@/components/players/OpeningTreeView";
 import { AllGamesView } from "@/components/players/AllGamesView";
 import { CardSkeleton } from "@/components/ui/LoadingSkeleton";
+import { useRefetchWhenImportFinishes } from "@/components/import/useRefetchWhenImportFinishes";
 
 type Tab = "games" | "openings";
 
@@ -20,6 +21,14 @@ export function PlayerGamesView({ slug }: { slug: string }) {
   useEffect(() => {
     if (slug) dispatch(fetchPlayerDetail(slug));
   }, [dispatch, slug]);
+
+  // Games landing while this list is open is the whole point of the import.
+  useRefetchWhenImportFinishes(
+    slug,
+    useCallback(() => {
+      if (slug) dispatch(fetchPlayerDetail(slug));
+    }, [dispatch, slug])
+  );
 
   if (loading) {
     return (

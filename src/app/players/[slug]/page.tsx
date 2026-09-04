@@ -15,6 +15,7 @@ import { PerformanceSplitCard } from "@/components/players/PerformanceSplitCard"
 import { OpeningBreakdownCard } from "@/components/players/OpeningBreakdownCard";
 import { StrengthWeaknessCard } from "@/components/players/StrengthWeaknessCard";
 import { GamesTable } from "@/components/players/GamesTable";
+import { useRefetchWhenImportFinishes } from "@/components/import/useRefetchWhenImportFinishes";
 
 function FideSection({ slug, fideId }: { slug: string; fideId: string | null }) {
   const dispatch = useAppDispatch();
@@ -123,6 +124,15 @@ export default function PlayerDetailPage() {
   useEffect(() => {
     if (slug) dispatch(fetchPlayerDetail(slug));
   }, [dispatch, slug]);
+
+  // An import finishing in the worker changes this page's data without the
+  // page knowing. Pull it again rather than leaving a stale "0 games" behind.
+  useRefetchWhenImportFinishes(
+    slug,
+    useCallback(() => {
+      if (slug) dispatch(fetchPlayerDetail(slug));
+    }, [dispatch, slug])
+  );
 
   // Your own record has a home, and this is not it. Old links and anything
   // that guessed the slug land here; send them to /me rather than render the

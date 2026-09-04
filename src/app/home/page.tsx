@@ -1,13 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 
 import { PlayerCard } from "@/components/players/PlayerCard";
 import { CardSkeleton } from "@/components/ui/LoadingSkeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { SearchInput } from "@/components/ui/SearchInput";
-import { FideSearchResults } from "@/components/players/FideSearchResults";
+import { OpponentSearch } from "@/components/players/OpponentSearch";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
   fetchPlayers,
@@ -146,12 +145,6 @@ export default function HomePage() {
     dispatch(fetchPlayers({ search: searchQuery || undefined, page: currentPage, ordering }));
   }, [dispatch, searchQuery, currentPage, ordering]);
 
-  // Lets a FIDE result say "Open" instead of "+ Add" for someone already held.
-  const ownedFideIds = useMemo(
-    () => new Set(items.map((p) => p.fide_id).filter((id): id is string => !!id)),
-    [items]
-  );
-
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (
@@ -184,10 +177,12 @@ export default function HomePage() {
         <div className="mt-4">
         {/* Search + sort */}
         <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center">
-          <SearchInput
-            placeholder="Search your opponents, or FIDE by name or ID…"
-            onSearch={handleSearch}
-            defaultValue={searchQuery}
+          <OpponentSearch
+            query={searchQuery}
+            onQueryChange={handleSearch}
+            localResults={items}
+            localLoading={loading}
+            onPlayerCreated={refreshList}
             className="max-w-xl flex-1"
           />
           <div className="flex flex-col gap-3 sm:items-end">
@@ -327,17 +322,6 @@ export default function HomePage() {
             }
           />
         )}
-
-        {/*
-          Players we do not have yet. Rendered alongside the list rather than
-          only when it comes back empty: one loose local match must not hide
-          the player you were actually looking for.
-        */}
-        <FideSearchResults
-          query={searchQuery}
-          ownedFideIds={ownedFideIds}
-          onPlayerCreated={refreshList}
-        />
         </div>
       </div>
     </div>
