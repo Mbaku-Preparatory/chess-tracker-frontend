@@ -330,7 +330,7 @@ export default function HomePage() {
             title={searchQuery ? "No opponents found" : "No opponents yet"}
             description={
               searchQuery
-                ? "Nothing in your list matches. Check the FIDE results below."
+                ? "Nothing in your list matches. Click the search box to add them from FIDE."
                 : "Add your first opponent to get started."
             }
           />
