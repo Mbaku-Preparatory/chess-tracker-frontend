@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import type { PlayerLookupResult } from "@/types";
 import { userMessage } from "@/lib/apiError";
+import { duplicatePlayerFrom, duplicatePlayerHref } from "@/lib/duplicatePlayer";
 
 // ── Platform metadata ────────────────────────────────────────────────────────
 
@@ -386,6 +387,13 @@ export default function NewPlayerPage() {
       const source = hasChesscom ? "chesscom" : hasLichess ? "lichess" : "chess_results";
       router.push(`/players/${player.public_id}/import?source=${source}`);
     } catch (err) {
+      // Already on their list. They asked to reach this player, so take them
+      // there rather than making them find the row themselves.
+      const existing = duplicatePlayerFrom(err);
+      if (existing) {
+        router.push(duplicatePlayerHref(existing));
+        return;
+      }
       setError(userMessage(err, "Could not create player. Try again."));
     } finally {
       setLoading(false);

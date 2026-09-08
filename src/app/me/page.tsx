@@ -18,6 +18,7 @@ import Link from "next/link";
 
 import { api } from "@/lib/api";
 import { userMessage } from "@/lib/apiError";
+import { duplicatePlayerFrom, type DuplicatePlayer } from "@/lib/duplicatePlayer";
 import type { ImportJob, MyPlayer } from "@/types";
 import { AskAssistant } from "@/components/players/AskAssistant";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -37,6 +38,7 @@ export default function MyProfilePage() {
   const [me, setMe] = useState<MyPlayer | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [duplicate, setDuplicate] = useState<DuplicatePlayer | null>(null);
 
   const [fideInput, setFideInput] = useState("");
   const [saving, setSaving] = useState(false);
@@ -89,11 +91,21 @@ export default function MyProfilePage() {
     if (!value || saving) return;
     setSaving(true);
     setError(null);
+    setDuplicate(null);
     try {
       setMe(await api.setMyFideId(value));
       setFideInput("");
     } catch (err) {
-      setError(userMessage(err, "Couldn't save that FIDE ID."));
+      // They already track this ID as an opponent — usually themselves, added
+      // from the home search before they filled this in. Naming the row and
+      // linking to it is the only answer they can act on; "you already have
+      // this" without saying where is a dead end.
+      const existing = duplicatePlayerFrom(err);
+      if (existing) {
+        setDuplicate(existing);
+      } else {
+        setError(userMessage(err, "Couldn't save that FIDE ID."));
+      }
     } finally {
       setSaving(false);
     }
@@ -134,6 +146,18 @@ export default function MyProfilePage() {
       {error && (
         <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">
           {error}
+        </div>
+      )}
+
+      {/* Not styled as an error: nothing went wrong, the record just already
+          exists somewhere they can go and look at. */}
+      {duplicate && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+          You already track FIDE ID {duplicate.fide_id} as{" "}
+          <Link href={`/players/${duplicate.slug}`} className="font-semibold underline">
+            {duplicate.full_name}
+          </Link>
+          . Delete that profile if it is really you, and then add the ID here.
         </div>
       )}
 

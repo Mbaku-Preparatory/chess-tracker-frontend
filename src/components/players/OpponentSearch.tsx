@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { api } from "@/lib/api";
+import { userMessage } from "@/lib/apiError";
+import { duplicatePlayerFrom, duplicatePlayerHref } from "@/lib/duplicatePlayer";
 import { useActiveImports } from "@/components/import/ActiveImportsProvider";
 import {
   federationOf,
@@ -133,17 +135,10 @@ export function OpponentSearch({
       setAddingId(fideId);
       setAddError(null);
       try {
-        // Open what we already hold rather than making a second copy of it.
-        // This is not the duplicate-detection feature — it is the one case
-        // that is free to check, because the ID is an exact key.
-        const existing = await api.getPlayers(fideId);
-        const match = existing.results.find((p) => p.fide_id === fideId);
-        if (match) {
-          setOpen(false);
-          router.push(`/players/${match.slug}`);
-          return;
-        }
-
+        // No look-before-you-leap check any more. The server rejects a second
+        // row for a FIDE ID you already hold and hands back the one you have,
+        // which is both race-proof and — unlike a check built on the players
+        // list — able to see your own profile. See lib/duplicatePlayer.
         const player = await api.createPlayer({
           full_name: result.display_name,
           fide_id: fideId,
@@ -166,11 +161,16 @@ export function OpponentSearch({
         setOpen(false);
         router.push(`/players/${player.slug}`);
       } catch (err) {
-        const message =
-          (err as { body?: { detail?: string } })?.body?.detail ??
-          (err as Error)?.message ??
-          "Could not add this player.";
-        setAddError(message);
+        // 409 is not a failure — it means they already have this player, and
+        // the response says which row. Go there, exactly as a successful add
+        // would have.
+        const existing = duplicatePlayerFrom(err);
+        if (existing) {
+          setOpen(false);
+          router.push(duplicatePlayerHref(existing));
+          return;
+        }
+        setAddError(userMessage(err, "Could not add this player."));
       } finally {
         setAddingId(null);
       }
