@@ -95,6 +95,18 @@ export function Navbar() {
             GM Library
           </Link>
 
+          {/* Olympiad archive */}
+          <Link
+            href="/olympiad"
+            className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+              isActive("/olympiad")
+                ? "bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400"
+                : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100"
+            }`}
+          >
+            Olympiad
+          </Link>
+
           {/* My Profile — you as a player, in the slot the repertoire used to
               hold. Unconditional: everyone has a profile from the moment they
               register, which is the whole reason the row is created eagerly. */}
