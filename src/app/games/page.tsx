@@ -5,125 +5,107 @@ import { Chessboard } from "react-chessboard";
 
 import { api } from "@/lib/api";
 import { userMessage } from "@/lib/apiError";
-import { usePuzzleEntry } from "@/lib/chess/puzzleEntry";
-import type { Puzzle, PuzzleVerdict } from "@/types";
+import { usePuzzleSolve } from "@/lib/chess/puzzleSolve";
+import type { Puzzle } from "@/types";
 
 /**
- * The daily puzzle: guess the five moves actually played from a real position.
+ * The daily puzzle: one position, and the move that wins it.
  *
- * Moves are played on the board rather than typed. It is chess and the board
- * is right there, and typing SAN would make the game partly a spelling test.
+ * Play your move on the board. The opponent answers, and you play the next
+ * one — usually two or three in all. A wrong move ends it, which is what makes
+ * getting it right mean anything.
  *
- * Nothing is scored here. The attempt goes to the server and comes back
- * marked — the solution is the whole game, so a client that could mark it
- * would have been given it.
+ * Nothing is checked here. Each move goes to the server and comes back marked,
+ * because the line is the whole point and a client that could check its own
+ * moves would have been handed it.
  */
 
-const VERDICT_CLASS: Record<PuzzleVerdict, string> = {
-  correct: "bg-[#4a7c59] text-white border-transparent",
-  misplaced: "bg-[#c9a227] text-white border-transparent",
-  piece: "bg-[#3f6fa8] text-white border-transparent",
-  wrong: "bg-gray-500 text-white border-transparent",
-};
-
-const LEGEND: { verdict: PuzzleVerdict; label: string }[] = [
-  { verdict: "correct", label: "Right move, right place" },
-  { verdict: "misplaced", label: "In the line, wrong place" },
-  { verdict: "piece", label: "Right piece, wrong move" },
-  { verdict: "wrong", label: "Not in the line" },
-];
-
-function Tile({ san, verdict }: { san: string | null; verdict?: PuzzleVerdict }) {
-  return (
-    <div
-      className={`flex h-9 items-center justify-center truncate rounded-md border px-1 font-mono text-xs font-bold ${
-        verdict
-          ? VERDICT_CLASS[verdict]
-          : "border-gray-300 bg-white text-gray-800 dark:border-dark-border dark:bg-dark-elevated dark:text-gray-100"
-      }`}
-    >
-      {san ?? ""}
-    </div>
-  );
+/** Lichess's theme tags are camelCase; nobody wants to read "mateIn2". */
+function prettyTheme(tag: string): string {
+  const spaced = tag.replace(/([a-z])([A-Z0-9])/g, "$1 $2").toLowerCase();
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
 }
 
-function PuzzleBoard({ puzzle, onScored }: { puzzle: Puzzle; onScored: (p: Puzzle) => void }) {
-  const entry = usePuzzleEntry(puzzle.fen, puzzle.solution_length);
+function PuzzleBoard({ puzzle, onChanged }: { puzzle: Puzzle; onChanged: (p: Puzzle) => void }) {
+  const solve = usePuzzleSolve(puzzle, api.playPuzzleMove, onChanged);
   const [selected, setSelected] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+
+  const playing = solve.status === "playing";
 
   const handleSquareClick = useCallback(
     (square: string) => {
-      if (puzzle.finished) return;
+      if (!playing) return;
       if (selected === square) return setSelected(null);
-      if (selected && entry.play(selected, square)) return setSelected(null);
-      setSelected(entry.legalTargets(square).length > 0 ? square : null);
+      if (selected && solve.play(selected, square)) return setSelected(null);
+      setSelected(solve.legalTargets(square).length > 0 ? square : null);
     },
-    [selected, entry, puzzle.finished]
+    [selected, solve, playing]
   );
 
   const handleDrop = useCallback(
     (from: string, to: string) => {
-      if (puzzle.finished) return false;
+      if (!playing) return false;
       setSelected(null);
-      return entry.play(from, to);
+      return solve.play(from, to);
     },
-    [entry, puzzle.finished]
+    [solve, playing]
   );
 
-  const targetStyles = useMemo(() => {
-    const squares = selected ? entry.legalTargets(selected) : [];
-    return Object.fromEntries(
-      squares.map((sq) => [
-        sq,
-        { background: "radial-gradient(circle, rgba(20,20,20,0.30) 22%, transparent 24%)" },
-      ])
-    );
-  }, [selected, entry]);
+  const squareStyles = useMemo(() => {
+    const targets = selected ? solve.legalTargets(selected) : [];
+    return {
+      // The last move, either side's, so the opponent's answer is not
+      // something you have to spot by comparing two screenshots.
+      ...(solve.lastMove
+        ? {
+            [solve.lastMove.from]: { backgroundColor: "rgba(246,195,68,0.35)" },
+            [solve.lastMove.to]: { backgroundColor: "rgba(246,195,68,0.45)" },
+          }
+        : {}),
+      ...(solve.wrongMove
+        ? {
+            [solve.wrongMove.from]: { backgroundColor: "rgba(220,38,38,0.35)" },
+            [solve.wrongMove.to]: { backgroundColor: "rgba(220,38,38,0.5)" },
+          }
+        : {}),
+      ...(selected ? { [selected]: { backgroundColor: "rgba(246,195,68,0.8)" } } : {}),
+      ...Object.fromEntries(
+        targets.map((sq) => [
+          sq,
+          { background: "radial-gradient(circle, rgba(20,20,20,0.30) 22%, transparent 24%)" },
+        ])
+      ),
+    };
+  }, [selected, solve.lastMove, solve.wrongMove, solve.legalTargets, solve]);
 
-  async function submit() {
-    setSubmitting(true);
-    setError(null);
-    try {
-      const next = await api.guessPuzzle(puzzle.id, entry.moves);
-      entry.clear();
-      setSelected(null);
-      onScored(next);
-    } catch (err) {
-      setError(userMessage(err, "Couldn't submit that guess."));
-    } finally {
-      setSubmitting(false);
-    }
-  }
+  const side = puzzle.side_to_move === "white" ? "White" : "Black";
+  const count = puzzle.moves_to_find === 1 ? "the move" : `${puzzle.moves_to_find} moves`;
 
-  const rows = Array.from({ length: puzzle.max_attempts }, (_, row) => {
-    if (row < puzzle.guesses.length) {
-      return { moves: puzzle.guesses[row], verdicts: puzzle.results[row] as PuzzleVerdict[] | null };
-    }
-    if (row === puzzle.guesses.length && !puzzle.finished) {
-      return { moves: entry.moves, verdicts: null };
-    }
-    return { moves: [] as string[], verdicts: null };
-  });
+  const status =
+    solve.status === "solved"
+      ? { text: "Solved", tone: "text-brand-600 dark:text-brand-400" }
+      : solve.status === "failed"
+        ? { text: "Not the move", tone: "text-red-600 dark:text-red-400" }
+        : solve.found > 0
+          ? { text: "Right — keep going", tone: "text-brand-600 dark:text-brand-400" }
+          : { text: `${side} to play · find ${count}`, tone: "text-gray-900 dark:text-gray-100" };
 
   return (
     <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
-      {/* Board sized against the viewport, and bounded by height because it is
-          square — otherwise a wide monitor makes it taller than the page. */}
+      {/* Bounded by height as well as width, because the board is square and a
+          wide monitor would otherwise make it taller than the page. */}
       <div className="w-full lg:w-[min(46vw,calc(100dvh-260px))]">
         <Chessboard
           options={{
-            position: entry.fen || puzzle.fen,
+            position: solve.fen,
+            // Your pieces at the bottom. Solving a tactic from the other side
+            // of the board is a different and much worse puzzle.
             boardOrientation: puzzle.side_to_move,
-            allowDragging: !puzzle.finished,
+            allowDragging: playing,
             onPieceDrop: ({ sourceSquare, targetSquare }) =>
               targetSquare ? handleDrop(sourceSquare, targetSquare) : false,
             onSquareClick: ({ square }) => handleSquareClick(square),
-            squareStyles: {
-              ...(selected ? { [selected]: { backgroundColor: "rgba(246,195,68,0.8)" } } : {}),
-              ...targetStyles,
-            },
+            squareStyles,
             arrows: [],
             boardStyle: { borderRadius: "8px" },
             darkSquareStyle: { backgroundColor: "#4a7c59" },
@@ -135,85 +117,56 @@ function PuzzleBoard({ puzzle, onScored }: { puzzle: Puzzle; onScored: (p: Puzzl
 
       <div className="flex min-w-0 flex-1 flex-col gap-4">
         <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-dark-border dark:bg-dark-surface">
-          <p className="text-sm font-bold text-gray-900 dark:text-gray-100">
-            {puzzle.side_to_move === "white" ? "White" : "Black"} to play, move {puzzle.move_number}
-          </p>
+          <p className={`text-base font-extrabold ${status.tone}`}>{status.text}</p>
           <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-            {puzzle.white} vs {puzzle.black}
-            {puzzle.year ? ` · ${puzzle.year}` : ""}
-            {puzzle.event ? ` · ${puzzle.event}` : ""}
+            Move {puzzle.move_number}
+            {puzzle.rating ? ` · rated ${puzzle.rating}` : ""}
+            {playing && puzzle.moves_to_find > 1
+              ? ` · ${solve.found}/${puzzle.moves_to_find} found`
+              : ""}
           </p>
-          <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">
-            Play the {puzzle.solution_length} moves you think came next.
-          </p>
+          {solve.status === "checking" && (
+            <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">Checking…</p>
+          )}
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          {rows.map((row, i) => (
-            <div
-              key={i}
-              className="grid gap-1.5"
-              style={{ gridTemplateColumns: `repeat(${puzzle.solution_length}, minmax(0, 1fr))` }}
-            >
-              {Array.from({ length: puzzle.solution_length }, (_, col) => (
-                <Tile key={col} san={row.moves[col] ?? null} verdict={row.verdicts?.[col]} />
-              ))}
-            </div>
-          ))}
-        </div>
-
-        {error && (
-          <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-        )}
-
-        {!puzzle.finished ? (
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={entry.undo}
-              disabled={entry.moves.length === 0}
-              className="btn-secondary disabled:opacity-40"
-            >
-              Undo
-            </button>
-            <button
-              type="button"
-              onClick={submit}
-              disabled={!entry.complete || submitting}
-              className="btn-primary disabled:opacity-50"
-            >
-              {submitting
-                ? "Checking…"
-                : `Submit (${puzzle.max_attempts - puzzle.attempts_used} left)`}
-            </button>
-          </div>
-        ) : (
-          <div
-            className={`rounded-xl border p-4 ${
-              puzzle.solved
-                ? "border-brand-600 text-brand-700 dark:text-brand-400"
-                : "border-gray-200 text-gray-900 dark:border-dark-border dark:text-gray-100"
-            }`}
-          >
-            <p className="text-sm font-extrabold">
-              {puzzle.solved ? "Solved" : "Out of guesses"}
-            </p>
-            {puzzle.solution && (
-              <p className="mt-1 font-mono text-sm text-gray-500 dark:text-gray-400">
-                {puzzle.solution.join("  ")}
-              </p>
+        {puzzle.finished && (
+          <div className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 dark:border-dark-border dark:bg-dark-surface">
+            {/* Only now: before this, these are the answer. */}
+            {solve.solutionSan.length > 0 && (
+              <div>
+                <p className="text-[11px] font-bold tracking-wide text-gray-400 dark:text-gray-500">
+                  THE LINE
+                </p>
+                <p className="mt-1 font-mono text-sm font-bold text-gray-900 dark:text-gray-100">
+                  {solve.solutionSan.join("  ")}
+                </p>
+              </div>
+            )}
+            {puzzle.themes.length > 0 && (
+              <ul className="flex flex-wrap gap-1.5">
+                {puzzle.themes.slice(0, 5).map((tag) => (
+                  <li
+                    key={tag}
+                    className="rounded-full border border-gray-200 px-2.5 py-1 text-xs text-gray-500 dark:border-dark-border dark:text-gray-400"
+                  >
+                    {prettyTheme(tag)}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {!!puzzle.game_url && (
+              <a
+                href={puzzle.game_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="self-start text-sm font-semibold text-brand-600 hover:underline dark:text-brand-400"
+              >
+                See the game →
+              </a>
             )}
           </div>
         )}
-
-        <ul className="flex flex-col gap-1">
-          {LEGEND.map(({ verdict, label }) => (
-            <li key={verdict} className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-              <span className={`h-3 w-3 rounded-sm ${VERDICT_CLASS[verdict].split(" ")[0]}`} />
-              {label}
-            </li>
-          ))}
-        </ul>
       </div>
     </div>
   );
@@ -248,7 +201,7 @@ export default function GamesPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Daily puzzle</h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Guess the moves actually played. A new position each day.
+          One position, and the move that wins it. A new one each day.
         </p>
       </div>
 
@@ -266,7 +219,7 @@ export default function GamesPage() {
               }`}
             >
               {new Date(p.date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
-              {p.solved ? " ✓" : ""}
+              {p.solved ? " ✓" : p.failed ? " ✕" : ""}
             </button>
           ))}
         </div>
@@ -286,7 +239,9 @@ export default function GamesPage() {
           </p>
         </div>
       ) : (
-        <PuzzleBoard puzzle={current} onScored={replace} />
+        /* Keyed on the puzzle: switching days is a new board, and carrying the
+           old one's move state across would be a bug hunt later. */
+        <PuzzleBoard key={current.id} puzzle={current} onChanged={replace} />
       )}
     </div>
   );
