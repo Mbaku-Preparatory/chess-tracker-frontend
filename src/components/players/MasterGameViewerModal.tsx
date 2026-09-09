@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Chess } from "chess.js";
 import { Chessboard } from "react-chessboard";
+
+import { useAnalysisLine } from "@/lib/chess/useAnalysisLine";
 import type { MasterGame } from "@/types";
 import { api } from "@/lib/api";
 import { NO_SCORES, scoresFromResultTag } from "@/lib/chessScore";
@@ -203,41 +205,63 @@ function NavBtn({ label, icon, disabled, onClick }: { label: string; icon: React
 
 export function MasterGameViewerModal({ game, onClose }: { game: MasterGame; onClose: () => void }) {
   const pgn = buildFullPgn(game);
-  const moves = parsePgn(pgn);
+  const gameMoves = parsePgn(pgn);
   // A master game's `result` is already the PGN token ("1-0"), so it needs no
   // colour to read — unlike a scouted Game, whose result is stored relative to
   // the player being scouted.
   const scores = scoresFromResultTag(game.result) ?? NO_SCORES;
 
-  const [currentIndex, setCurrentIndex] = useState(-1);
   const [showShare, setShowShare] = useState(false);
+  const [selected, setSelected] = useState<string | null>(null);
   const [analysisLoading, setAnalysisLoading] = useState<"lichess" | null>(null);
   const moveListRef = useRef<HTMLDivElement>(null);
   const activeMoveRef = useRef<HTMLButtonElement>(null);
 
-  const goTo = useCallback((i: number) => {
-    setCurrentIndex(Math.max(-1, Math.min(i, moves.length - 1)));
-  }, [moves.length]);
+  // The game is never edited. Playing a move that leaves it opens a branch,
+  // and `line.moves` reads the game up to that point followed by the branch.
+  const line = useAnalysisLine(gameMoves);
+  const { moves, index: currentIndex, fen: currentFen, goTo } = line;
+
+  // Click a piece to pick it up, click a legal square to move. Clicking
+  // another of your own pieces switches to it rather than failing, which is
+  // what people expect and costs nothing.
+  const handleSquareClick = useCallback(
+    (square: string) => {
+      if (selected === square) return setSelected(null);
+      if (selected && line.play(selected, square)) return setSelected(null);
+      setSelected(line.legalTargets(square).length > 0 ? square : null);
+    },
+    [selected, line]
+  );
+
+  const handleDrop = useCallback(
+    (from: string, to: string) => {
+      setSelected(null);
+      return line.play(from, to);
+    },
+    [line]
+  );
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight" || e.key === "ArrowDown") { e.preventDefault(); setCurrentIndex((i) => Math.min(i + 1, moves.length - 1)); }
-      else if (e.key === "ArrowLeft" || e.key === "ArrowUp") { e.preventDefault(); setCurrentIndex((i) => Math.max(i - 1, -1)); }
-      else if (e.key === "Home") { e.preventDefault(); setCurrentIndex(-1); }
-      else if (e.key === "End") { e.preventDefault(); setCurrentIndex(moves.length - 1); }
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") { e.preventDefault(); goTo(currentIndex + 1); }
+      else if (e.key === "ArrowLeft" || e.key === "ArrowUp") { e.preventDefault(); goTo(currentIndex - 1); }
+      else if (e.key === "Home") { e.preventDefault(); goTo(-1); }
+      else if (e.key === "End") { e.preventDefault(); goTo(moves.length - 1); }
       else if (e.key === "Escape") { onClose(); }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [moves.length, onClose]);
+    // currentIndex is a dependency now, where it was not before: navigation
+    // used React's own setter, whose identity is stable and whose functional
+    // form always saw fresh state. goTo closes over the current position
+    // instead, so the listener has to be rebound as it moves — otherwise the
+    // arrow keys step from wherever the modal was opened, forever.
+  }, [moves.length, onClose, goTo, currentIndex]);
 
   useEffect(() => {
     activeMoveRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }, [currentIndex]);
-
-  const currentFen = currentIndex === -1
-    ? "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-    : moves[currentIndex].fen;
 
   const engine = useStockfish(currentFen, moves.length > 0);
   const bestMoveSquares = parseUciMove(engine.bestMove);
@@ -337,9 +361,27 @@ export function MasterGameViewerModal({ game, onClose }: { game: MasterGame; onC
                   options={{
                     position: currentFen,
                     boardOrientation: "white",
-                    allowDragging: false,
+                    // Play your own moves. The game is untouched — a move that
+                    // leaves it opens a branch instead.
+                    allowDragging: true,
+                    onPieceDrop: ({ sourceSquare, targetSquare }) =>
+                      targetSquare ? handleDrop(sourceSquare, targetSquare) : false,
+                    onSquareClick: ({ square }) => handleSquareClick(square),
                     squareStyles: {
                       ...highlightSquares,
+                      ...(selected ? { [selected]: { backgroundColor: "rgba(246,195,68,0.8)" } } : {}),
+                      // A dot on an empty square, a ring on an occupied one:
+                      // a dot centred over a piece hides the piece, and what
+                      // you are about to capture matters more than the dot.
+                      ...Object.fromEntries(
+                        (selected ? line.legalTargets(selected) : []).map((sq) => [
+                          sq,
+                          {
+                            background:
+                              "radial-gradient(circle, rgba(20,20,20,0.30) 22%, transparent 24%)",
+                          },
+                        ])
+                      ),
                       ...(bestMoveSquares
                         ? {
                             [bestMoveSquares[0]]: { backgroundColor: "rgba(0,200,80,0.35)" },
@@ -371,25 +413,51 @@ export function MasterGameViewerModal({ game, onClose }: { game: MasterGame; onC
                   <div className="flex h-full items-center justify-center text-sm text-gray-400 dark:text-gray-600">No moves available</div>
                 ) : (
                   <div className="flex flex-wrap gap-x-1 gap-y-0.5 py-1 text-sm font-mono leading-relaxed">
-                    {moves.map((mv, idx) => (
-                      <span key={idx} className="inline-flex items-baseline">
-                        {mv.color === "w" && (
-                          <span className="mr-0.5 select-none text-gray-400 dark:text-gray-600">{mv.moveNumber}.</span>
-                        )}
-                        <button
-                          ref={idx === currentIndex ? activeMoveRef : null}
-                          onClick={() => goTo(idx)}
-                          className={`rounded px-1 py-0.5 transition-colors ${
-                            idx === currentIndex
-                              ? "bg-brand-600 text-white"
-                              : "text-gray-800 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-dark-elevated"
-                          }`}
-                        >
-                          {mv.san}
-                        </button>
-                      </span>
-                    ))}
+                    {moves.map((mv, idx) => {
+                      const branched = line.branchStartsAt !== null && idx >= line.branchStartsAt;
+                      const current = idx === currentIndex;
+                      return (
+                        <span key={idx} className="inline-flex items-baseline">
+                          {/* Where the game stops and your line starts. */}
+                          {idx === line.branchStartsAt && (
+                            <span className="mx-0.5 select-none text-brand-600 dark:text-brand-400">(</span>
+                          )}
+                          {mv.color === "w" && (
+                            <span className="mr-0.5 select-none text-gray-400 dark:text-gray-600">{mv.moveNumber}.</span>
+                          )}
+                          <button
+                            ref={current ? activeMoveRef : null}
+                            onClick={() => goTo(idx)}
+                            className={`rounded px-1 py-0.5 transition-colors ${
+                              current
+                                ? "bg-brand-600 text-white"
+                                : branched
+                                  ? "italic text-brand-600 hover:bg-brand-50 dark:text-brand-400 dark:hover:bg-brand-900/30"
+                                  : "text-gray-800 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-dark-elevated"
+                            }`}
+                          >
+                            {mv.san}
+                          </button>
+                          {branched && idx === moves.length - 1 && (
+                            <span className="mx-0.5 select-none text-brand-600 dark:text-brand-400">)</span>
+                          )}
+                        </span>
+                      );
+                    })}
                   </div>
+                )}
+
+                {line.branch && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      line.clearBranch();
+                      setSelected(null);
+                    }}
+                    className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-brand-600 px-3 py-1 text-xs font-bold text-brand-600 transition hover:bg-brand-50 dark:text-brand-400 dark:hover:bg-brand-900/30"
+                  >
+                    ↩ Back to the game
+                  </button>
                 )}
               </div>
 

@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Chess } from "chess.js";
 import { Chessboard } from "react-chessboard";
+
+import { useAnalysisLine } from "@/lib/chess/useAnalysisLine";
+import type { ParsedMove } from "@/lib/chess/types";
 import type { Game } from "@/types";
 import { api } from "@/lib/api";
 import {
@@ -178,12 +181,6 @@ interface PgnViewerModalProps {
   onClose: () => void;
 }
 
-interface ParsedMove {
-  san: string;
-  fen: string;
-  moveNumber: number;
-  color: "w" | "b";
-}
 
 // ── Who is sitting on each side of the board ──────────────────────────────────
 
@@ -300,6 +297,12 @@ function parsePgn(pgn: string): ParsedMove[] {
     moves.push({
       san: move.san,
       fen: replay.fen(),
+      // Recorded here rather than re-derived. Highlighting the last move used
+      // to re-parse the whole PGN on every render to find these, which also
+      // meant a move played on the board could never be highlighted: it is not
+      // in the PGN.
+      from: move.from,
+      to: move.to,
       moveNumber: Math.ceil((moves.length + 1) / 2),
       color: move.color,
     });
@@ -309,8 +312,8 @@ function parsePgn(pgn: string): ParsedMove[] {
 
 export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
   const [pgn, setPgn] = useState<string | null>(null);
-  const [moves, setMoves] = useState<ParsedMove[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(-1); // -1 = starting position
+  const [gameMoves, setGameMoves] = useState<ParsedMove[]>([]);
+  const [selected, setSelected] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showShare, setShowShare] = useState(false);
@@ -362,8 +365,7 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
         if (cancelled) return;
         const parsed = parsePgn(data.pgn_text);
         setPgn(data.pgn_text);
-        setMoves(parsed);
-        setCurrentIndex(-1);
+        setGameMoves(parsed);
       })
       .catch((err) => {
         if (!cancelled) setError(err.message || "Failed to load PGN");
@@ -376,16 +378,41 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
     };
   }, [game.id]);
 
+  // The game is never edited. A move that leaves it opens a branch, and
+  // `line.moves` reads the game up to that point followed by the branch.
+  const line = useAnalysisLine(gameMoves);
+  const { moves, index: currentIndex, fen: currentFen, goTo } = line;
+
+  // Back to the start whenever the modal is pointed at a different game.
+  // Declared here rather than inside the loader: `line` is defined below that
+  // effect, and referencing it there only works because the promise resolves
+  // asynchronously — which is a trap, not a design.
+  const { reset } = line;
+  useEffect(() => {
+    reset();
+  }, [game.id, reset]);
+
   // Scroll active move into view
   useEffect(() => {
     activeMoveRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }, [currentIndex]);
 
-  const goTo = useCallback(
-    (index: number) => {
-      setCurrentIndex(Math.max(-1, Math.min(index, moves.length - 1)));
+
+  const handleSquareClick = useCallback(
+    (square: string) => {
+      if (selected === square) return setSelected(null);
+      if (selected && line.play(selected, square)) return setSelected(null);
+      setSelected(line.legalTargets(square).length > 0 ? square : null);
     },
-    [moves.length]
+    [selected, line]
+  );
+
+  const handleDrop = useCallback(
+    (from: string, to: string) => {
+      setSelected(null);
+      return line.play(from, to);
+    },
+    [line]
   );
 
   // Keyboard navigation
@@ -393,16 +420,16 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "ArrowRight" || e.key === "ArrowDown") {
         e.preventDefault();
-        setCurrentIndex((i) => Math.min(i + 1, moves.length - 1));
+        goTo(currentIndex + 1);
       } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
         e.preventDefault();
-        setCurrentIndex((i) => Math.max(i - 1, -1));
+        goTo(currentIndex - 1);
       } else if (e.key === "Home") {
         e.preventDefault();
-        setCurrentIndex(-1);
+        goTo(-1);
       } else if (e.key === "End") {
         e.preventDefault();
-        setCurrentIndex(moves.length - 1);
+        goTo(moves.length - 1);
       } else if (e.key === "Escape") {
         onClose();
       }
@@ -411,30 +438,19 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
     return () => window.removeEventListener("keydown", handler);
   }, [moves.length, onClose]);
 
-  const currentFen =
-    currentIndex === -1
-      ? "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-      : moves[currentIndex].fen;
-
   // Stockfish analysis
   const engine = useStockfish(currentFen, !loading && !error);
   const bestMoveSquares = parseUciMove(engine.bestMove);
 
   // Build highlighted squares for last move using verbose history
+  // Straight off the current move. This used to re-parse the whole PGN on
+  // every render to find the squares — which also meant a move played on the
+  // board could never highlight, because it is not in the PGN.
   const highlightSquares: Record<string, React.CSSProperties> = {};
-  if (currentIndex >= 0 && pgn) {
-    try {
-      const replay = new Chess();
-      replay.loadPgn(pgn);
-      const history = replay.history({ verbose: true });
-      const mv = history[currentIndex];
-      if (mv) {
-        highlightSquares[mv.from] = { backgroundColor: "rgba(255, 214, 10, 0.4)" };
-        highlightSquares[mv.to] = { backgroundColor: "rgba(255, 214, 10, 0.55)" };
-      }
-    } catch {
-      // ignore
-    }
+  const activeMove = currentIndex >= 0 ? moves[currentIndex] : null;
+  if (activeMove) {
+    highlightSquares[activeMove.from] = { backgroundColor: "rgba(255, 214, 10, 0.4)" };
+    highlightSquares[activeMove.to] = { backgroundColor: "rgba(255, 214, 10, 0.55)" };
   }
 
   const dateStr = game.date_played
@@ -516,10 +532,28 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
                 <Chessboard
                   options={{
                     position: currentFen,
+                    onPieceDrop: ({ sourceSquare, targetSquare }) =>
+                      targetSquare ? handleDrop(sourceSquare, targetSquare) : false,
+                    onSquareClick: ({ square }) => handleSquareClick(square),
                     boardOrientation: orientation,
-                    allowDragging: false,
+                    // Play your own moves; the game is untouched, and a move
+                    // that leaves it opens a branch instead.
+                    allowDragging: true,
                     squareStyles: {
                       ...highlightSquares,
+                      ...(selected ? { [selected]: { backgroundColor: "rgba(246,195,68,0.8)" } } : {}),
+                      // A dot on an empty square, a ring on an occupied one:
+                      // a dot centred over a piece hides the piece, and what
+                      // you are about to capture matters more than the dot.
+                      ...Object.fromEntries(
+                        (selected ? line.legalTargets(selected) : []).map((sq) => [
+                          sq,
+                          {
+                            background:
+                              "radial-gradient(circle, rgba(20,20,20,0.30) 22%, transparent 24%)",
+                          },
+                        ])
+                      ),
                       ...(bestMoveSquares
                         ? {
                             [bestMoveSquares[0]]: { backgroundColor: "rgba(0,200,80,0.35)" },
@@ -573,26 +607,52 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
               )}
               {!loading && moves.length > 0 && (
                 <div className="flex flex-wrap gap-x-1 gap-y-0.5 py-1 text-sm font-mono leading-relaxed">
-                  {moves.map((mv, idx) => (
-                    <span key={idx} className="inline-flex items-baseline">
-                      {mv.color === "w" && (
-                        <span className="mr-0.5 select-none text-gray-400 dark:text-gray-500">
-                          {mv.moveNumber}.
-                        </span>
-                      )}
-                      <button
-                        ref={idx === currentIndex ? activeMoveRef : null}
-                        onClick={() => goTo(idx)}
-                        className={`rounded px-1 py-0.5 transition-colors ${
-                          idx === currentIndex
-                            ? "bg-brand-600 text-white"
-                            : "text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-dark-muted"
-                        }`}
-                      >
-                        {mv.san}
-                      </button>
-                    </span>
-                  ))}
+                  {moves.map((mv, idx) => {
+                    const branched = line.branchStartsAt !== null && idx >= line.branchStartsAt;
+                    const current = idx === currentIndex;
+                    return (
+                      <span key={idx} className="inline-flex items-baseline">
+                        {/* Where the game stops and your line starts. */}
+                        {idx === line.branchStartsAt && (
+                          <span className="mx-0.5 select-none text-brand-600 dark:text-brand-400">(</span>
+                        )}
+                        {mv.color === "w" && (
+                          <span className="mr-0.5 select-none text-gray-400 dark:text-gray-500">
+                            {mv.moveNumber}.
+                          </span>
+                        )}
+                        <button
+                          ref={current ? activeMoveRef : null}
+                          onClick={() => goTo(idx)}
+                          className={`rounded px-1 py-0.5 transition-colors ${
+                            current
+                              ? "bg-brand-600 text-white"
+                              : branched
+                                ? "italic text-brand-600 hover:bg-brand-50 dark:text-brand-400 dark:hover:bg-brand-900/30"
+                                : "text-gray-800 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-dark-muted"
+                          }`}
+                        >
+                          {mv.san}
+                        </button>
+                        {branched && idx === moves.length - 1 && (
+                          <span className="mx-0.5 select-none text-brand-600 dark:text-brand-400">)</span>
+                        )}
+                      </span>
+                    );
+                  })}
+
+                  {line.branch && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        line.clearBranch();
+                        setSelected(null);
+                      }}
+                      className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-brand-600 px-3 py-1 text-xs font-bold text-brand-600 transition hover:bg-brand-50 dark:text-brand-400 dark:hover:bg-brand-900/30"
+                    >
+                      ↩ Back to the game
+                    </button>
+                  )}
                 </div>
               )}
             </div>
