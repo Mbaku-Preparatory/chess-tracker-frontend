@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { api } from "@/lib/api";
 import { userMessage } from "@/lib/apiError";
@@ -71,6 +71,12 @@ export default function OlympiadPage() {
   const [year, setYear] = useState("");
   const [search, setSearch] = useState("");
 
+  // Guards against two loads racing. This must be a ref, not the loadingMore
+  // state: React batches state updates, so two onEndReached calls in the same
+  // tick both read `false`, both request the same page, and the same fifty
+  // games are appended twice — which is what produced duplicate list keys.
+  const inFlight = useRef(false);
+
   const [openGame, setOpenGame] = useState<MasterGame | null>(null);
   const [openingId, setOpeningId] = useState<number | null>(null);
 
@@ -90,6 +96,8 @@ export default function OlympiadPage() {
 
   const load = useCallback(
     async (nextPage: number) => {
+      if (inFlight.current) return;
+      inFlight.current = true;
       if (nextPage === 1) setLoading(true);
       else setLoadingMore(true);
       setError(null);
@@ -102,13 +110,21 @@ export default function OlympiadPage() {
           search: search || null,
           page: nextPage,
         });
-        setGames((prev) => (nextPage === 1 ? body.results : [...prev, ...body.results]));
+        setGames((prev) => {
+          if (nextPage === 1) return body.results;
+          // Belt and braces. The ref above should make a repeat impossible,
+          // but a duplicate id here means React silently omits rows rather
+          // than merely warning, so it is worth being certain.
+          const seen = new Set(prev.map((g) => g.id));
+          return [...prev, ...body.results.filter((g) => !seen.has(g.id))];
+        });
         setCount(body.count);
         setHasMore(body.has_more);
         setPage(body.page);
       } catch (err) {
         setError(userMessage(err, "Couldn't load those games."));
       } finally {
+        inFlight.current = false;
         setLoading(false);
         setLoadingMore(false);
       }
