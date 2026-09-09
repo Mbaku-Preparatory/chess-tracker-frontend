@@ -95,6 +95,18 @@ export function Navbar() {
             GM Library
           </Link>
 
+          {/* Daily puzzle */}
+          <Link
+            href="/games"
+            className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+              isActive("/games")
+                ? "bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400"
+                : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100"
+            }`}
+          >
+            Games
+          </Link>
+
           {/* Olympiad archive */}
           <Link
             href="/olympiad"
