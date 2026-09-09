@@ -1,22 +1,26 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { api } from "@/lib/api";
 import { userMessage } from "@/lib/apiError";
+import { federationFor, federationsFor } from "@/lib/federations";
 import { SearchInput } from "@/components/ui/SearchInput";
-import type { OlympiadFilters, OlympiadGame } from "@/types";
+import { MasterGameViewerModal } from "@/components/players/MasterGameViewerModal";
+import type { MasterGame, OlympiadFilters, OlympiadGame } from "@/types";
 
 /**
  * The Chess Olympiad archive.
  *
- * Filtered by country and round, because that is how a team event is read —
- * "how did Kenya do in round 3", not "show me the Najdorf". Openings have
- * their own explorer and this does not duplicate it.
+ * Filtered by country and round, which is how a team event is read — "how did
+ * Kenya do in round 3". The openings explorer already answers the other
+ * question and this does not duplicate it.
  *
- * Filter values come from the server, so the country row only offers
- * federations that actually played. Two hundred codes where most return
- * nothing is worse than no list at all.
+ * Country and round are dropdowns because their ranges are known and long: 209
+ * federations and 21 rounds are a scrolling row of chips nobody can use. Year
+ * is typed because its range is a century and a reader almost always has a
+ * specific one in mind — scanning 90 options to find 1978 is slower than
+ * typing it.
  */
 
 const RESULT_LABEL: Record<string, string> = {
@@ -25,63 +29,21 @@ const RESULT_LABEL: Record<string, string> = {
   "1/2-1/2": "½–½",
 };
 
-function Chip({
-  label,
-  selected,
-  onClick,
-}: {
-  label: string;
-  selected: boolean;
-  onClick: () => void;
-}) {
+const SELECT_CLASS =
+  "rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 " +
+  "focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 " +
+  "dark:border-dark-border dark:bg-dark-elevated dark:text-gray-100";
+
+/** A dash, never a guess: TWIC-sourced rows genuinely carry no federation. */
+function Federation({ code }: { code: string }) {
+  if (!code) return <span className="text-gray-400">—</span>;
+  const f = federationFor(code);
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`shrink-0 rounded-full border px-3 py-1 text-xs font-semibold transition ${
-        selected
-          ? "border-brand-600 bg-brand-600 text-white"
-          : "border-gray-300 bg-white text-gray-600 hover:border-brand-400 dark:border-dark-border dark:bg-dark-elevated dark:text-gray-300"
-      }`}
-    >
-      {label}
-    </button>
+    <span className="text-gray-400" title={f.name}>
+      {f.flag} {f.code}
+    </span>
   );
 }
-
-function FilterRow({
-  label,
-  values,
-  selected,
-  onSelect,
-}: {
-  label: string;
-  values: string[];
-  selected: string | null;
-  onSelect: (value: string | null) => void;
-}) {
-  if (values.length === 0) return null;
-  return (
-    <div className="mb-3">
-      <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">
-        {label}
-      </p>
-      {/* Scrolls inside itself: a century of federations must never make the
-          page scroll sideways. */}
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        {/* "All" is a chip rather than a clear button, so clearing one filter
-            never reads as clearing every filter. */}
-        <Chip label="All" selected={selected === null} onClick={() => onSelect(null)} />
-        {values.map((v) => (
-          <Chip key={v} label={v} selected={selected === v} onClick={() => onSelect(v)} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// A dash, never a guess: TWIC-sourced rows genuinely carry no federation.
-const fed = (code: string) => code || "—";
 
 export default function OlympiadPage() {
   const [filters, setFilters] = useState<OlympiadFilters | null>(null);
@@ -93,10 +55,14 @@ export default function OlympiadPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [year, setYear] = useState<number | null>(null);
-  const [federation, setFederation] = useState<string | null>(null);
-  const [round, setRound] = useState<string | null>(null);
+  const [federation, setFederation] = useState("");
+  const [round, setRound] = useState("");
+  const [yearInput, setYearInput] = useState("");
+  const [year, setYear] = useState("");
   const [search, setSearch] = useState("");
+
+  const [openGame, setOpenGame] = useState<MasterGame | null>(null);
+  const [openingId, setOpeningId] = useState<number | null>(null);
 
   useEffect(() => {
     api
@@ -105,13 +71,26 @@ export default function OlympiadPage() {
       .catch((err) => setError(userMessage(err, "Couldn't load the Olympiad archive.")));
   }, []);
 
+  // A typed year debounces: firing per keystroke means "1978" is four
+  // requests, three of them for years that do not exist.
+  useEffect(() => {
+    const timer = setTimeout(() => setYear(yearInput.trim()), 400);
+    return () => clearTimeout(timer);
+  }, [yearInput]);
+
   const load = useCallback(
     async (nextPage: number) => {
       if (nextPage === 1) setLoading(true);
       else setLoadingMore(true);
       setError(null);
       try {
-        const body = await api.getOlympiadGames({ year, federation, round, search, page: nextPage });
+        const body = await api.getOlympiadGames({
+          year: year && /^\d{4}$/.test(year) ? Number(year) : null,
+          federation: federation || null,
+          round: round || null,
+          search: search || null,
+          page: nextPage,
+        });
         setGames((prev) => (nextPage === 1 ? body.results : [...prev, ...body.results]));
         setCount(body.count);
         setHasMore(body.has_more);
@@ -126,14 +105,31 @@ export default function OlympiadPage() {
     [year, federation, round, search]
   );
 
-  // Any filter change resets to page one. Carrying the page number across a
-  // change lands the reader on page 4 of a three-page result, which looks
-  // exactly like a filter that matched nothing.
+  // Any filter change resets to page one. Carrying the page number lands the
+  // reader on page 4 of a three-page result, which looks like a filter that
+  // matched nothing.
   useEffect(() => {
     load(1);
   }, [load]);
 
-  const years = Array.from(new Set((filters?.events ?? []).map((e) => String(e.year))));
+  const federationOptions = useMemo(
+    () => federationsFor(filters?.federations ?? []),
+    [filters]
+  );
+
+  async function openGameViewer(game: OlympiadGame) {
+    setOpeningId(game.id);
+    try {
+      const full = await api.getOlympiadGameMoves(game.id);
+      setOpenGame({ ...full, result: full.result as MasterGame["result"] });
+    } catch (err) {
+      setError(userMessage(err, "Couldn't open that game."));
+    } finally {
+      setOpeningId(null);
+    }
+  }
+
+  const activeFilters = [federation, round, year, search].filter(Boolean).length;
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -141,26 +137,81 @@ export default function OlympiadPage() {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Olympiad</h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           {filters
-            ? `${filters.total_games.toLocaleString()} games from ${filters.events.length} events`
+            ? `${filters.total_games.toLocaleString()} games from ${filters.events.length} events, 1924–2024`
             : "Chess Olympiad archive"}
         </p>
       </div>
 
-      <SearchInput placeholder="Search a player…" onSearch={setSearch} className="mb-4" />
+      <div className="mb-4 flex flex-wrap items-end gap-3">
+        <label className="flex flex-col gap-1">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
+            Country
+          </span>
+          <select
+            value={federation}
+            onChange={(e) => setFederation(e.target.value)}
+            className={SELECT_CLASS}
+          >
+            <option value="">All countries</option>
+            {federationOptions.map((f) => (
+              <option key={f.code} value={f.code}>
+                {f.flag} {f.name}
+              </option>
+            ))}
+          </select>
+        </label>
 
-      <FilterRow
-        label="Country"
-        values={filters?.federations ?? []}
-        selected={federation}
-        onSelect={setFederation}
-      />
-      <FilterRow label="Round" values={filters?.rounds ?? []} selected={round} onSelect={setRound} />
-      <FilterRow
-        label="Year"
-        values={years}
-        selected={year === null ? null : String(year)}
-        onSelect={(v) => setYear(v === null ? null : Number(v))}
-      />
+        <label className="flex flex-col gap-1">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
+            Round
+          </span>
+          <select
+            value={round}
+            onChange={(e) => setRound(e.target.value)}
+            className={SELECT_CLASS}
+          >
+            <option value="">All rounds</option>
+            {(filters?.rounds ?? []).map((r) => (
+              <option key={r} value={String(r)}>
+                Round {r}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="flex flex-col gap-1">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
+            Year
+          </span>
+          <input
+            type="text"
+            inputMode="numeric"
+            value={yearInput}
+            onChange={(e) => setYearInput(e.target.value.replace(/\D/g, "").slice(0, 4))}
+            placeholder="Any"
+            className={`${SELECT_CLASS} w-24`}
+          />
+        </label>
+
+        <div className="min-w-[200px] flex-1">
+          <SearchInput placeholder="Search a player…" onSearch={setSearch} />
+        </div>
+
+        {activeFilters > 0 && (
+          <button
+            type="button"
+            onClick={() => {
+              setFederation("");
+              setRound("");
+              setYearInput("");
+              setSearch("");
+            }}
+            className="pb-2 text-sm font-medium text-brand-600 hover:underline dark:text-brand-400"
+          >
+            Clear
+          </button>
+        )}
+      </div>
 
       {error && (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">
@@ -174,7 +225,7 @@ export default function OlympiadPage() {
         <div className="rounded-xl border border-dashed border-gray-300 py-12 text-center dark:border-dark-border">
           <p className="font-semibold text-gray-900 dark:text-gray-100">No games match</p>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Try a different country or round.
+            Try a different country, round or year.
           </p>
         </div>
       ) : (
@@ -183,7 +234,7 @@ export default function OlympiadPage() {
             {count.toLocaleString()} game{count === 1 ? "" : "s"}
           </p>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] text-sm">
+            <table className="w-full min-w-[720px] text-sm">
               <thead>
                 <tr className="border-b border-gray-200 text-left text-xs uppercase tracking-wider text-gray-400 dark:border-dark-border">
                   <th className="py-2 pr-3 font-semibold">White</th>
@@ -198,21 +249,22 @@ export default function OlympiadPage() {
                 {games.map((g) => (
                   <tr
                     key={g.id}
-                    className="border-b border-gray-100 last:border-0 dark:border-dark-border/60"
+                    onClick={() => openGameViewer(g)}
+                    className="cursor-pointer border-b border-gray-100 transition-colors last:border-0 hover:bg-brand-50 dark:border-dark-border/60 dark:hover:bg-brand-900/20"
                   >
                     <td className="py-2 pr-3 text-gray-900 dark:text-gray-100">
-                      {g.white}{" "}
-                      <span className="text-gray-400">({fed(g.white_federation)})</span>
+                      {g.white} <Federation code={g.white_federation} />
                     </td>
                     <td className="py-2 pr-3 text-gray-900 dark:text-gray-100">
-                      {g.black}{" "}
-                      <span className="text-gray-400">({fed(g.black_federation)})</span>
+                      {g.black} <Federation code={g.black_federation} />
                     </td>
                     <td className="py-2 pr-3 font-semibold text-gray-600 dark:text-gray-300">
-                      {RESULT_LABEL[g.result] ?? g.result}
+                      {openingId === g.id ? "…" : RESULT_LABEL[g.result] ?? g.result}
                     </td>
                     <td className="py-2 pr-3 text-gray-500 dark:text-gray-400">{g.year ?? "—"}</td>
-                    <td className="py-2 pr-3 text-gray-500 dark:text-gray-400">{g.round || "—"}</td>
+                    <td className="py-2 pr-3 text-gray-500 dark:text-gray-400">
+                      {g.round_number ?? "—"}
+                    </td>
                     <td className="py-2 text-gray-500 dark:text-gray-400">
                       {[g.eco, g.opening_name].filter(Boolean).join(" ") || "—"}
                     </td>
@@ -235,6 +287,10 @@ export default function OlympiadPage() {
             </div>
           )}
         </>
+      )}
+
+      {openGame && (
+        <MasterGameViewerModal game={openGame} onClose={() => setOpenGame(null)} />
       )}
     </div>
   );
