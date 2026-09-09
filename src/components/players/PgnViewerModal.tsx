@@ -472,7 +472,7 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       {/* Modal */}
-      <div className="relative flex max-h-[95dvh] w-full flex-col overflow-hidden rounded-t-2xl bg-white dark:bg-dark-surface shadow-2xl sm:max-h-[90dvh] sm:max-w-5xl sm:rounded-2xl">
+      <div className="relative flex max-h-[95dvh] w-full flex-col overflow-hidden rounded-t-2xl bg-white dark:bg-dark-surface shadow-2xl sm:max-h-[92dvh] sm:max-w-7xl sm:rounded-2xl">
         {/* Header */}
         <div className="flex shrink-0 items-start justify-between gap-3 border-b border-gray-100 dark:border-dark-border px-4 py-3 sm:px-6">
           <div className="min-w-0">
@@ -508,18 +508,29 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
         {/* Body */}
         <div className="flex min-h-0 flex-1 flex-col sm:flex-row">
           {/* Board + eval bar */}
-          <div className="flex shrink-0 items-center justify-center gap-2 bg-gray-50 dark:bg-dark-elevated p-3 sm:p-5">
+          <div className="flex shrink-0 items-center justify-center gap-2 bg-gray-50 p-2 dark:bg-dark-elevated sm:p-5">
+            {/* Vertical beside the board on a wide screen; below `sm` the board
+                wants the whole width, so a column here would squeeze the board
+                rather than the bar. The horizontal one under it takes over. */}
             <EvalBar
+              className="hidden sm:flex"
               score={engine.score}
               mate={engine.mate}
               depth={engine.depth}
               isAnalyzing={engine.isAnalyzing}
               source={engine.source}
             />
-            {/* 45vw is a side-by-side desktop measure; below `sm` the modal
-                stacks, so the board takes the width the phone actually has. */}
+            {/* Sized against the viewport rather than capped at a fixed 420.
+                On a phone the board is square and full width, so its height is
+                the screen's width — enough to push the move list off a short
+                screen entirely. The max-w bound reserves room for the header,
+                plates, controls and some moves, and the max() floor stops that
+                reservation shrinking the board to nothing on a small device.
+                The board is square, so its height is its width — the `dvh`
+                term is what stops a wide monitor producing a board taller than
+                the modal. */}
             <div
-              className="flex w-full max-w-[min(86vw,420px)] flex-col gap-1.5 sm:w-[min(45vw,420px)] sm:max-w-[min(45vw,420px)]"
+              className="flex w-full max-w-[max(220px,calc(95dvh-330px))] flex-col gap-1.5 sm:w-[min(52vw,calc(92dvh-190px))] sm:max-w-none"
               style={{ minWidth: 220 }}
             >
               <PlayerPlate
@@ -578,6 +589,15 @@ export function PgnViewerModal({ game, onClose }: PgnViewerModalProps) {
                 />
               )}
               <PlayerPlate player={players[orientation]} color={orientation} />
+              <EvalBar
+                orientation="horizontal"
+                className="mt-0.5 sm:hidden"
+                score={engine.score}
+                mate={engine.mate}
+                depth={engine.depth}
+                isAnalyzing={engine.isAnalyzing}
+                source={engine.source}
+              />
             </div>
           </div>
 
