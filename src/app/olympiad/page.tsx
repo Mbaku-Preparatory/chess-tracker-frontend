@@ -67,7 +67,6 @@ export default function OlympiadPage() {
   const [section, setSection] = useState("");
   const [federation, setFederation] = useState("");
   const [round, setRound] = useState("");
-  const [yearInput, setYearInput] = useState("");
   const [year, setYear] = useState("");
   const [search, setSearch] = useState("");
 
@@ -86,13 +85,6 @@ export default function OlympiadPage() {
       .then(setFilters)
       .catch((err) => setError(userMessage(err, "Couldn't load the Olympiad archive.")));
   }, []);
-
-  // A typed year debounces: firing per keystroke means "1978" is four
-  // requests, three of them for years that do not exist.
-  useEffect(() => {
-    const timer = setTimeout(() => setYear(yearInput.trim()), 400);
-    return () => clearTimeout(timer);
-  }, [yearInput]);
 
   const load = useCallback(
     async (nextPage: number) => {
@@ -138,6 +130,15 @@ export default function OlympiadPage() {
   useEffect(() => {
     load(1);
   }, [load]);
+
+  // Built from the events that exist. Olympiads are not annual — they are
+  // biennial, and wars and boycotts leave further gaps — so a typed year is
+  // mostly a guess at which ones actually happened.
+  const years = useMemo(() => {
+    const set = Array.from(new Set((filters?.events ?? []).map((e) => e.year)));
+    set.sort((a, b) => b - a);
+    return set.map(String);
+  }, [filters]);
 
   const federationOptions = useMemo(
     () => federationsFor(filters?.federations ?? []),
@@ -233,14 +234,14 @@ export default function OlympiadPage() {
           <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
             Year
           </span>
-          <input
-            type="text"
-            inputMode="numeric"
-            value={yearInput}
-            onChange={(e) => setYearInput(e.target.value.replace(/\D/g, "").slice(0, 4))}
-            placeholder="Any"
-            className={`${SELECT_CLASS} w-24`}
-          />
+          <select value={year} onChange={(e) => setYear(e.target.value)} className={SELECT_CLASS}>
+            <option value="">All years</option>
+            {years.map((y) => (
+              <option key={y} value={y}>
+                {y}
+              </option>
+            ))}
+          </select>
         </label>
 
         <div className="min-w-[200px] flex-1">
@@ -254,7 +255,7 @@ export default function OlympiadPage() {
               setSection("");
               setFederation("");
               setRound("");
-              setYearInput("");
+              setYear("");
               setSearch("");
             }}
             className="pb-2 text-sm font-medium text-brand-600 hover:underline dark:text-brand-400"
