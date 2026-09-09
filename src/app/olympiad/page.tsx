@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { api } from "@/lib/api";
 import { userMessage } from "@/lib/apiError";
+import { ViewButton } from "@/components/ui/ViewButton";
 import { federationFor, federationsFor } from "@/lib/federations";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { MasterGameViewerModal } from "@/components/players/MasterGameViewerModal";
@@ -295,6 +296,8 @@ export default function OlympiadPage() {
                   <th className="py-2 pr-3 font-semibold">Year</th>
                   <th className="py-2 pr-3 font-semibold">Round</th>
                   <th className="py-2 font-semibold">Opening</th>
+                  {/* Header-less: the buttons under it say what they are. */}
+                  <th className="w-px py-2" />
                 </tr>
               </thead>
               <tbody>
@@ -311,7 +314,10 @@ export default function OlympiadPage() {
                       {g.black} <Federation code={g.black_federation} />
                     </td>
                     <td className="py-2 pr-3 font-semibold text-gray-600 dark:text-gray-300">
-                      {openingId === g.id ? "…" : RESULT_LABEL[g.result] ?? g.result}
+                      {/* The result stays put while the game loads; the View
+                          button carries that now, and blanking the result was
+                          only ever a stand-in for having somewhere to show it. */}
+                      {RESULT_LABEL[g.result] ?? g.result}
                     </td>
                     <td className="py-2 pr-3 text-gray-500 dark:text-gray-400">{g.year ?? "—"}</td>
                     <td className="py-2 pr-3 text-gray-500 dark:text-gray-400">
@@ -319,6 +325,13 @@ export default function OlympiadPage() {
                     </td>
                     <td className="py-2 text-gray-500 dark:text-gray-400">
                       {[g.eco, g.opening_name].filter(Boolean).join(" ") || "—"}
+                    </td>
+                    <td className="py-2 pl-3 text-right">
+                      <ViewButton
+                        onClick={() => openGameViewer(g)}
+                        loading={openingId === g.id}
+                        label={`View ${g.white} versus ${g.black}`}
+                      />
                     </td>
                   </tr>
                 ))}

@@ -5,6 +5,7 @@ import type { Game } from "@/types";
 import { ColorBadge, EcoBadge, ResultBadge, SourceBadge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PgnViewerModal } from "./PgnViewerModal";
+import { ViewButton } from "@/components/ui/ViewButton";
 import { api } from "@/lib/api";
 import { gameRef } from "@/lib/gameRef";
 
@@ -63,6 +64,8 @@ export function GamesTable({ games, loading, onDeleted }: GamesTableProps) {
                 <th className="hidden whitespace-nowrap px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 sm:table-cell">ECO</th>
                 <th className="hidden whitespace-nowrap px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 sm:table-cell">Moves</th>
                 <th className="hidden whitespace-nowrap px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 lg:table-cell">Source</th>
+                {/* Header-less: the buttons under it say what they are. */}
+                <th className="w-px px-4 py-3" />
                 {onDeleted && <th className="w-10 px-2 py-3" />}
               </tr>
             </thead>
@@ -72,7 +75,6 @@ export function GamesTable({ games, loading, onDeleted }: GamesTableProps) {
                   key={game.id}
                   onClick={() => handleRowClick(game)}
                   className="cursor-pointer transition-colors hover:bg-brand-50/60 active:bg-brand-50 dark:hover:bg-brand-900/20 dark:active:bg-brand-900/30"
-                  title="Click to view game"
                 >
                   <td className="whitespace-nowrap px-4 py-3 text-gray-500 dark:text-gray-400">
                     {game.date_played
@@ -115,6 +117,12 @@ export function GamesTable({ games, loading, onDeleted }: GamesTableProps) {
                   </td>
                   <td className="hidden whitespace-nowrap px-4 py-3 lg:table-cell">
                     <SourceBadge source={game.source} />
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3 text-right">
+                    <ViewButton
+                      onClick={() => handleRowClick(game)}
+                      label={`View the game against ${game.opponent_name}`}
+                    />
                   </td>
                   {onDeleted && (
                     <td
