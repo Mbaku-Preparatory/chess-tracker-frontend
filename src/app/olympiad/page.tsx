@@ -55,6 +55,7 @@ export default function OlympiadPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [section, setSection] = useState("");
   const [federation, setFederation] = useState("");
   const [round, setRound] = useState("");
   const [yearInput, setYearInput] = useState("");
@@ -85,6 +86,7 @@ export default function OlympiadPage() {
       setError(null);
       try {
         const body = await api.getOlympiadGames({
+          section: section || null,
           year: year && /^\d{4}$/.test(year) ? Number(year) : null,
           federation: federation || null,
           round: round || null,
@@ -102,7 +104,7 @@ export default function OlympiadPage() {
         setLoadingMore(false);
       }
     },
-    [year, federation, round, search]
+    [section, year, federation, round, search]
   );
 
   // Any filter change resets to page one. Carrying the page number lands the
@@ -129,7 +131,7 @@ export default function OlympiadPage() {
     }
   }
 
-  const activeFilters = [federation, round, year, search].filter(Boolean).length;
+  const activeFilters = [section, federation, round, year, search].filter(Boolean).length;
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -140,6 +142,29 @@ export default function OlympiadPage() {
             ? `${filters.total_games.toLocaleString()} games from ${filters.events.length} events, 1924–2024`
             : "Chess Olympiad archive"}
         </p>
+      </div>
+
+      <div className="mb-4 flex gap-1 rounded-lg border border-gray-200 bg-gray-50 p-1 dark:border-dark-border dark:bg-dark-elevated">
+        {[
+          { value: "", label: "All" },
+          ...(filters?.sections ?? []).map((s) => ({
+            value: s.value,
+            label: `${s.label} (${s.games.toLocaleString()})`,
+          })),
+        ].map((opt) => (
+          <button
+            key={opt.value || "all"}
+            type="button"
+            onClick={() => setSection(opt.value)}
+            className={`flex-1 rounded-md px-3 py-1.5 text-sm font-semibold transition ${
+              section === opt.value
+                ? "bg-white text-brand-700 shadow-sm dark:bg-dark-surface dark:text-brand-400"
+                : "text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
       </div>
 
       <div className="mb-4 flex flex-wrap items-end gap-3">
@@ -201,6 +226,7 @@ export default function OlympiadPage() {
           <button
             type="button"
             onClick={() => {
+              setSection("");
               setFederation("");
               setRound("");
               setYearInput("");
