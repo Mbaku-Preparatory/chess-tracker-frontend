@@ -34,13 +34,22 @@ const SELECT_CLASS =
   "focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 " +
   "dark:border-dark-border dark:bg-dark-elevated dark:text-gray-100";
 
-/** A dash, never a guess: TWIC-sourced rows genuinely carry no federation. */
+/**
+ * The flag alone, with the country's name on hover.
+ *
+ * The code alongside it was noise — a flag already says which country, and
+ * repeating it in three letters made every row read twice. The code survives
+ * only as the fallback for federations emoji has no flag for: nations that no
+ * longer exist, and FIDE's own non-national associations.
+ *
+ * A dash, never a guess, where the source recorded no federation at all.
+ */
 function Federation({ code }: { code: string }) {
   if (!code) return <span className="text-gray-400">—</span>;
   const f = federationFor(code);
   return (
     <span className="text-gray-400" title={f.name}>
-      {f.flag} {f.code}
+      {f.flag || f.code}
     </span>
   );
 }
