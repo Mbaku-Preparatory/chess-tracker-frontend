@@ -30,6 +30,17 @@
 }
 
 @layer components {
+  /* A row that scrolls sideways without advertising it — used by the navbar's
+     link row on a narrow screen, where a visible scrollbar would eat into a
+     16px-tall strip of a 64px bar. */
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
   .card {
     @apply rounded-xl border border-gray-200 bg-white shadow-sm dark:border-dark-border dark:bg-dark-surface;
   }

@@ -64,79 +64,90 @@ export function Navbar() {
 
   return (
     <nav className="no-print sticky top-0 z-50 border-b border-gray-200 bg-white/80 backdrop-blur-md dark:border-dark-border dark:bg-dark-bg/80">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex items-center gap-2.5">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-4 sm:px-6 lg:px-8">
+        <Link href="/" className="flex shrink-0 items-center gap-2.5">
           <Logo size={36} />
           <span className="hidden text-lg font-bold text-gray-900 dark:text-gray-100 sm:inline">Chess Preparatory</span>
         </Link>
 
-        <div className="flex items-center gap-1">
-          {/* Main nav link */}
-          <Link
-            href="/home"
-            className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-              isActive("/home")
-                ? "bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400"
-                : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100"
-            }`}
-          >
-            My Opponents
-          </Link>
+        {/* `min-w-0` is what stops this row setting a floor under the page.
+            Five links plus the toggle and the avatar want about 560px, and a
+            flex item refuses to shrink past its content by default — so on
+            every phone the whole document became 560px wide and scrolled
+            sideways, carrying the boards off the screen with it. The links
+            scroll within the bar instead; the toggle and the avatar stay put.
+            The scroller holds only the links: the profile dropdown is
+            absolutely positioned, and `overflow-x` on its ancestor would clip
+            it. */}
+        <div className="flex min-w-0 items-center gap-1">
+          <div className="no-scrollbar flex min-w-0 items-center gap-1 overflow-x-auto">
+            {/* Main nav link */}
+            <Link
+              href="/home"
+              className={`shrink-0 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                isActive("/home")
+                  ? "bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400"
+                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100"
+              }`}
+            >
+              My Opponents
+            </Link>
 
-          {/* GM Library */}
-          <Link
-            href="/master-games"
-            className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-              isActive("/master-games")
-                ? "bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400"
-                : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100"
-            }`}
-          >
-            GM Library
-          </Link>
+            {/* GM Library */}
+            <Link
+              href="/master-games"
+              className={`shrink-0 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                isActive("/master-games")
+                  ? "bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400"
+                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100"
+              }`}
+            >
+              GM Library
+            </Link>
 
-          {/* Daily puzzle */}
-          <Link
-            href="/games"
-            className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-              isActive("/games")
-                ? "bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400"
-                : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100"
-            }`}
-          >
-            Games
-          </Link>
+            {/* Daily puzzle */}
+            <Link
+              href="/games"
+              className={`shrink-0 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                isActive("/games")
+                  ? "bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400"
+                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100"
+              }`}
+            >
+              Games
+            </Link>
 
-          {/* Olympiad archive */}
-          <Link
-            href="/olympiad"
-            className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-              isActive("/olympiad")
-                ? "bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400"
-                : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100"
-            }`}
-          >
-            Olympiad
-          </Link>
+            {/* Olympiad archive */}
+            <Link
+              href="/olympiad"
+              className={`shrink-0 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                isActive("/olympiad")
+                  ? "bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400"
+                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100"
+              }`}
+            >
+              Olympiad
+            </Link>
 
-          {/* My Profile — you as a player, in the slot the repertoire used to
-              hold. Unconditional: everyone has a profile from the moment they
-              register, which is the whole reason the row is created eagerly. */}
-          <Link
-            href="/me"
-            className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-              isActive("/me")
-                ? "bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400"
-                : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100"
-            }`}
-          >
-            My Profile
-          </Link>
+            {/* My Profile — you as a player, in the slot the repertoire used to
+                hold. Unconditional: everyone has a profile from the moment they
+                register, which is the whole reason the row is created eagerly. */}
+            <Link
+              href="/me"
+              className={`shrink-0 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                isActive("/me")
+                  ? "bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400"
+                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100"
+              }`}
+            >
+              My Profile
+            </Link>
+          </div>
 
           {/* Theme toggle */}
           <button
             onClick={() => dispatch(toggleTheme())}
-            className="ml-1 rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100"
+            className="ml-1 shrink-0 rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100"
             title={themeMode === "dark" ? "Switch to light mode" : "Switch to dark mode"}
           >
             {themeMode === "dark" ? (
@@ -152,7 +163,7 @@ export function Navbar() {
 
           {/* Auth state */}
           {token ? (
-            <div ref={profileRef} className="relative ml-2 border-l border-gray-200 pl-3 dark:border-dark-border">
+            <div ref={profileRef} className="relative ml-2 shrink-0 border-l border-gray-200 pl-3 dark:border-dark-border">
               {/* Profile avatar button */}
               <button
                 onClick={() => setDropdownOpen((o) => !o)}
