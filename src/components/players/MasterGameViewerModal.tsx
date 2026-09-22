@@ -355,24 +355,20 @@ export function MasterGameViewerModal({ game, onClose }: { game: MasterGame; onC
                 isAnalyzing={engine.isAnalyzing}
                 source={engine.source}
               />
-              {/* Sized against the viewport rather than capped at a fixed 420.
-                  On a phone the board is square and full width, so its height
-                  is the screen's width — enough to push the move list off a
-                  short screen. The max-w bound reserves room for the header,
-                  plates, controls and some moves, and the max() floor stops
-                  that reservation shrinking the board to nothing.
-                On a phone the board is square and full width, so its height is
-                the screen's width — enough to push the move list off a short
-                screen entirely. The max-w bound reserves room for the header,
-                plates, controls and some moves, and the max() floor stops that
-                reservation shrinking the board to nothing on a small device.
-                  The board is square, so its height is its width — the `dvh`
-                  term is what stops a wide monitor producing a board taller
-                  than the modal. */}
-              <div
-                className="flex w-full max-w-[max(220px,calc(95dvh-330px))] flex-col gap-1.5 sm:w-[min(52vw,calc(92dvh-190px))] sm:max-w-none"
-                style={{ minWidth: 220 }}
-              >
+              {/* The board is square, so one number is both its width and its
+                  height, and it has to fit the smaller of the two budgets —
+                  hence `min()` of a width term and a height term. Getting this
+                  wrong costs width: a height-only bound made the board 69% of
+                  a small phone's width, and `min-width` could not be
+                  overridden by `max-width`, so on a short screen the floor won
+                  and the board overflowed the space reserved for it.
+                  The subtracted term is the furniture that shares the column —
+                  header, padding, both plates, the eval bar, and a strip of
+                  the move list — measured, not guessed. The inner `max()`
+                  keeps the board usable on a very short screen, and because it
+                  sits inside `min(100%, …)` it can never push past the width
+                  available. */}
+              <div className="flex w-[min(100%,max(160px,calc(95dvh-250px)))] flex-col gap-1.5 sm:w-[min(52vw,max(160px,calc(92dvh-160px)))]">
                 <PlayerPlate name={game.black} rating={game.black_elo} color="black" score={scores.black} />
                 <Chessboard
                   options={{
