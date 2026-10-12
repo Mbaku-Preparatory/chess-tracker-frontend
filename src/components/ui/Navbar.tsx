@@ -71,11 +71,12 @@ export function Navbar() {
         </Link>
 
         {/* `min-w-0` is what stops this row setting a floor under the page.
-            Five links plus the toggle and the avatar want about 560px, and a
-            flex item refuses to shrink past its content by default — so on
-            every phone the whole document became 560px wide and scrolled
-            sideways, carrying the boards off the screen with it. The links
-            scroll within the bar instead; the toggle and the avatar stay put.
+            When the bar held five links, they plus the toggle and the avatar
+            wanted about 560px, and a flex item refuses to shrink past its
+            content by default — so on every phone the whole document became
+            560px wide and scrolled sideways, carrying the boards off the
+            screen with it. The links scroll within the bar instead; the
+            toggle and the avatar stay put.
             The scroller holds only the links: the profile dropdown is
             absolutely positioned, and `overflow-x` on its ancestor would clip
             it. */}
@@ -91,42 +92,6 @@ export function Navbar() {
               }`}
             >
               My Opponents
-            </Link>
-
-            {/* GM Library */}
-            <Link
-              href="/master-games"
-              className={`shrink-0 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                isActive("/master-games")
-                  ? "bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400"
-                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100"
-              }`}
-            >
-              GM Library
-            </Link>
-
-            {/* Daily puzzle */}
-            <Link
-              href="/games"
-              className={`shrink-0 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                isActive("/games")
-                  ? "bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400"
-                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100"
-              }`}
-            >
-              Games
-            </Link>
-
-            {/* Olympiad archive */}
-            <Link
-              href="/olympiad"
-              className={`shrink-0 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                isActive("/olympiad")
-                  ? "bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400"
-                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100"
-              }`}
-            >
-              Olympiad
             </Link>
 
             {/* My Profile — you as a player, in the slot the repertoire used to
