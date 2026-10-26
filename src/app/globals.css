@@ -23,6 +23,45 @@
   --brand-950:  27  37  16;
 }
 
+/* ── Public site palette (landing page, player profiles) ────────────────────
+   DESIGN.md's "Mercury" system, with the brand green as its one accent.
+   Dark is the design as drawn; light is its mirror: the same hierarchy of
+   canvas, card and raised surface, with contrast re-checked rather than
+   inverted. The accent splits into a fill and its text colour, because the
+   bright mark green carries dark text and the button green (#5c7a33) carries
+   white — the two cannot share an "on-accent" colour.
+   RGB triplets, so Tailwind's /<alpha> modifiers keep working. */
+:root {
+  --ink-canvas: 246 246 249;
+  --ink-card:   255 255 255;
+  --ink-raised: 236 236 242;
+  --ink-line:   226 227 237;   /* DESIGN.md's mist border */
+  --ink-text:    23  23  33;   /* the dark canvas, as text: 16:1 */
+  --ink-muted:   74  74  88;   /* 8.7:1 on card */
+  --ink-faint:  104 104 118;   /* 5.4:1 on card */
+  --accent:      92 122  51;   /* fills: white text at 4.9:1 */
+  --accent-soft: 74  99  41;   /* accent text on card: 7.0:1 */
+  --on-accent:  255 255 255;
+  --result-win:  92 122  51;
+  --result-draw: 152 152 166;
+  --result-loss: 176  74  62;  /* 5.0:1 on card */
+}
+.dark {
+  --ink-canvas:  23  23  33;   /* #171721 */
+  --ink-card:    30  30  42;   /* #1e1e2a */
+  --ink-raised:  39  39  53;   /* #272735 */
+  --ink-line:    52  52  74;
+  --ink-text:   237 237 243;   /* #ededf3, never pure white */
+  --ink-muted:  195 195 204;   /* #c3c3cc */
+  --ink-faint:  154 154 168;   /* 5.6:1 on card */
+  --accent:     124 172  66;   /* the mark's green: 6.9:1 on canvas */
+  --accent-soft: 147 190 82;
+  --on-accent:   23  23  33;
+  --result-win: 124 172  66;
+  --result-draw: 108 108 124;
+  --result-loss: 192 103  91;
+}
+
 @layer base {
   body {
     @apply bg-gray-50 text-gray-900 antialiased dark:bg-dark-bg dark:text-gray-100;

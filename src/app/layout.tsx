@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { GlobalLoader } from "@/components/ui/GlobalLoader";
 import { SITE_URL } from "@/lib/site";
+import { THEME_SCRIPT } from "@/lib/theme";
 import { StoreProvider } from "@/redux/provider";
 
 import "./globals.css";
@@ -26,6 +27,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Sets light or dark before the first paint; see lib/theme.ts. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body>
         <StoreProvider>
           <ThemeProvider>

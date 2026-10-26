@@ -11,9 +11,9 @@ const CONTACT_EMAIL = "bakutarb@gmail.com";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="mt-8">
-      <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{title}</h2>
-      <div className="mt-3 space-y-3 text-sm leading-relaxed text-gray-600 dark:text-gray-300">
+    <section className="mt-10">
+      <h2 className="text-[21px] font-[480] text-ink-text">{title}</h2>
+      <div className="mt-3 space-y-3 text-[16px] leading-[1.6] text-ink-muted">
         {children}
       </div>
     </section>
@@ -22,13 +22,13 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="mx-auto max-w-3xl">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Privacy Policy</h1>
-      <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+    <div className="mx-auto max-w-3xl py-8">
+      <h1 className="text-[32px] font-[480] leading-[1.15] tracking-[0.015em] text-ink-text sm:text-[42px]">Privacy Policy</h1>
+      <p className="mt-2 text-[14px] text-ink-faint">
         Last updated {LAST_UPDATED}
       </p>
 
-      <p className="mt-6 text-sm leading-relaxed text-gray-600 dark:text-gray-300">
+      <p className="mt-6 text-[16px] leading-[1.6] text-ink-muted">
         Chess Preparatory (&ldquo;the app&rdquo;) helps chess players prepare for opponents by
         collecting published game records and organising preparation sessions. This policy covers
         both the web app and the Android app, which share one account and one backend.
@@ -36,28 +36,28 @@ export default function PrivacyPolicyPage() {
 
       <Section title="What we collect">
         <p>
-          <strong className="font-medium text-gray-900 dark:text-gray-100">Account details.</strong>{" "}
+          <strong className="font-[480] text-ink-text">Account details.</strong>{" "}
           Your username, email address, and first and last name, which you supply at signup. Your
           password is stored only as a salted cryptographic hash &mdash; we never store or have
           access to the password itself. We send a six-digit code to your email address to confirm
           you own it.
         </p>
         <p>
-          <strong className="font-medium text-gray-900 dark:text-gray-100">Chess data.</strong>{" "}
+          <strong className="font-[480] text-ink-text">Chess data.</strong>{" "}
           Games, opponent profiles, opening statistics, and performance summaries. Some of this you
           enter or upload yourself (for example, PGN files). The rest is fetched on your instruction
           from public sources &mdash; Chess.com, Lichess, chess-results.org, and FIDE &mdash; and is
           published game data, not private information.
         </p>
         <p>
-          <strong className="font-medium text-gray-900 dark:text-gray-100">
+          <strong className="font-[480] text-ink-text">
             Preparation sessions.
           </strong>{" "}
           The titles, notes, dates and times of the prep sessions you schedule, and whether you
           marked them complete.
         </p>
         <p>
-          <strong className="font-medium text-gray-900 dark:text-gray-100">
+          <strong className="font-[480] text-ink-text">
             Your conversations with Mbaku.
           </strong>{" "}
           The questions you ask the in-app assistant and the answers it gives are stored against
@@ -65,7 +65,7 @@ export default function PrivacyPolicyPage() {
           <em>The Mbaku assistant</em> below for who else sees them.
         </p>
         <p>
-          <strong className="font-medium text-gray-900 dark:text-gray-100">
+          <strong className="font-[480] text-ink-text">
             Crash reports.
           </strong>{" "}
           When the Android app hits an error, it sends a diagnostic report. See{" "}
@@ -81,7 +81,7 @@ export default function PrivacyPolicyPage() {
           build advertising profiles.
         </p>
         <p>
-          <strong className="font-medium text-gray-900 dark:text-gray-100">Profile photo.</strong>{" "}
+          <strong className="font-[480] text-ink-text">Profile photo.</strong>{" "}
           If you set a profile picture in the Android app, the app asks for permission to read the
           image you select. That image is stored only in local storage on your own device and is
           never uploaded to our servers. Uninstalling the app removes it.
@@ -103,7 +103,7 @@ export default function PrivacyPolicyPage() {
           on someone else&apos;s phone can still be found and fixed. A report contains the error and
           its stack trace, your device model and Android version, the app version, and a trail of
           the screens you visited and buttons you pressed just beforehand. It does{" "}
-          <strong className="font-medium text-gray-900 dark:text-gray-100">not</strong> contain the
+          <strong className="font-[480] text-ink-text">not</strong> contain the
           contents of anything you typed &mdash; not your questions to Mbaku, not your notes, not
           your opponents&apos; names.
         </p>
@@ -138,7 +138,7 @@ export default function PrivacyPolicyPage() {
         <p>
           The web app has a page where you can send the developer a tip. It buys you nothing &mdash;
           every feature is available whether or not you ever use it &mdash; and it is entirely
-          optional. <strong className="font-medium text-gray-900 dark:text-gray-100">The Android
+          optional. <strong className="font-[480] text-ink-text">The Android
           app does not include this.</strong>
         </p>
         <p>
@@ -187,20 +187,20 @@ export default function PrivacyPolicyPage() {
         </p>
         <ul className="ml-5 list-disc space-y-1">
           <li>
-            <strong className="font-medium text-gray-900 dark:text-gray-100">Railway</strong> and{" "}
-            <strong className="font-medium text-gray-900 dark:text-gray-100">Vercel</strong> &mdash;
+            <strong className="font-[480] text-ink-text">Railway</strong> and{" "}
+            <strong className="font-[480] text-ink-text">Vercel</strong> &mdash;
             hosting and database.
           </li>
           <li>
-            <strong className="font-medium text-gray-900 dark:text-gray-100">Sentry</strong> &mdash;
+            <strong className="font-[480] text-ink-text">Sentry</strong> &mdash;
             crash reports from the Android app, as described above.
           </li>
           <li>
-            <strong className="font-medium text-gray-900 dark:text-gray-100">Anthropic</strong>{" "}
+            <strong className="font-[480] text-ink-text">Anthropic</strong>{" "}
             &mdash; the questions you ask Mbaku and the opponent summary sent with them.
           </li>
           <li>
-            <strong className="font-medium text-gray-900 dark:text-gray-100">Paystack</strong>{" "}
+            <strong className="font-[480] text-ink-text">Paystack</strong>{" "}
             &mdash; the email address and amount for a tip you choose to send, on the web app only.
           </li>
         </ul>
@@ -219,7 +219,7 @@ export default function PrivacyPolicyPage() {
         <p>
           To delete your entire account and all data associated with it, email{" "}
           <a
-            className="font-medium text-brand-600 hover:underline dark:text-brand-400"
+            className="font-[480] text-accent-soft underline-offset-4 hover:underline"
             href={`mailto:${CONTACT_EMAIL}?subject=Account%20deletion%20request`}
           >
             {CONTACT_EMAIL}
@@ -247,7 +247,7 @@ export default function PrivacyPolicyPage() {
         <p>
           Questions about this policy or your data:{" "}
           <a
-            className="font-medium text-brand-600 hover:underline dark:text-brand-400"
+            className="font-[480] text-accent-soft underline-offset-4 hover:underline"
             href={`mailto:${CONTACT_EMAIL}`}
           >
             {CONTACT_EMAIL}

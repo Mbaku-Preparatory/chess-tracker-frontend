@@ -23,30 +23,29 @@ const config: Config = {
           border:   "#2c2c3e",
           muted:    "#35354a",
         },
-        // The public site (landing page, player profiles), after DESIGN.md's
-        // "Mercury" system: one dark canvas, cards one step lighter, ivory
-        // text, and a single accent. The accent is the brand green rather
-        // than DESIGN.md's cobalt, so the site and the logo agree.
-        // Dark-only by design, so these are plain values, not light/dark pairs.
+        // The public site (landing page, player profiles), after DESIGN.md.
+        // Light and dark values live in globals.css; the `dark` class on
+        // <html> picks between them, the same switch the app uses.
         ink: {
-          canvas: "#171721", // page background
-          card:   "#1e1e2a", // cards: separation by value, never shadow
-          raised: "#272735", // secondary buttons, inputs, hover
-          line:   "#34344a", // hairline dividers inside cards
-          text:   "#ededf3", // primary text; never pure white
-          muted:  "#c3c3cc", // secondary text
-          faint:  "#9a9aa8", // captions and axis labels (5.6:1 on card)
+          canvas: "rgb(var(--ink-canvas) / <alpha-value>)",
+          card:   "rgb(var(--ink-card) / <alpha-value>)",
+          raised: "rgb(var(--ink-raised) / <alpha-value>)",
+          line:   "rgb(var(--ink-line) / <alpha-value>)",
+          text:   "rgb(var(--ink-text) / <alpha-value>)",
+          muted:  "rgb(var(--ink-muted) / <alpha-value>)",
+          faint:  "rgb(var(--ink-faint) / <alpha-value>)",
         },
         accent: {
-          DEFAULT: "#7cac42", // the mark's green: 6.9:1 on canvas
-          soft:    "#93be52", // accent text on cards
+          DEFAULT: "rgb(var(--accent) / <alpha-value>)",
+          soft:    "rgb(var(--accent-soft) / <alpha-value>)",
+          on:      "rgb(var(--on-accent) / <alpha-value>)",
         },
-        // Results, used only to encode data (bars, W/D/L). Muted so the
-        // accent stays the one loud colour on the page.
+        // Results, only to encode data (bars, W/D/L), so the accent stays
+        // the one loud colour on the page.
         result: {
-          win:  "#7cac42",
-          draw: "#6c6c7c",
-          loss: "#c0675b",
+          win:  "rgb(var(--result-win) / <alpha-value>)",
+          draw: "rgb(var(--result-draw) / <alpha-value>)",
+          loss: "rgb(var(--result-loss) / <alpha-value>)",
         },
         brand: {
           50:  "rgb(var(--brand-50)  / <alpha-value>)",

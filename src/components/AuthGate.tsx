@@ -15,13 +15,12 @@ function isAuthPath(pathname: string): boolean {
 }
 
 /**
- * Paths readable without a login. A superset of the auth pages: /privacy must
- * also be reachable by *anyone*, including Google Play's reviewers, who open
- * the policy URL with no account — but unlike an auth page it must stay
- * readable while signed in too, so it deliberately isn't an isAuthPath.
+ * Paths under AuthGate readable without a login: only the auth pages. Public
+ * pages (the landing page, player profiles, /privacy) live in the (public)
+ * route group, outside AuthGate, so they never come through here.
  */
 function isPublicPath(pathname: string): boolean {
-  return isAuthPath(pathname) || pathname === "/privacy";
+  return isAuthPath(pathname);
 }
 
 export function AuthGate({ children }: { children: React.ReactNode }) {

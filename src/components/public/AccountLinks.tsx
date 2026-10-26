@@ -21,7 +21,7 @@ export function AccountLinks() {
 
   if (signedIn) {
     return (
-      <Link href="/home" className="whitespace-nowrap rounded-pill bg-accent px-5 py-2 text-[15px] font-[480] text-ink-canvas hover:bg-accent-soft">
+      <Link href="/home" className="whitespace-nowrap rounded-pill bg-accent px-5 py-2 text-[15px] font-[480] text-accent-on hover:bg-accent-soft">
         Open app
       </Link>
     );
@@ -31,7 +31,7 @@ export function AccountLinks() {
       <Link href="/login" className="whitespace-nowrap rounded-pill px-3 py-2 text-[15px] text-ink-text hover:bg-ink-raised sm:px-4">
         Log in
       </Link>
-      <Link href="/signup" className="whitespace-nowrap rounded-pill bg-accent px-4 py-2 text-[15px] font-[480] text-ink-canvas hover:bg-accent-soft sm:px-5">
+      <Link href="/signup" className="whitespace-nowrap rounded-pill bg-accent px-4 py-2 text-[15px] font-[480] text-accent-on hover:bg-accent-soft sm:px-5">
         Get started
       </Link>
     </nav>
