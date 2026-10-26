@@ -8,7 +8,7 @@ import { api } from "@/lib/api";
 import { Logo } from "@/components/ui/Logo";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { clearAuth, setProfilePic } from "@/redux/actions/auth";
-import { toggleTheme } from "@/redux/actions/theme";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function Navbar() {
   const pathname = usePathname();
@@ -19,7 +19,6 @@ export function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const { token, refreshToken, email, profilePic } = useAppSelector((s) => s.auth);
-  const themeMode = useAppSelector((s) => s.theme.mode);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -31,7 +30,20 @@ export function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  if (pathname === "/login" || pathname === "/signup" || pathname === "/") return null;
+  // The sign-in pages have nothing to navigate to, but still need the way
+  // home and the theme switch: someone arriving from the dark landing page
+  // should be able to keep it dark.
+  if (pathname === "/login" || pathname === "/signup") {
+    return (
+      <nav className="no-print mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <Link href="/" className="flex items-center gap-2.5" aria-label="Chess Preparatory home">
+          <Logo size={32} />
+          <span className="hidden text-lg font-bold text-gray-900 dark:text-gray-100 sm:inline">Chess Preparatory</span>
+        </Link>
+        <ThemeToggle className="text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100" />
+      </nav>
+    );
+  }
 
   async function handleLogout() {
     if (refreshToken) {
@@ -121,22 +133,7 @@ export function Navbar() {
             </Link>
           </div>
 
-          {/* Theme toggle */}
-          <button
-            onClick={() => dispatch(toggleTheme())}
-            className="ml-1 shrink-0 rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100"
-            title={themeMode === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-          >
-            {themeMode === "dark" ? (
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
-              </svg>
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.72 9.72 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
-              </svg>
-            )}
-          </button>
+          <ThemeToggle className="ml-1 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100" />
 
           {/* Auth state */}
           {token ? (

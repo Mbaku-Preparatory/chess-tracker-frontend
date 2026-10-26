@@ -158,29 +158,29 @@ export function RatingHistoryChart({ history }: { history: RatingPoint[] }) {
         >
           <defs>
             <linearGradient id="rating-fill" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stopColor="#7cac42" stopOpacity="0.28" />
-              <stop offset="100%" stopColor="#7cac42" stopOpacity="0" />
+              <stop offset="0%" style={{ stopColor: "rgb(var(--accent))" }} stopOpacity="0.28" />
+              <stop offset="100%" style={{ stopColor: "rgb(var(--accent))" }} stopOpacity="0" />
             </linearGradient>
           </defs>
           <g transform={`translate(${M.left},${M.top})`}>
             {s.ticks.map((t) => (
               <g key={t}>
-                <line x1={0} x2={innerW} y1={s.y(t)} y2={s.y(t)} stroke="#34344a" strokeWidth={1} />
-                <text x={-8} y={s.y(t)} dy="0.32em" textAnchor="end" fontSize={11} fill="#9a9aa8">
+                <line x1={0} x2={innerW} y1={s.y(t)} y2={s.y(t)} className="stroke-ink-line" strokeWidth={1} />
+                <text x={-8} y={s.y(t)} dy="0.32em" textAnchor="end" fontSize={11} className="fill-ink-faint">
                   {t}
                 </text>
               </g>
             ))}
             {years.map((y, i) =>
               i % everyNth === 0 && s.x(y) >= 0 ? (
-                <text key={y.getTime()} x={s.x(y)} y={innerH + 20} textAnchor="middle" fontSize={11} fill="#9a9aa8">
+                <text key={y.getTime()} x={s.x(y)} y={innerH + 20} textAnchor="middle" fontSize={11} className="fill-ink-faint">
                   {y.getUTCFullYear()}
                 </text>
               ) : null,
             )}
             <path d={drawn.area} fill="url(#rating-fill)" />
-            <path d={drawn.line} fill="none" stroke="#7cac42" strokeWidth={2} strokeLinejoin="round" />
-            <circle cx={s.x(latest.month)} cy={s.y(latest.rating)} r={3.5} fill="#7cac42" />
+            <path d={drawn.line} fill="none" className="stroke-accent" strokeWidth={2} strokeLinejoin="round" />
+            <circle cx={s.x(latest.month)} cy={s.y(latest.rating)} r={3.5} className="fill-accent" />
             {hovered && (
               <g>
                 <line
@@ -188,10 +188,10 @@ export function RatingHistoryChart({ history }: { history: RatingPoint[] }) {
                   x2={s.x(hovered.month)}
                   y1={0}
                   y2={innerH}
-                  stroke="#c3c3cc"
+                  className="stroke-ink-muted"
                   strokeOpacity={0.4}
                 />
-                <circle cx={s.x(hovered.month)} cy={s.y(hovered.rating)} r={4.5} fill="#ededf3" />
+                <circle cx={s.x(hovered.month)} cy={s.y(hovered.rating)} r={4.5} className="fill-ink-text" />
               </g>
             )}
             <rect

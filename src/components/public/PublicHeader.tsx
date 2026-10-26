@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Logo } from "@/components/ui/Logo";
 
 import { AccountLinks } from "./AccountLinks";
@@ -12,7 +13,10 @@ export function PublicHeader() {
           <Logo size={30} />
           <span className="hidden whitespace-nowrap text-[17px] font-[480] tracking-[0.01em] sm:inline">Chess Preparatory</span>
         </Link>
-        <AccountLinks />
+        <div className="flex items-center gap-1 sm:gap-2">
+          <ThemeToggle className="text-ink-muted hover:bg-ink-raised hover:text-ink-text" />
+          <AccountLinks />
+        </div>
       </div>
     </header>
   );

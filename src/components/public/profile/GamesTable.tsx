@@ -81,11 +81,11 @@ export function GamesTable({
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 shrink-0 rounded-full border border-ink-faint bg-ink-text" aria-label="White" />
+                <span className="h-2.5 w-2.5 shrink-0 rounded-full border border-ink-faint bg-white" aria-label="White" />
                 <Side name={g.whiteName} elo={g.whiteElo} profile={g.white} self={g.white?.fideId === fideId} />
               </div>
               <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 shrink-0 rounded-full border border-ink-faint bg-ink-canvas" aria-label="Black" />
+                <span className="h-2.5 w-2.5 shrink-0 rounded-full border border-ink-faint bg-neutral-900" aria-label="Black" />
                 <Side name={g.blackName} elo={g.blackElo} profile={g.black} self={g.black?.fideId === fideId} />
               </div>
               <p className="text-[12px] text-ink-faint">

@@ -36,7 +36,7 @@ function ColourCard({ colour, counts }: { colour: "White" | "Black"; counts: Res
     <div className="flex flex-col gap-3 rounded-xl bg-ink-raised/60 p-5">
       <div className="flex items-center gap-2 text-[13px] text-ink-muted">
         <span
-          className={`h-3 w-3 rounded-full border border-ink-faint ${colour === "White" ? "bg-ink-text" : "bg-ink-canvas"}`}
+          className={`h-3 w-3 rounded-full border border-ink-faint ${colour === "White" ? "bg-white" : "bg-neutral-900"}`}
           aria-hidden="true"
         />
         As {colour.toLowerCase()}

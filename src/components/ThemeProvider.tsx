@@ -6,26 +6,23 @@ import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { loadThemeFromStorage } from "@/redux/actions/theme";
 
 /**
- * Applies the light/dark mode to <html>.
+ * Keeps the `dark` class on <html> in step with the theme state.
  *
- * It used to also write the --brand-* custom properties at runtime, for a
- * six-scheme colour picker. That is gone; the palette lives in globals.css as
- * ordinary CSS defaults, which is one source of truth instead of a stylesheet
- * and a reducer racing to set the same variables.
+ * The first paint is the head script's job (lib/theme.ts); this takes over
+ * once the saved choice has loaded, and from then on follows the switch.
  */
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch();
-  const mode = useAppSelector((s) => s.theme.mode);
+  const { mode, loaded } = useAppSelector((s) => s.theme);
 
   useEffect(() => {
     dispatch(loadThemeFromStorage());
   }, [dispatch]);
 
   useEffect(() => {
-    const html = document.documentElement;
-    if (mode === "dark") html.classList.add("dark");
-    else html.classList.remove("dark");
-  }, [mode]);
+    if (!loaded) return;
+    document.documentElement.classList.toggle("dark", mode === "dark");
+  }, [mode, loaded]);
 
   return <>{children}</>;
 }
