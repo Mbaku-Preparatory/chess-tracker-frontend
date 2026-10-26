@@ -72,6 +72,13 @@ export default function LandingPage() {
     },
     {
       "@context": "https://schema.org",
+      "@type": "Organization",
+      name: "Chess Preparatory",
+      url: SITE_URL,
+      logo: `${SITE_URL}/icon.svg`,
+    },
+    {
+      "@context": "https://schema.org",
       "@type": "FAQPage",
       mainEntity: FAQ.map(({ q, a }) => ({
         "@type": "Question",
