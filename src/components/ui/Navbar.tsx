@@ -65,7 +65,7 @@ export function Navbar() {
   return (
     <nav className="no-print sticky top-0 z-50 border-b border-gray-200 bg-white/80 backdrop-blur-md dark:border-dark-border dark:bg-dark-bg/80">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex shrink-0 items-center gap-2.5">
+        <Link href="/home" className="flex shrink-0 items-center gap-2.5">
           <Logo size={36} />
           <span className="hidden text-lg font-bold text-gray-900 dark:text-gray-100 sm:inline">Chess Preparatory</span>
         </Link>
