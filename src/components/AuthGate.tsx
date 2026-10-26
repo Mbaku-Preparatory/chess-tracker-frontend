@@ -44,7 +44,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
       router.replace("/login");
     }
     if (token && isAuthPath(pathname)) {
-      router.replace("/");
+      router.replace("/home");
     }
   }, [authInitialized, token, pathname, router]);
 

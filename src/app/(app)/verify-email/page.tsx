@@ -27,7 +27,7 @@ function VerifyEmailForm() {
     try {
       const data = await api.verifyEmail(email, code.trim());
       dispatch(setAuth({ token: data.access, refreshToken: data.refresh, email: data.email }));
-      router.replace("/");
+      router.replace("/home");
     } catch (err) {
       setError(userMessage(err, "Verification failed."));
     } finally {

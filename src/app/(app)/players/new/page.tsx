@@ -406,7 +406,7 @@ export default function NewPlayerPage() {
     <div className="mx-auto max-w-lg">
       {/* Breadcrumb */}
       <nav className="mb-6 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-        <Link href="/" className="hover:text-gray-900">My Opponents</Link>
+        <Link href="/home" className="hover:text-gray-900">My Opponents</Link>
         <span>/</span>
         <span className="text-gray-900">Add Opponent</span>
       </nav>
@@ -605,7 +605,7 @@ export default function NewPlayerPage() {
           >
             {loading ? "Creating…" : "Create & import games →"}
           </button>
-          <Link href="/" className="btn-secondary">
+          <Link href="/home" className="btn-secondary">
             Cancel
           </Link>
         </div>
