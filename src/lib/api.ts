@@ -179,7 +179,13 @@ export const api = {
   // These take a game's public_id, not its sequential id. The backend still
   // accepts either while clients migrate, but a sequential id in a URL
   // publishes how many games exist and how fast that grows.
-  getGamePgn(publicId: string): Promise<{ id: number; public_id: string; pgn_text: string }> {
+  getGamePgn(publicId: string): Promise<{
+    id: number;
+    public_id: string;
+    pgn_text: string;
+    game: import("@/types").Game;
+    player: { slug: string; full_name: string };
+  }> {
     return fetchJson(`${API_BASE}/games/${publicId}/pgn/`);
   },
 
@@ -327,6 +333,10 @@ export const api = {
     a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
+  },
+
+  getMasterGame(id: string): Promise<import("@/types").MasterGame> {
+    return fetchJson(`${API_BASE}/openings/master-games/${encodeURIComponent(id)}/`);
   },
 
   getMasterGames(params: { eco: string; limit?: number }): Promise<import("@/types").MasterGame[]> {

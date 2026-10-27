@@ -1,9 +1,10 @@
 "use client";
 
-import { cpToWhitePct, formatScore } from "@/hooks/useStockfish";
-import type { StockfishResult } from "@/hooks/useStockfish";
+import { cpToWhitePct, formatScore, type EngineResult } from "@/hooks/useEngine";
 
-type EvalBarProps = Pick<StockfishResult, "score" | "mate" | "depth" | "isAnalyzing" | "source"> & {
+type EvalBarProps = Pick<EngineResult, "depth" | "isAnalyzing" | "source"> & {
+  score: number | null;
+  mate: number | null;
   /**
    * Horizontal is for narrow screens, where the board takes the full width and
    * a column beside it would squeeze the board rather than the bar.

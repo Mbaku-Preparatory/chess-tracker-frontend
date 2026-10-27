@@ -1,10 +1,10 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Game } from "@/types";
 import { ColorBadge, EcoBadge, ResultBadge, SourceBadge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { PgnViewerModal } from "./PgnViewerModal";
 import { ViewButton } from "@/components/ui/ViewButton";
 import { api } from "@/lib/api";
 import { gameRef } from "@/lib/gameRef";
@@ -16,7 +16,7 @@ interface GamesTableProps {
 }
 
 export function GamesTable({ games, loading, onDeleted }: GamesTableProps) {
-  const [selectedGame, setSelectedGame] = useState<Game | null>(null);
+  const router = useRouter();
   // Keyed on public_id, which is what the delete call takes.
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
@@ -41,7 +41,7 @@ export function GamesTable({ games, loading, onDeleted }: GamesTableProps) {
 
   function handleRowClick(game: Game) {
     setConfirmId(null);
-    setSelectedGame(game);
+    router.push(`/games/${gameRef(game)}`);
   }
 
   if (!loading && !games.length) {
@@ -165,10 +165,6 @@ export function GamesTable({ games, loading, onDeleted }: GamesTableProps) {
           </table>
         </div>
       </div>
-
-      {selectedGame && (
-        <PgnViewerModal game={selectedGame} onClose={() => setSelectedGame(null)} />
-      )}
     </>
   );
 }

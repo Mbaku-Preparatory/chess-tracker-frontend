@@ -1,17 +1,14 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { PgnViewerModal } from "@/components/players/PgnViewerModal";
-import { MasterGameViewerModal } from "@/components/players/MasterGameViewerModal";
 import type {
   OpeningExplorerData,
   ExplorerEngineMove,
   ExplorerDbGame,
-  Game,
   ColorChoice,
   GameResult,
-  GameSource,
   MasterGame,
 } from "@/types";
 
@@ -263,32 +260,6 @@ function SectionHeader({ label, count }: { label: string; count?: number | strin
   );
 }
 
-// ── Build a minimal Game object for PgnViewerModal ────────────────────────────
-
-function toGameObject(g: ExplorerDbGame): Game {
-  return {
-    id: g.id,
-    public_id: g.public_id,
-    event: g.event,
-    site: "",
-    round: g.round,
-    date_played: g.date_played,
-    opponent_name: g.opponent_name,
-    opponent_rating: g.opponent_rating ?? null,
-    color_played: g.color_played,
-    result: g.result,
-    eco_code: null,
-    opening_name: g.opening_name || null,
-    opening_family: null,
-    num_moves: null,
-    time_control: null,
-    moves_preview: "",
-    source: "chess_results" as GameSource,
-    source_url: null,
-    notes: null,
-  };
-}
-
 // ── Master game row ───────────────────────────────────────────────────────────
 
 const RESULT_COLOR: Record<string, string> = {
@@ -371,10 +342,9 @@ export function OpeningExplorer({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAllMoves, setShowAllMoves] = useState(false);
-  const [viewingGame, setViewingGame] = useState<Game | null>(null);
+  const router = useRouter();
   const [masterGames, setMasterGames] = useState<MasterGame[]>([]);
   const [masterLoading, setMasterLoading] = useState(true);
-  const [viewingMasterGame, setViewingMasterGame] = useState<MasterGame | null>(null);
   const [gamesTab, setGamesTab] = useState<"gm" | "recent">("gm");
 
   useEffect(() => {
@@ -420,12 +390,6 @@ export function OpeningExplorer({
 
   return (
     <>
-      {viewingGame && (
-        <PgnViewerModal game={viewingGame} onClose={() => setViewingGame(null)} />
-      )}
-      {viewingMasterGame && (
-        <MasterGameViewerModal game={viewingMasterGame} onClose={() => setViewingMasterGame(null)} />
-      )}
 
       <div className="space-y-5 px-4 pb-5 pt-4">
 
@@ -525,7 +489,7 @@ export function OpeningExplorer({
                   {masterGames.map((g, i) => (
                     <div key={g.id}>
                       {i > 0 && <div className="mx-3 border-t border-gray-100 dark:border-dark-border" />}
-                      <MasterGameRow game={g} onOpen={setViewingMasterGame} />
+                      <MasterGameRow game={g} onOpen={(game) => router.push(`/master-games/${game.id}`)} />
                     </div>
                   ))}
                 </div>
@@ -544,7 +508,7 @@ export function OpeningExplorer({
                     {top_games.map((g, i) => (
                       <div key={g.id}>
                         {i > 0 && <div className="mx-3 border-t border-gray-100 dark:border-dark-border" />}
-                        <DbGameRow game={g} onOpen={(game) => setViewingGame(toGameObject(game))} />
+                        <DbGameRow game={g} onOpen={(game) => router.push(`/games/${game.public_id || game.id}`)} />
                       </div>
                     ))}
                   </div>
