@@ -17,7 +17,7 @@ export default function robots(): MetadataRoute.Robots {
         "/home", "/players", "/me", "/explorer", "/support", "/verify-email",
         // A signed-in user's games and the master corpus. "/games" is not
         // "/game/…", the public game pages, for the same prefix reason.
-        "/games", "/master-games",
+        "/games", "/master-games", "/books",
         "/api/",
       ],
     },

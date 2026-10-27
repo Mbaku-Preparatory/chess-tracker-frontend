@@ -11,7 +11,18 @@ import type { AnalysisLine } from "@/lib/chess/useAnalysisLine";
  * game is never hidden behind the variation, so there is no "back to the game"
  * to find.
  */
-export function MoveList({ mainMoves, line, result }: { mainMoves: ParsedMove[]; line: AnalysisLine; result: string | null }) {
+export function MoveList({
+  mainMoves,
+  line,
+  result,
+  intro = null,
+}: {
+  mainMoves: ParsedMove[];
+  line: AnalysisLine;
+  result: string | null;
+  /** The annotator's note before the first move. */
+  intro?: string | null;
+}) {
   const activeRef = useRef<HTMLButtonElement>(null);
   const startsAt = line.branchStartsAt;
 
@@ -80,12 +91,20 @@ export function MoveList({ mainMoves, line, result }: { mainMoves: ParsedMove[];
     </div>
   );
 
+  // An annotated game's notes sit under the row of the move they follow, in
+  // the body font: they are prose, not notation.
+  const note = (i: number | null) =>
+    i !== null && mainMoves[i].comment ? (
+      <p key={i} className="px-3 py-1.5 font-sans text-[13px] leading-[1.5] text-ink-muted">{mainMoves[i].comment}</p>
+    ) : null;
+
   if (mainMoves.length === 0 && !line.branch) {
     return <p className="py-6 text-center text-[14px] text-ink-faint">No moves recorded for this game.</p>;
   }
 
   return (
     <div className="font-mono text-[14px]">
+      {intro && <p className="px-3 pb-2 pt-1 font-sans text-[13px] leading-[1.5] text-ink-muted">{intro}</p>}
       {rows.length === 0 && variation}
       {rows.map((r, n) => (
         <div key={n}>
@@ -94,6 +113,8 @@ export function MoveList({ mainMoves, line, result }: { mainMoves: ParsedMove[];
             {r.white === null ? <span className="flex-1 px-2 py-1 text-ink-faint">…</span> : cell(r.white)}
             {cell(r.black)}
           </div>
+          {note(r.white)}
+          {note(r.black)}
           {n === variationRow && variation}
         </div>
       ))}

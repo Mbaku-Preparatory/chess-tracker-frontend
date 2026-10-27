@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 
 import {
   INITIAL,
+  START_FEN,
   type Branch,
   type LineState,
   branchStartsAt,
@@ -43,21 +44,23 @@ export interface AnalysisLine {
   reset: () => void;
 }
 
-export function useAnalysisLine(mainMoves: ParsedMove[]): AnalysisLine {
+/** `start` is where the line begins: the opening position for a game, the
+ * diagram for a book exercise. */
+export function useAnalysisLine(mainMoves: ParsedMove[], start: string = START_FEN): AnalysisLine {
   const [state, setState] = useState<LineState>(INITIAL);
 
   const moves = useMemo(() => lineOf(mainMoves, state), [mainMoves, state]);
-  const fen = fenAt(moves, state.index);
+  const fen = fenAt(moves, state.index, start);
   const startsAt = branchStartsAt(state.branch);
 
   const play = useCallback(
     (from: string, to: string) => {
-      const next = playMove(state, mainMoves, from, to);
+      const next = playMove(state, mainMoves, from, to, start);
       if (!next) return false;
       setState(next);
       return true;
     },
-    [state, mainMoves]
+    [state, mainMoves, start]
   );
 
   const goTo = useCallback(

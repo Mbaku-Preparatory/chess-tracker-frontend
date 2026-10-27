@@ -1,5 +1,6 @@
 "use client";
 
+import { Chess } from "chess.js";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -9,7 +10,7 @@ import { hasInAppHistory } from "@/components/NavigationMemory";
 import { EvalBar } from "@/components/ui/EvalBar";
 import { DEPTHS, useAnalysisPrefs } from "@/lib/analysisPrefs";
 import { api } from "@/lib/api";
-import { movetext, parsePgn } from "@/lib/chess/pgn";
+import { movetext, parsePgn, pgnStart } from "@/lib/chess/pgn";
 import { useAnalysisLine } from "@/lib/chess/useAnalysisLine";
 import { useEngine } from "@/hooks/useEngine";
 
@@ -48,7 +49,14 @@ export interface AnalysisViewProps {
   importToLichess: boolean;
   /** Where Back goes when the page was not opened from inside the site. */
   back: { href: string };
+  /** Solve mode: the solution and the engine stay hidden until the line is
+   * played on the board or given up. For book exercises. */
+  solve?: boolean;
+  /** Previous and next, for a page that is one of a set (a book's exercises). */
+  pager?: { label: string; prev: string | null; next: string | null };
 }
+
+const clean = (san: string) => san.replace(/[+#!?]/g, "");
 
 function BackButton({ href }: { href: string }) {
   const router = useRouter();
@@ -155,12 +163,16 @@ function Nav({ index, last, goTo, className = "" }: { index: number; last: numbe
  * app opens here, whatever list it came from.
  */
 export function AnalysisView(props: AnalysisViewProps) {
-  const { pgn, white, black, orientation = "white", result, title, details, filename, shareUrl, importToLichess, back } = props;
+  const { pgn, white, black, orientation = "white", result, title, details, filename, shareUrl, importToLichess, back, solve = false, pager } = props;
   const mainMoves = useMemo(() => parsePgn(pgn), [pgn]);
-  const line = useAnalysisLine(mainMoves);
+  const start = useMemo(() => pgnStart(pgn), [pgn]);
+  const line = useAnalysisLine(mainMoves, start.fen);
   const { moves, index, fen, goTo } = line;
   const [prefs, setPrefs] = useAnalysisPrefs();
-  const engine = useEngine(fen, { enabled: prefs.engine, depth: DEPTHS[prefs.depth].depth, capMs: DEPTHS[prefs.depth].capMs });
+  const [solving, setSolving] = useState(solve && mainMoves.length > 0);
+  const [feedback, setFeedback] = useState<{ ok: boolean; text: string } | null>(null);
+  // The engine would give the answer away, so it waits until the line is solved.
+  const engine = useEngine(fen, { enabled: prefs.engine && !solving, depth: DEPTHS[prefs.depth].depth, capMs: DEPTHS[prefs.depth].capMs });
   const top = engine.lines[0] ?? null;
 
   const [selected, setSelected] = useState<string | null>(null);
@@ -168,8 +180,46 @@ export function AnalysisView(props: AnalysisViewProps) {
   const [lichessBusy, setLichessBusy] = useState(false);
   const finished = result === "1-0" || result === "0-1" || result === "1/2-1/2";
 
+  // Solving: a move is checked against the book's next move instead of
+  // opening a variation. Right, and the book's reply is played after a beat;
+  // wrong, and the position stays for another try.
+  const attempt = useCallback(
+    (from: string, to: string) => {
+      const expected = mainMoves[index + 1];
+      if (!expected) return false;
+      let san: string;
+      try {
+        san = new Chess(fen).move({ from, to, promotion: "q" }).san;
+      } catch {
+        return false;
+      }
+      if (clean(san) !== clean(expected.san)) {
+        setFeedback({ ok: false, text: `${san} is not the book's move. Try again.` });
+        return false;
+      }
+      const reached = index + 1;
+      line.selectMain(reached);
+      const done = () => {
+        setSolving(false);
+        setFeedback({ ok: true, text: "Solved. The book's notes are below." });
+      };
+      if (!mainMoves[reached + 1]) {
+        done();
+        return true;
+      }
+      setFeedback({ ok: true, text: `${expected.san} is right.` });
+      window.setTimeout(() => {
+        line.selectMain(reached + 1);
+        if (!mainMoves[reached + 2]) done();
+      }, 450);
+      return true;
+    },
+    [mainMoves, index, fen, line],
+  );
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (solving) return;
       const target = e.target as HTMLElement;
       if (target.closest("input, textarea, select, [contenteditable]")) return;
       const to = { ArrowRight: index + 1, ArrowDown: index + 1, ArrowLeft: index - 1, ArrowUp: index - 1, Home: -1, End: moves.length - 1 }[e.key];
@@ -179,23 +229,28 @@ export function AnalysisView(props: AnalysisViewProps) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [index, moves.length, goTo]);
+  }, [index, moves.length, goTo, solving]);
 
   const onSquareClick = useCallback(
     (square: string) => {
       if (selected === square) return setSelected(null);
-      if (selected && line.play(selected, square)) return setSelected(null);
+      if (selected && line.legalTargets(selected).includes(square)) {
+        if (solving) attempt(selected, square);
+        else line.play(selected, square);
+        return setSelected(null);
+      }
       setSelected(line.legalTargets(square).length > 0 ? square : null);
     },
-    [selected, line],
+    [selected, line, solving, attempt],
   );
   const onDrop = useCallback(
     (from: string, to: string) => {
       setSelected(null);
-      return line.play(from, to);
+      return solving ? attempt(from, to) : line.play(from, to);
     },
-    [line],
+    [line, solving, attempt],
   );
+  const toMove = start.fen.split(" ")[1] === "b" ? "Black" : "White";
 
   const squareStyles = useMemo(() => {
     const styles: Record<string, React.CSSProperties> = {};
@@ -228,7 +283,12 @@ export function AnalysisView(props: AnalysisViewProps) {
   }
 
   async function openLichess() {
-    const board = `https://lichess.org/analysis/pgn/${encodeURIComponent(movetext(mainMoves))}`;
+    // Bare moves only describe a game from the opening position; one that
+    // starts from a diagram opens Lichess's board at that position instead.
+    const fromStart = start.fen === new Chess().fen();
+    const board = fromStart
+      ? `https://lichess.org/analysis/pgn/${encodeURIComponent(movetext(mainMoves))}`
+      : `https://lichess.org/analysis/${start.fen.replace(/ /g, "_")}`;
     if (!importToLichess) {
       window.open(board, "_blank", "noopener");
       return;
@@ -273,6 +333,20 @@ export function AnalysisView(props: AnalysisViewProps) {
             {details.filter(Boolean).map((d) => <span key={String(d)}>{d}</span>)}
           </p>
         </div>
+        {pager && (
+          <nav aria-label="Exercises" className="flex shrink-0 items-center gap-2 sm:ml-auto">
+            {[{ href: pager.prev, label: "Previous" }, { href: pager.next, label: "Next" }].map((p) =>
+              p.href ? (
+                <Link key={p.label} href={p.href} className="rounded-pill bg-ink-card px-3.5 py-1.5 text-[14px] text-ink-muted hover:bg-ink-raised hover:text-ink-text">
+                  {p.label}
+                </Link>
+              ) : (
+                <span key={p.label} className="rounded-pill px-3.5 py-1.5 text-[14px] text-ink-faint opacity-50">{p.label}</span>
+              ),
+            )}
+            <span className="text-[13px] tabular-nums text-ink-faint">{pager.label}</span>
+          </nav>
+        )}
       </header>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
@@ -284,18 +358,41 @@ export function AnalysisView(props: AnalysisViewProps) {
             <Plate side={bottomSide} color={orientation} />
             {bar("horizontal", "mt-0.5 sm:hidden")}
             {/* On a phone the controls sit under the board, where a thumb is. */}
-            <Nav index={index} last={moves.length - 1} goTo={goTo} className="mt-2 lg:hidden" />
+            {!solving && <Nav index={index} last={moves.length - 1} goTo={goTo} className="mt-2 lg:hidden" />}
           </div>
         </section>
 
         <aside className="flex min-w-0 flex-col gap-3">
-          <EnginePanel prefs={prefs} setPrefs={setPrefs} engine={engine} fen={fen} />
+          {(solving || feedback) && (
+            <section aria-label="Solve" aria-live="polite" className="flex flex-col gap-3 rounded-xl bg-ink-card p-4">
+              {solving && <p className="text-[15px] font-[520] text-ink-text">{toMove} to move. Play the best move on the board.</p>}
+              {feedback && (
+                <p className={`text-[14px] font-[520] ${feedback.ok ? "text-accent-soft" : "text-amber-600 dark:text-amber-400"}`}>{feedback.text}</p>
+              )}
+              {solving && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSolving(false);
+                    setFeedback(null);
+                  }}
+                  className="self-start rounded-pill border border-ink-line px-3.5 py-1.5 text-[13px] text-ink-muted hover:bg-ink-raised hover:text-ink-text"
+                >
+                  Show solution
+                </button>
+              )}
+            </section>
+          )}
 
-          <section aria-label="Moves" data-moves-scroll className="max-h-[45vh] overflow-y-auto rounded-xl bg-ink-card p-2 lg:max-h-[calc(100dvh-520px)] lg:min-h-[160px]">
-            <MoveList mainMoves={mainMoves} line={line} result={finished ? result : null} />
-          </section>
+          {!solving && <EnginePanel prefs={prefs} setPrefs={setPrefs} engine={engine} fen={fen} />}
 
-          <Nav index={index} last={moves.length - 1} goTo={goTo} className="hidden lg:grid" />
+          {!solving && (
+            <section aria-label="Moves" data-moves-scroll className="max-h-[45vh] overflow-y-auto rounded-xl bg-ink-card p-2 lg:max-h-[calc(100dvh-520px)] lg:min-h-[160px]">
+              <MoveList mainMoves={mainMoves} line={line} result={finished ? result : null} intro={start.comment} />
+            </section>
+          )}
+
+          {!solving && <Nav index={index} last={moves.length - 1} goTo={goTo} className="hidden lg:grid" />}
 
           <div className="flex flex-wrap gap-2">
             {[
