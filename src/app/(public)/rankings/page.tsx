@@ -136,7 +136,12 @@ export default async function RankingsPage({ searchParams }: { searchParams: Sea
             ))}
           </nav>
         </div>
-        <FederationFilter view={view} />
+        <div className="flex items-center gap-4">
+          <FederationFilter view={view} />
+          <Link href="/rankings/countries" className="whitespace-nowrap text-[14px] text-ink-muted underline decoration-ink-line underline-offset-4 hover:text-ink-text">
+            All countries
+          </Link>
+        </div>
       </div>
 
       <section className="rounded-xl bg-ink-card p-4 sm:p-8" aria-label="Ranked players">

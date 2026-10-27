@@ -19,7 +19,10 @@ function fed(code: string, name: string, iso2: string, flagOverride?: string): F
   return { code, name, flag: flagOverride ?? toFlag(iso2) };
 }
 
-export const FEDERATIONS: Federation[] = [
+// Federations FIDE lists players under today. Checked against the codes in
+// FIDE's rating list (Oct 2026): a wrong code here leaves every player of that
+// country showing three bare letters.
+export const CURRENT_FEDERATIONS: Federation[] = [
   fed("AFG", "Afghanistan", "AF"),
   fed("ALB", "Albania", "AL"),
   fed("ALG", "Algeria", "DZ"),
@@ -113,7 +116,7 @@ export const FEDERATIONS: Federation[] = [
   fed("KGZ", "Kyrgyzstan", "KG"),
   fed("LAO", "Laos", "LA"),
   fed("LAT", "Latvia", "LV"),
-  fed("LIB", "Lebanon", "LB"),
+  fed("LBN", "Lebanon", "LB"),
   fed("LES", "Lesotho", "LS"),
   fed("LBA", "Libya", "LY"),
   fed("LIE", "Liechtenstein", "LI"),
@@ -129,7 +132,6 @@ export const FEDERATIONS: Federation[] = [
   fed("MRI", "Mauritius", "MU"),
   fed("MEX", "Mexico", "MX"),
   fed("MDA", "Moldova", "MD"),
-  fed("MNG", "Mongolia", "MN"),
   fed("MNE", "Montenegro", "ME"),
   fed("MAR", "Morocco", "MA"),
   fed("MOZ", "Mozambique", "MZ"),
@@ -159,7 +161,6 @@ export const FEDERATIONS: Federation[] = [
   fed("RWA", "Rwanda", "RW"),
   fed("SMR", "San Marino", "SM"),
   fed("STP", "São Tomé and Príncipe", "ST"),
-  fed("SAU", "Saudi Arabia", "SA"),
   fed("SCO", "Scotland", "GB", "🏴󠁧󠁢󠁳󠁣󠁴󠁿"),
   fed("SEN", "Senegal", "SN"),
   fed("SRB", "Serbia", "RS"),
@@ -229,7 +230,17 @@ export const FEDERATIONS: Federation[] = [
   fed("SKN", "Saint Kitts and Nevis", "KN"),
   fed("SSD", "South Sudan", "SS"),
   fed("VIN", "Saint Vincent and the Grenadines", "VC"),
+  fed("CUR", "Curaçao", "CW"),
+  fed("GRL", "Greenland", "GL"),
+  fed("KIR", "Kiribati", "KI"),
+  fed("NCL", "New Caledonia", "NC"),
+  fed("TGA", "Tonga", "TO"),
+  fed("VAN", "Vanuatu", "VU"),
+];
 
+// Codes only old games carry: no player is rated under them today, so they get
+// no rankings page, but they still name the federation on a game.
+const FORMER_FEDERATIONS: Federation[] = [
   // Nations that no longer exist. Named so their games are findable; no flag,
   // because emoji has none and a successor state's flag would be a lie about
   // who played. `federationFor` renders an empty flag as nothing at all.
@@ -248,6 +259,8 @@ export const FEDERATIONS: Federation[] = [
   fed("ICS", "Deaf Chess (ICSC)", "", ""),
   fed("IPC", "Disabled Chess (IPCA)", "", ""),
 ];
+
+export const FEDERATIONS: Federation[] = [...CURRENT_FEDERATIONS, ...FORMER_FEDERATIONS];
 
 /**
  * Code → federation, for showing a name and flag instead of three letters.

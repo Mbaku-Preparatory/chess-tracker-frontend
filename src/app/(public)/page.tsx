@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { PlayerSearch } from "@/components/public/PlayerSearch";
+import { profilePath } from "@/lib/publicPlayer";
+import { fetchRankings, type RankingEntry } from "@/lib/rankings";
 import { SHARE_IMAGE, SITE_URL } from "@/lib/site";
 
 const TITLE = "Chess Preparatory · FIDE player ratings, history and games";
@@ -62,7 +64,20 @@ const FAQ = [
   },
 ];
 
-export default function LandingPage() {
+/** The world's top ten, as links: a crawler landing here reaches profiles
+ * without typing in the search box. Cached for an hour with the rankings; if
+ * the API is down the section is left out rather than failing the page. */
+async function topPlayers(): Promise<RankingEntry[]> {
+  try {
+    const { results } = await fetchRankings({ tc: "classical", list: "overall", fed: "", page: 1 });
+    return results.slice(0, 10);
+  } catch {
+    return [];
+  }
+}
+
+export default async function LandingPage() {
+  const top = await topPlayers();
   const jsonLd = [
     {
       "@context": "https://schema.org",
@@ -112,6 +127,36 @@ export default function LandingPage() {
           ))}
         </p>
       </section>
+
+      {top.length > 0 && (
+        <section aria-labelledby="top-heading" className="flex flex-col gap-6">
+          <div className="flex flex-wrap items-baseline justify-between gap-4">
+            <h2 id="top-heading" className="text-[28px] font-[480] leading-[1.2] tracking-[0.015em] sm:text-[32px]">
+              World top 10
+            </h2>
+            <p className="flex gap-5 text-[14px]">
+              <Link href="/rankings" className="text-ink-muted underline decoration-ink-line underline-offset-4 hover:text-ink-text">
+                Full rankings
+              </Link>
+              <Link href="/rankings/countries" className="text-ink-muted underline decoration-ink-line underline-offset-4 hover:text-ink-text">
+                By country
+              </Link>
+            </p>
+          </div>
+          <ol className="grid gap-x-10 rounded-xl bg-ink-card p-4 sm:grid-flow-col sm:grid-cols-2 sm:grid-rows-5 sm:p-8">
+            {top.map(({ rank, rating, player }) => (
+              <li key={player.fideId} className="flex items-baseline gap-3 border-b border-ink-line/60 py-3 last:border-0 sm:[&:nth-child(5)]:border-0">
+                <span className="w-6 shrink-0 text-right text-[14px] tabular-nums text-ink-faint">{rank}</span>
+                <Link href={profilePath(player)} className="min-w-0 flex-1 truncate text-[16px] hover:text-accent-soft">
+                  {player.title && <span className="mr-1.5 text-accent">{player.title}</span>}
+                  {player.fullName}
+                </Link>
+                <span className="shrink-0 text-[14px] tabular-nums text-ink-muted">{rating}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
 
       <section aria-labelledby="profile-heading" className="flex flex-col gap-8">
         <h2 id="profile-heading" className="max-w-[24ch] text-balance text-[28px] font-[480] leading-[1.2] tracking-[0.015em] sm:text-[32px]">

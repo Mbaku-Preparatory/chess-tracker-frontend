@@ -7,7 +7,7 @@
  * so a sitemap a day old is never meaningfully behind.
  */
 
-import { FEDERATIONS } from "./federations";
+import { CURRENT_FEDERATIONS } from "./federations";
 import { rankingsPath } from "./rankings";
 import { GRAPHQL_URL, SITE_URL } from "./site";
 
@@ -19,7 +19,8 @@ export const SITEMAP_REVALIDATE = 86_400;
 export const STATIC_PAGES = [
   "/",
   "/rankings",
-  ...FEDERATIONS.map((f) => rankingsPath({ tc: "classical", list: "overall", fed: f.code, page: 1 })),
+  "/rankings/countries",
+  ...CURRENT_FEDERATIONS.map((f) => rankingsPath({ tc: "classical", list: "overall", fed: f.code, page: 1 })),
   "/privacy",
 ];
 

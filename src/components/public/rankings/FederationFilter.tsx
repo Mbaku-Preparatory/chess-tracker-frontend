@@ -2,10 +2,10 @@
 
 import { useRouter } from "next/navigation";
 
-import { FEDERATIONS } from "@/lib/federations";
+import { CURRENT_FEDERATIONS } from "@/lib/federations";
 import { rankingsPath, type RankingsView } from "@/lib/rankings";
 
-const BY_NAME = [...FEDERATIONS].sort((a, b) => a.name.localeCompare(b.name));
+const BY_NAME = [...CURRENT_FEDERATIONS].sort((a, b) => a.name.localeCompare(b.name));
 
 /**
  * The country picker. A plain GET form, so it works before the script loads
