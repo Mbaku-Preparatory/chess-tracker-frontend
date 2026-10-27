@@ -1,14 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
-import type {
-  ChessResultsImportResult,
-  ChessResultsPlayerCandidate,
-  ChessResultsTournamentOption,
-  ImportJob,
-} from "@/types";
+import { GRAPHQL_URL } from "@/lib/site";
+import type { ImportJob } from "@/types";
 import { userMessage } from "@/lib/apiError";
 import { useActiveImports } from "./ActiveImportsProvider";
 
@@ -16,26 +12,9 @@ interface ChessResultsImportSectionProps {
   slug: string;
   playerRef: string;
   fideId?: string | null;
-  // Called when an import completes. The single-URL fallback has a result to
-  // hand over; a background job reports its own detail, so it passes nothing.
-  onSuccess?: (result?: ChessResultsImportResult) => void;
+  // Called once when an import finishes successfully.
+  onSuccess?: () => void;
 }
-
-// ── State machine ─────────────────────────────────────────────────────────────
-
-type Step =
-  | { type: "idle" }
-  | { type: "searching" }
-  | { type: "selecting-player"; candidates: ChessResultsPlayerCandidate[] }
-  | { type: "loading-tournaments"; crId: string; name: string }
-  // Picking a player with a FIDE ID starts the import there and then, so there
-  // is a moment between the click and the job existing.
-  | { type: "starting"; name: string }
-  | { type: "choose-mode"; playerName: string; tournaments: ChessResultsTournamentOption[] }
-  | { type: "selecting-tournaments"; playerName: string; tournaments: ChessResultsTournamentOption[] }
-  // The import itself no longer lives in this component — it is a row in the
-  // database being worked on by the worker service. All we hold is its id.
-  | { type: "job"; job: ImportJob };
 
 const POLL_INTERVAL_MS = 2000;
 
@@ -43,40 +22,53 @@ function isTerminal(job: ImportJob): boolean {
   return job.status === "succeeded" || job.status === "failed" || job.status === "cancelled";
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+type Candidate = { fideId: string; fullName: string; federation: string; standardRating: number | null };
 
-function buildImportUrl(t: ChessResultsTournamentOption): string {
-  // Prefer the full original URL from chess-results (includes SNode, fed, etc.
-  // that team/Olympiad events require).  Fall back to a constructed URL for
-  // entries created before this field was added.
-  if (t.url) return t.url;
-  return `https://chess-results.com/tnr${t.tnr}.aspx?lan=1&art=9&snr=${t.snr}`;
+/**
+ * Players on FIDE's rating list matching a name. Answered from our own copy of
+ * the list, so it costs no request to FIDE or chess-results.
+ */
+async function searchRatingList(name: string): Promise<Candidate[]> {
+  const res = await fetch(GRAPHQL_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      query: `query Search($q: String!) {
+        searchPublicPlayers(query: $q, limit: 8) { fideId fullName federation standardRating }
+      }`,
+      variables: { q: name },
+    }),
+  });
+  if (!res.ok) throw new Error("Search failed. Try again.");
+  const body = await res.json();
+  return body?.data?.searchPublicPlayers ?? [];
 }
-
 
 // ── Main component ────────────────────────────────────────────────────────────
 
+/**
+ * Imports every game chess-results has for one FIDE ID.
+ *
+ * chess-results' game search returns a whole career in one export, so there
+ * is nothing to choose: the player's FIDE ID is the whole input. A player
+ * without one on file can be looked up by name on FIDE's rating list.
+ */
 export function ChessResultsImportSection({
   slug,
   playerRef,
   fideId,
   onSuccess,
 }: ChessResultsImportSectionProps) {
-  // The profile already knows who this is — don't offer to look up someone else.
-  const hasKnownFideId = Boolean(fideId?.trim());
+  // The profile already knows who this is — don't offer to import someone else.
+  const knownFideId = fideId?.trim() || "";
 
-  const [step, setStep] = useState<Step>({ type: "idle" });
-  const [searchMode, setSearchMode] = useState<"fide_id" | "name">(
-    hasKnownFideId ? "fide_id" : "name"
-  );
-  const [fideInput, setFideInput] = useState(fideId ?? "");
+  const [job, setJob] = useState<ImportJob | null>(null);
+  const [starting, setStarting] = useState(false);
+  const [fideInput, setFideInput] = useState("");
   const [nameInput, setNameInput] = useState("");
-  const [searchError, setSearchError] = useState<string | null>(null);
-  const [selected, setSelected] = useState<Set<string>>(new Set()); // keys: `${tnr}-${snr}`
-  const [showUrlFallback, setShowUrlFallback] = useState(false);
-  const [rawUrl, setRawUrl] = useState("");
-  const [rawUrlStatus, setRawUrlStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
-  const [rawUrlError, setRawUrlError] = useState<string | null>(null);
+  const [candidates, setCandidates] = useState<Candidate[] | null>(null);
+  const [searching, setSearching] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [jobError, setJobError] = useState<string | null>(null);
   const [notifyEmail, setNotifyEmail] = useState(false);
 
@@ -92,13 +84,13 @@ export function ChessResultsImportSection({
   const refreshRef = useRef(refreshActiveImports);
   refreshRef.current = refreshActiveImports;
 
-  const activeJobId = step.type === "job" && !isTerminal(step.job) ? step.job.id : null;
+  const activeJobId = job && !isTerminal(job) ? job.id : null;
 
   // ── Reconnect to an import already in progress ──────────────────────────────
   //
-  // The whole point of moving this server-side: a coach can close the tab mid
-  // -import, come back, and still see it running. Nothing in component state
-  // survives that, so on mount we ask whether this player has a live job.
+  // A coach can close the tab mid-import, come back, and still see it running.
+  // Nothing in component state survives that, so on mount we ask whether this
+  // player has a live job.
   useEffect(() => {
     let cancelled = false;
 
@@ -106,11 +98,7 @@ export function ChessResultsImportSection({
       try {
         const { results } = await api.recentImportJobs(slug);
         const live = results.find((j) => !isTerminal(j));
-        if (live && !cancelled) {
-          setStep((current) =>
-            current.type === "idle" ? { type: "job", job: live } : current
-          );
-        }
+        if (live && !cancelled) setJob((current) => current ?? live);
       } catch {
         // Not being able to check is not worth interrupting anyone over —
         // they can still start a new import.
@@ -132,11 +120,11 @@ export function ChessResultsImportSection({
 
     const tick = async () => {
       try {
-        const job = await api.getImportJob(activeJobId);
+        const next = await api.getImportJob(activeJobId);
         if (cancelled) return;
-        setStep({ type: "job", job });
-        if (isTerminal(job)) {
-          if (job.status === "succeeded") onSuccessRef.current?.(undefined);
+        setJob(next);
+        if (isTerminal(next)) {
+          if (next.status === "succeeded") onSuccessRef.current?.();
           refreshRef.current();
           return; // stop polling
         }
@@ -156,147 +144,51 @@ export function ChessResultsImportSection({
     };
   }, [activeJobId]);
 
-  // ── Search ──────────────────────────────────────────────────────────────────
+  // ── Actions ─────────────────────────────────────────────────────────────────
 
-  async function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-    setSearchError(null);
-
-    // A known FIDE ID always wins over whatever is in the inputs — the field
-    // isn't rendered in that case, so its state is not something to trust.
-    const params = hasKnownFideId
-      ? { fide_id: fideId!.trim() }
-      : searchMode === "fide_id"
-        ? { fide_id: fideInput.trim() }
-        : { q: nameInput.trim() };
-
-    if (!Object.values(params)[0]) return;
-
-    setStep({ type: "searching" });
-
-    try {
-      const { results } = await api.searchChessResultsPlayer(params);
-
-      if (results.length === 0) {
-        setStep({ type: "idle" });
-        setSearchError("No players found. Try a different name or check the FIDE ID.");
-        return;
-      }
-
-      if (results.length === 1) {
-        // Only one person it could be — don't make them confirm it.
-        await selectCandidate(results[0]);
-      } else {
-        setStep({ type: "selecting-player", candidates: results });
-      }
-    } catch (err) {
-      setStep({ type: "idle" });
-      setSearchError(userMessage(err, "Search failed. Try again."));
-    }
-  }
-
-  // The fork in the flow. A player with a FIDE ID can be imported whole in one
-  // request, which is fast enough that asking "all of them, or which ones?"
-  // would be asking someone to optimise something that no longer costs
-  // anything. Without an ID there is nothing to look them up by in the game
-  // database, so those players still go through the tournament list — and
-  // matching a scout target on surname alone would risk importing a namesake's
-  // games, which is worse than being slow.
-  async function selectCandidate(candidate: ChessResultsPlayerCandidate) {
-    if (candidate.fide_id) {
-      await importCareer(candidate.fide_id, candidate.name);
-    } else {
-      await loadTournaments(candidate.cr_id, candidate.name);
-    }
-  }
-
-  async function importCareer(fideId: string, name: string) {
-    setStep({ type: "starting", name });
+  async function startImport(id: string) {
+    setError(null);
     setJobError(null);
+    setStarting(true);
     try {
-      const job = await api.createCareerImportJob(slug, fideId, notifyEmail);
-      setStep({ type: "job", job });
+      setJob(await api.createCareerImportJob(slug, id, notifyEmail));
       refreshActiveImports();
     } catch (err) {
-      setStep({ type: "idle" });
-      setSearchError(userMessage(err, "Could not start the import."));
+      setError(userMessage(err, "Could not start the import."));
+    } finally {
+      setStarting(false);
     }
   }
 
-  async function loadTournaments(crId: string, name: string) {
-    setStep({ type: "loading-tournaments", crId, name });
+  async function handleNameSearch(e: React.FormEvent) {
+    e.preventDefault();
+    if (!nameInput.trim()) return;
+    setError(null);
+    setSearching(true);
     try {
-      const data = await api.getChessResultsTournaments(crId);
-      // Start empty. "Fetch all" is its own button, so someone who chose to
-      // pick tournaments meant to pick them — handing them a full set to
-      // untick is the opposite of what they asked for.
-      setSelected(new Set());
-      setStep({
-        type: "choose-mode",
-        playerName: data.player_name || name,
-        tournaments: data.tournaments,
-      });
+      const found = await searchRatingList(nameInput.trim());
+      setCandidates(found);
+      if (found.length === 0) setError("No rated players found with that name.");
     } catch (err) {
-      setStep({ type: "idle" });
-      setSearchError(userMessage(err, "Could not load tournament list."));
+      setError(userMessage(err, "Search failed. Try again."));
+    } finally {
+      setSearching(false);
     }
   }
-
-  // ── Import ──────────────────────────────────────────────────────────────────
 
   async function handleCancelImport(jobId: string) {
     try {
-      const job = await api.cancelImportJob(jobId);
-      setStep({ type: "job", job });
+      setJob(await api.cancelImportJob(jobId));
       refreshActiveImports();
     } catch (err) {
       setJobError(userMessage(err, "Could not cancel the import."));
     }
   }
 
-  async function handleImport(toImport: ChessResultsTournamentOption[]) {
-    // The caller decides what "these" means: every tournament for Fetch all,
-    // the ticked ones for the picker. Reading selection state in here is what
-    // coupled the two paths together.
-    if (toImport.length === 0) return;
-
-    setJobError(null);
-    try {
-      // Returns as soon as the job row exists — the importing happens in the
-      // worker, so this resolves in milliseconds regardless of batch size.
-      const job = await api.createImportJob(
-        slug,
-        toImport.map((t) => ({ name: t.name, url: buildImportUrl(t) })),
-        notifyEmail
-      );
-      setStep({ type: "job", job });
-      refreshActiveImports();
-    } catch (err) {
-      setJobError(userMessage(err, "Could not start the import."));
-    }
-  }
-
-  // ── Raw URL fallback ────────────────────────────────────────────────────────
-
-  async function handleRawUrlImport(e: React.FormEvent) {
-    e.preventDefault();
-    if (!rawUrl.trim() || !rawUrl.includes("chess-results.com")) return;
-    setRawUrlStatus("loading");
-    setRawUrlError(null);
-    try {
-      // This endpoint queues now rather than importing inline, so it returns a
-      // job like every other path here. Hand it to the state machine above and
-      // the existing polling reports it — the fallback stops being a special
-      // case that reports its own result.
-      const job = await api.importFromChessResults(slug, { url: rawUrl.trim() });
-      setRawUrlStatus("idle");
-      setStep({ type: "job", job });
-      refreshActiveImports();
-    } catch (err) {
-      setRawUrlError(userMessage(err, "Import failed."));
-      setRawUrlStatus("error");
-    }
-  }
+  const inputClass =
+    "block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-[#1a3a6b] focus:outline-none focus:ring-1 focus:ring-[#1a3a6b] dark:border-dark-border dark:bg-dark-elevated dark:text-gray-100 dark:placeholder-gray-500";
+  const buttonClass =
+    "inline-flex items-center gap-2 rounded-lg bg-[#1a3a6b] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#142d54] disabled:cursor-not-allowed disabled:opacity-60";
 
   // ── Render ──────────────────────────────────────────────────────────────────
 
@@ -314,280 +206,102 @@ export function ChessResultsImportSection({
             Import OTB Games from Chess-Results
           </h3>
           <p className="text-xs text-gray-500 dark:text-gray-400">
-            Fetch over-the-board tournament games from chess-results.com
+            Every over-the-board game chess-results.com has for this player
           </p>
         </div>
       </div>
 
-      {/* ── Step: idle / searching ─────────────────────────────────────────── */}
-      {(step.type === "idle" || step.type === "searching") && (
-        <div className="space-y-4">
-          <form onSubmit={handleSearch} className="space-y-3">
-            {/*
-              A player with a FIDE ID on file has nothing to type and nothing to
-              choose: the ID is the identity, and letting someone edit it here
-              only invites importing another player's games onto this profile.
-              The tabs and the input appear only when we don't already know it.
-            */}
-            {hasKnownFideId ? (
-              <div className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2.5 dark:border-dark-border dark:bg-dark-surface">
-                <div className="min-w-0">
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Searching by FIDE ID</p>
-                  <p className="font-mono text-sm font-medium text-gray-900 dark:text-gray-100">
-                    {fideId}
-                  </p>
-                </div>
-                <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-                  From profile
-                </span>
+      {job ? (
+        <ImportProgress
+          playerRef={playerRef}
+          job={job}
+          error={jobError}
+          onReset={() => { setJob(null); setJobError(null); }}
+          onCancel={() => handleCancelImport(job.id)}
+        />
+      ) : (
+        <div className="space-y-3">
+          {knownFideId ? (
+            // The ID is the identity. Letting someone edit it here only
+            // invites importing another player's games onto this profile.
+            <div className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2.5 dark:border-dark-border dark:bg-dark-surface">
+              <div className="min-w-0">
+                <p className="text-xs text-gray-500 dark:text-gray-400">FIDE ID</p>
+                <p className="font-mono text-sm font-medium text-gray-900 dark:text-gray-100">
+                  {knownFideId}
+                </p>
               </div>
-            ) : (
-              <>
-                {/* Mode tabs */}
-                <div className="flex gap-1 rounded-lg bg-gray-100 p-1 dark:bg-dark-elevated">
-                  {(["fide_id", "name"] as const).map((mode) => (
+              <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                From profile
+              </span>
+            </div>
+          ) : (
+            <>
+              <form
+                onSubmit={(e) => { e.preventDefault(); if (fideInput.trim()) startImport(fideInput.trim()); }}
+                className="flex gap-2"
+              >
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={fideInput}
+                  onChange={(e) => setFideInput(e.target.value)}
+                  placeholder="FIDE ID, e.g. 1503014"
+                  autoComplete="off"
+                  className={inputClass}
+                />
+              </form>
+              <form onSubmit={handleNameSearch} className="flex gap-2">
+                <input
+                  type="text"
+                  value={nameInput}
+                  onChange={(e) => setNameInput(e.target.value)}
+                  placeholder="Or find them by name"
+                  autoComplete="off"
+                  className={inputClass}
+                />
+                <button type="submit" disabled={searching || !nameInput.trim()} className={buttonClass}>
+                  {searching ? "Searching…" : "Find"}
+                </button>
+              </form>
+              {candidates && candidates.length > 0 && (
+                <div className="space-y-2">
+                  {candidates.map((c) => (
                     <button
-                      key={mode}
+                      key={c.fideId}
                       type="button"
-                      onClick={() => {
-                        setSearchMode(mode);
-                        setSearchError(null);
-                      }}
-                      className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition ${
-                        searchMode === mode
-                          ? "bg-white text-gray-900 shadow-sm dark:bg-dark-muted dark:text-gray-100"
-                          : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                      }`}
+                      onClick={() => { setFideInput(c.fideId); setCandidates(null); }}
+                      className="flex w-full items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 text-left transition hover:border-[#1a3a6b]/40 hover:bg-blue-50/40 dark:border-dark-border dark:bg-dark-surface dark:hover:border-[#1a3a6b]/60 dark:hover:bg-blue-950/30"
                     >
-                      {mode === "fide_id" ? "By FIDE ID" : "By Name"}
+                      <span className="min-w-0 flex-1">
+                        <span className="block font-medium text-gray-900 dark:text-gray-100">{c.fullName}</span>
+                        <span className="block text-xs text-gray-500 dark:text-gray-400">
+                          {[c.federation, `FIDE ${c.fideId}`, c.standardRating && `Elo ${c.standardRating}`]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </span>
+                      </span>
+                      <span className="shrink-0 text-xs font-medium text-[#1a3a6b] dark:text-blue-400">Use →</span>
                     </button>
                   ))}
                 </div>
-
-                {searchMode === "fide_id" ? (
-                  <input
-                    type="text"
-                    value={fideInput}
-                    onChange={(e) => setFideInput(e.target.value)}
-                    placeholder="e.g. 1503014"
-                    autoComplete="off"
-                    className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-[#1a3a6b] focus:outline-none focus:ring-1 focus:ring-[#1a3a6b] dark:border-dark-border dark:bg-dark-elevated dark:text-gray-100 dark:placeholder-gray-500"
-                  />
-                ) : (
-                  <input
-                    type="text"
-                    value={nameInput}
-                    onChange={(e) => setNameInput(e.target.value)}
-                    placeholder="e.g. Timothy Mwabu"
-                    autoComplete="off"
-                    className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-[#1a3a6b] focus:outline-none focus:ring-1 focus:ring-[#1a3a6b] dark:border-dark-border dark:bg-dark-elevated dark:text-gray-100 dark:placeholder-gray-500"
-                  />
-                )}
-              </>
-            )}
-
-            {searchError && (
-              <p className="text-xs text-red-600 dark:text-red-400">{searchError}</p>
-            )}
-
-            <button
-              type="submit"
-              disabled={
-                step.type === "searching" ||
-                (!hasKnownFideId &&
-                  (searchMode === "fide_id" ? !fideInput.trim() : !nameInput.trim()))
-              }
-              className="inline-flex items-center gap-2 rounded-lg bg-[#1a3a6b] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#142d54] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {step.type === "searching" && (
-                <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
               )}
-              {step.type === "searching" ? "Searching…" : "Search Games"}
-            </button>
-          </form>
+            </>
+          )}
 
-          {/* URL fallback */}
-          <div>
-            <button
-              type="button"
-              onClick={() => setShowUrlFallback((v) => !v)}
-              className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-            >
-              {showUrlFallback ? "▾" : "▸"} Already have a direct URL?
-            </button>
+          <NotifyMeCheckbox checked={notifyEmail} onChange={setNotifyEmail} />
 
-            {showUrlFallback && (
-              <form onSubmit={handleRawUrlImport} className="mt-2 space-y-2">
-                <input
-                  type="url"
-                  value={rawUrl}
-                  onChange={(e) => {
-                    setRawUrl(e.target.value);
-                    setRawUrlStatus("idle");
-                    setRawUrlError(null);
-                  }}
-                  placeholder="https://chess-results.com/tnr12345.aspx?lan=1&art=9&snr=42"
-                  autoComplete="off"
-                  spellCheck={false}
-                  className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-[#1a3a6b] focus:outline-none focus:ring-1 focus:ring-[#1a3a6b] dark:border-dark-border dark:bg-dark-elevated dark:text-gray-100 dark:placeholder-gray-500"
-                />
-                {rawUrl && !rawUrl.includes("chess-results.com") && (
-                  <p className="text-xs text-red-600">URL must be from chess-results.com</p>
-                )}
-                {rawUrlError && (
-                  <p className="text-xs text-red-600 dark:text-red-400">{rawUrlError}</p>
-                )}
-                {rawUrlStatus === "done" && (
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="text-xs text-emerald-600">Games imported successfully.</p>
-                    <Link href={`/players/${playerRef}`} className="btn-secondary text-xs">
-                      View Profile
-                    </Link>
-                  </div>
-                )}
-                <button
-                  type="submit"
-                  disabled={
-                    rawUrlStatus === "loading" ||
-                    !rawUrl.includes("chess-results.com")
-                  }
-                  className="inline-flex items-center gap-2 rounded-lg bg-[#1a3a6b] px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-[#142d54] disabled:opacity-60"
-                >
-                  {rawUrlStatus === "loading" && (
-                    <svg className="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                  )}
-                  {rawUrlStatus === "loading" ? "Importing…" : "Import from URL"}
-                </button>
-              </form>
-            )}
-          </div>
+          {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
+
+          <button
+            type="button"
+            onClick={() => startImport(knownFideId || fideInput.trim())}
+            disabled={starting || !(knownFideId || fideInput.trim())}
+            className={buttonClass}
+          >
+            {starting ? "Starting…" : "Import all games"}
+          </button>
         </div>
-      )}
-
-      {/* ── Step: selecting-player ─────────────────────────────────────────── */}
-      {step.type === "selecting-player" && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => { setStep({ type: "idle" }); setSearchError(null); }}
-              className="text-xs text-gray-500 hover:text-gray-800 dark:hover:text-gray-200"
-            >
-              ← Search again
-            </button>
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Select the correct player
-            </span>
-          </div>
-
-          <div className="space-y-2">
-            {step.candidates.map((c) => (
-              <button
-                key={c.cr_id}
-                type="button"
-                onClick={() => selectCandidate(c)}
-                className="flex w-full items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 text-left transition hover:border-[#1a3a6b]/40 hover:bg-blue-50/40 dark:border-dark-border dark:bg-dark-surface dark:hover:border-[#1a3a6b]/60 dark:hover:bg-blue-950/30"
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    {c.title && (
-                      <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-bold text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
-                        {c.title}
-                      </span>
-                    )}
-                    <span className="font-medium text-gray-900 dark:text-gray-100">{c.name}</span>
-                  </div>
-                  <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-gray-500 dark:text-gray-400">
-                    {c.federation && <span>{c.federation}</span>}
-                    {c.fide_id && <span>FIDE {c.fide_id}</span>}
-                    {c.rating && <span>Elo {c.rating}</span>}
-                    {c.birth_year && <span>b. {c.birth_year}</span>}
-                  </div>
-                </div>
-                <span className="shrink-0 text-xs font-medium text-[#1a3a6b] dark:text-blue-400">
-                  Select →
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ── Step: loading-tournaments / starting ───────────────────────────── */}
-      {(step.type === "loading-tournaments" || step.type === "starting") && (
-        <div className="flex items-center gap-2 py-2 text-sm text-gray-500 dark:text-gray-400">
-          <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-          </svg>
-          {step.type === "starting"
-            ? `Fetching games for ${step.name}…`
-            : `Loading tournaments for ${step.name}…`}
-        </div>
-      )}
-
-      {/* ── Step: choose-mode ──────────────────────────────────────────────── */}
-      {step.type === "choose-mode" && (
-        <ImportModeChooser
-          playerName={step.playerName}
-          count={step.tournaments.length}
-          notifyEmail={notifyEmail}
-          onNotifyChange={setNotifyEmail}
-          onBack={() => { setStep({ type: "idle" }); setSearchError(null); }}
-          onFetchAll={() => handleImport(step.tournaments)}
-          onChoose={() =>
-            setStep({
-              type: "selecting-tournaments",
-              playerName: step.playerName,
-              tournaments: step.tournaments,
-            })
-          }
-        />
-      )}
-
-      {/* ── Step: selecting-tournaments ────────────────────────────────────── */}
-      {step.type === "selecting-tournaments" && (
-        <TournamentSelector
-          playerName={step.playerName}
-          tournaments={step.tournaments}
-          selected={selected}
-          notifyEmail={notifyEmail}
-          onNotifyChange={setNotifyEmail}
-          onToggle={(key) =>
-            setSelected((prev) => {
-              const next = new Set(prev);
-              next.has(key) ? next.delete(key) : next.add(key);
-              return next;
-            })
-          }
-          onSelectAll={() =>
-            setSelected(new Set(step.tournaments.map((t) => `${t.tnr}-${t.snr}`)))
-          }
-          onClearAll={() => setSelected(new Set())}
-          onBack={() => { setStep({ type: "idle" }); setSearchError(null); }}
-          onImport={() =>
-            handleImport(
-              step.tournaments.filter((t) => selected.has(`${t.tnr}-${t.snr}`))
-            )
-          }
-        />
-      )}
-
-      {/* ── Step: job running or finished ──────────────────────────────────── */}
-      {step.type === "job" && (
-        <ImportProgress
-          playerRef={playerRef}
-          job={step.job}
-          error={jobError}
-          onReset={() => { setStep({ type: "idle" }); setJobError(null); }}
-          onCancel={() => handleCancelImport(step.job.id)}
-        />
       )}
     </div>
   );
@@ -596,7 +310,7 @@ export function ChessResultsImportSection({
 // ── Notify-me control ────────────────────────────────────────────────────────
 
 /**
- * Offered at both entry points, because the decision belongs with the click
+ * Offered next to the button, because the decision belongs with the click
  * that starts the import — not somewhere in account settings.
  */
 function NotifyMeCheckbox({
@@ -626,206 +340,6 @@ function NotifyMeCheckbox({
   );
 }
 
-// ── Import mode chooser ──────────────────────────────────────────────────────
-
-/**
- * Two ways in, offered up front: take everything, or pick. Fetching all is the
- * common case and shouldn't cost twenty clicks, but a coach re-importing one
- * event shouldn't have to untick nineteen either.
- */
-function ImportModeChooser({
-  playerName,
-  count,
-  notifyEmail,
-  onNotifyChange,
-  onBack,
-  onFetchAll,
-  onChoose,
-}: {
-  playerName: string;
-  count: number;
-  notifyEmail: boolean;
-  onNotifyChange: (v: boolean) => void;
-  onBack: () => void;
-  onFetchAll: () => void;
-  onChoose: () => void;
-}) {
-  if (count === 0) {
-    return (
-      <div className="space-y-3">
-        <button type="button" onClick={onBack} className="text-xs text-gray-500 hover:text-gray-800 dark:hover:text-gray-200">
-          ← Search again
-        </button>
-        <p className="py-4 text-center text-sm text-gray-500 dark:text-gray-400">
-          No tournaments found for this player on chess-results.com.
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2">
-        <button type="button" onClick={onBack} className="text-xs text-gray-500 hover:text-gray-800 dark:hover:text-gray-200">
-          ← Back
-        </button>
-        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-          {playerName} · {count} tournament{count !== 1 ? "s" : ""} found
-        </span>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        <button
-          type="button"
-          onClick={onFetchAll}
-          className="group flex flex-col items-start gap-2 rounded-xl border-2 border-[#1a3a6b]/30 bg-white p-4 text-left transition hover:border-[#1a3a6b] hover:shadow-md dark:border-[#1a3a6b]/50 dark:bg-dark-surface dark:hover:border-[#1a3a6b]"
-        >
-          <span className="text-2xl leading-none">♞</span>
-          <span className="font-semibold text-gray-900 dark:text-gray-100">
-            Fetch all tournaments
-          </span>
-          <span className="text-xs text-gray-500 dark:text-gray-400">
-            Import every one of the {count} events we found. Best for a new player.
-          </span>
-          <span className="mt-auto pt-2 text-xs font-semibold text-[#1a3a6b] group-hover:underline dark:text-blue-400">
-            Start import →
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={onChoose}
-          className="group flex flex-col items-start gap-2 rounded-xl border-2 border-gray-200 bg-white p-4 text-left transition hover:border-gray-400 hover:shadow-md dark:border-dark-border dark:bg-dark-surface dark:hover:border-gray-500"
-        >
-          <span className="text-2xl leading-none">♟</span>
-          <span className="font-semibold text-gray-900 dark:text-gray-100">
-            Choose tournaments
-          </span>
-          <span className="text-xs text-gray-500 dark:text-gray-400">
-            Pick exactly which events to bring in.
-          </span>
-          <span className="mt-auto pt-2 text-xs font-semibold text-gray-600 group-hover:underline dark:text-gray-300">
-            Pick manually →
-          </span>
-        </button>
-      </div>
-
-      <NotifyMeCheckbox checked={notifyEmail} onChange={onNotifyChange} />
-    </div>
-  );
-}
-
-// ── Tournament selector sub-component ────────────────────────────────────────
-
-function TournamentSelector({
-  playerName,
-  tournaments,
-  selected,
-  notifyEmail,
-  onNotifyChange,
-  onToggle,
-  onSelectAll,
-  onClearAll,
-  onBack,
-  onImport,
-}: {
-  playerName: string;
-  tournaments: ChessResultsTournamentOption[];
-  selected: Set<string>;
-  notifyEmail: boolean;
-  onNotifyChange: (v: boolean) => void;
-  onToggle: (key: string) => void;
-  onSelectAll: () => void;
-  onClearAll: () => void;
-  onBack: () => void;
-  onImport: () => void;
-}) {
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={onBack}
-            className="text-xs text-gray-500 hover:text-gray-800 dark:hover:text-gray-200"
-          >
-            ← Back
-          </button>
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            {playerName}
-          </span>
-        </div>
-        <div className="flex gap-2 text-xs text-gray-400">
-          <button type="button" onClick={onSelectAll} className="hover:text-gray-700 dark:hover:text-gray-200">
-            Select all
-          </button>
-          <span>·</span>
-          <button type="button" onClick={onClearAll} className="hover:text-gray-700 dark:hover:text-gray-200">
-            Clear
-          </button>
-        </div>
-      </div>
-
-      {tournaments.length === 0 ? (
-        <p className="py-4 text-center text-sm text-gray-500 dark:text-gray-400">
-          No tournaments found for this player on chess-results.com.
-        </p>
-      ) : (
-        <div className="max-h-72 space-y-1.5 overflow-y-auto pr-1">
-          {tournaments.map((t) => {
-            const key = `${t.tnr}-${t.snr}`;
-            const checked = selected.has(key);
-            return (
-              <label
-                key={key}
-                className={`flex cursor-pointer items-start gap-3 rounded-lg border px-3 py-2.5 transition ${
-                  checked
-                    ? "border-[#1a3a6b]/40 bg-blue-50/60 dark:border-[#1a3a6b]/50 dark:bg-blue-950/30"
-                    : "border-gray-200 bg-white hover:border-gray-300 dark:border-dark-border dark:bg-dark-surface dark:hover:border-gray-600"
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  onChange={() => onToggle(key)}
-                  className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 accent-[#1a3a6b]"
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                    {t.name}
-                  </p>
-                  <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                    {[t.year, t.location].filter(Boolean).join(" · ") || "No date/location info"}
-                  </p>
-                </div>
-              </label>
-            );
-          })}
-        </div>
-      )}
-
-      <NotifyMeCheckbox checked={notifyEmail} onChange={onNotifyChange} />
-
-      {/*
-        Sticky: the list can run to twenty-plus rows, and a button that has
-        scrolled off the bottom of a long page may as well not exist.
-      */}
-      <div className="sticky bottom-0 -mx-1 flex items-center gap-3 border-t border-gray-200 bg-blue-50/95 px-1 py-3 backdrop-blur dark:border-dark-border dark:bg-dark-bg/95">
-        <button
-          type="button"
-          disabled={selected.size === 0}
-          onClick={onImport}
-          className="inline-flex items-center gap-2 rounded-lg bg-[#1a3a6b] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#142d54] disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          Import {selected.size > 0 ? `${selected.size} tournament${selected.size !== 1 ? "s" : ""}` : "selected"}
-        </button>
-        <span className="text-xs text-gray-500 dark:text-gray-400">
-          {selected.size} of {tournaments.length} selected
-        </span>
-      </div>
-    </div>
-  );
-}
 
 // ── Chess-themed progress bar ────────────────────────────────────────────────
 
@@ -861,7 +375,7 @@ function ImportProgressBar({
     >
       <div className="mb-2 flex items-baseline justify-between">
         <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-          {total === 1 ? "Importing tournament" : "Importing tournaments"}
+          Importing games
         </span>
         <span className="text-xs tabular-nums text-gray-500 dark:text-gray-400">
           {done} of {total}
@@ -1020,7 +534,7 @@ function ImportProgress({
 
       {job.cancel_requested && !finished && (
         <p className="text-xs text-gray-500 dark:text-gray-400">
-          Stopping after the current tournament…
+          Stopping…
         </p>
       )}
 

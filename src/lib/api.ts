@@ -2,16 +2,12 @@ import type {
   AccountDelinkResult,
   AccountGamesDeleteResult,
   ChessComImportResult,
-  ChessResultsImportResult,
-  ChessResultsPlayerCandidate,
-  ChessResultsTournamentOption,
   ActiveImportJob,
   ImportJob,
   Payment,
   LichessImportResult,
   Game,
   GamesFilter,
-  OpeningDistribution,
   OpeningStat,
   OpeningStudySuggestion,
   OpeningExplorerData,
@@ -21,7 +17,6 @@ import type {
   PlayerAccount,
   MyPlayer,
   PlayerDetail,
-  PlayerInsights,
   PlayerLookupResult,
   PrepSummary,
 } from "@/types";
@@ -92,59 +87,6 @@ async function fetchJson<T>(url: string, init?: RequestInit, _retriedAfterRefres
 }
 
 export const api = {
-  getPlayers(search?: string, page?: number, ordering?: string): Promise<PaginatedResponse<Player>> {
-    const params = new URLSearchParams();
-    if (search) params.set("search", search);
-    if (page && page > 1) params.set("page", String(page));
-    if (ordering) params.set("ordering", ordering);
-    return fetchJson(`${API_BASE}/players/?${params}`);
-  },
-
-  /** Which Olympiads exist, and the only filter values that return anything. */
-  /** Every puzzle up to today, with this player's progress on each. */
-  getPuzzles(): Promise<import("@/types").PuzzleList> {
-    return fetchJson(`${API_BASE}/puzzles/`);
-  },
-
-  /**
-   * Submit one move, in UCI. Checked server-side: the client is never told the
-   * line, only whether this move was on it and what the opponent answers.
-   */
-  playPuzzleMove(id: number, move: string): Promise<import("@/types").PuzzleMoveResult> {
-    return fetchJson(`${API_BASE}/puzzles/${id}/move/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ move }),
-    });
-  },
-
-  getOlympiadFilters(): Promise<import("@/types").OlympiadFilters> {
-    return fetchJson(`${API_BASE}/openings/olympiad/events/`);
-  },
-
-  /** One page of Olympiad games. Carries no movetext — see getOlympiadGameMoves. */
-  getOlympiadGames(params: {
-    section?: string | null;
-    year?: number | null;
-    federation?: string | null;
-    round?: string | null;
-    search?: string | null;
-    page?: number;
-  }): Promise<import("@/types").OlympiadGamePage> {
-    const q = new URLSearchParams();
-    if (params.section) q.set("section", params.section);
-    if (params.year) q.set("year", String(params.year));
-    if (params.federation) q.set("federation", params.federation);
-    if (params.round) q.set("round", params.round);
-    if (params.search) q.set("search", params.search);
-    if (params.page && params.page > 1) q.set("page", String(params.page));
-    return fetchJson(`${API_BASE}/openings/olympiad/games/?${q}`);
-  },
-
-  getOlympiadGameMoves(id: number): Promise<import("@/types").OlympiadGameWithMoves> {
-    return fetchJson(`${API_BASE}/openings/olympiad/games/${id}/moves/`);
-  },
-
   getPlayerDetail(slug: string): Promise<PlayerDetail> {
     return fetchJson(`${API_BASE}/players/${slug}/`);
   },
@@ -161,17 +103,16 @@ export const api = {
   },
 
   /**
-   * Save a FIDE ID and queue the import of their recent games.
+   * Save a FIDE ID and queue the import of their games.
    *
-   * Returns immediately: finding the games means two round trips to
-   * chess-results, which happen in the worker. Poll `import_job` with
-   * getImportJob() to follow it.
+   * Returns immediately: the worker fetches the games from chess-results.
+   * Poll `import_job` with getImportJob() to follow it.
    */
-  setMyFideId(fideId: string, fullHistory = false): Promise<MyPlayer> {
+  setMyFideId(fideId: string): Promise<MyPlayer> {
     return fetchJson(`${API_BASE}/me/player/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fide_id: fideId, full_history: fullHistory }),
+      body: JSON.stringify({ fide_id: fideId }),
     });
   },
 
@@ -219,14 +160,6 @@ export const api = {
       // Omitted on the first question; the response carries the id to send back.
       body: JSON.stringify({ question, conversation_id: conversationId ?? undefined }),
     });
-  },
-
-  getPlayerSummary(slug: string): Promise<PerformanceSummary> {
-    return fetchJson(`${API_BASE}/players/${slug}/summary/`);
-  },
-
-  getPlayerOpeningDistribution(slug: string): Promise<OpeningDistribution> {
-    return fetchJson(`${API_BASE}/players/${slug}/opening-distribution/`);
   },
 
   importPGN(payload: {
@@ -294,23 +227,6 @@ export const api = {
     });
   },
 
-  searchChessResultsPlayer(params: {
-    q?: string;
-    fide_id?: string;
-  }): Promise<{ results: ChessResultsPlayerCandidate[] }> {
-    const qs = new URLSearchParams(
-      Object.fromEntries(Object.entries(params).filter(([, v]) => v)) as Record<string, string>
-    );
-    return fetchJson(`${API_BASE}/chess-results/search/?${qs}`);
-  },
-
-  getChessResultsTournaments(crId: string): Promise<{
-    player_name: string;
-    tournaments: ChessResultsTournamentOption[];
-  }> {
-    return fetchJson(`${API_BASE}/chess-results/player/${crId}/tournaments/`);
-  },
-
   // ── Payments ───────────────────────────────────────────────────────────────
 
   /**
@@ -335,26 +251,12 @@ export const api = {
 
   // ── Background import jobs ─────────────────────────────────────────────────
   //
-  // Queue a batch and poll it, rather than looping in the browser. The work
+  // Queue an import and poll it, rather than looping in the browser. The work
   // continues if the tab closes, and progress survives reopening on another
   // device.
 
-  createImportJob(
-    slug: string,
-    tournaments: { name: string; url: string }[],
-    notifyEmail = false
-  ): Promise<ImportJob> {
-    return fetchJson(`${API_BASE}/players/${slug}/import-jobs/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ tournaments, notify_email: notifyEmail }),
-    });
-  },
-
-  // Everything chess-results holds on one player, without listing the events
-  // first. The worker asks their game database, which is one request for a
-  // whole career instead of one per tournament, so this is the preferred way
-  // in whenever a FIDE ID is known.
+  // Everything chess-results holds on one player. The worker asks their game
+  // database, which returns a whole career in one request.
   createCareerImportJob(
     slug: string,
     fideId: string,
@@ -383,18 +285,6 @@ export const api = {
 
   recentImportJobs(slug: string): Promise<{ results: ImportJob[] }> {
     return fetchJson(`${API_BASE}/players/${slug}/import-jobs/recent/`);
-  },
-
-  /** Queue a single chess-results event. Returns the job to poll. */
-  importFromChessResults(
-    slug: string,
-    payload: { url: string; notify_email?: boolean }
-  ): Promise<ImportJob> {
-    return fetchJson(`${API_BASE}/players/${slug}/import-chess-results/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
   },
 
   getPrepSummary(slug: string, source?: string): Promise<PrepSummary> {
@@ -439,11 +329,8 @@ export const api = {
     URL.revokeObjectURL(url);
   },
 
-  getMasterGames(params: { eco?: string; event?: string; limit?: number }): Promise<import("@/types").MasterGame[]> {
-    const qs = new URLSearchParams();
-    if (params.eco)   qs.set("eco",   params.eco);
-    if (params.event) qs.set("event", params.event);
-    qs.set("limit", String(params.limit ?? 10));
+  getMasterGames(params: { eco: string; limit?: number }): Promise<import("@/types").MasterGame[]> {
+    const qs = new URLSearchParams({ eco: params.eco, limit: String(params.limit ?? 10) });
     return fetchJson(`${API_BASE}/openings/master-games/?${qs}`);
   },
 
@@ -459,21 +346,6 @@ export const api = {
     return fetchJson(`${API_BASE}/openings/explorer/?${qs}`);
   },
 
-  getTournamentList(q?: string, limit = 50): Promise<import("@/types").TournamentSummary[]> {
-    const qs = new URLSearchParams({ limit: String(limit) });
-    if (q) qs.set("q", q);
-    return fetchJson(`${API_BASE}/openings/tournaments/?${qs}`);
-  },
-
-  getPlayerInsights(slug: string, ecoCodes?: string[]): Promise<PlayerInsights> {
-    const params = new URLSearchParams();
-    if (ecoCodes && ecoCodes.length > 0) {
-      params.set("eco_codes", ecoCodes.join(","));
-    }
-    const qs = params.toString();
-    return fetchJson(`${API_BASE}/players/${slug}/insights/${qs ? `?${qs}` : ""}`);
-  },
-
   getOpeningStudies(slug: string, limit?: number): Promise<{ suggestions: OpeningStudySuggestion[] }> {
     const qs = limit ? `?limit=${limit}` : "";
     return fetchJson(`${API_BASE}/players/${slug}/opening-studies/${qs}`);
@@ -487,11 +359,6 @@ getOpeningExplorer(
     const qs = new URLSearchParams({ eco_code });
     if (opening_name) qs.set("opening_name", opening_name);
     return fetchJson(`${API_BASE}/players/${slug}/opening-explorer/?${qs}`);
-  },
-
-  searchOpenings(query: string, limit = 20): Promise<import("@/types").OpeningResult[]> {
-    const params = new URLSearchParams({ q: query, limit: String(limit) });
-    return fetchJson(`${API_BASE}/openings/search/?${params}`);
   },
 
   // ── Auth ─────────────────────────────────────────────────────────────────
@@ -604,18 +471,6 @@ getOpeningExplorer(
   },
 
   // ── Player accounts ───────────────────────────────────────────────────────
-
-  getAccounts(slug: string): Promise<PlayerAccount[]> {
-    return fetchJson(`${API_BASE}/players/${slug}/accounts/`);
-  },
-
-  addAccount(slug: string, platform: "chesscom" | "lichess", username: string): Promise<PlayerAccount> {
-    return fetchJson(`${API_BASE}/players/${slug}/accounts/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ platform, username }),
-    });
-  },
 
   removeAccount(
     slug: string,

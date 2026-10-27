@@ -13,7 +13,6 @@ import { SectionContainer } from "@/components/ui/SectionContainer";
 import { CardSkeleton } from "@/components/ui/LoadingSkeleton";
 import { PerformanceSplitCard } from "@/components/players/PerformanceSplitCard";
 import { OpeningBreakdownCard } from "@/components/players/OpeningBreakdownCard";
-import { StrengthWeaknessCard } from "@/components/players/StrengthWeaknessCard";
 import { GamesTable } from "@/components/players/GamesTable";
 import { useRefetchWhenImportFinishes } from "@/components/import/useRefetchWhenImportFinishes";
 
@@ -358,20 +357,6 @@ export default function PlayerDetailPage() {
             <Link href={`/players/${slug}/games`} className="text-sm text-brand-600 hover:underline">
               View all games →
             </Link>
-          </div>
-        </SectionContainer>
-      )}
-
-      {/* Strengths & Weaknesses */}
-      {(player.strengths.length > 0 || player.weaknesses.length > 0) && (
-        <SectionContainer title="Strengths & Weaknesses">
-          <div className="grid gap-4 sm:grid-cols-2">
-            {player.strengths.length > 0 && (
-              <StrengthWeaknessCard items={player.strengths} type="strength" />
-            )}
-            {player.weaknesses.length > 0 && (
-              <StrengthWeaknessCard items={player.weaknesses} type="weakness" />
-            )}
           </div>
         </SectionContainer>
       )}
