@@ -15,8 +15,17 @@ export function MoveList({ mainMoves, line, result }: { mainMoves: ParsedMove[];
   const activeRef = useRef<HTMLButtonElement>(null);
   const startsAt = line.branchStartsAt;
 
+  // Keep the current move in sight by scrolling the list's own box, never the
+  // page: scrollIntoView scrolls every scrollable ancestor, so on a phone,
+  // where the list sits below the board, each Next nudged the whole page.
   useEffect(() => {
-    activeRef.current?.scrollIntoView({ block: "nearest" });
+    const el = activeRef.current;
+    const box = el?.closest<HTMLElement>("[data-moves-scroll]");
+    if (!el || !box) return;
+    const e = el.getBoundingClientRect();
+    const b = box.getBoundingClientRect();
+    if (e.top < b.top) box.scrollTop -= b.top - e.top + 4;
+    else if (e.bottom > b.bottom) box.scrollTop += e.bottom - b.bottom + 4;
   }, [line.index, line.onBranch]);
 
   // A move of the game is current when the board is on it: on the game, or

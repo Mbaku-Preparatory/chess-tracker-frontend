@@ -291,7 +291,7 @@ export function AnalysisView(props: AnalysisViewProps) {
         <aside className="flex min-w-0 flex-col gap-3">
           <EnginePanel prefs={prefs} setPrefs={setPrefs} engine={engine} fen={fen} />
 
-          <section aria-label="Moves" className="max-h-[45vh] overflow-y-auto rounded-xl bg-ink-card p-2 lg:max-h-[calc(100dvh-520px)] lg:min-h-[160px]">
+          <section aria-label="Moves" data-moves-scroll className="max-h-[45vh] overflow-y-auto rounded-xl bg-ink-card p-2 lg:max-h-[calc(100dvh-520px)] lg:min-h-[160px]">
             <MoveList mainMoves={mainMoves} line={line} result={finished ? result : null} />
           </section>
 
