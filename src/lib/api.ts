@@ -335,6 +335,31 @@ export const api = {
     URL.revokeObjectURL(url);
   },
 
+  /** A chess book PDF to convert. Answers at once; the worker converts it, and
+   * the book's status is polled through GraphQL (lib/books.ts). */
+  uploadBook(file: File, title?: string): Promise<{ public_id: string; title: string; status: string }> {
+    const body = new FormData();
+    body.append("file", file);
+    if (title) body.append("title", title);
+    return fetchJson(`${API_BASE}/books/`, { method: "POST", body });
+  },
+
+  async downloadBookPgn(publicId: string): Promise<void> {
+    const token = authStorage.getToken();
+    const res = await fetch(`${API_BASE}/books/${encodeURIComponent(publicId)}/pgn/`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) throw new Error("Failed to download the book's PGN");
+    const blob = await res.blob();
+    const match = (res.headers.get("Content-Disposition") ?? "").match(/filename="([^"]+)"/);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = match?.[1] ?? "book.pgn";
+    a.click();
+    URL.revokeObjectURL(url);
+  },
+
   getMasterGame(id: string): Promise<import("@/types").MasterGame> {
     return fetchJson(`${API_BASE}/openings/master-games/${encodeURIComponent(id)}/`);
   },
