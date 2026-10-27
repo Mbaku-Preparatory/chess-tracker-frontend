@@ -20,28 +20,6 @@ function Switch({ checked, onChange, label }: { checked: boolean; onChange: (v: 
   );
 }
 
-function SoundToggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <button
-      type="button"
-      onClick={() => onChange(!on)}
-      aria-pressed={on}
-      aria-label={on ? "Mute move sounds" : "Turn move sounds on"}
-      title={on ? "Sound on" : "Sound off"}
-      className="rounded-lg p-1.5 text-ink-muted hover:bg-ink-raised hover:text-ink-text"
-    >
-      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M11 5L6 9H3v6h3l5 4V5z" />
-        {on ? (
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15.5 8.5a5 5 0 010 7M18.5 5.5a9 9 0 010 13" />
-        ) : (
-          <path strokeLinecap="round" strokeLinejoin="round" d="M16 9l5 6M21 9l-5 6" />
-        )}
-      </svg>
-    </button>
-  );
-}
-
 /** The engine switch, its depth, and the best lines it has found. */
 export function EnginePanel({
   prefs,
@@ -64,10 +42,7 @@ export function EnginePanel({
 
   return (
     <section aria-label="Engine" className="flex flex-col gap-3 rounded-xl bg-ink-card p-4">
-      <div className="flex items-center justify-between gap-3">
-        <Switch checked={prefs.engine} onChange={(engineOn) => setPrefs({ engine: engineOn })} label="Engine" />
-        <SoundToggle on={prefs.sound} onChange={(sound) => setPrefs({ sound })} />
-      </div>
+      <Switch checked={prefs.engine} onChange={(engineOn) => setPrefs({ engine: engineOn })} label="Engine" />
 
       {prefs.engine ? (
         <>
