@@ -7,12 +7,21 @@
  * so a sitemap a day old is never meaningfully behind.
  */
 
+import { FEDERATIONS } from "./federations";
+import { rankingsPath } from "./rankings";
 import { GRAPHQL_URL, SITE_URL } from "./site";
 
 export const SITEMAP_REVALIDATE = 86_400;
 
 // The public pages that are not player profiles. Add new public pages here.
-export const STATIC_PAGES = ["/", "/privacy"];
+// Each federation's classical list is its own page ("Kenya chess rankings"):
+// the searches people make. The other lists are reachable from its tabs.
+export const STATIC_PAGES = [
+  "/",
+  "/rankings",
+  ...FEDERATIONS.map((f) => rankingsPath({ tc: "classical", list: "overall", fed: f.code, page: 1 })),
+  "/privacy",
+];
 
 type Entry = { fideId: string; slug: string; lastModified: string | null };
 
