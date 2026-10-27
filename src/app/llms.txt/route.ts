@@ -23,7 +23,7 @@ export function GET() {
 
 ## Pages
 
-- [Home](${SITE_URL}/): what the site is, and lookup by FIDE ID
+- [Home](${SITE_URL}/): what the site is, and player search by name or FIDE ID
 - [Sitemap](${SITE_URL}/sitemap.xml): every active player's profile
 - [Privacy policy](${SITE_URL}/privacy)
 `;
