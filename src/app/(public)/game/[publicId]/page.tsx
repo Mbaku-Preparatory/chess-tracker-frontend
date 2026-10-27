@@ -85,7 +85,7 @@ export default async function PublicGamePage({ params }: { params: Params }) {
       filename={pgnFilename(game.whiteName, game.blackName, game.date, game.result)}
       shareUrl={`${SITE_URL}${gamePath(game.publicId)}`}
       importToLichess={false}
-      back={home ? { href: profilePath(home), label: home.fullName } : { href: "/", label: "Home" }}
+      back={{ href: home ? profilePath(home) : "/" }}
     />
   );
 }

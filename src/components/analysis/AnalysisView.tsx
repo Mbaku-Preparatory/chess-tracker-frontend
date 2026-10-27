@@ -15,6 +15,7 @@ import { playSound, soundFor } from "@/lib/chessSounds";
 import { useEngine } from "@/hooks/useEngine";
 
 import { EnginePanel } from "./EnginePanel";
+import { MoveList } from "./MoveList";
 import { ShareSheet } from "./ShareSheet";
 
 const Board = dynamic(() => import("./Board"), {
@@ -46,10 +47,11 @@ export interface AnalysisViewProps {
   /** Signed in: send the PGN through our Lichess import. Otherwise open
    * Lichess's analysis board with the moves in the URL. */
   importToLichess: boolean;
-  back: { href: string; label: string };
+  /** Where Back goes when the page was not opened from inside the site. */
+  back: { href: string };
 }
 
-function BackButton({ href, label }: { href: string; label: string }) {
+function BackButton({ href }: { href: string }) {
   const router = useRouter();
   return (
     <Link
@@ -63,12 +65,12 @@ function BackButton({ href, label }: { href: string; label: string }) {
           router.back();
         }
       }}
-      className="inline-flex shrink-0 items-center gap-1.5 rounded-pill bg-ink-card px-3 py-2 text-[14px] text-ink-muted hover:bg-ink-raised hover:text-ink-text"
+      className="inline-flex shrink-0 items-center gap-1.5 rounded-pill border-2 border-accent px-3.5 py-1.5 text-[14px] font-[520] text-accent-soft hover:bg-accent hover:text-accent-on"
     >
-      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
       </svg>
-      {label}
+      Back
     </Link>
   );
 }
@@ -90,6 +92,31 @@ function Plate({ side, color }: { side: AnalysisSide; color: "white" | "black" }
     </div>
   );
 }
+
+const ICON_DOWNLOAD = (
+  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+  </svg>
+);
+const ICON_SHARE = (
+  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+  </svg>
+);
+// Chess.com's pawn in its green, to say where the button goes.
+const ICON_CHESSCOM = (
+  <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden>
+    <circle cx="12" cy="5.5" r="3.5" fill="#81b64c" />
+    <path fill="#81b64c" d="M9.2 9.5h5.6l-.9 4.2c1.9.9 3.3 2.6 3.6 4.6H6.5c.3-2 1.7-3.7 3.6-4.6zM5.5 19.5h13a1.5 1.5 0 010 3h-13a1.5 1.5 0 010-3z" />
+  </svg>
+);
+// Lichess's own mark (lila public/logo/lichess.svg, which lila licenses for
+// referring to lichess.org, as this button does).
+const ICON_LICHESS = (
+  <svg className="h-4 w-4" viewBox="0 0 50 50" aria-hidden>
+    <path fill="currentColor" stroke="currentColor" strokeLinejoin="round" d="M38.956.5c-3.53.418-6.452.902-9.286 2.984C5.534 1.786-.692 18.533.68 29.364 3.493 50.214 31.918 55.785 41.329 41.7c-7.444 7.696-19.276 8.752-28.323 3.084S-.506 27.392 4.683 17.567C9.873 7.742 18.996 4.535 29.03 6.405c2.43-1.418 5.225-3.22 7.655-3.187l-1.694 4.86 12.752 21.37c-.439 5.654-5.459 6.112-5.459 6.112-.574-1.47-1.634-2.942-4.842-6.036-3.207-3.094-17.465-10.177-15.788-16.207-2.001 6.967 10.311 14.152 14.04 17.663 3.73 3.51 5.426 6.04 5.795 6.756 0 0 9.392-2.504 7.838-8.927L37.4 7.171z" />
+  </svg>
+);
 
 const ICONS = {
   start: "M8.445 14.832A1 1 0 0010 14v-2.798l5.445 3.63A1 1 0 0017 14V6a1 1 0 00-1.555-.832L10 8.798V6a1 1 0 00-1.555-.832l-6 4a1 1 0 000 1.664l6 4z",
@@ -140,7 +167,6 @@ export function AnalysisView(props: AnalysisViewProps) {
   const [selected, setSelected] = useState<string | null>(null);
   const [sharing, setSharing] = useState(false);
   const [lichessBusy, setLichessBusy] = useState(false);
-  const activeMoveRef = useRef<HTMLButtonElement>(null);
   const finished = result === "1-0" || result === "0-1" || result === "1/2-1/2";
 
   // A sound for the move arrived at, however it was reached.
@@ -152,10 +178,6 @@ export function AnalysisView(props: AnalysisViewProps) {
     const lastOfGame = finished && !line.inBranch && index === mainMoves.length - 1;
     void playSound(soundFor(moves[index].san, lastOfGame));
   }, [index, moves, prefs.sound, finished, line.inBranch, mainMoves.length]);
-
-  useEffect(() => {
-    activeMoveRef.current?.scrollIntoView({ block: "nearest" });
-  }, [index]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -254,7 +276,7 @@ export function AnalysisView(props: AnalysisViewProps) {
       {sharing && <ShareSheet pgn={pgn} title={title} url={shareUrl} onClose={() => setSharing(false)} />}
 
       <header className="flex items-start gap-3">
-        <BackButton href={back.href} label={back.label} />
+        <BackButton href={back.href} />
         <div className="min-w-0 pt-0.5">
           <h1 className="text-balance text-[18px] font-[520] leading-tight text-ink-text sm:text-[22px]">{title}</h1>
           <p className="mt-1 flex flex-wrap gap-x-3 text-[13px] text-ink-faint">
@@ -279,66 +301,31 @@ export function AnalysisView(props: AnalysisViewProps) {
         <aside className="flex min-w-0 flex-col gap-3">
           <EnginePanel prefs={prefs} setPrefs={setPrefs} engine={engine} fen={fen} />
 
-          <section aria-label="Moves" className="rounded-xl bg-ink-card p-3">
-            {moves.length === 0 ? (
-              <p className="py-6 text-center text-[14px] text-ink-faint">No moves recorded for this game.</p>
-            ) : (
-              <div className="flex max-h-[45vh] flex-wrap content-start gap-x-1 gap-y-0.5 overflow-y-auto font-mono text-[14px] leading-relaxed lg:max-h-[calc(100dvh-520px)] lg:min-h-[160px]">
-                {moves.map((mv, i) => {
-                  const branched = line.branchStartsAt !== null && i >= line.branchStartsAt;
-                  const current = i === index;
-                  return (
-                    <span key={i} className="inline-flex items-baseline">
-                      {i === line.branchStartsAt && <span className="mx-0.5 select-none text-accent-soft">(</span>}
-                      {mv.color === "w" && <span className="mr-0.5 select-none text-ink-faint">{mv.moveNumber}.</span>}
-                      <button
-                        type="button"
-                        ref={current ? activeMoveRef : null}
-                        onClick={() => goTo(i)}
-                        className={`rounded px-1 py-0.5 ${
-                          current ? "bg-accent text-accent-on" : branched ? "italic text-accent-soft hover:bg-ink-raised" : "text-ink-text hover:bg-ink-raised"
-                        }`}
-                      >
-                        {mv.san}
-                      </button>
-                      {branched && i === moves.length - 1 && <span className="mx-0.5 select-none text-accent-soft">)</span>}
-                    </span>
-                  );
-                })}
-                {finished && !line.inBranch && <span className="ml-1 self-center font-[520] text-ink-text">{result.replaceAll("1/2", "½")}</span>}
-              </div>
-            )}
-            {line.branch && (
-              <button
-                type="button"
-                onClick={() => {
-                  line.clearBranch();
-                  setSelected(null);
-                }}
-                className="mt-3 w-full rounded-pill border border-accent px-3 py-1.5 text-[13px] font-[520] text-accent-soft hover:bg-ink-raised"
-              >
-                ↩ Back to the game
-              </button>
-            )}
+          <section aria-label="Moves" className="max-h-[45vh] overflow-y-auto rounded-xl bg-ink-card p-2 lg:max-h-[calc(100dvh-520px)] lg:min-h-[160px]">
+            <MoveList mainMoves={mainMoves} line={line} result={finished ? result : null} />
           </section>
 
           <Nav index={index} last={moves.length - 1} goTo={goTo} className="hidden lg:grid" />
 
           <div className="flex flex-wrap gap-2">
             {[
-              { label: "Download PGN", onClick: download },
-              { label: "Chess.com", onClick: () => window.open(`https://www.chess.com/analysis?pgn=${encodeURIComponent(pgn)}`, "_blank", "noopener") },
-              { label: lichessBusy ? "Opening…" : "Lichess", onClick: openLichess, disabled: lichessBusy },
-              { label: "Share", onClick: () => setSharing(true) },
+              { label: "Download PGN", icon: ICON_DOWNLOAD, onClick: download },
+              { label: "Chess.com", icon: ICON_CHESSCOM, onClick: () => window.open(`https://www.chess.com/analysis?pgn=${encodeURIComponent(pgn)}`, "_blank", "noopener") },
+              { label: lichessBusy ? "Opening…" : "Lichess", icon: ICON_LICHESS, onClick: openLichess, disabled: lichessBusy },
+              { label: "Share", icon: ICON_SHARE, onClick: () => setSharing(true) },
             ].map((a) => (
               <button
                 key={a.label}
                 type="button"
                 onClick={a.onClick}
                 disabled={a.disabled}
-                className="rounded-pill bg-ink-card px-3.5 py-2 text-[13px] text-ink-muted hover:bg-ink-raised hover:text-ink-text disabled:opacity-60"
+                aria-label={a.label}
+                title={a.label}
+                className="inline-flex items-center gap-2 rounded-pill bg-ink-card px-3 py-2 text-[13px] text-ink-muted hover:bg-ink-raised hover:text-ink-text disabled:opacity-60"
               >
-                {a.label}
+                {a.icon}
+                {/* Icons alone on a phone: four labelled buttons do not fit a row. */}
+                <span className="hidden sm:inline">{a.label}</span>
               </button>
             ))}
           </div>

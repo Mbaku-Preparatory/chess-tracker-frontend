@@ -52,7 +52,7 @@ export default function MasterGameAnalysisPage() {
       filename={pgnFilename(game.white, game.black, game.year, game.result)}
       shareUrl={null}
       importToLichess
-      back={{ href: "/explorer", label: "Explorer" }}
+      back={{ href: "/explorer" }}
     />
   );
 }
