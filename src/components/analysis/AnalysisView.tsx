@@ -264,9 +264,10 @@ export function AnalysisView(props: AnalysisViewProps) {
     <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4">
       {sharing && <ShareSheet pgn={pgn} title={title} url={shareUrl} onClose={() => setSharing(false)} />}
 
-      <header className="flex items-start gap-3">
+      {/* On a phone the title needs the full width, so Back takes its own line. */}
+      <header className="flex flex-col items-start gap-3 sm:flex-row">
         <BackButton href={back.href} />
-        <div className="min-w-0 pt-0.5">
+        <div className="min-w-0 sm:pt-0.5">
           <h1 className="text-balance text-[18px] font-[520] leading-tight text-ink-text sm:text-[22px]">{title}</h1>
           <p className="mt-1 flex flex-wrap gap-x-3 text-[13px] text-ink-faint">
             {details.filter(Boolean).map((d) => <span key={String(d)}>{d}</span>)}
