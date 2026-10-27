@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { FideIdLookup } from "@/components/public/FideIdLookup";
+import { PlayerSearch } from "@/components/public/PlayerSearch";
 import { SITE_URL } from "@/lib/site";
 
 const TITLE = "Chess Preparatory · FIDE player ratings, history and games";
@@ -102,7 +102,7 @@ export default function LandingPage() {
           Official ratings and ranks, monthly rating history, and games with results and openings, for
           every player rated by FIDE.
         </p>
-        <FideIdLookup />
+        <PlayerSearch />
         <p className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[14px] text-ink-faint">
           <span>For example</span>
           {EXAMPLES.map((e) => (
