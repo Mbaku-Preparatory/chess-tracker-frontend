@@ -1,7 +1,7 @@
 "use client";
 
 import { DEPTHS, type AnalysisPrefs, type EngineDepth } from "@/lib/analysisPrefs";
-import { formatScore, pvToSan, type EngineResult } from "@/hooks/useEngine";
+import { MULTI_PV, formatScore, pvToSan, type EngineResult } from "@/hooks/useEngine";
 
 function Switch({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
   return (
@@ -63,24 +63,37 @@ export function EnginePanel({
             ))}
           </div>
 
-          {status && <p className="text-[12px] text-ink-faint">{status}</p>}
+          {/* Everything below keeps one height whatever the engine is doing. The
+              lines empty while a new position is analysed and fill again when it
+              answers; a panel that shrank and grew with them shoved the move list
+              and the very buttons being clicked up and down on every move. */}
+          <p className="h-4 text-[12px] leading-4 text-ink-faint">{status ?? "\u00a0"}</p>
 
           <ol className="flex flex-col gap-1.5">
-            {engine.lines.map((line, i) => (
-              <li key={i} className="flex min-w-0 items-baseline gap-2 text-[13px]">
-                <span
-                  className={`w-14 shrink-0 rounded px-1.5 py-0.5 text-center font-mono text-[12px] font-bold tabular-nums ${
-                    (line.mate ?? line.score ?? 0) >= 0 ? "bg-white text-neutral-900 ring-1 ring-ink-line" : "bg-neutral-800 text-white"
-                  }`}
-                >
-                  {formatScore(line.score, line.mate)}
-                </span>
-                <span className="min-w-0 truncate font-mono text-ink-muted">{pvToSan(fen, line.pv)}</span>
-              </li>
-            ))}
-            {!engine.isAnalyzing && engine.lines.length === 0 && (
-              <li className="text-[13px] text-ink-faint">No evaluation for this position.</li>
-            )}
+            {Array.from({ length: MULTI_PV }, (_, i) => {
+              const line = engine.lines[i];
+              const empty = !engine.isAnalyzing && engine.lines.length === 0;
+              return (
+                <li key={i} className="flex h-6 min-w-0 items-center gap-2 text-[13px]">
+                  {line ? (
+                    <>
+                      <span
+                        className={`w-14 shrink-0 rounded px-1.5 py-0.5 text-center font-mono text-[12px] font-bold tabular-nums ${
+                          (line.mate ?? line.score ?? 0) >= 0 ? "bg-white text-neutral-900 ring-1 ring-ink-line" : "bg-neutral-800 text-white"
+                        }`}
+                      >
+                        {formatScore(line.score, line.mate)}
+                      </span>
+                      <span className="min-w-0 truncate font-mono text-ink-muted">{pvToSan(fen, line.pv)}</span>
+                    </>
+                  ) : empty && i === 0 ? (
+                    <span className="text-ink-faint">No evaluation for this position.</span>
+                  ) : (
+                    <span className={`h-5 w-14 shrink-0 rounded bg-ink-raised ${engine.isAnalyzing ? "animate-pulse" : "opacity-0"}`} />
+                  )}
+                </li>
+              );
+            })}
           </ol>
         </>
       ) : (
