@@ -46,7 +46,7 @@ function toView({ pgn_text, game, player }: Loaded): AnalysisViewProps {
     filename: pgnFilename(white.name, black.name, game.date_played, result),
     shareUrl: null,
     importToLichess: true,
-    back: { href: `/players/${player.slug}/games`, label: "Games" },
+    back: { href: `/players/${player.slug}/games` },
   };
 }
 
