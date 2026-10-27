@@ -15,10 +15,9 @@ export type EngineDepth = "quick" | "standard" | "deep";
 export interface AnalysisPrefs {
   engine: boolean;
   depth: EngineDepth;
-  sound: boolean;
 }
 
-export const DEFAULT_PREFS: AnalysisPrefs = { engine: false, depth: "standard", sound: true };
+export const DEFAULT_PREFS: AnalysisPrefs = { engine: false, depth: "standard" };
 
 /** Depth to search to, and a time cap so a phone is never stuck on "Deep". */
 export const DEPTHS: Record<EngineDepth, { label: string; depth: number; capMs: number }> = {
@@ -38,7 +37,6 @@ function read(): AnalysisPrefs {
     cached = {
       engine: typeof stored.engine === "boolean" ? stored.engine : DEFAULT_PREFS.engine,
       depth: stored.depth in DEPTHS ? stored.depth : DEFAULT_PREFS.depth,
-      sound: typeof stored.sound === "boolean" ? stored.sound : DEFAULT_PREFS.sound,
     };
   } catch {
     cached = DEFAULT_PREFS;

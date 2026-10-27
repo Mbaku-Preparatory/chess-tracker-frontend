@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { hasInAppHistory } from "@/components/NavigationMemory";
 import { EvalBar } from "@/components/ui/EvalBar";
@@ -11,7 +11,6 @@ import { DEPTHS, useAnalysisPrefs } from "@/lib/analysisPrefs";
 import { api } from "@/lib/api";
 import { movetext, parsePgn } from "@/lib/chess/pgn";
 import { useAnalysisLine } from "@/lib/chess/useAnalysisLine";
-import { playSound, soundFor } from "@/lib/chessSounds";
 import { useEngine } from "@/hooks/useEngine";
 
 import { EnginePanel } from "./EnginePanel";
@@ -168,16 +167,6 @@ export function AnalysisView(props: AnalysisViewProps) {
   const [sharing, setSharing] = useState(false);
   const [lichessBusy, setLichessBusy] = useState(false);
   const finished = result === "1-0" || result === "0-1" || result === "1/2-1/2";
-
-  // A sound for the move arrived at, however it was reached.
-  const shownIndex = useRef(index);
-  useEffect(() => {
-    const previous = shownIndex.current;
-    shownIndex.current = index;
-    if (!prefs.sound || index === previous || index < 0) return;
-    const lastOfGame = finished && !line.inBranch && index === mainMoves.length - 1;
-    void playSound(soundFor(moves[index].san, lastOfGame));
-  }, [index, moves, prefs.sound, finished, line.inBranch, mainMoves.length]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
