@@ -76,6 +76,9 @@ export const FEDERATIONS: Federation[] = [
   fed("EST", "Estonia", "EE"),
   fed("ETH", "Ethiopia", "ET"),
   fed("FAI", "Faroe Islands", "FO"),
+  // Players FIDE registers under its own flag rather than a country. No emoji
+  // exists for it; the name is what the bare code was missing.
+  fed("FID", "FIDE", "", ""),
   fed("FIJ", "Fiji", "FJ"),
   fed("FIN", "Finland", "FI"),
   fed("FRA", "France", "FR"),

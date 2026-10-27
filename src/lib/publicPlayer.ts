@@ -109,16 +109,21 @@ export class BackendUnavailable extends Error {}
  * BackendUnavailable when the API cannot answer, so the page can say so
  * rather than claim the player does not exist. */
 export async function fetchPublicPlayer(fideId: string, page = 1): Promise<PublicPlayer | null> {
+  const player = await queryPublicPlayer(fideId, page, { next: { revalidate: 3600, tags: [playerTag(fideId)] } });
+  // The data cache cannot tell a profile from "not rated", so a cached null
+  // is asked again live: a player the next list or a refresh adds would
+  // otherwise 404 for up to an hour.
+  return player ?? queryPublicPlayer(fideId, page, { cache: "no-store" });
+}
+
+async function queryPublicPlayer(fideId: string, page: number, caching: RequestInit): Promise<PublicPlayer | null> {
   const params = new URLSearchParams({
     query: PROFILE_QUERY,
     variables: JSON.stringify({ fideId, page }),
   });
   let response: Response;
   try {
-    response = await fetch(`${GRAPHQL_URL}?${params}`, {
-      headers: { Accept: "application/json" },
-      next: { revalidate: 3600, tags: [playerTag(fideId)] },
-    });
+    response = await fetch(`${GRAPHQL_URL}?${params}`, { headers: { Accept: "application/json" }, ...caching });
   } catch (err) {
     throw new BackendUnavailable(String(err));
   }

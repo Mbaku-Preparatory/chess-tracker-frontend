@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { PlayerSearch } from "@/components/public/PlayerSearch";
-import { SITE_URL } from "@/lib/site";
+import { SHARE_IMAGE, SITE_URL } from "@/lib/site";
 
 const TITLE = "Chess Preparatory · FIDE player ratings, history and games";
 const DESCRIPTION =
@@ -12,8 +12,8 @@ export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
   alternates: { canonical: "/" },
-  openGraph: { title: TITLE, description: DESCRIPTION, url: "/", type: "website", siteName: "Chess Preparatory" },
-  twitter: { card: "summary", title: TITLE, description: DESCRIPTION },
+  openGraph: { title: TITLE, description: DESCRIPTION, url: "/", type: "website", siteName: "Chess Preparatory", images: [SHARE_IMAGE] },
+  twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION, images: [SHARE_IMAGE] },
 };
 
 // Well-known players whose profiles are a fair first click. Canonical URLs,

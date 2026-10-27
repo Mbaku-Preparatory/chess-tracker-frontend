@@ -14,7 +14,7 @@ import {
   rankingsPath,
   type RankingsView,
 } from "@/lib/rankings";
-import { SITE_URL } from "@/lib/site";
+import { SHARE_IMAGE, SITE_URL } from "@/lib/site";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -53,8 +53,8 @@ export async function generateMetadata({ searchParams }: { searchParams: SearchP
     alternates: { canonical },
     // An empty list, or a page past its end, is not a page worth a search result.
     ...(results.length === 0 && { robots: { index: false } }),
-    openGraph: { title, description, url: canonical, type: "website", siteName: "Chess Preparatory" },
-    twitter: { card: "summary", title, description },
+    openGraph: { title, description, url: canonical, type: "website", siteName: "Chess Preparatory", images: [SHARE_IMAGE] },
+    twitter: { card: "summary_large_image", title, description, images: [SHARE_IMAGE] },
   };
 }
 
