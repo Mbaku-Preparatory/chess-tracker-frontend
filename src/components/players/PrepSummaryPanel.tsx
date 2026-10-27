@@ -1,10 +1,11 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { Chess } from "chess.js";
 import { Chessboard } from "react-chessboard";
 import { api } from "@/lib/api";
-import { PgnViewerModal } from "@/components/players/PgnViewerModal";
+import { gameRef } from "@/lib/gameRef";
 import { ColorBadge, ResultBadge } from "@/components/ui/Badge";
 import type { PrepSummary, PrepTree, PrepTreeNode, Game } from "@/types";
 
@@ -166,7 +167,7 @@ function InteractivePrepTree({ tree, orientation, totalGames, slug, color, sourc
   const [gamesTotal, setGamesTotal] = useState(0);
   const [gamesPage, setGamesPage] = useState(1);
   const [gamesLoading, setGamesLoading] = useState(false);
-  const [viewerGame, setViewerGame] = useState<Game | null>(null);
+  const router = useRouter();
   const [downloading, setDownloading] = useState(false);
   const fetchRef = useRef(0);
 
@@ -373,7 +374,7 @@ function InteractivePrepTree({ tree, orientation, totalGames, slug, color, sourc
                 <GameRow
                   key={game.id}
                   game={game}
-                  onOpenViewer={setViewerGame}
+                  onOpenViewer={(g) => router.push(`/games/${gameRef(g)}`)}
                 />
               ))}
               {games.length < gamesTotal && (
@@ -393,11 +394,6 @@ function InteractivePrepTree({ tree, orientation, totalGames, slug, color, sourc
           )}
         </div>
       </div>
-
-      {/* PGN viewer modal for OTB / imported games */}
-      {viewerGame && (
-        <PgnViewerModal game={viewerGame} onClose={() => setViewerGame(null)} />
-      )}
     </div>
   );
 }

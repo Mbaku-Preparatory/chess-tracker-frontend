@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { NavigationMemory } from "@/components/NavigationMemory";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { GlobalLoader } from "@/components/ui/GlobalLoader";
 import { SITE_URL } from "@/lib/site";
@@ -35,6 +36,7 @@ export default function RootLayout({
         <StoreProvider>
           <ThemeProvider>
             <GlobalLoader />
+            <NavigationMemory />
             {children}
           </ThemeProvider>
         </StoreProvider>
