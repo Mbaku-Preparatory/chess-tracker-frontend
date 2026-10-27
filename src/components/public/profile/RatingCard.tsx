@@ -64,7 +64,9 @@ export function RatingCard({
         )}
         {/* Only from history: before it is fetched, "0 games" would read as a fact. */}
         {rating != null && points.length > 0 && (
-          <span className="tabular-nums">{year.games} rated games in 12 months</span>
+          <span className="tabular-nums">
+            {year.games} rated game{year.games === 1 ? "" : "s"} in 12 months
+          </span>
         )}
         {nationalRank != null && (
           <span className="tabular-nums">

@@ -4,6 +4,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 
 import { GamesTable } from "@/components/public/profile/GamesTable";
 import { PerformancePanel } from "@/components/public/profile/PerformancePanel";
+import { PendingChart, PendingRows } from "@/components/public/profile/Pending";
 import { ProfileRefresher } from "@/components/public/profile/ProfileRefresher";
 import { RatingCard } from "@/components/public/profile/RatingCard";
 import { RatingHistoryChart } from "@/components/public/profile/RatingHistoryChart";
@@ -177,7 +178,13 @@ export default async function PublicPlayerPage({ params, searchParams }: { param
         <p className="max-w-[68ch] text-[16px] leading-[1.6] text-ink-muted">{summary(player, fed.name)}</p>
       </header>
 
-      <ProfileRefresher fideId={player.fideId} needed={needsRefresh} queued={player.refreshStatus != null} />
+      <ProfileRefresher
+        fideId={player.fideId}
+        historyFetchedAt={player.historyFetchedAt}
+        gamesFetchedAt={player.gamesFetchedAt}
+        needed={needsRefresh}
+        queued={player.refreshStatus != null}
+      />
 
       <section aria-label="Ratings" className="grid gap-4 md:grid-cols-3">
         <RatingCard label="Classical" rating={player.standardRating} worldRank={player.worldRankStandard}
@@ -195,7 +202,11 @@ export default async function PublicPlayerPage({ params, searchParams }: { param
             <h2 id="history-heading" className="text-[21px] font-[480]">Rating history</h2>
             <p className="text-[13px] text-ink-faint">Official monthly FIDE ratings</p>
           </div>
-          <RatingHistoryChart history={history} />
+          {player.historyFetchedAt ? (
+            <RatingHistoryChart history={history} />
+          ) : (
+            <PendingChart label="Fetching rating history from FIDE…" />
+          )}
         </section>
 
         <section className="flex flex-col gap-4 rounded-xl bg-ink-card p-6 sm:p-8" aria-labelledby="performance-heading">
@@ -204,10 +215,13 @@ export default async function PublicPlayerPage({ params, searchParams }: { param
             <p className="text-[13px] text-ink-faint">
               {player.stats.games
                 ? `Across ${player.stats.games.toLocaleString("en")} games with recorded moves`
-                : "No games with recorded moves yet"}
+                : player.gamesFetchedAt
+                  ? "No games with recorded moves on chess-results.com"
+                  : "Calculated from this player's games once they arrive"}
             </p>
           </div>
           {player.stats.games > 0 && <PerformancePanel stats={player.stats} />}
+          {!player.gamesFetchedAt && <PendingRows label="Waiting for games from chess-results.com…" rows={3} />}
         </section>
       </div>
 
@@ -218,10 +232,10 @@ export default async function PublicPlayerPage({ params, searchParams }: { param
         </div>
         {player.games.count > 0 ? (
           <GamesTable games={player.games.results} count={player.games.count} page={page} fideId={player.fideId} basePath={canonical} />
+        ) : !player.gamesFetchedAt ? (
+          <PendingRows label="Fetching games from chess-results.com…" />
         ) : (
-          <p className="py-8 text-center text-[14px] text-ink-faint">
-            {needsRefresh ? "Games appear here once they have been fetched." : "No games with recorded moves on chess-results.com."}
-          </p>
+          <p className="py-8 text-center text-[14px] text-ink-faint">No games with recorded moves on chess-results.com.</p>
         )}
       </section>
     </article>
