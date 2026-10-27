@@ -11,7 +11,7 @@ import { RatingHistoryChart } from "@/components/public/profile/RatingHistoryCha
 import { federationFor } from "@/lib/federations";
 import { fetchPublicPlayer, profilePath, titledName, type PublicPlayer } from "@/lib/publicPlayer";
 import { series } from "@/lib/ratingSeries";
-import { SITE_URL } from "@/lib/site";
+import { SHARE_IMAGE, SITE_URL } from "@/lib/site";
 
 type Params = Promise<{ slug: string; fideId: string }>;
 type SearchParams = Promise<{ page?: string }>;
@@ -44,7 +44,8 @@ function summary(player: PublicPlayer, country: string): string {
   const title = TITLE_NAMES[player.title] ?? TITLE_NAMES[player.womenTitle];
   const described = `${country === player.federation ? "" : `${demonym(country)} `}chess player`;
   const who = [
-    `${player.fullName} is ${/^[aeiou]/i.test(described) ? "an" : "a"} ${described}`,
+    // No "u": "a United States-registered", "a Ugandan" — it sounds like "you".
+    `${player.fullName} is ${/^[aeio]/i.test(described) ? "an" : "a"} ${described}`,
     title ? `holding the ${title} title` : null,
     player.birthYear ? `born in ${player.birthYear}` : null,
   ]
@@ -96,8 +97,8 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
     title,
     description,
     alternates: { canonical },
-    openGraph: { title, description, url: canonical, type: "profile", siteName: "Chess Preparatory" },
-    twitter: { card: "summary", title, description },
+    openGraph: { title, description, url: canonical, type: "profile", siteName: "Chess Preparatory", images: [SHARE_IMAGE] },
+    twitter: { card: "summary_large_image", title, description, images: [SHARE_IMAGE] },
   };
 }
 
