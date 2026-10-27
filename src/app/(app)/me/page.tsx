@@ -171,7 +171,7 @@ export default function MyProfilePage() {
       {needsFideId && (
         <SectionContainer title="Connect your FIDE ID">
           <p className="text-sm text-gray-600 dark:text-gray-300">
-            Add it and we&apos;ll pull in your rating and your recent tournament
+            Add it and we&apos;ll pull in your rating and your tournament
             games. Mbaku can only talk about play it can see.
           </p>
           <form onSubmit={saveFideId} className="mt-3 flex gap-2">
@@ -217,16 +217,17 @@ export default function MyProfilePage() {
 
       {/* Finished, but found nothing. Saying so is the whole reason the payload
           carries the most recent job rather than only a running one.
-          `games_imported === 0` and not `total === 0`: an import that visited
-          twenty tournaments and extracted nothing from any of them is the same
-          outcome to the person reading this page, and gating on total left
-          exactly that case showing nothing at all. */}
+          `games_imported === 0` and not `total === 0`: an import that ran and
+          extracted nothing is the same outcome to the person reading this
+          page, and gating on total left exactly that case showing nothing at
+          all. */}
       {!inFlight && job && job.games_imported === 0 && player.fide_id && (
         <SectionContainer title="No games found">
           <p className="text-sm text-gray-600 dark:text-gray-300">
-            We couldn&apos;t find tournaments for FIDE ID {player.fide_id} on
-            chess-results. That usually means your events aren&apos;t published
-            there — your rating above is still from FIDE.
+            We couldn&apos;t find games for FIDE ID {player.fide_id} on
+            chess-results. That usually means your events&apos; games
+            aren&apos;t published there — your rating above is still from
+            FIDE.
           </p>
           <button
             onClick={() => api.setMyFideId(player.fide_id!).then(setMe).catch(() => {})}
@@ -243,18 +244,18 @@ export default function MyProfilePage() {
           do it. A profile with a FIDE ID, nothing running, and no button was
           a dead end. */}
       {!!player.fide_id && !inFlight && (
-        <SectionContainer title={gamesCount > 0 ? "Older games" : "Fetch your games"}>
+        <SectionContainer title={gamesCount > 0 ? "New games" : "Fetch your games"}>
           <p className="text-sm text-gray-600 dark:text-gray-300">
             {gamesCount > 0
-              ? "Signing up imported your 20 most recent tournaments. If you have played longer than that, pull in the rest."
-              : "Search chess-results for every tournament under your FIDE ID and import the games."}
+              ? "Played since your last import? Fetch again to pull in new games from chess-results."
+              : "Fetch every game chess-results has under your FIDE ID."}
           </p>
           <button
             onClick={async () => {
               if (!player.fide_id) return;
               setSaving(true);
               try {
-                setMe(await api.setMyFideId(player.fide_id, true));
+                setMe(await api.setMyFideId(player.fide_id));
               } catch (err) {
                 setError(userMessage(err, "Couldn't start the import."));
               } finally {
@@ -264,7 +265,7 @@ export default function MyProfilePage() {
             disabled={saving}
             className="btn-secondary mt-3"
           >
-            {saving ? "Starting…" : gamesCount > 0 ? "Import my full history" : "Import my games"}
+            {saving ? "Starting…" : gamesCount > 0 ? "Fetch new games" : "Import my games"}
           </button>
         </SectionContainer>
       )}
