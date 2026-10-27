@@ -21,9 +21,16 @@ export function GET() {
 - Games come from chess-results.com, for tournaments whose organisers uploaded the moves. A player's game count can be lower than the games FIDE rated.
 - Each profile carries schema.org ProfilePage and Person data, including the FIDE ID.
 
+## Rankings
+
+- [World rankings](${SITE_URL}/rankings): FIDE's ranking of active players, from the latest monthly list, 50 per page.
+- Query parameters: tc=classical|rapid|blitz (default classical), list=overall|women|juniors|girls (default overall), fed=<FIDE federation code, e.g. KEN> (default the world), page=<n>.
+- Juniors and girls are players under 20 on 1 January. Tied ratings share a rank. Overall world and federation ranks match the ranks shown on each profile.
+
 ## Pages
 
 - [Home](${SITE_URL}/): what the site is, and player search by name or FIDE ID
+- [Rankings](${SITE_URL}/rankings): world and per-federation player rankings
 - [Sitemap](${SITE_URL}/sitemap.xml): every active player's profile
 - [Privacy policy](${SITE_URL}/privacy)
 `;

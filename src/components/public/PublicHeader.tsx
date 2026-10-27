@@ -14,6 +14,9 @@ export function PublicHeader() {
           <span className="hidden whitespace-nowrap text-[17px] font-[480] tracking-[0.01em] sm:inline">Chess Preparatory</span>
         </Link>
         <div className="flex items-center gap-1 sm:gap-2">
+          <Link href="/rankings" className="whitespace-nowrap rounded-pill px-3 py-2 text-[15px] text-ink-muted hover:bg-ink-raised hover:text-ink-text sm:px-4">
+            Rankings
+          </Link>
           <ThemeToggle className="text-ink-muted hover:bg-ink-raised hover:text-ink-text" />
           <AccountLinks />
         </div>
