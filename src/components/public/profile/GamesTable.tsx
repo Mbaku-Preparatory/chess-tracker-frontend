@@ -1,6 +1,48 @@
+"use client";
+
+import dynamic from "next/dynamic";
 import Link from "next/link";
+import { useState } from "react";
 
 import { GAMES_PAGE_SIZE, profilePath, type PlayerRef, type PublicGame } from "@/lib/publicPlayer";
+import type { MasterGame } from "@/types";
+
+// The board, chess rules and engine only load when someone opens a game, so
+// the profile page itself stays light.
+const GameViewer = dynamic(
+  () => import("@/components/players/MasterGameViewerModal").then((m) => m.MasterGameViewerModal),
+  { ssr: false },
+);
+
+/** The viewer already shows master games from moves alone; a public game is
+ * the same shape. */
+function asViewerGame(g: PublicGame): MasterGame {
+  return {
+    id: 0,
+    white: g.whiteName,
+    black: g.blackName,
+    white_elo: g.whiteElo,
+    black_elo: g.blackElo,
+    result: g.result as MasterGame["result"],
+    eco: g.eco,
+    opening_name: g.openingName,
+    event: g.event,
+    site: g.site,
+    year: g.date ? Number(g.date.slice(0, 4)) : null,
+    moves: g.moves,
+  };
+}
+
+const viewable = (g: PublicGame) => g.plyCount > 0 && g.moves.length > 0;
+
+/** Opening a game from a click anywhere on its row, except on a link to a
+ * player's profile, which goes where it says. */
+function onRowClick(g: PublicGame, open: (g: PublicGame) => void) {
+  return (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest("a, button")) return;
+    if (viewable(g)) open(g);
+  };
+}
 
 const RESULT_LABEL: Record<PublicGame["result"], string> = {
   "1-0": "1–0",
@@ -61,7 +103,9 @@ export function GamesTable({
   fideId: string;
   basePath: string;
 }) {
+  const [viewing, setViewing] = useState<PublicGame | null>(null);
   const pages = Math.max(1, Math.ceil(count / GAMES_PAGE_SIZE));
+  const label = (g: PublicGame) => `View ${g.whiteName} against ${g.blackName}, ${RESULT_LABEL[g.result]}`;
   const href = (p: number) => (p === 1 ? `${basePath}#games` : `${basePath}?page=${p}#games`);
 
   return (
@@ -72,13 +116,30 @@ export function GamesTable({
         {games.map((g) => {
           const o = outcome(g, fideId);
           return (
-            <li key={g.publicId} className="flex flex-col gap-1.5 py-3 text-[14px] text-ink-muted">
+            <li
+              key={g.publicId}
+              onClick={onRowClick(g, setViewing)}
+              className={`flex flex-col gap-1.5 py-3 text-[14px] text-ink-muted ${viewable(g) ? "cursor-pointer" : ""}`}
+            >
               <div className="flex items-center justify-between gap-3 text-[12px] text-ink-faint">
                 <span className="tabular-nums">{formatDate(g.date)}</span>
-                <span className="inline-flex items-center gap-2 tabular-nums text-ink-text">
-                  {o && <span className={`h-2 w-2 rounded-full ${MARKER[o]}`} aria-label={o} />}
-                  {RESULT_LABEL[g.result]}
-                </span>
+                {viewable(g) ? (
+                  <button
+                    type="button"
+                    onClick={() => setViewing(g)}
+                    aria-label={label(g)}
+                    className="inline-flex items-center gap-2 rounded-pill px-2 py-0.5 tabular-nums text-ink-text hover:bg-ink-raised"
+                  >
+                    {o && <span className={`h-2 w-2 rounded-full ${MARKER[o]}`} aria-hidden="true" />}
+                    {RESULT_LABEL[g.result]}
+                    <span className="text-accent-soft">View</span>
+                  </button>
+                ) : (
+                  <span className="inline-flex items-center gap-2 tabular-nums text-ink-text">
+                    {o && <span className={`h-2 w-2 rounded-full ${MARKER[o]}`} aria-label={o} />}
+                    {RESULT_LABEL[g.result]}
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <span className="h-2.5 w-2.5 shrink-0 rounded-full border border-ink-faint bg-white" aria-label="White" />
@@ -111,16 +172,34 @@ export function GamesTable({
             {games.map((g) => {
               const o = outcome(g, fideId);
               return (
-                <tr key={g.publicId} className="border-b border-ink-line/60 align-top">
+                <tr
+                  key={g.publicId}
+                  onClick={onRowClick(g, setViewing)}
+                  className={`border-b border-ink-line/60 align-top ${viewable(g) ? "cursor-pointer hover:bg-ink-raised/50" : ""}`}
+                >
                   <td className="whitespace-nowrap py-3 pr-3 tabular-nums text-ink-faint">{formatDate(g.date)}</td>
                   <td className="px-3 py-3">
                     <Side name={g.whiteName} elo={g.whiteElo} profile={g.white} self={g.white?.fideId === fideId} />
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
-                    <span className="inline-flex items-center gap-2 tabular-nums text-ink-text">
-                      {o && <span className={`h-2 w-2 rounded-full ${MARKER[o]}`} aria-label={o} />}
-                      {RESULT_LABEL[g.result]}
-                    </span>
+                    {/* The row is clickable for a mouse; this is the same
+                        action for a keyboard or screen reader. */}
+                    {viewable(g) ? (
+                      <button
+                        type="button"
+                        onClick={() => setViewing(g)}
+                        aria-label={label(g)}
+                        className="-mx-2 inline-flex items-center gap-2 rounded-pill px-2 py-0.5 tabular-nums text-ink-text hover:bg-ink-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+                      >
+                        {o && <span className={`h-2 w-2 rounded-full ${MARKER[o]}`} aria-hidden="true" />}
+                        {RESULT_LABEL[g.result]}
+                      </button>
+                    ) : (
+                      <span className="inline-flex items-center gap-2 tabular-nums text-ink-text">
+                        {o && <span className={`h-2 w-2 rounded-full ${MARKER[o]}`} aria-label={o} />}
+                        {RESULT_LABEL[g.result]}
+                      </span>
+                    )}
                   </td>
                   <td className="px-3 py-3">
                     <Side name={g.blackName} elo={g.blackElo} profile={g.black} self={g.black?.fideId === fideId} />
@@ -144,7 +223,7 @@ export function GamesTable({
         <nav className="flex items-center justify-between text-[14px]" aria-label="Games pages">
           {page > 1 ? (
             <Link href={href(page - 1)} rel="prev" className="rounded-pill bg-ink-raised px-4 py-2 hover:bg-ink-line">
-              Newer games
+              Previous
             </Link>
           ) : (
             <span />
@@ -154,13 +233,15 @@ export function GamesTable({
           </span>
           {page < pages ? (
             <Link href={href(page + 1)} rel="next" className="rounded-pill bg-ink-raised px-4 py-2 hover:bg-ink-line">
-              Older games
+              Next
             </Link>
           ) : (
             <span />
           )}
         </nav>
       )}
+
+      {viewing && <GameViewer game={asViewerGame(viewing)} onClose={() => setViewing(null)} />}
     </div>
   );
 }
