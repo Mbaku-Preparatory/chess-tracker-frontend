@@ -7,6 +7,7 @@ import { Chessboard } from "react-chessboard";
 import { useAnalysisLine } from "@/lib/chess/useAnalysisLine";
 import type { MasterGame } from "@/types";
 import { api } from "@/lib/api";
+import { authStorage } from "@/lib/auth";
 import { NO_SCORES, scoresFromResultTag } from "@/lib/chessScore";
 import { EvalBar } from "@/components/ui/EvalBar";
 import { useStockfish, parseUciMove } from "@/hooks/useStockfish";
@@ -290,16 +291,30 @@ export function MasterGameViewerModal({ game, onClose }: { game: MasterGame; onC
       window.open(`https://www.chess.com/analysis?pgn=${encodeURIComponent(pgn)}`, "_blank", "noopener");
       return;
     }
+    // Lichess's analysis board takes moves straight from the URL: no import,
+    // no account. Visitors on public profiles have no session for the import
+    // proxy, and opening it synchronously keeps it inside the click, where a
+    // browser allows a new tab.
+    const movetext = (game.moves ?? "").replace(/\s+/g, " ").trim();
+    const board = `https://lichess.org/analysis/pgn/${encodeURIComponent(movetext)}`;
+    if (!authStorage.getToken()) {
+      window.open(board, "_blank", "noopener");
+      return;
+    }
     setAnalysisLoading("lichess");
     try {
       const data = await api.lichessImportProxy(pgn);
       window.open(data.url, "_blank", "noopener");
-    } catch { /* silent */ } finally {
+    } catch {
+      // The import failed; the analysis board still shows the game.
+      window.open(board, "_blank", "noopener");
+    } finally {
       setAnalysisLoading(null);
     }
   }
 
-  const resultLabel = game.result === "1/2-1/2" ? "½–½" : game.result === "1-0" ? "1–0" : "0–1";
+  const resultLabel =
+    game.result === "1/2-1/2" ? "½–½" : game.result === "1-0" ? "1–0" : game.result === "0-1" ? "0–1" : "*";
 
   return (
     <>

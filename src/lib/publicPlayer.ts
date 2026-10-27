@@ -31,11 +31,13 @@ export type PublicGame = {
   result: "1-0" | "0-1" | "1/2-1/2" | "*";
   event: string;
   eventCountry: string;
+  site: string;
   date: string | null;
   round: string;
   eco: string;
   openingName: string;
   plyCount: number;
+  moves: string; // SAN movetext, no headers
   white: PlayerRef | null;
   black: PlayerRef | null;
 };
@@ -92,7 +94,7 @@ query PublicProfile($fideId: String!, $page: Int!) {
       count
       results {
         publicId whiteName blackName whiteElo blackElo result event eventCountry
-        date round eco openingName plyCount
+        date round eco openingName plyCount site moves
         white { ${REF} } black { ${REF} }
       }
     }
