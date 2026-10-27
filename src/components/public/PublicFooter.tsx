@@ -7,7 +7,9 @@ export function PublicFooter() {
         <p>
           Ratings and ranks from FIDE&apos;s official rating list. Games from chess-results.com.
         </p>
-        <nav className="flex gap-5">
+        <nav className="flex flex-wrap gap-x-5 gap-y-2">
+          <Link href="/rankings" className="hover:text-ink-muted">Rankings</Link>
+          <Link href="/rankings/countries" className="hover:text-ink-muted">Rankings by country</Link>
           <Link href="/privacy" className="hover:text-ink-muted">Privacy</Link>
           <Link href="/login" className="hover:text-ink-muted">Log in</Link>
         </nav>
