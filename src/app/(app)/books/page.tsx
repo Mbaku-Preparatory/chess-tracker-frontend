@@ -10,6 +10,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { ReadABook } from "@/components/books/ReadABook";
 import { RetroProgress } from "@/components/books/RetroProgress";
 import { NotifyMeCheckbox } from "@/components/ui/NotifyMeCheckbox";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -153,6 +154,8 @@ export default function BooksPage() {
           </p>
         )}
       </section>
+
+      <ReadABook variant="books" />
 
       {books === null ? (
         <div className="h-24 animate-pulse rounded-xl bg-gray-100 dark:bg-dark-elevated" />
