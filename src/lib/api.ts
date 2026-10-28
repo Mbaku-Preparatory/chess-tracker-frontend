@@ -341,12 +341,13 @@ export const api = {
   uploadBook(
     file: File,
     options: { title?: string; notifyEmail?: boolean } = {},
+    signal?: AbortSignal,
   ): Promise<{ public_id: string; title: string; status: string; sha256: string; duplicate: boolean }> {
     const body = new FormData();
     body.append("file", file);
     if (options.title) body.append("title", options.title);
     if (options.notifyEmail) body.append("notify_email", "true");
-    return fetchJson(`${API_BASE}/books/`, { method: "POST", body });
+    return fetchJson(`${API_BASE}/books/`, { method: "POST", body, signal });
   },
 
   /** A reader book's index; sent gzipped, which the browser undoes. */

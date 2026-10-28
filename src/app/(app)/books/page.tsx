@@ -15,7 +15,7 @@ import { RetroProgress } from "@/components/books/RetroProgress";
 import { NotifyMeCheckbox } from "@/components/ui/NotifyMeCheckbox";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { api } from "@/lib/api";
-import { userMessage } from "@/lib/apiError";
+import { userMessage, wasAborted } from "@/lib/apiError";
 import { forgetBookFile, keepBookFile, sha256Of } from "@/lib/bookFiles";
 import { deleteBook, isConverting, myBooks, type Book } from "@/lib/books";
 
@@ -57,6 +57,8 @@ export default function BooksPage() {
   const [uploading, setUploading] = useState(false);
   const [notifyEmail, setNotifyEmail] = useState(true);
   const fileRef = useRef<HTMLInputElement>(null);
+  // The upload in flight, so it can be cancelled (a 50 MB scan on a slow line).
+  const uploadRef = useRef<AbortController | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -79,25 +81,38 @@ export default function BooksPage() {
   }, [converting, load]);
 
   async function upload(file: File) {
+    const controller = new AbortController();
+    uploadRef.current = controller;
     setUploading(true);
     setError(null);
     setAlready(null);
     try {
       // A reader book is read over this copy: the server deletes its own.
       void sha256Of(file).then((sha) => keepBookFile(sha, file));
-      const result = await api.uploadBook(file, { notifyEmail });
+      const result = await api.uploadBook(file, { notifyEmail }, controller.signal);
       if (result.duplicate) setAlready({ publicId: result.public_id, title: result.title, ready: result.status === "succeeded" });
       await load();
     } catch (err) {
-      setError(userMessage(err));
+      if (wasAborted(err)) void sha256Of(file).then((sha) => forgetBookFile(sha));
+      else setError(userMessage(err));
     } finally {
+      uploadRef.current = null;
       setUploading(false);
       if (fileRef.current) fileRef.current.value = "";
     }
   }
 
+  function cancelUpload() {
+    uploadRef.current?.abort();
+  }
+
   async function remove(book: Book) {
-    if (!window.confirm(`Delete “${book.title}” and its exercises?`)) return;
+    // Cancelling a book still being read is deleting it: the worker stops
+    // within a page (books/services/processing.py).
+    const question = isConverting(book)
+      ? `Stop reading “${book.title}”? What has been read so far is thrown away.`
+      : `Delete “${book.title}” and its exercises?`;
+    if (!window.confirm(question)) return;
     try {
       await deleteBook(book.publicId);
       if (book.sha256) await forgetBookFile(book.sha256);
@@ -115,26 +130,37 @@ export default function BooksPage() {
       />
 
       <section className="mb-8 rounded-xl border border-dashed border-gray-300 p-6 dark:border-dark-border">
-        <label className="flex cursor-pointer flex-col items-start gap-3 sm:flex-row sm:items-center">
-          <span className="shrink-0 whitespace-nowrap rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">
-            {uploading ? "Uploading…" : "Upload a PDF"}
-          </span>
+        <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+          <label className="flex cursor-pointer items-center gap-3">
+            <span className="shrink-0 whitespace-nowrap rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">
+              {uploading ? "Uploading…" : "Upload a PDF"}
+            </span>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="application/pdf,.pdf"
+              className="sr-only"
+              disabled={uploading}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) void upload(file);
+              }}
+            />
+          </label>
+          {uploading && (
+            <button
+              type="button"
+              onClick={cancelUpload}
+              className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:border-dark-border dark:text-gray-300 dark:hover:bg-dark-elevated"
+            >
+              Cancel
+            </button>
+          )}
           <span className="text-sm text-gray-500 dark:text-gray-400">
             Up to 50 MB. A scanned book is read where it is: it stays on this device, and the server keeps only where
             its moves and diagrams are.
           </span>
-          <input
-            ref={fileRef}
-            type="file"
-            accept="application/pdf,.pdf"
-            className="sr-only"
-            disabled={uploading}
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) void upload(file);
-            }}
-          />
-        </label>
+        </div>
         <div className="mt-4 max-w-md">
           <NotifyMeCheckbox
             checked={notifyEmail}
@@ -201,15 +227,13 @@ export default function BooksPage() {
                     )}
                   </>
                 )}
-                {!isConverting(book) && (
-                  <button
-                    type="button"
-                    onClick={() => void remove(book)}
-                    className="rounded-lg px-3 py-1.5 text-sm text-gray-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20"
-                  >
-                    Delete
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => void remove(book)}
+                  className="rounded-lg px-3 py-1.5 text-sm text-gray-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20"
+                >
+                  {isConverting(book) ? "Cancel" : "Delete"}
+                </button>
               </div>
             </li>
           ))}
