@@ -1,20 +1,34 @@
 /**
  * A user's chess books: the GraphQL side (books/schema.py on the backend).
- * Uploading and the PGN download are REST, in lib/api.ts, because they carry
- * file bodies.
+ * Uploading, the PGN download and a reader book's index are REST, in
+ * lib/api.ts, because they carry file bodies.
+ *
+ * Two kinds: "exercises" (a book typeset in a chess font, read into one
+ * position per exercise) and "reader" (any other book, usually a scan: the
+ * owner reads their own PDF and every move in it opens on the board).
  */
 
 import graphqlClient from "@/api/graphqlClient";
 
 export type BookStatus = "pending" | "running" | "succeeded" | "failed";
+export type BookKind = "exercises" | "reader";
 
 export type Book = {
   publicId: string;
   title: string;
   status: BookStatus;
   error: string;
+  kind: BookKind;
   exerciseCount: number;
   verifiedCount: number;
+  /** 0..1 while a reader book is read page by page; null when unknown. */
+  progress: number | null;
+  pageCount: number;
+  pagesDone: number;
+  diagramCount: number;
+  moveCount: number;
+  notifyEmail: boolean;
+  sha256: string;
   createdAt: string;
 };
 
@@ -38,7 +52,8 @@ export type BookExercise = {
   problem: string;
 };
 
-const BOOK_FIELDS = "publicId title status error exerciseCount verifiedCount createdAt";
+const BOOK_FIELDS =
+  "publicId title status error kind exerciseCount verifiedCount progress pageCount pagesDone diagramCount moveCount notifyEmail sha256 createdAt";
 
 async function query<T>(text: string, variables: Record<string, unknown> = {}): Promise<T> {
   const response = await graphqlClient({ data: { query: text, variables } });
@@ -87,3 +102,17 @@ export async function deleteBook(publicId: string): Promise<boolean> {
   );
   return data.deleteBook.ok;
 }
+
+/**
+ * A reader book's index (books/services/scan/link.py on the backend).
+ * Positions are in PDF points from the top-left of each page.
+ */
+export type ReaderIndex = {
+  version: 1;
+  /** [fen, san, parent, next]: node 0 is the starting position; a diagram has no parent. */
+  nodes: [string, string | null, number | null, number | null][];
+  pages: { w: number; h: number; hot: [number, number, number, number, number, HotKind][] }[];
+};
+
+/** 0 a diagram, 1 a move of the game, 2 a variation in the text. */
+export type HotKind = 0 | 1 | 2;

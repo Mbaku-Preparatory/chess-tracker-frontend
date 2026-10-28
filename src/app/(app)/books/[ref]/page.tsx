@@ -4,12 +4,14 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { BookReader } from "@/components/books/BookReader";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { api } from "@/lib/api";
 import { userMessage } from "@/lib/apiError";
 import { getBook, type BookDetail } from "@/lib/books";
 
-/** A converted book: what came out of it, and every exercise to open. */
+/** A converted book: a reader book opens to read; an exercise book shows what
+ * came out of it, and every exercise to open. */
 export default function BookPage() {
   const { ref } = useParams<{ ref: string }>();
   const [book, setBook] = useState<BookDetail | null | undefined>(undefined);
@@ -34,6 +36,8 @@ export default function BookPage() {
       </p>
     );
   }
+
+  if (book.kind === "reader") return <BookReader book={book} />;
 
   const stopped = book.exercises.filter((e) => !e.verified);
   const first = book.exercises[0]?.number;
