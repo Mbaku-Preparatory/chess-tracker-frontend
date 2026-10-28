@@ -50,7 +50,9 @@ export interface AnalysisViewProps {
   /** Where Back goes when the page was not opened from inside the site. */
   back: { href: string };
   /** Solve mode: the solution and the engine stay hidden until the line is
-   * played on the board or given up. For book exercises. */
+   * played on the board or given up. Any legal move can be played: one that
+   * is not the book's opens a line of its own to explore, and Take back
+   * returns to the exercise. For book exercises. */
   solve?: boolean;
   /** Previous and next, for a page that is one of a set (a book's exercises). */
   pager?: { label: string; prev: string | null; next: string | null };
@@ -170,6 +172,9 @@ export function AnalysisView(props: AnalysisViewProps) {
   const { moves, index, fen, goTo } = line;
   const [prefs, setPrefs] = useAnalysisPrefs();
   const [solving, setSolving] = useState(solve && mainMoves.length > 0);
+  // How far into the book's line the solver has got: the moves up to here are
+  // theirs to see and step through; the rest is still the answer.
+  const [solvedUpTo, setSolvedUpTo] = useState(-1);
   const [feedback, setFeedback] = useState<{ ok: boolean; text: string } | null>(null);
   // The engine would give the answer away, so it waits until the line is solved.
   const engine = useEngine(fen, { enabled: prefs.engine && !solving, depth: DEPTHS[prefs.depth].depth, capMs: DEPTHS[prefs.depth].capMs });
@@ -180,13 +185,17 @@ export function AnalysisView(props: AnalysisViewProps) {
   const [lichessBusy, setLichessBusy] = useState(false);
   const finished = result === "1-0" || result === "0-1" || result === "1/2-1/2";
 
-  // Solving: a move is checked against the book's next move instead of
-  // opening a variation. Right, and the book's reply is played after a beat;
-  // wrong, and the position stays for another try.
+  // Solving: a move from the book's line is checked against the book's next
+  // move. Right, and the book's reply is played after a beat. Any other legal
+  // move is played too — the board is never refused — but as a line of the
+  // solver's own, which they can carry on, step through, or take back to try
+  // the exercise again.
   const attempt = useCallback(
     (from: string, to: string) => {
+      // Already off the book's line: the move just carries it on.
+      if (line.inBranch) return line.play(from, to);
       const expected = mainMoves[index + 1];
-      if (!expected) return false;
+      if (!expected) return line.play(from, to);
       let san: string;
       try {
         san = new Chess(fen).move({ from, to, promotion: "q" }).san;
@@ -194,11 +203,13 @@ export function AnalysisView(props: AnalysisViewProps) {
         return false;
       }
       if (clean(san) !== clean(expected.san)) {
-        setFeedback({ ok: false, text: `${san} is not the book's move. Try again.` });
-        return false;
+        if (!line.play(from, to)) return false;
+        setFeedback({ ok: false, text: `${san} is not the book's move. Explore it here, or take it back and try again.` });
+        return true;
       }
       const reached = index + 1;
       line.selectMain(reached);
+      setSolvedUpTo(reached);
       const done = () => {
         setSolving(false);
         setFeedback({ ok: true, text: "Solved. The book's notes are below." });
@@ -210,6 +221,7 @@ export function AnalysisView(props: AnalysisViewProps) {
       setFeedback({ ok: true, text: `${expected.san} is right.` });
       window.setTimeout(() => {
         line.selectMain(reached + 1);
+        setSolvedUpTo(reached + 1);
         if (!mainMoves[reached + 2]) done();
       }, 450);
       return true;
@@ -217,19 +229,35 @@ export function AnalysisView(props: AnalysisViewProps) {
     [mainMoves, index, fen, line],
   );
 
+  /** Back to where the solver's own line left the book, to try again. */
+  const takeBack = useCallback(() => {
+    if (line.branch) line.selectMain(line.branch.fromIndex);
+    setFeedback(null);
+  }, [line]);
+
+  // While solving, stepping forward along the book's line stops at the last
+  // move found: beyond it is the answer. The solver's own line is theirs.
+  const last = solving && !line.onBranch ? solvedUpTo : moves.length - 1;
+  const showNav = !solving || last >= 0;
+  // The moves found so far, without the book's notes: a note after one often
+  // says what comes next.
+  const solvedMoves = useMemo(
+    () => (solving ? mainMoves.slice(0, solvedUpTo + 1).map(({ comment: _, ...m }) => m) : mainMoves),
+    [mainMoves, solving, solvedUpTo],
+  );
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (solving) return;
       const target = e.target as HTMLElement;
       if (target.closest("input, textarea, select, [contenteditable]")) return;
-      const to = { ArrowRight: index + 1, ArrowDown: index + 1, ArrowLeft: index - 1, ArrowUp: index - 1, Home: -1, End: moves.length - 1 }[e.key];
+      const to = { ArrowRight: index + 1, ArrowDown: index + 1, ArrowLeft: index - 1, ArrowUp: index - 1, Home: -1, End: last }[e.key];
       if (to === undefined) return;
       e.preventDefault();
-      goTo(to);
+      goTo(Math.min(to, last));
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [index, moves.length, goTo, solving]);
+  }, [index, last, goTo]);
 
   const onSquareClick = useCallback(
     (square: string) => {
@@ -358,28 +386,50 @@ export function AnalysisView(props: AnalysisViewProps) {
             <Plate side={bottomSide} color={orientation} />
             {bar("horizontal", "mt-0.5 sm:hidden")}
             {/* On a phone the controls sit under the board, where a thumb is. */}
-            {!solving && <Nav index={index} last={moves.length - 1} goTo={goTo} className="mt-2 lg:hidden" />}
+            {showNav && <Nav index={index} last={last} goTo={goTo} className="mt-2 lg:hidden" />}
           </div>
         </section>
 
         <aside className="flex min-w-0 flex-col gap-3">
           {(solving || feedback) && (
             <section aria-label="Solve" aria-live="polite" className="flex flex-col gap-3 rounded-xl bg-ink-card p-4">
-              {solving && <p className="text-[15px] font-[520] text-ink-text">{toMove} to move. Play the best move on the board.</p>}
+              {solving && (
+                <p className="text-[15px] font-[520] text-ink-text">
+                  {line.inBranch ? "Your own line, off the book's." : `${toMove} to move. Play the best move on the board.`}
+                </p>
+              )}
               {feedback && (
                 <p className={`text-[14px] font-[520] ${feedback.ok ? "text-accent-soft" : "text-amber-600 dark:text-amber-400"}`}>{feedback.text}</p>
               )}
+              {/* The moves found so far and, under them, the solver's own
+                  line: the rest of the book's stays out of sight. */}
+              {solving && (solvedUpTo >= 0 || line.branch) && (
+                <div data-moves-scroll className="max-h-40 overflow-y-auto rounded-lg bg-ink-raised/40 p-1">
+                  <MoveList mainMoves={solvedMoves} line={line} result={null} />
+                </div>
+              )}
               {solving && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSolving(false);
-                    setFeedback(null);
-                  }}
-                  className="self-start rounded-pill border border-ink-line px-3.5 py-1.5 text-[13px] text-ink-muted hover:bg-ink-raised hover:text-ink-text"
-                >
-                  Show solution
-                </button>
+                <div className="flex flex-wrap gap-2">
+                  {line.onBranch && (
+                    <button
+                      type="button"
+                      onClick={takeBack}
+                      className="rounded-pill bg-accent px-3.5 py-1.5 text-[13px] font-[520] text-accent-on hover:opacity-90"
+                    >
+                      Take back
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSolving(false);
+                      setFeedback(null);
+                    }}
+                    className="rounded-pill border border-ink-line px-3.5 py-1.5 text-[13px] text-ink-muted hover:bg-ink-raised hover:text-ink-text"
+                  >
+                    Show solution
+                  </button>
+                </div>
               )}
             </section>
           )}
@@ -392,7 +442,7 @@ export function AnalysisView(props: AnalysisViewProps) {
             </section>
           )}
 
-          {!solving && <Nav index={index} last={moves.length - 1} goTo={goTo} className="hidden lg:grid" />}
+          {showNav && <Nav index={index} last={last} goTo={goTo} className="hidden lg:grid" />}
 
           <div className="flex flex-wrap gap-2">
             {[
