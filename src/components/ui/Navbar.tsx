@@ -9,6 +9,7 @@ import { Logo } from "@/components/ui/Logo";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { clearAuth, setProfilePic } from "@/redux/actions/auth";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { BurgerButton } from "@/components/ui/BurgerButton";
 
 // The app's sections, in the bar on a desktop and in the burger menu below it.
 const LINKS = [
@@ -247,29 +248,12 @@ export function Navbar() {
         </div>
 
         {/* Phones and tablets: a burger, and the whole menu behind it. */}
-        <button
-          type="button"
+        <BurgerButton
+          open={menuOpen}
           onClick={() => setMenuOpen((o) => !o)}
-          aria-expanded={menuOpen}
-          aria-controls="app-menu"
-          aria-label={menuOpen ? "Close the menu" : "Open the menu"}
-          className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-dark-elevated lg:hidden"
-        >
-          {/* three lines that fold into an X */}
-          {[-6, 0, 6].map((y, i) => (
-            <span
-              key={y}
-              aria-hidden="true"
-              className="absolute h-0.5 w-5 rounded-full bg-current transition-all duration-200 motion-reduce:transition-none"
-              style={{
-                transform: menuOpen
-                  ? i === 1 ? "scaleX(0)" : `rotate(${i === 0 ? 45 : -45}deg)`
-                  : `translateY(${y}px)`,
-                opacity: menuOpen && i === 1 ? 0 : 1,
-              }}
-            />
-          ))}
-        </button>
+          controls="app-menu"
+          className="text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-dark-elevated lg:hidden"
+        />
       </div>
 
       {menuOpen && (

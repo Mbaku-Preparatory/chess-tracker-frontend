@@ -4,6 +4,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { Logo } from "@/components/ui/Logo";
 
 import { AccountLinks } from "./AccountLinks";
+import { PublicMenu } from "./PublicMenu";
 
 export function PublicHeader() {
   return (
@@ -13,12 +14,17 @@ export function PublicHeader() {
           <Logo size={30} />
           <span className="hidden whitespace-nowrap text-[17px] font-[480] tracking-[0.01em] sm:inline">Chess Preparatory</span>
         </Link>
-        <div className="flex items-center gap-1 sm:gap-2">
+        <div className="hidden items-center gap-2 lg:flex">
           <Link href="/rankings" className="whitespace-nowrap rounded-pill px-3 py-2 text-[15px] text-ink-muted hover:bg-ink-raised hover:text-ink-text sm:px-4">
             Rankings
           </Link>
           <ThemeToggle className="text-ink-muted hover:bg-ink-raised hover:text-ink-text" />
           <AccountLinks />
+        </div>
+        {/* Phones and tablets: the main button, and the rest behind a burger. */}
+        <div className="flex items-center gap-1 lg:hidden">
+          <AccountLinks primaryOnly />
+          <PublicMenu />
         </div>
       </div>
     </header>
