@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 
+import { ReadABook } from "@/components/books/ReadABook";
 import { PlayerCard } from "@/components/players/PlayerCard";
 import { CardSkeleton } from "@/components/ui/LoadingSkeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -169,6 +170,8 @@ export default function HomePage() {
         </p>
         <h1 className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">Dashboard</h1>
       </div>
+
+      <ReadABook variant="dashboard" />
 
       {/* Opponents — a plain heading. The list is the point of the page, so
           there is nothing to collapse it into. */}

@@ -116,3 +116,16 @@ export type ReaderIndex = {
 
 /** 0 a diagram, 1 a move of the game, 2 a variation in the text. */
 export type HotKind = 0 | 1 | 2;
+
+/** The demo books anyone can read (lib/publicBook.ts has the server side);
+ * here for the signed-in app, which fetches in the browser. Empty when the
+ * API is down: an invitation, not a page, is what is lost. */
+export async function demoBooks(): Promise<{ publicSlug: string; title: string; pageCount: number; moveCount: number }[]> {
+  try {
+    return (await query<{ publicBooks: { publicSlug: string; title: string; pageCount: number; moveCount: number }[] }>(
+      "{ publicBooks { publicSlug title pageCount moveCount } }",
+    )).publicBooks;
+  } catch {
+    return [];
+  }
+}
