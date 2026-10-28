@@ -1,30 +1,58 @@
 "use client";
 
 /**
- * Books: a chess book PDF in, every exercise out as a position to solve, with
- * the book's solution and notes. Private to the account that uploaded it.
+ * Books: a chess book PDF in. A book typeset in a chess font comes out as
+ * exercises to solve; any other (a scan, usually) as a reader, where every
+ * move in the owner's own PDF opens on the board. Private to the account
+ * that uploaded it.
  */
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { RetroProgress } from "@/components/books/RetroProgress";
+import { NotifyMeCheckbox } from "@/components/ui/NotifyMeCheckbox";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { api } from "@/lib/api";
 import { userMessage } from "@/lib/apiError";
+import { forgetBookFile, keepBookFile, sha256Of } from "@/lib/bookFiles";
 import { deleteBook, isConverting, myBooks, type Book } from "@/lib/books";
 
 const POLL_MS = 3000;
 
+const n = (x: number) => x.toLocaleString("en");
+
 function status(book: Book): string {
-  if (isConverting(book)) return "Converting… this takes about half a minute.";
   if (book.status === "failed") return book.error || "This book could not be converted.";
-  return `${book.exerciseCount.toLocaleString("en")} exercises · ${book.verifiedCount.toLocaleString("en")} verified`;
+  if (book.kind === "reader") return `Reader · ${n(book.diagramCount)} diagrams · ${n(book.moveCount)} moves`;
+  return `${n(book.exerciseCount)} exercises · ${n(book.verifiedCount)} verified`;
+}
+
+function Converting({ book }: { book: Book }) {
+  const label =
+    book.progress === null
+      ? "Opening the book…"
+      : book.pagesDone >= book.pageCount
+        ? "Linking every move to its position…"
+        : `Reading page ${n(book.pagesDone + 1)} of ${n(book.pageCount)}…`;
+  return (
+    <div className="mt-2 flex flex-col gap-1">
+      <RetroProgress value={book.progress} label={label} />
+      {book.progress !== null && (
+        <p className="text-[13px] text-gray-500 dark:text-gray-400">
+          A scanned book takes a few minutes.{" "}
+          {book.notifyEmail ? "You can leave this page: we'll email you when it's done." : "You can leave this page and come back."}
+        </p>
+      )}
+    </div>
+  );
 }
 
 export default function BooksPage() {
   const [books, setBooks] = useState<Book[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [notifyEmail, setNotifyEmail] = useState(true);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
@@ -51,7 +79,9 @@ export default function BooksPage() {
     setUploading(true);
     setError(null);
     try {
-      await api.uploadBook(file);
+      // A reader book is read over this copy: the server deletes its own.
+      void sha256Of(file).then((sha) => keepBookFile(sha, file));
+      await api.uploadBook(file, { notifyEmail });
       await load();
     } catch (err) {
       setError(userMessage(err));
@@ -65,6 +95,7 @@ export default function BooksPage() {
     if (!window.confirm(`Delete “${book.title}” and its exercises?`)) return;
     try {
       await deleteBook(book.publicId);
+      if (book.sha256) await forgetBookFile(book.sha256);
       await load();
     } catch (err) {
       setError(userMessage(err));
@@ -75,17 +106,17 @@ export default function BooksPage() {
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
       <PageHeader
         title="Books"
-        subtitle="Upload a chess book as a PDF and get every exercise as a position to solve, with the book's solution and notes. Your books are private to you."
+        subtitle="Upload a chess book as a PDF. A book of exercises becomes positions to solve, with the book's solutions and notes; any other book, scanned ones too, becomes a reader where every move opens on the board. Your books are private to you."
       />
 
       <section className="mb-8 rounded-xl border border-dashed border-gray-300 p-6 dark:border-dark-border">
         <label className="flex cursor-pointer flex-col items-start gap-3 sm:flex-row sm:items-center">
-          <span className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">
+          <span className="shrink-0 whitespace-nowrap rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">
             {uploading ? "Uploading…" : "Upload a PDF"}
           </span>
           <span className="text-sm text-gray-500 dark:text-gray-400">
-            Works with books whose diagrams are text, which is most modern ones. Scanned books are not supported yet. Up
-            to 50 MB.
+            Up to 50 MB. A scanned book is read where it is: it stays on this device, and the server keeps only where
+            its moves and diagrams are.
           </span>
           <input
             ref={fileRef}
@@ -99,6 +130,13 @@ export default function BooksPage() {
             }}
           />
         </label>
+        <div className="mt-4 max-w-md">
+          <NotifyMeCheckbox
+            checked={notifyEmail}
+            onChange={setNotifyEmail}
+            hint="A scanned book takes a few minutes to read; we'll send a link when it's ready."
+          />
+        </div>
         {error && <p className="mt-3 text-sm text-red-600 dark:text-red-400">{error}</p>}
       </section>
 
@@ -113,7 +151,7 @@ export default function BooksPage() {
               key={book.publicId}
               className="flex flex-col gap-3 rounded-xl border border-gray-200 p-4 dark:border-dark-border sm:flex-row sm:items-center sm:justify-between"
             >
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 {book.status === "succeeded" ? (
                   <Link href={`/books/${book.publicId}`} className="font-semibold text-gray-900 hover:text-brand-600 dark:text-gray-100">
                     {book.title}
@@ -121,27 +159,29 @@ export default function BooksPage() {
                 ) : (
                   <span className="font-semibold text-gray-900 dark:text-gray-100">{book.title}</span>
                 )}
-                <p
-                  className={`mt-0.5 text-sm ${
-                    book.status === "failed" ? "text-red-600 dark:text-red-400" : "text-gray-500 dark:text-gray-400"
-                  } ${isConverting(book) ? "animate-pulse" : ""}`}
-                >
-                  {status(book)}
-                </p>
+                {isConverting(book) ? (
+                  <Converting book={book} />
+                ) : (
+                  <p className={`mt-0.5 text-sm ${book.status === "failed" ? "text-red-600 dark:text-red-400" : "text-gray-500 dark:text-gray-400"}`}>
+                    {status(book)}
+                  </p>
+                )}
               </div>
               <div className="flex shrink-0 gap-2">
                 {book.status === "succeeded" && (
                   <>
                     <Link href={`/books/${book.publicId}`} className="rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-700">
-                      Open
+                      {book.kind === "reader" ? "Read" : "Open"}
                     </Link>
-                    <button
-                      type="button"
-                      onClick={() => void api.downloadBookPgn(book.publicId).catch((err) => setError(userMessage(err)))}
-                      className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:border-dark-border dark:text-gray-300 dark:hover:bg-dark-elevated"
-                    >
-                      Download PGN
-                    </button>
+                    {book.kind === "exercises" && (
+                      <button
+                        type="button"
+                        onClick={() => void api.downloadBookPgn(book.publicId).catch((err) => setError(userMessage(err)))}
+                        className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:border-dark-border dark:text-gray-300 dark:hover:bg-dark-elevated"
+                      >
+                        Download PGN
+                      </button>
+                    )}
                   </>
                 )}
                 {!isConverting(book) && (

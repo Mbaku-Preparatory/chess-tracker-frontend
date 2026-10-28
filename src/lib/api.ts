@@ -337,11 +337,20 @@ export const api = {
 
   /** A chess book PDF to convert. Answers at once; the worker converts it, and
    * the book's status is polled through GraphQL (lib/books.ts). */
-  uploadBook(file: File, title?: string): Promise<{ public_id: string; title: string; status: string }> {
+  uploadBook(
+    file: File,
+    options: { title?: string; notifyEmail?: boolean } = {},
+  ): Promise<{ public_id: string; title: string; status: string; sha256: string }> {
     const body = new FormData();
     body.append("file", file);
-    if (title) body.append("title", title);
+    if (options.title) body.append("title", options.title);
+    if (options.notifyEmail) body.append("notify_email", "true");
     return fetchJson(`${API_BASE}/books/`, { method: "POST", body });
+  },
+
+  /** A reader book's index; sent gzipped, which the browser undoes. */
+  getBookReader(publicId: string): Promise<import("@/lib/books").ReaderIndex> {
+    return fetchJson(`${API_BASE}/books/${encodeURIComponent(publicId)}/reader/`);
   },
 
   async downloadBookPgn(publicId: string): Promise<void> {
