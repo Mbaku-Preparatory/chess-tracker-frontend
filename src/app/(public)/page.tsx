@@ -2,13 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { PlayerSearch } from "@/components/public/PlayerSearch";
+import { bookPath, fetchPublicBooks } from "@/lib/publicBook";
 import { profilePath } from "@/lib/publicPlayer";
 import { fetchRankings, type RankingEntry } from "@/lib/rankings";
 import { SHARE_IMAGE, SITE_URL } from "@/lib/site";
 
-const TITLE = "Chess Preparatory · FIDE player ratings, history and games";
+const TITLE = "Chess Preparatory · FIDE player ratings, history, games and chess books";
 const DESCRIPTION =
-  "A profile for every FIDE-rated chess player: official ratings and world and national ranks, monthly rating history, and games with results and openings.";
+  "A profile for every FIDE-rated chess player: official ratings and world and national ranks, monthly rating history, and games with results and openings. Plus a reader that opens any chess book PDF on a board.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -60,7 +61,26 @@ const FAQ = [
   },
   {
     q: "What does an account add?",
-    a: "Scouting and preparation: import an opponent's games from chess-results, Chess.com and Lichess, see the openings they play and how they score with them, and plan your preparation.",
+    a: "Scouting and preparation: import an opponent's games from chess-results, Chess.com and Lichess, see the openings they play and how they score with them, and plan your preparation. And your chess books: upload a PDF and read it with a board, or solve its exercises.",
+  },
+  {
+    q: "Can I read a chess book here?",
+    a: "Yes. Upload a chess book as a PDF, scans included, and every move and diagram in it opens on a board beside the page. A book of exercises becomes puzzles to solve. The book stays on your device; the server keeps only where the moves are. Demo books are free to read without an account.",
+  },
+];
+
+const BOOK_PARTS = [
+  {
+    title: "Every move on the board",
+    body: "Upload a chess book as a PDF, scans included. Each move and diagram the reader finds lights up on the page: tap it and the board shows the position; arrows walk the line.",
+  },
+  {
+    title: "Exercises become puzzles",
+    body: "A book typeset in a chess font comes out as its exercises: each diagram as a position to solve, your move checked against the book's, and its notes once you have it.",
+  },
+  {
+    title: "Your book stays yours",
+    body: "The file is read once, for where its moves and diagrams sit, and deleted. The reader draws your own copy, kept in your browser. Nobody else sees your books.",
   },
 ];
 
@@ -77,13 +97,30 @@ async function topPlayers(): Promise<RankingEntry[]> {
 }
 
 export default async function LandingPage() {
-  const top = await topPlayers();
+  const [top, books] = await Promise.all([topPlayers(), fetchPublicBooks()]);
+  const demo = books[0] ?? null;
   const jsonLd = [
     {
       "@context": "https://schema.org",
       "@type": "WebSite",
       name: "Chess Preparatory",
       url: SITE_URL,
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      name: "Chess Preparatory",
+      url: SITE_URL,
+      applicationCategory: "SportsApplication",
+      operatingSystem: "Web",
+      offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+      featureList: [
+        "FIDE player profiles with ratings, ranks, rating history and games",
+        "World and national rankings",
+        "Opponent scouting and preparation",
+        "A chess book reader: every move and diagram of a PDF opens on a board",
+        "Exercise books converted to puzzles to solve",
+      ],
     },
     {
       "@context": "https://schema.org",
@@ -115,7 +152,7 @@ export default async function LandingPage() {
         </h1>
         <p className="max-w-[56ch] text-[18px] leading-[1.5] text-ink-muted">
           Official ratings and ranks, monthly rating history, and games with results and openings, for
-          every player rated by FIDE.
+          every player rated by FIDE. And a reader that opens any chess book on a board.
         </p>
         <PlayerSearch />
         <p className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[14px] text-ink-faint">
@@ -164,6 +201,32 @@ export default async function LandingPage() {
         </h2>
         <div className="grid gap-4 md:grid-cols-3">
           {PROFILE_PARTS.map((part) => (
+            <article key={part.title} className="flex flex-col gap-3 rounded-xl bg-ink-card p-8">
+              <h3 className="text-[21px] font-[480]">{part.title}</h3>
+              <p className="text-[16px] leading-[1.5] text-ink-muted">{part.body}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section aria-labelledby="books-heading" className="flex flex-col gap-8">
+        <div className="flex flex-wrap items-baseline justify-between gap-4">
+          <h2 id="books-heading" className="max-w-[24ch] text-balance text-[28px] font-[480] leading-[1.2] tracking-[0.015em] sm:text-[32px]">
+            Read chess books with a board
+          </h2>
+          <p className="flex gap-5 text-[14px]">
+            <Link href="/chess-books" className="text-ink-muted underline decoration-ink-line underline-offset-4 hover:text-ink-text">
+              How it works
+            </Link>
+            {demo && (
+              <Link href={bookPath(demo.publicSlug)} className="text-ink-muted underline decoration-ink-line underline-offset-4 hover:text-ink-text">
+                Try it on {demo.title}
+              </Link>
+            )}
+          </p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          {BOOK_PARTS.map((part) => (
             <article key={part.title} className="flex flex-col gap-3 rounded-xl bg-ink-card p-8">
               <h3 className="text-[21px] font-[480]">{part.title}</h3>
               <p className="text-[16px] leading-[1.5] text-ink-muted">{part.body}</p>

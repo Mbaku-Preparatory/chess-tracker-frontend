@@ -11,7 +11,7 @@ export const dynamic = "force-static";
 export function GET() {
   const text = `# Chess Preparatory
 
-> Public profiles for every FIDE-rated chess player: official FIDE ratings and world and national ranks, monthly rating history, and over-the-board games with results and openings. Accounts add opponent scouting and preparation tools.
+> Public profiles for every FIDE-rated chess player: official FIDE ratings and world and national ranks, monthly rating history, and over-the-board games with results and openings. A chess book reader that opens any chess book PDF on a board, and turns exercise books into puzzles. Accounts add opponent scouting and preparation tools.
 
 ## Player profiles
 
@@ -27,10 +27,17 @@ export function GET() {
 - Query parameters: tc=classical|rapid|blitz (default classical), list=overall|women|juniors|girls (default overall), fed=<FIDE federation code, e.g. KEN> (default the world), page=<n>.
 - Juniors and girls are players under 20 on 1 January. Tied ratings share a rank. Overall world and federation ranks match the ranks shown on each profile.
 
+## Chess books
+
+- [Chess books](${SITE_URL}/chess-books): upload a chess book as a PDF (scans included, up to 50 MB, algebraic notation) and read it with a board beside the page: every move and diagram the reader finds opens as a position, lines can be stepped through, and any move can be played from any position and checked with an engine. A book typeset in a chess font becomes its exercises, as puzzles solved on the board.
+- The book stays with its owner: the server keeps an index of where moves and diagrams sit, deletes the file, and the reader draws the owner's own copy in their browser. Uploaded books are private to the account.
+- Demo books: public-domain books anyone can read without an account, at ${SITE_URL}/book/<slug>. Each carries schema.org Book data. The list is on the chess books page.
+
 ## Pages
 
 - [Home](${SITE_URL}/): what the site is, and player search by name or FIDE ID
 - [Rankings](${SITE_URL}/rankings): world and per-federation player rankings
+- [Chess books](${SITE_URL}/chess-books): the book reader and exercise solver, with demo books
 - [Sitemap](${SITE_URL}/sitemap.xml): every active player's profile
 - [Privacy policy](${SITE_URL}/privacy)
 `;

@@ -11,9 +11,11 @@
  * has the whole screen, and the board slides up from the bottom when a move
  * is tapped; swiping it down, ✕, or the phone's back button puts it away.
  *
- * The PDF comes from this device (lib/bookFiles.ts), never from the server,
- * which kept only the index (lib/books.ts, ReaderIndex). pdf.js draws the
- * pages, only those near the screen, and lets go of the rest.
+ * The owner's PDF comes from this device (lib/bookFiles.ts), never from the
+ * server, which kept only the index (lib/books.ts, ReaderIndex). A demo book
+ * (lib/publicBook.ts) is the one exception: the server serves both, and the
+ * PDF is kept on the device after the first visit. pdf.js draws the pages,
+ * only those near the screen, and lets go of the rest.
  */
 
 import { Chess } from "chess.js";
@@ -29,6 +31,17 @@ import { api } from "@/lib/api";
 import { userMessage } from "@/lib/apiError";
 import { bookFile, keepBookFile, sha256Of } from "@/lib/bookFiles";
 import type { Book, ReaderIndex } from "@/lib/books";
+import { bookIndexUrl, bookPdfUrl } from "@/lib/publicBook";
+
+/** Where a book's index and PDF come from: the owner's account and device,
+ * or the public routes of a demo book. */
+export type BookSource = { kind: "own"; book: Book } | { kind: "public"; slug: string; title: string; sha256: string };
+
+async function publicFetch<T>(url: string, read: (r: Response) => Promise<T>): Promise<T> {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(response.status === 404 ? "This book is no longer available." : "The book could not be loaded. Try again in a moment.");
+  return read(response);
+}
 
 type Node = ReaderIndex["nodes"][number];
 
@@ -440,9 +453,17 @@ function useWide(): boolean {
   return wide;
 }
 
-export function BookReader({ book }: { book: Book }) {
+export function BookReader({ source, backHref = "/books" }: { source: BookSource; backHref?: string }) {
+  const title = source.kind === "own" ? source.book.title : source.title;
+  const sha256 = source.kind === "own" ? source.book.sha256 : source.sha256;
+  // Primitives, so a parent re-rendering with a fresh `source` object does
+  // not fetch the book again.
+  const publicId = source.kind === "own" ? source.book.publicId : null;
+  const slug = source.kind === "public" ? source.slug : null;
+  const id = publicId ?? `public:${slug}`;
   const [index, setIndex] = useState<ReaderIndex | null>(null);
   const [file, setFile] = useState<Blob | null | undefined>(undefined);
+  const [fetching, setFetching] = useState(false);
   const [doc, setDoc] = useState<PDFDocumentProxy | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [current, setCurrent] = useState<number | null>(null);
@@ -457,15 +478,33 @@ export function BookReader({ book }: { book: Book }) {
 
   useEffect(() => {
     let cancelled = false;
-    api.getBookReader(book.publicId).then(
+    const index = publicId !== null ? api.getBookReader(publicId) : publicFetch(bookIndexUrl(slug as string), (r) => r.json());
+    index.then(
       (i) => !cancelled && setIndex(i),
       (err) => !cancelled && setError(userMessage(err)),
     );
-    bookFile(book.sha256).then((f) => !cancelled && setFile(f));
+    (async () => {
+      // The device's copy first, for either kind. A demo book's comes from the
+      // server once, and is kept so the next visit opens at once.
+      let f = await bookFile(sha256);
+      if (!f && slug !== null) {
+        setFetching(true);
+        try {
+          f = await publicFetch(bookPdfUrl(slug), (r) => r.blob());
+          await keepBookFile(sha256, f);
+        } catch (err) {
+          if (!cancelled) setError(userMessage(err));
+          return;
+        } finally {
+          setFetching(false);
+        }
+      }
+      if (!cancelled) setFile(f);
+    })();
     return () => {
       cancelled = true;
     };
-  }, [book.publicId, book.sha256]);
+  }, [publicId, slug, sha256]);
 
   useEffect(() => {
     if (!file) return;
@@ -640,23 +679,23 @@ export function BookReader({ book }: { book: Book }) {
 
   useEffect(() => {
     try {
-      if (doc) localStorage.setItem(LAST_PAGE_KEY(book.publicId), String(page));
+      if (doc) localStorage.setItem(LAST_PAGE_KEY(id), String(page));
     } catch {
       // private window: nothing to remember with
     }
-  }, [page, doc, book.publicId]);
+  }, [page, doc, id]);
 
   // back to where the reader left off
   useEffect(() => {
     if (!doc) return;
     let saved = 1;
     try {
-      saved = Number(localStorage.getItem(LAST_PAGE_KEY(book.publicId))) || 1;
+      saved = Number(localStorage.getItem(LAST_PAGE_KEY(id))) || 1;
     } catch {
       saved = 1;
     }
     if (saved > 1) requestAnimationFrame(() => pageEls.current.get(saved - 1)?.scrollIntoView({ block: "start" }));
-  }, [doc, book.publicId]);
+  }, [doc, id]);
 
   const register = useCallback((n: number, el: HTMLElement | null) => {
     if (el) pageEls.current.set(n, el);
@@ -669,9 +708,13 @@ export function BookReader({ book }: { book: Book }) {
   };
 
   if (error) return <p className="py-16 text-center text-sm text-red-600">{error}</p>;
-  if (file === null) return <OpenYourCopy book={book} onFile={setFile} />;
-  if (!index || !doc || file === undefined) {
-    return <div className="mx-auto mt-8 h-40 max-w-4xl animate-pulse rounded-xl bg-ink-card" />;
+  if (file === null && source.kind === "own") return <OpenYourCopy book={source.book} onFile={setFile} />;
+  if (!index || !doc || !file) {
+    return (
+      <div className="mx-auto mt-8 flex h-40 max-w-4xl flex-col items-center justify-center gap-2 rounded-xl bg-ink-card text-[14px] text-ink-faint">
+        {fetching ? <p>Fetching the book, once: this browser keeps it for next time.</p> : <span className="h-4 w-24 animate-pulse rounded bg-ink-raised" />}
+      </div>
+    );
   }
   if (doc.numPages !== index.pages.length) {
     return <p className="py-16 text-center text-sm text-red-600">This copy of the book has a different number of pages from the one uploaded.</p>;
@@ -680,10 +723,10 @@ export function BookReader({ book }: { book: Book }) {
   return (
     <div className={`mx-auto flex w-full max-w-[1240px] flex-col gap-4 lg:pb-8 ${sheet ? "pb-[75dvh]" : "pb-8"}`}>
       <header className="flex flex-wrap items-center gap-3">
-        <Link href="/books" className="rounded-pill border-2 border-accent px-3.5 py-1 text-[14px] font-[520] text-ink-text hover:bg-accent/10">
+        <Link href={backHref} className="rounded-pill border-2 border-accent px-3.5 py-1 text-[14px] font-[520] text-ink-text hover:bg-accent/10">
           Back
         </Link>
-        <h1 className="min-w-0 flex-1 truncate text-[18px] font-[520] text-ink-text sm:text-[22px]">{book.title}</h1>
+        <h1 className="min-w-0 flex-1 truncate text-[18px] font-[520] text-ink-text sm:text-[22px]">{title}</h1>
         <label className="flex items-center gap-2 text-[13px] text-ink-faint">
           Page
           <input
