@@ -68,6 +68,13 @@ export function buildApiError(status: number, statusText: string, body: unknown)
 }
 
 /** Build the error thrown when the request never got a response at all. */
+/** The request was cancelled on purpose (an AbortController): not an error to show. */
+export function wasAborted(err: unknown): boolean {
+  if (err instanceof DOMException) return err.name === "AbortError";
+  const technical = (err as { technical?: unknown })?.technical;
+  return typeof technical === "string" && /abort/i.test(technical);
+}
+
 export function buildNetworkError(cause: unknown): AppError {
   const err = new Error(
     "Can't reach the server. Check your connection and try again."
