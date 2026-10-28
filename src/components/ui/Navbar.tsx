@@ -10,6 +10,19 @@ import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { clearAuth, setProfilePic } from "@/redux/actions/auth";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
+// The app's sections, in the bar on a desktop and in the burger menu below it.
+const LINKS = [
+  { href: "/home", label: "My Opponents" },
+  // every move strong players chose from any position
+  { href: "/explorer", label: "Explorer" },
+  // the user's own chess books: exercises, or a reader for scans
+  { href: "/books", label: "Books" },
+  // you as a player, in the slot the repertoire used to hold. Unconditional:
+  // everyone has a profile from the moment they register, which is the whole
+  // reason the row is created eagerly.
+  { href: "/me", label: "My Profile" },
+];
+
 export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -17,6 +30,7 @@ export function Navbar() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const { token, refreshToken, email, profilePic } = useAppSelector((s) => s.auth);
 
@@ -29,6 +43,15 @@ export function Navbar() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // The burger menu closes on any navigation, and on Escape.
+  useEffect(() => setMenuOpen(false), [pathname]);
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setMenuOpen(false);
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [menuOpen]);
 
   // The sign-in pages have nothing to navigate to, but still need the way
   // home and the theme switch: someone arriving from the dark landing page
@@ -92,57 +115,21 @@ export function Navbar() {
             The scroller holds only the links: the profile dropdown is
             absolutely positioned, and `overflow-x` on its ancestor would clip
             it. */}
-        <div className="flex min-w-0 items-center gap-1">
+        <div className="hidden min-w-0 items-center gap-1 lg:flex">
           <div className="no-scrollbar flex min-w-0 items-center gap-1 overflow-x-auto">
-            {/* Main nav link */}
-            <Link
-              href="/home"
-              className={`shrink-0 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                isActive("/home")
-                  ? "bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400"
-                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100"
-              }`}
-            >
-              My Opponents
-            </Link>
-
-            {/* Explorer — every move strong players chose from any position. */}
-            <Link
-              href="/explorer"
-              className={`shrink-0 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                isActive("/explorer")
-                  ? "bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400"
-                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100"
-              }`}
-            >
-              Explorer
-            </Link>
-
-            {/* Books — the user's own chess books, converted into exercises. */}
-            <Link
-              href="/books"
-              className={`shrink-0 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                isActive("/books")
-                  ? "bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400"
-                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100"
-              }`}
-            >
-              Books
-            </Link>
-
-            {/* My Profile — you as a player, in the slot the repertoire used to
-                hold. Unconditional: everyone has a profile from the moment they
-                register, which is the whole reason the row is created eagerly. */}
-            <Link
-              href="/me"
-              className={`shrink-0 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                isActive("/me")
-                  ? "bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400"
-                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100"
-              }`}
-            >
-              My Profile
-            </Link>
+            {LINKS.map(({ href, label }) => (
+              <Link
+                key={href}
+                href={href}
+                className={`shrink-0 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                  isActive(href)
+                    ? "bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400"
+                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100"
+                }`}
+              >
+                {label}
+              </Link>
+            ))}
           </div>
 
           <ThemeToggle className="ml-1 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100" />
@@ -258,7 +245,116 @@ export function Navbar() {
             </div>
           )}
         </div>
+
+        {/* Phones and tablets: a burger, and the whole menu behind it. */}
+        <button
+          type="button"
+          onClick={() => setMenuOpen((o) => !o)}
+          aria-expanded={menuOpen}
+          aria-controls="app-menu"
+          aria-label={menuOpen ? "Close the menu" : "Open the menu"}
+          className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-dark-elevated lg:hidden"
+        >
+          {/* three lines that fold into an X */}
+          {[-6, 0, 6].map((y, i) => (
+            <span
+              key={y}
+              aria-hidden="true"
+              className="absolute h-0.5 w-5 rounded-full bg-current transition-all duration-200 motion-reduce:transition-none"
+              style={{
+                transform: menuOpen
+                  ? i === 1 ? "scaleX(0)" : `rotate(${i === 0 ? 45 : -45}deg)`
+                  : `translateY(${y}px)`,
+                opacity: menuOpen && i === 1 ? 0 : 1,
+              }}
+            />
+          ))}
+        </button>
       </div>
+
+      {menuOpen && (
+        <>
+          {/* the page behind: a tap there closes the menu. Absolute, not
+              fixed: the bar's backdrop blur makes it the containing block
+              for fixed children, which would squeeze this into the bar. */}
+          <button
+            type="button"
+            aria-label="Close the menu"
+            tabIndex={-1}
+            onClick={() => setMenuOpen(false)}
+            className="absolute inset-x-0 top-16 z-40 h-[calc(100dvh-4rem)] cursor-default bg-black/30 lg:hidden"
+          />
+          <div
+            id="app-menu"
+            className="absolute inset-x-0 top-16 z-50 max-h-[calc(100dvh-4rem)] overflow-y-auto border-b border-gray-200 bg-white shadow-lg dark:border-dark-border dark:bg-dark-bg lg:hidden"
+          >
+            <ul className="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-3 sm:px-6">
+              {LINKS.map(({ href, label }) => (
+                <li key={href}>
+                  <Link
+                    href={href}
+                    onClick={() => setMenuOpen(false)}
+                    aria-current={isActive(href) ? "page" : undefined}
+                    className={`block rounded-lg px-4 py-3 text-base font-medium ${
+                      isActive(href)
+                        ? "bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400"
+                        : "text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-dark-elevated"
+                    }`}
+                  >
+                    {label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+
+            <div className="mx-auto max-w-7xl border-t border-gray-100 px-4 py-3 dark:border-dark-border sm:px-6">
+              <div className="flex items-center justify-between gap-3 px-4 py-1">
+                <span className="text-sm text-gray-600 dark:text-gray-300">Theme</span>
+                <ThemeToggle className="text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100" />
+              </div>
+            </div>
+
+            <div className="mx-auto max-w-7xl border-t border-gray-100 px-4 py-3 dark:border-dark-border sm:px-6">
+              {token ? (
+                <>
+                  <div className="flex items-center gap-3 px-4 py-2">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-600 text-sm font-bold text-white">
+                      {profilePic ? <img src={profilePic} alt="" className="h-full w-full object-cover" /> : initials}
+                    </div>
+                    {email && <p className="min-w-0 truncate text-sm font-medium text-gray-700 dark:text-gray-200">{email}</p>}
+                  </div>
+                  <Link
+                    href="/support"
+                    onClick={() => setMenuOpen(false)}
+                    className="block rounded-lg px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-dark-elevated"
+                  >
+                    Support this project
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      void handleLogout();
+                    }}
+                    className="block w-full rounded-lg px-4 py-3 text-left text-base font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <div className="flex gap-2 px-4 py-2">
+                  <Link href="/login" className="flex-1 rounded-lg border border-gray-200 px-4 py-2.5 text-center text-sm font-medium text-gray-700 dark:border-dark-border dark:text-gray-200">
+                    Login
+                  </Link>
+                  <Link href="/signup" className="btn-primary flex-1 text-center text-sm">
+                    Sign up
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </nav>
   );
 }
