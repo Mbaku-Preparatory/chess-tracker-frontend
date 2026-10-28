@@ -1,3 +1,4 @@
+import { bookPath, fetchPublicBooks } from "@/lib/publicBook";
 import { STATIC_PAGES, playerChunk, urlset, xmlResponse } from "@/lib/sitemap";
 import { SITE_URL } from "@/lib/site";
 
@@ -9,7 +10,14 @@ export async function GET(_request: Request, { params }: { params: Promise<{ fil
   const { file } = await params;
 
   if (file === "pages.xml") {
-    return xmlResponse(urlset(STATIC_PAGES.map((path) => ({ loc: `${SITE_URL}${path}` }))));
+    // The demo books sit with the static pages: a handful, published by hand.
+    const books = await fetchPublicBooks();
+    return xmlResponse(
+      urlset([
+        ...STATIC_PAGES.map((path) => ({ loc: `${SITE_URL}${path}` })),
+        ...books.map((b) => ({ loc: `${SITE_URL}${bookPath(b.publicSlug)}`, lastmod: b.finishedAt })),
+      ]),
+    );
   }
 
   const match = /^players-(\d{1,4})\.xml$/.exec(file);
