@@ -33,3 +33,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+
+# pdf.js's decoders, fonts and CMaps, copied from node_modules on install
+# (package.json postinstall) so they always match the installed version
+/public/pdfjs/

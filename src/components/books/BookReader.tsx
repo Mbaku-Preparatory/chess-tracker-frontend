@@ -338,7 +338,18 @@ export function BookReader({ book }: { book: Book }) {
     (async () => {
       const pdfjs = await import("pdfjs-dist");
       pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString();
-      const loading = pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) });
+      const loading = pdfjs.getDocument({
+        data: new Uint8Array(await file.arrayBuffer()),
+        // Scanned books keep their pictures as JBIG2 (and some as JPEG 2000):
+        // pdf.js decodes those with WebAssembly it fetches from here, and
+        // without it draws the text and leaves every diagram blank.
+        // Copied into public/ on install (package.json postinstall).
+        wasmUrl: "/pdfjs/wasm/",
+        cMapUrl: "/pdfjs/cmaps/",
+        cMapPacked: true,
+        standardFontDataUrl: "/pdfjs/standard_fonts/",
+        iccUrl: "/pdfjs/iccs/",
+      });
       task = loading;
       const loaded = await loading.promise;
       if (!cancelled) setDoc(loaded);
