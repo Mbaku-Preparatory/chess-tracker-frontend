@@ -5,6 +5,10 @@
  * diagram the server found lit up over it. Tap one and the board shows that
  * position; ← and → step through the line it belongs to.
  *
+ * On a desktop the board sits beside the book. On a phone or tablet the book
+ * has the whole screen, and the board slides up from the bottom when a move
+ * is tapped; swiping it down, ✕, or the phone's back button puts it away.
+ *
  * The PDF comes from this device (lib/bookFiles.ts), never from the server,
  * which kept only the index (lib/books.ts, ReaderIndex). pdf.js draws the
  * pages, only those near the screen, and lets go of the rest.
@@ -208,13 +212,14 @@ function Panel({
   current,
   go,
   open,
-  setOpen,
+  onClose,
 }: {
   nodes: Node[];
   current: number | null;
   go: (n: number) => void;
+  /** below lg: whether the sheet is up (from lg the panel is always there) */
   open: boolean;
-  setOpen: (v: boolean) => void;
+  onClose: () => void;
 }) {
   const fen = current === null ? "8/8/8/8/8/8/8/8 w - - 0 1" : nodes[current][FEN];
   const [prefs, setPrefs] = useAnalysisPrefs();
@@ -225,6 +230,9 @@ function Panel({
   const prev = current === null ? null : nodes[current][PARENT];
   const next = current === null ? null : nodes[current][NEXT];
   const listRef = useRef<HTMLDivElement>(null);
+  // swiping the sheet down puts it away
+  const [drag, setDrag] = useState(0);
+  const dragStart = useRef<number | null>(null);
 
   useEffect(() => {
     listRef.current?.querySelector("[data-on]")?.scrollIntoView({ block: "nearest" });
@@ -239,9 +247,22 @@ function Panel({
   return (
     <aside
       aria-label="Position"
-      className="fixed inset-x-0 bottom-0 z-30 flex flex-col gap-2 rounded-t-2xl bg-ink-card px-4 pb-4 pt-3 shadow-[0_-6px_24px_rgba(0,0,0,0.18)] lg:sticky lg:top-20 lg:z-auto lg:gap-3 lg:rounded-xl lg:p-4 lg:shadow-none"
+      aria-hidden={!open ? true : undefined}
+      onTouchStart={(e) => (dragStart.current = e.touches[0].clientY)}
+      onTouchMove={(e) => dragStart.current !== null && setDrag(Math.max(0, e.touches[0].clientY - dragStart.current))}
+      onTouchEnd={() => {
+        if (drag > 80) onClose();
+        dragStart.current = null;
+        setDrag(0);
+      }}
+      style={drag ? { transform: `translateY(${drag}px)`, transition: "none" } : undefined}
+      className={`fixed inset-x-0 bottom-0 z-30 flex max-h-[85dvh] flex-col gap-2 overflow-y-auto rounded-t-2xl bg-ink-card px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-6px_24px_rgba(0,0,0,0.18)] transition-transform duration-200 motion-reduce:transition-none ${
+        open ? "translate-y-0" : "pointer-events-none translate-y-full"
+      } lg:pointer-events-auto lg:sticky lg:top-20 lg:z-auto lg:max-h-none lg:translate-y-0 lg:gap-3 lg:overflow-visible lg:rounded-xl lg:p-4 lg:shadow-none`}
     >
-      <div className={`${open ? "" : "hidden"} mx-auto w-full max-w-[min(100%,30vh)] lg:block lg:max-w-none`}>
+      {/* the handle: where a swipe down starts, on a phone */}
+      <div aria-hidden="true" className="mx-auto h-1.5 w-10 shrink-0 rounded-full bg-ink-line lg:hidden" />
+      <div className="mx-auto w-full max-w-[min(100%,40dvh)] lg:max-w-none">
         <Chessboard
           options={{
             position: fen,
@@ -270,13 +291,13 @@ function Panel({
           <button type="button" aria-label="Next move" disabled={next === null} onClick={() => next !== null && go(next)} className={button}>
             →
           </button>
-          <button type="button" aria-label={open ? "Hide the board" : "Show the board"} onClick={() => setOpen(!open)} className={`${button} lg:hidden`}>
-            {open ? "↓" : "↑"}
+          <button type="button" aria-label="Close the board" onClick={onClose} className={`${button} lg:hidden`}>
+            ✕
           </button>
         </div>
       </div>
       {line.length > 1 && (
-        <div ref={listRef} className={`${open ? "" : "hidden"} max-h-16 overflow-y-auto border-t border-ink-line pt-2 text-[14px] leading-7 lg:block lg:max-h-48`}>
+        <div ref={listRef} className="max-h-16 overflow-y-auto border-t border-ink-line pt-2 text-[14px] leading-7 lg:max-h-48">
           {line.map((x, i) => {
             if (!nodes[x][SAN]) return null;
             const parent = nodes[nodes[x][PARENT] as number][FEN].split(" ");
@@ -309,13 +330,27 @@ function Panel({
 
 // ── The reader ───────────────────────────────────────────────────────────────
 
+/** Desktop width (Tailwind's lg), where the board sits beside the book. */
+function useWide(): boolean {
+  const [wide, setWide] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const update = () => setWide(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+  return wide;
+}
+
 export function BookReader({ book }: { book: Book }) {
   const [index, setIndex] = useState<ReaderIndex | null>(null);
   const [file, setFile] = useState<Blob | null | undefined>(undefined);
   const [doc, setDoc] = useState<PDFDocumentProxy | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [current, setCurrent] = useState<number | null>(null);
-  const [open, setOpen] = useState(true);
+  const [sheet, setSheet] = useState(false);
+  const wide = useWide();
   const [page, setPage] = useState(1);
   const pageEls = useRef(new Map<number, HTMLElement>());
 
@@ -367,15 +402,59 @@ export function BookReader({ book }: { book: Book }) {
     return m;
   }, [index]);
 
-  const go = useCallback(
-    (n: number, scroll = true) => {
-      setCurrent(n);
-      if (!scroll) return;
+  // Bring a move's highlight into view: centred beside the desktop panel,
+  // in the top third on a phone, where the sheet doesn't cover it.
+  const reveal = useCallback(
+    (n: number, always: boolean) => {
       const pageNo = placeOf.get(n);
       const el = pageNo === undefined ? null : pageEls.current.get(pageNo)?.querySelector(`[data-node="${n}"]`);
-      el?.scrollIntoView({ block: "center", behavior: "smooth" });
+      if (!el) return;
+      if (wide) {
+        if (always) el.scrollIntoView({ block: "center", behavior: "smooth" });
+        return;
+      }
+      const top = el.getBoundingClientRect().top;
+      if (always || top > window.innerHeight * 0.3 || top < 72) {
+        window.scrollTo({ top: window.scrollY + top - window.innerHeight * 0.22, behavior: "smooth" });
+      }
     },
-    [placeOf],
+    [placeOf, wide],
+  );
+
+  // The board on a phone is a history entry, so the phone's back button puts
+  // it away instead of leaving the book.
+  const openSheet = useCallback(() => {
+    if (wide || sheet) return;
+    window.history.pushState({ readerBoard: true }, "");
+    setSheet(true);
+  }, [wide, sheet]);
+  const closeSheet = useCallback(() => {
+    if (window.history.state?.readerBoard) window.history.back();
+    else setSheet(false);
+  }, []);
+  useEffect(() => {
+    const onPop = () => setSheet(Boolean(window.history.state?.readerBoard));
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
+  /** A move or diagram tapped on the page. */
+  const pick = useCallback(
+    (n: number) => {
+      setCurrent(n);
+      openSheet();
+      reveal(n, false);
+    },
+    [openSheet, reveal],
+  );
+
+  /** A step through the line, from the panel or the keyboard. */
+  const go = useCallback(
+    (n: number) => {
+      setCurrent(n);
+      reveal(n, true);
+    },
+    [reveal],
   );
 
   useEffect(() => {
@@ -444,7 +523,7 @@ export function BookReader({ book }: { book: Book }) {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-[1240px] flex-col gap-4 pb-[46vh] lg:pb-8">
+    <div className={`mx-auto flex w-full max-w-[1240px] flex-col gap-4 lg:pb-8 ${sheet ? "pb-[75dvh]" : "pb-8"}`}>
       <header className="flex flex-wrap items-center gap-3">
         <Link href="/books" className="rounded-pill border-2 border-accent px-3.5 py-1 text-[14px] font-[520] text-ink-text hover:bg-accent/10">
           Back
@@ -469,10 +548,10 @@ export function BookReader({ book }: { book: Book }) {
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
         <main className="mx-auto flex w-full max-w-[780px] flex-col gap-7">
           {index.pages.map((p, i) => (
-            <PdfPage key={i} doc={doc} number={i} page={p} current={current} onPick={(n) => go(n, false)} register={register} />
+            <PdfPage key={i} doc={doc} number={i} page={p} current={current} onPick={pick} register={register} />
           ))}
         </main>
-        <Panel nodes={index.nodes} current={current} go={go} open={open} setOpen={setOpen} />
+        <Panel nodes={index.nodes} current={current} go={go} open={sheet || wide} onClose={closeSheet} />
       </div>
     </div>
   );
