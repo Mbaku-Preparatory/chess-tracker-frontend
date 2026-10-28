@@ -336,11 +336,12 @@ export const api = {
   },
 
   /** A chess book PDF to convert. Answers at once; the worker converts it, and
-   * the book's status is polled through GraphQL (lib/books.ts). */
+   * the book's status is polled through GraphQL (lib/books.ts). The same file
+   * again answers with the book already there, and `duplicate` true. */
   uploadBook(
     file: File,
     options: { title?: string; notifyEmail?: boolean } = {},
-  ): Promise<{ public_id: string; title: string; status: string; sha256: string }> {
+  ): Promise<{ public_id: string; title: string; status: string; sha256: string; duplicate: boolean }> {
     const body = new FormData();
     body.append("file", file);
     if (options.title) body.append("title", options.title);

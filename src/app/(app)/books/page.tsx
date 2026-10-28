@@ -51,6 +51,8 @@ function Converting({ book }: { book: Book }) {
 export default function BooksPage() {
   const [books, setBooks] = useState<Book[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // The same file uploaded again: not an error, but worth a word.
+  const [already, setAlready] = useState<{ publicId: string; title: string; ready: boolean } | null>(null);
   const [uploading, setUploading] = useState(false);
   const [notifyEmail, setNotifyEmail] = useState(true);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -78,10 +80,12 @@ export default function BooksPage() {
   async function upload(file: File) {
     setUploading(true);
     setError(null);
+    setAlready(null);
     try {
       // A reader book is read over this copy: the server deletes its own.
       void sha256Of(file).then((sha) => keepBookFile(sha, file));
-      await api.uploadBook(file, { notifyEmail });
+      const result = await api.uploadBook(file, { notifyEmail });
+      if (result.duplicate) setAlready({ publicId: result.public_id, title: result.title, ready: result.status === "succeeded" });
       await load();
     } catch (err) {
       setError(userMessage(err));
@@ -138,6 +142,16 @@ export default function BooksPage() {
           />
         </div>
         {error && <p className="mt-3 text-sm text-red-600 dark:text-red-400">{error}</p>}
+        {already && (
+          <p className="mt-3 text-sm text-gray-600 dark:text-gray-300">
+            You already have this book as “{already.title}”.{" "}
+            {already.ready ? (
+              <Link href={`/books/${already.publicId}`} className="text-brand-600 underline">Open it</Link>
+            ) : (
+              "It is still being converted."
+            )}
+          </p>
+        )}
       </section>
 
       {books === null ? (
