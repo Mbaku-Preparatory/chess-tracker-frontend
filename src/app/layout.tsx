@@ -11,9 +11,9 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "Chess Preparatory - Opponent Intelligence",
+  title: "Chess Preparatory",
   description:
-    "Search your opponent, unlock prep, and walk in with a practical match plan.",
+    "A profile for every FIDE-rated chess player, world and national rankings, a reader for chess books, and tools to prepare for an opponent.",
 };
 
 /**

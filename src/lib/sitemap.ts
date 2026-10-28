@@ -21,6 +21,7 @@ export const STATIC_PAGES = [
   "/rankings",
   "/rankings/countries",
   ...CURRENT_FEDERATIONS.map((f) => rankingsPath({ tc: "classical", list: "overall", fed: f.code, page: 1 })),
+  "/chess-books",
   "/privacy",
 ];
 

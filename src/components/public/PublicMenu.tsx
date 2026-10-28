@@ -29,7 +29,11 @@ export function PublicMenu() {
 
   const item = "block rounded-xl px-4 py-3 text-[16px] text-ink-text hover:bg-ink-raised";
   // Get started / Open app stay in the bar beside the burger, so not here too.
-  const links = [{ href: "/rankings", label: "Rankings" }, ...(signedIn ? [] : [{ href: "/login", label: "Log in" }])];
+  const links = [
+    { href: "/rankings", label: "Rankings" },
+    { href: "/chess-books", label: "Books" },
+    ...(signedIn ? [] : [{ href: "/login", label: "Log in" }]),
+  ];
 
   return (
     <>

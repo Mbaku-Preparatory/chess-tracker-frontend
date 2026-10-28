@@ -37,7 +37,7 @@ export default function BookPage() {
     );
   }
 
-  if (book.kind === "reader") return <BookReader book={book} />;
+  if (book.kind === "reader") return <BookReader source={{ kind: "own", book }} />;
 
   const stopped = book.exercises.filter((e) => !e.verified);
   const first = book.exercises[0]?.number;
