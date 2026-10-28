@@ -21,12 +21,15 @@ export type PublicBook = {
 /** What the backend does not know about a demo book: who wrote it and when,
  * for the page's text and its schema.org Book. Keyed by slug; a book
  * published without an entry here still has a page, with the title alone. */
-export const ABOUT: Record<string, { author: string; year: number; blurb: string }> = {
+export const ABOUT: Record<string, { author: string; year: number; blurb: string; edition?: { text: string; href: string } }> = {
   "chess-fundamentals": {
     author: "José Raúl Capablanca",
     year: 1921,
     blurb:
       "The World Champion's own course for improving players: endings first, then the middlegame and the opening, with the principles behind each shown in his games.",
+    // The 1921 text is public domain; this algebraic typesetting of it is
+    // released CC0 by its maker.
+    edition: { text: "Algebraic edition typeset by lordlinks, CC0", href: "https://github.com/lordlinks/Chess_Fundamentals" },
   },
 };
 

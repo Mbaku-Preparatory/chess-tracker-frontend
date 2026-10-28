@@ -73,6 +73,15 @@ export default async function PublicBookPage({ params }: { params: Params }) {
           This copy is read by Chess Preparatory: every one of its {n(book.moveCount)} moves and {n(book.diagramCount)} diagrams opens on the board
           beside the page. Tap a move to see the position, use ← and → to step through the line, or play your own moves and switch the engine on.
           {about && about.year < 1930 ? " The book is in the public domain." : ""}
+          {about?.edition && (
+            <>
+              {" "}
+              <a href={about.edition.href} rel="noopener" className="underline decoration-ink-line underline-offset-4 hover:text-ink-text">
+                {about.edition.text}
+              </a>
+              .
+            </>
+          )}
         </p>
       </section>
       <BookReader source={{ kind: "public", slug: book.publicSlug, title: book.title, sha256: book.sha256 }} backHref="/chess-books" />
