@@ -303,6 +303,28 @@ export const api = {
     return fetchJson(`${API_BASE}/players/${slug}/bot-book/?color=${color}`);
   },
 
+  /** The face on the player's bot: one of lib/avatars, or null for the default. */
+  setBotAvatar(slug: string, avatar: number | null): Promise<{ bot_avatar: number | null }> {
+    return fetchJson(`${API_BASE}/players/${slug}/bot-avatar/`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ avatar }),
+    });
+  },
+
+  /** The signed-in account: names, email and the avatar they picked. */
+  getMe(): Promise<import("@/types").Me> {
+    return fetchJson(`${API_BASE}/auth/me/`);
+  },
+
+  setMyAvatar(avatar: number | null): Promise<import("@/types").Me> {
+    return fetchJson(`${API_BASE}/auth/me/`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ avatar }),
+    });
+  },
+
   getPrepGames(
     slug: string,
     moves: string[],
