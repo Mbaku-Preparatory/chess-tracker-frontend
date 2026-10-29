@@ -14,8 +14,6 @@ import { BurgerButton } from "@/components/ui/BurgerButton";
 // The app's sections, in the bar on a desktop and in the burger menu below it.
 const LINKS = [
   { href: "/home", label: "My Opponents" },
-  // every move strong players chose from any position
-  { href: "/explorer", label: "Explorer" },
   // the user's own chess books: exercises, or a reader for scans
   { href: "/books", label: "Books" },
   // you as a player, in the slot the repertoire used to hold. Unconditional:

@@ -14,7 +14,7 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: "*",
       allow: "/",
       disallow: [
-        "/home", "/players", "/me", "/explorer", "/support", "/verify-email",
+        "/home", "/players", "/me", "/support", "/verify-email",
         // A signed-in user's games and the master corpus. "/games" is not
         // "/game/…", the public game pages, for the same prefix reason.
         "/games", "/master-games", "/books",

@@ -25,9 +25,9 @@ export function ImportJobProgress({
 
   if (!isTerminal(job)) {
     return (
-      <div className="mt-4 space-y-2 rounded-lg border border-brand-200 bg-white px-4 py-3">
+      <div className="mt-4 space-y-2 rounded-lg border border-brand-200 bg-white px-4 py-3 dark:border-brand-800 dark:bg-dark-surface">
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-sm text-gray-700">
+          <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
             <svg className="h-4 w-4 animate-spin text-brand-500" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
@@ -42,12 +42,12 @@ export function ImportJobProgress({
             type="button"
             onClick={onCancel}
             disabled={job.cancel_requested}
-            className="text-sm text-gray-500 hover:text-gray-800 disabled:opacity-50"
+            className="text-sm text-gray-500 hover:text-gray-800 disabled:opacity-50 dark:text-gray-400 dark:hover:text-gray-200"
           >
             {job.cancel_requested ? "Cancelling…" : "Cancel"}
           </button>
         </div>
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-gray-500 dark:text-gray-400">
           This runs on the server — you can close this page and come back to it.
         </p>
       </div>
@@ -67,7 +67,7 @@ export function ImportJobProgress({
         </div>
         <div className="flex flex-wrap gap-2 text-xs">
           {entry?.games_skipped ? (
-            <span className="rounded-full border border-gray-200 bg-gray-100 px-2.5 py-1 text-gray-500">
+            <span className="rounded-full border border-gray-200 bg-gray-100 px-2.5 py-1 text-gray-500 dark:border-dark-border dark:text-gray-400">
               {entry.games_skipped} game{entry.games_skipped !== 1 ? "s" : ""} skipped
             </span>
           ) : null}
@@ -83,7 +83,7 @@ export function ImportJobProgress({
 
   if (job.status === "cancelled") {
     return (
-      <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
+      <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600 dark:border-dark-border dark:bg-dark-elevated dark:text-gray-300">
         Import cancelled.
       </div>
     );
