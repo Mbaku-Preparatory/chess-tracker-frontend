@@ -157,14 +157,9 @@ export default function PrivacyPolicyPage() {
 
       <Section title="Your FIDE ID">
         <p>
-          You can give us your FIDE ID when you register, or later on your profile. It is optional
-          and the app works without it.
-        </p>
-        <p>
-          If you provide one we use it to look up your public rating record on FIDE and to find your
-          published tournament games on chess-results.org, so the app can show your own play back to
-          you. Both sources are public. We send them your FIDE ID and nothing else about you &mdash;
-          not your name as we hold it, not your email.
+          We no longer ask for your own FIDE ID. Earlier versions of the app let you give it when you
+          registered, to show your own play back to you. If you gave one, it and the public games
+          found with it stay on your account until you delete the account or ask us to remove them.
         </p>
       </Section>
 

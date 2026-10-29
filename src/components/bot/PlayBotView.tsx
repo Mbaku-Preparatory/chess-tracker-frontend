@@ -32,7 +32,8 @@ const clampElo = (elo: number) => Math.min(SLIDER_MAX, Math.max(ELO_MIN, elo));
  */
 export function PlayBotView({ slug }: { slug: string }) {
   const [player, setPlayer] = useState<PlayerDetail | null>(null);
-  const [me, setMe] = useState<PlayerDetail | null>(null);
+  // The plate's name, from the account: there is no player row for you.
+  const [youName, setYouName] = useState("You");
   const [books, setBooks] = useState<Record<Color, BotBookGame[]> | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -60,9 +61,14 @@ export function PlayBotView({ slug }: { slug: string }) {
         setColor(black.games.length > white.games.length ? "black" : "white");
       })
       .catch((err) => !cancelled && setError(userMessage(err, "Couldn't load this player's games.")));
-    // Not having a profile of your own is fine: the plate says "You".
-    api.getMyPlayer().then((m) => !cancelled && setMe(m.player)).catch(() => {});
-    api.getMe().then((m) => !cancelled && setMyAvatar(m.avatar)).catch(() => {});
+    api
+      .getMe()
+      .then((m) => {
+        if (cancelled) return;
+        setMyAvatar(m.avatar);
+        setYouName(`${m.first_name} ${m.last_name}`.trim() || m.username || "You");
+      })
+      .catch(() => {});
     return () => {
       cancelled = true;
     };
@@ -81,7 +87,7 @@ export function PlayBotView({ slug }: { slug: string }) {
   const name = player.full_name;
   const botDefaultSrc = avatarSrc(defaultAvatar(player.public_id));
   const botSrc = avatarSrc(resolveAvatar(botAvatar, player.public_id));
-  const myDefaultSrc = profilePic || avatarSrc(defaultAvatar(me?.public_id ?? email ?? "you"));
+  const myDefaultSrc = profilePic || avatarSrc(defaultAvatar(email ?? "you"));
   const mySrc = myAvatar ? avatarSrc(myAvatar) : myDefaultSrc;
 
   // Shown at once, saved behind; put back if the save fails.
@@ -105,7 +111,7 @@ export function PlayBotView({ slug }: { slug: string }) {
         // A new choice is a new game.
         key={`${color}-${strength}`}
         player={player}
-        me={me}
+        youName={youName}
         botColor={color}
         games={colorGames}
         elo={strength}
@@ -143,7 +149,7 @@ export function PlayBotView({ slug }: { slug: string }) {
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
           {[
             { who: "bot" as const, src: botSrc, label: `${name} bot` },
-            { who: "me" as const, src: mySrc, label: me?.full_name ?? "You" },
+            { who: "me" as const, src: mySrc, label: youName },
           ].map((a) => (
             <div key={a.who} className="flex min-w-0 items-center gap-3">
               <button type="button" onClick={() => setPicking(a.who)} className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label={`Change the avatar for ${a.label}`}>

@@ -110,7 +110,7 @@ function facedLine(book: Book, fen: string, ply: number, single: BotBookGame | n
 
 export function BotGame({
   player,
-  me,
+  youName,
   botColor,
   games,
   elo,
@@ -119,7 +119,8 @@ export function BotGame({
   onExit,
 }: {
   player: PlayerDetail;
-  me: PlayerDetail | null;
+  /** The account holder's name for their plate and the PGN. */
+  youName: string;
   botColor: Color;
   /** The player's games in the bot's colour: its book. */
   games: BotBookGame[];
@@ -331,8 +332,8 @@ export function BotGame({
   }
 
   function download() {
-    const white = botColor === "white" ? `${name} bot` : (me?.full_name ?? "You");
-    const black = botColor === "black" ? `${name} bot` : (me?.full_name ?? "You");
+    const white = botColor === "white" ? `${name} bot` : youName;
+    const black = botColor === "black" ? `${name} bot` : youName;
     const tag = result?.tag ?? "*";
     const today = new Date().toISOString().slice(0, 10);
     const text = moves.map((m, i) => (i % 2 === 0 ? `${i / 2 + 1}. ${m.san}` : m.san)).join(" ");
@@ -348,8 +349,6 @@ export function BotGame({
     URL.revokeObjectURL(url);
   }
 
-  const youName = me?.full_name ?? "You";
-  const youRating = me ? (me.standard_rating ?? me.rapid_rating ?? me.blitz_rating) : null;
   const status = result
     ? result.text
     : engineError
@@ -399,7 +398,7 @@ export function BotGame({
           <div className="flex w-full max-w-[min(100%,calc(100dvh-190px))] flex-col gap-1.5 lg:max-w-[min(100%,calc(100dvh-270px))]">
             <Plate name={name} rating={player.standard_rating ?? player.rapid_rating ?? player.blitz_rating} color={botColor} tag={`Bot · ${elo}`} avatar={botAvatarSrc} />
             <Board fen={fen} orientation={youColor} squareStyles={squareStyles} onDrop={tryMove} onSquareClick={onSquareClick} />
-            <Plate name={youName} rating={youRating} color={youColor} avatar={youAvatarSrc} />
+            <Plate name={youName} rating={null} color={youColor} avatar={youAvatarSrc} />
           </div>
         </section>
 

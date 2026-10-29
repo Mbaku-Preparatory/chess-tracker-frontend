@@ -22,8 +22,6 @@ export interface DuplicatePlayer {
   slug: string;
   full_name: string;
   fide_id: string | null;
-  /** Your own profile lives at /me — never at /players/<slug>. */
-  is_self: boolean;
 }
 
 interface DuplicateBody {
@@ -48,14 +46,10 @@ export function duplicatePlayerFrom(err: unknown): DuplicatePlayer | null {
     slug: player.slug,
     full_name: String(player.full_name ?? ""),
     fide_id: player.fide_id ?? null,
-    // Checked as a real boolean rather than for truthiness: DRF used to coerce
-    // this to the string "False", which is truthy here and would have sent
-    // every caller to /me. The server no longer does that; this is the belt.
-    is_self: player.is_self === true,
   };
 }
 
 /** Where to send somebody to see the player they already have. */
 export function duplicatePlayerHref(player: DuplicatePlayer): string {
-  return player.is_self ? "/me" : `/players/${player.slug}`;
+  return `/players/${player.slug}`;
 }
