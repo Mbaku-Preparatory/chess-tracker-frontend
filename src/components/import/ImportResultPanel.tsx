@@ -89,7 +89,7 @@ export function ImportResultPanel({ result }: { result: PGNImportResult }) {
         <>
           {/* ── Win / Draw / Loss ── */}
           <div className="card p-5">
-            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">
+            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
               Results from this import
             </h3>
             <div className="flex gap-3">
@@ -98,12 +98,12 @@ export function ImportResultPanel({ result }: { result: PGNImportResult }) {
                 { label: "Draws", value: draws, bar: "bg-yellow-400" },
                 { label: "Losses", value: losses, bar: "bg-red-400" },
               ].map(({ label, value, bar }) => (
-                <div key={label} className="flex-1 rounded-lg bg-gray-50 px-3 py-3 text-center">
+                <div key={label} className="flex-1 rounded-lg bg-gray-50 px-3 py-3 text-center dark:bg-dark-elevated">
                   <div className={`mx-auto mb-1.5 h-1 w-8 rounded-full ${bar}`} />
-                  <div className="text-xl font-bold text-gray-900">{value}</div>
-                  <div className="text-xs text-gray-500">{label}</div>
+                  <div className="text-xl font-bold text-gray-900 dark:text-gray-100">{value}</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">{label}</div>
                   {total > 0 && (
-                    <div className="mt-0.5 text-xs text-gray-400">
+                    <div className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
                       {Math.round((value / total) * 100)}%
                     </div>
                   )}
@@ -115,17 +115,17 @@ export function ImportResultPanel({ result }: { result: PGNImportResult }) {
           {/* ── Opening breakdown with percentages ── */}
           {opening_summary.length > 0 && (
             <div className="card p-5">
-              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">
+              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                 Openings detected
               </h3>
               <ul className="space-y-3">
                 {opening_summary.map(({ name, count, percent }) => (
                   <li key={name}>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="truncate font-medium text-gray-800">{name}</span>
-                      <span className="ml-3 shrink-0 tabular-nums text-gray-500">
+                      <span className="truncate font-medium text-gray-800 dark:text-gray-200">{name}</span>
+                      <span className="ml-3 shrink-0 tabular-nums text-gray-500 dark:text-gray-400">
                         {percent}%
-                        <span className="ml-1 text-xs text-gray-400">({count}×)</span>
+                        <span className="ml-1 text-xs text-gray-400 dark:text-gray-500">({count}×)</span>
                       </span>
                     </div>
                     <div className="mt-1.5 h-1.5 w-full rounded-full bg-gray-100">

@@ -80,18 +80,18 @@ export function ConnectedAccountManager({
   }
 
   return (
-    <div className="mt-5 rounded-xl border border-gray-200 bg-white/80 p-4">
+    <div className="mt-5 rounded-xl border border-gray-200 bg-white/80 p-4 dark:border-dark-border dark:bg-dark-surface/80">
       <div className="mb-3">
-        <h4 className="text-sm font-semibold text-gray-900">
+        <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
           Connected {PLATFORM_LABEL[platform]} accounts
         </h4>
-        <p className="mt-1 text-xs text-gray-500">
+        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
           You can delink an account, delete only its imported games, or do both.
         </p>
       </div>
 
       {platformAccounts.length === 0 ? (
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
           No {PLATFORM_LABEL[platform]} accounts linked yet.
         </p>
       ) : (
@@ -102,14 +102,14 @@ export function ConnectedAccountManager({
             return (
               <div
                 key={account.id}
-                className="rounded-lg border border-gray-200 bg-white p-3"
+                className="rounded-lg border border-gray-200 bg-white p-3 dark:border-dark-border dark:bg-dark-surface"
               >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
-                    <div className="text-sm font-semibold text-gray-900">
+                    <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                       {account.username}
                     </div>
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                       Imported games from this linked account can be removed separately.
                     </p>
                   </div>
@@ -119,7 +119,7 @@ export function ConnectedAccountManager({
                       type="button"
                       disabled={!!busyKey}
                       onClick={() => handleDelink(account, false)}
-                      className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-semibold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-semibold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-dark-border dark:bg-dark-surface dark:text-gray-300 dark:hover:bg-dark-muted"
                     >
                       {isBusy && busyKey?.startsWith("delink") ? "Working…" : "Delink only"}
                     </button>

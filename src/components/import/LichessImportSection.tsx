@@ -50,7 +50,7 @@ export function LichessImportSection({
 
   return (
     <div className="space-y-5">
-      <div className="rounded-xl border border-brand-200 bg-brand-50/40 p-5">
+      <div className="rounded-xl border border-brand-200 bg-brand-50/40 p-5 dark:border-brand-800 dark:bg-dark-surface">
         <div className="mb-4 flex items-center gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#b05000] text-white">
             <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
@@ -58,8 +58,8 @@ export function LichessImportSection({
             </svg>
           </div>
           <div>
-            <h3 className="font-semibold text-gray-900">Import from Lichess</h3>
-            <p className="text-xs text-gray-500">
+            <h3 className="font-semibold text-gray-900 dark:text-gray-100">Import from Lichess</h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               Fetch the opponent&apos;s recent public games automatically
             </p>
           </div>
@@ -76,7 +76,7 @@ export function LichessImportSection({
                   className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
                     username === a.username
                       ? "border-[#b05000] bg-[#b05000] text-white"
-                      : "border-gray-200 bg-white text-gray-600 hover:border-[#b05000] hover:text-[#b05000]"
+                      : "border-gray-200 bg-white text-gray-600 hover:border-[#b05000] hover:text-[#b05000] dark:border-dark-border dark:bg-dark-surface dark:text-gray-300"
                   }`}
                 >
                   {a.username}
@@ -89,7 +89,7 @@ export function LichessImportSection({
             <div className="flex-1">
               <label
                 htmlFor="lichess-username"
-                className="mb-1.5 block text-sm font-medium text-gray-700"
+                className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
                 Lichess username
                 <span className="ml-1 text-red-500">*</span>
@@ -102,14 +102,14 @@ export function LichessImportSection({
                 placeholder="e.g. DrNykterstein"
                 autoComplete="off"
                 spellCheck={false}
-                className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-dark-border dark:bg-dark-surface dark:text-gray-100 dark:placeholder-gray-500"
               />
             </div>
 
             <div className="w-full sm:w-32">
               <label
                 htmlFor="lichess-limit"
-                className="mb-1.5 block text-sm font-medium text-gray-700"
+                className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
                 Games to fetch
               </label>
@@ -117,7 +117,7 @@ export function LichessImportSection({
                 id="lichess-limit"
                 value={limit}
                 onChange={(e) => setLimit(Number(e.target.value))}
-                className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:border-dark-border dark:bg-dark-surface dark:text-gray-100"
               >
                 <option value={25}>25</option>
                 <option value={50}>50</option>
@@ -134,7 +134,7 @@ export function LichessImportSection({
               className={`inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-colors ${
                 canSubmit
                   ? "bg-[#b05000] hover:bg-[#8f4200] focus:outline-none focus:ring-2 focus:ring-[#b05000] focus:ring-offset-1"
-                  : "cursor-not-allowed bg-gray-300"
+                  : "cursor-not-allowed bg-gray-300 dark:bg-dark-muted dark:text-gray-400"
               }`}
             >
               {starting && (

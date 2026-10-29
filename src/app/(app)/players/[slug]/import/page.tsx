@@ -219,8 +219,8 @@ export default function PlayerImportPage() {
   if (playerLoading) {
     return (
       <div className="mx-auto max-w-2xl">
-        <div className="h-8 w-48 animate-pulse rounded bg-gray-200" />
-        <div className="mt-4 h-4 w-64 animate-pulse rounded bg-gray-100" />
+        <div className="h-8 w-48 animate-pulse rounded bg-gray-200 dark:bg-dark-elevated" />
+        <div className="mt-4 h-4 w-64 animate-pulse rounded bg-gray-100 dark:bg-dark-elevated" />
       </div>
     );
   }
@@ -228,7 +228,7 @@ export default function PlayerImportPage() {
   if (playerError || !player) {
     return (
       <div className="py-16 text-center">
-        <p className="text-gray-500">{playerError ?? "Player not found."}</p>
+        <p className="text-gray-500 dark:text-gray-400">{playerError ?? "Player not found."}</p>
         <Link href="/home" className="btn-primary mt-4 inline-flex">
           Back to players
         </Link>
@@ -247,25 +247,25 @@ export default function PlayerImportPage() {
   return (
     <div className="mx-auto max-w-2xl">
       {/* Breadcrumb */}
-      <nav className="mb-6 flex items-center gap-2 text-sm text-gray-500">
-        <Link href={`/players/${slug}`} className="hover:text-gray-900">
+      <nav className="mb-6 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+        <Link href={`/players/${slug}`} className="hover:text-gray-900 dark:hover:text-gray-100">
           {player.full_name}
         </Link>
         <span>/</span>
-        <span className="text-gray-900">Import Games</span>
+        <span className="text-gray-900 dark:text-gray-100">Import Games</span>
       </nav>
 
       {/* Player badge */}
       <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-brand-100 text-lg font-bold text-brand-700">
+          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-brand-100 text-lg font-bold text-brand-700 dark:bg-brand-900/40 dark:text-brand-300">
             {initials}
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Import Games</h1>
-            <p className="text-sm text-gray-500">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Import Games</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               Adding games for{" "}
-              <span className="font-medium text-gray-700">{player.full_name}</span>
+              <span className="font-medium text-gray-700 dark:text-gray-300">{player.full_name}</span>
             </p>
           </div>
         </div>
@@ -276,7 +276,7 @@ export default function PlayerImportPage() {
 
       {/* Source selector */}
       <div className="mb-6">
-        <p className="mb-3 text-sm font-medium text-gray-600">Import source</p>
+        <p className="mb-3 text-sm font-medium text-gray-600 dark:text-gray-300">Import source</p>
         <div className="flex flex-wrap gap-2">
           {SOURCE_TABS.map((tab) => {
             const isActive = activeSource === tab.id;
@@ -328,7 +328,7 @@ export default function PlayerImportPage() {
         )}
 
         {activeSource === "pgn" && (
-          <div className="rounded-xl border border-gray-200 bg-white p-5">
+          <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-dark-border dark:bg-dark-surface">
             <div className="mb-4 flex items-center gap-3">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gray-700 text-white">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-5 w-5">
@@ -336,15 +336,15 @@ export default function PlayerImportPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900">Import from PGN file</h3>
-                <p className="text-xs text-gray-500">Paste or upload a .pgn file directly</p>
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100">Import from PGN file</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Paste or upload a .pgn file directly</p>
               </div>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Color selection */}
               <fieldset>
-                <legend className="mb-2 text-sm font-medium text-gray-700">
+                <legend className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                   {player.full_name} played as…
                 </legend>
                 <div className="grid grid-cols-3 gap-3">
@@ -353,8 +353,8 @@ export default function PlayerImportPage() {
                       key={value}
                       className={`flex cursor-pointer flex-col gap-1 rounded-lg border p-3 text-left transition-colors ${
                         color === value
-                          ? "border-brand-600 bg-brand-50"
-                          : "border-gray-200 bg-white hover:bg-gray-50"
+                          ? "border-brand-600 bg-brand-50 dark:bg-brand-900/30"
+                          : "border-gray-200 bg-white hover:bg-gray-50 dark:border-dark-border dark:bg-dark-surface dark:hover:bg-dark-muted"
                       }`}
                     >
                       <input
@@ -370,7 +370,7 @@ export default function PlayerImportPage() {
                       />
                       <span
                         className={`text-sm font-semibold ${
-                          color === value ? "text-brand-700" : "text-gray-800"
+                          color === value ? "text-brand-700 dark:text-brand-300" : "text-gray-800 dark:text-gray-200"
                         }`}
                       >
                         {value === "white" && (
@@ -381,7 +381,7 @@ export default function PlayerImportPage() {
                         )}
                         {label}
                       </span>
-                      <span className="text-xs text-gray-400">{hint}</span>
+                      <span className="text-xs text-gray-400 dark:text-gray-500">{hint}</span>
                     </label>
                   ))}
                 </div>
@@ -392,7 +392,7 @@ export default function PlayerImportPage() {
                 <div>
                   <label
                     htmlFor="name-override"
-                    className="mb-1.5 block text-sm font-medium text-gray-700"
+                    className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
                     Name in PGN headers
                     <span className="ml-1 text-red-500">*</span>
@@ -402,9 +402,9 @@ export default function PlayerImportPage() {
                     type="text"
                     value={nameOverride}
                     onChange={(e) => setNameOverride(e.target.value)}
-                    className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                    className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-dark-border dark:bg-dark-surface dark:text-gray-100 dark:placeholder-gray-500"
                   />
-                  <p className="mt-1 text-xs text-gray-400">
+                  <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
                     How the player&rsquo;s name appears in the White/Black PGN headers. Partial
                     match is fine.
                   </p>
@@ -414,14 +414,14 @@ export default function PlayerImportPage() {
               {/* PGN input */}
               <div>
                 <div className="mb-1.5 flex items-center justify-between">
-                  <label htmlFor="pgn-input" className="text-sm font-medium text-gray-700">
+                  <label htmlFor="pgn-input" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     PGN
                     <span className="ml-1 text-red-500">*</span>
                   </label>
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-1"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-1 dark:border-dark-border dark:bg-dark-surface dark:text-gray-300 dark:hover:bg-dark-muted"
                   >
                     <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path
@@ -449,8 +449,8 @@ export default function PlayerImportPage() {
                   className={`relative rounded-lg transition-colors ${dragging ? "ring-2 ring-brand-500 ring-offset-1" : ""}`}
                 >
                   {dragging && (
-                    <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-lg border-2 border-dashed border-brand-400 bg-brand-50/80">
-                      <p className="text-sm font-medium text-brand-700">
+                    <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-lg border-2 border-dashed border-brand-400 bg-brand-50/80 dark:bg-brand-950/80">
+                      <p className="text-sm font-medium text-brand-700 dark:text-brand-300">
                         Drop your .pgn file here
                       </p>
                     </div>
@@ -466,13 +466,13 @@ export default function PlayerImportPage() {
                     rows={12}
                     spellCheck={false}
                     placeholder={`[Event "Tournament"]\n[White "${color === "white" ? player.full_name : "Opponent"}"]\n[Black "${color === "black" ? player.full_name : "Opponent"}"]\n[Result "1-0"]\n\n1. e4 e5 2. Nf3 Nc6 ...`}
-                    className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 font-mono text-xs text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                    className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 font-mono text-xs text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-dark-border dark:bg-dark-surface dark:text-gray-100 dark:placeholder-gray-500"
                   />
                 </div>
 
                 <div className="mt-1 flex items-center justify-between">
                   {fileName ? (
-                    <span className="inline-flex items-center gap-1.5 text-xs text-brand-700">
+                    <span className="inline-flex items-center gap-1.5 text-xs text-brand-700 dark:text-brand-300">
                       <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path
                           strokeLinecap="round"
@@ -484,7 +484,7 @@ export default function PlayerImportPage() {
                       {fileName}
                     </span>
                   ) : (
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-400 dark:text-gray-500">
                       Paste PGN above, upload a file, or drag &amp; drop a .pgn here.
                     </p>
                   )}
@@ -492,7 +492,7 @@ export default function PlayerImportPage() {
                     <button
                       type="button"
                       onClick={handleClear}
-                      className="text-xs text-gray-400 hover:text-gray-600"
+                      className="text-xs text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
                     >
                       Clear
                     </button>
@@ -502,7 +502,7 @@ export default function PlayerImportPage() {
 
               {/* Error */}
               {error && (
-                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">
                   {error}
                 </div>
               )}
