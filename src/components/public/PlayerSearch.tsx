@@ -7,7 +7,7 @@ import { federationFor } from "@/lib/federations";
 import { profilePath, titledName } from "@/lib/publicPlayer";
 import { GRAPHQL_URL } from "@/lib/site";
 
-type Result = {
+export type PlayerSearchResult = {
   fideId: string;
   fullName: string;
   slug: string;
@@ -37,7 +37,7 @@ const DEBOUNCE_MS = 200;
 // less only costs a request that comes back empty.
 const searchable = (q: string) => /\d/.test(q) ? /^\d{3,}$/.test(q.trim()) : /[\p{L}]{3,}/u.test(q);
 
-function rating(r: Result): string | null {
+function rating(r: PlayerSearchResult): string | null {
   if (r.standardRating) return `${r.standardRating}`;
   if (r.rapidRating) return `${r.rapidRating} rapid`;
   if (r.blitzRating) return `${r.blitzRating} blitz`;
@@ -53,12 +53,23 @@ function rating(r: Result): string | null {
  * and a screen reader hears how many were found. Replies are matched to the
  * query that asked for them, so a slow answer for "carl" cannot replace the
  * list for "carlsen".
+ *
+ * With `onPick`, choosing a player hands them over instead of opening their
+ * profile (the bot page builds a bot from them).
  */
-export function PlayerSearch() {
+export function PlayerSearch({
+  onPick,
+  placeholder = "Search by name or FIDE ID",
+  buttonLabel = "Search",
+}: {
+  onPick?: (player: PlayerSearchResult) => void;
+  placeholder?: string;
+  buttonLabel?: string;
+} = {}) {
   const router = useRouter();
   const listId = useId();
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<Result[]>([]);
+  const [results, setResults] = useState<PlayerSearchResult[]>([]);
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
@@ -88,7 +99,7 @@ export function PlayerSearch() {
           setStatus({ kind: "error", message: body.errors?.[0]?.message ?? "Search is unavailable right now. Try again shortly." });
           return;
         }
-        const found: Result[] = body.data.searchPublicPlayers;
+        const found: PlayerSearchResult[] = body.data.searchPublicPlayers;
         setResults(found);
         setActive(found.length ? 0 : -1);
         setStatus(found.length ? { kind: "results" } : { kind: "empty", query: q });
@@ -101,9 +112,10 @@ export function PlayerSearch() {
     return () => clearTimeout(timer);
   }, [query]);
 
-  function go(result: Result) {
+  function go(result: PlayerSearchResult) {
     setOpen(false);
-    router.push(profilePath(result));
+    if (onPick) onPick(result);
+    else router.push(profilePath(result));
   }
 
   function submit(e: React.FormEvent) {
@@ -111,7 +123,7 @@ export function PlayerSearch() {
     const q = query.trim();
     if (open && results[active]) return go(results[active]);
     // A FIDE ID needs no search: the profile page corrects the name part.
-    if (/^\d{3,10}$/.test(q)) return router.push(`/player/player/${q}`);
+    if (/^\d{3,10}$/.test(q) && !onPick) return router.push(`/player/player/${q}`);
     if (results[0]) return go(results[0]);
     if (!searchable(q)) setStatus({ kind: "error", message: "Type at least three letters of a name, or a FIDE ID." });
   }
@@ -156,7 +168,7 @@ export function PlayerSearch() {
           aria-describedby={`${listId}-status`}
           autoComplete="off"
           spellCheck={false}
-          placeholder="Search by name or FIDE ID"
+          placeholder={placeholder}
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
@@ -171,7 +183,7 @@ export function PlayerSearch() {
           type="submit"
           className="whitespace-nowrap rounded-r-pill bg-accent px-6 py-3.5 text-[16px] font-[480] text-accent-on hover:bg-accent-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
-          Search
+          {buttonLabel}
         </button>
       </div>
 

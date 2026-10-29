@@ -105,20 +105,51 @@ export function PlayBotView({ slug }: { slug: string }) {
 
   const strength = elo ?? defaultElo;
 
+  // Both the setup and the game open these.
+  const pickers = (
+    <>
+      {picking === "bot" && (
+        <AvatarPicker
+          title={`Avatar for ${name} bot`}
+          current={botAvatar}
+          defaultSrc={botDefaultSrc}
+          defaultLabel="Default"
+          onPick={(n) => pickAvatar("bot", n)}
+          onClose={() => setPicking(null)}
+        />
+      )}
+      {picking === "me" && (
+        <AvatarPicker
+          title="Your avatar"
+          current={myAvatar}
+          defaultSrc={myDefaultSrc}
+          defaultLabel={profilePic ? "Your photo" : "Default"}
+          onPick={(n) => pickAvatar("me", n)}
+          onClose={() => setPicking(null)}
+        />
+      )}
+    </>
+  );
+
   if (playing) {
     return (
-      <BotGame
-        // A new choice is a new game.
-        key={`${color}-${strength}`}
-        player={player}
-        youName={youName}
-        botColor={color}
-        games={colorGames}
-        elo={strength}
-        botAvatarSrc={botSrc}
-        youAvatarSrc={mySrc}
-        onExit={() => setPlaying(false)}
-      />
+      <>
+        <BotGame
+          // A new choice is a new game.
+          key={`${color}-${strength}`}
+          botName={player.full_name}
+          botRating={player.standard_rating ?? player.rapid_rating ?? player.blitz_rating}
+          youName={youName}
+          botColor={color}
+          games={colorGames}
+          elo={strength}
+          botAvatarSrc={botSrc}
+          youAvatarSrc={mySrc}
+          onChangeAvatar={setPicking}
+          onExit={() => setPlaying(false)}
+        />
+        {pickers}
+      </>
     );
   }
 
@@ -167,26 +198,7 @@ export function PlayBotView({ slug }: { slug: string }) {
         {avatarError && <p className="text-[13px] text-red-600 dark:text-red-400">{avatarError}</p>}
       </section>
 
-      {picking === "bot" && (
-        <AvatarPicker
-          title={`Avatar for ${name} bot`}
-          current={botAvatar}
-          defaultSrc={botDefaultSrc}
-          defaultLabel="Default"
-          onPick={(n) => pickAvatar("bot", n)}
-          onClose={() => setPicking(null)}
-        />
-      )}
-      {picking === "me" && (
-        <AvatarPicker
-          title="Your avatar"
-          current={myAvatar}
-          defaultSrc={myDefaultSrc}
-          defaultLabel={profilePic ? "Your photo" : "Default"}
-          onPick={(n) => pickAvatar("me", n)}
-          onClose={() => setPicking(null)}
-        />
-      )}
+      {pickers}
 
       <section aria-label="Game" className="flex flex-col gap-4 rounded-xl bg-ink-card p-4">
         <div className="flex flex-wrap items-center gap-3">
