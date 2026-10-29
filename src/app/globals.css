@@ -131,6 +131,70 @@
   }
 }
 
+/*
+  Play bot: the bot's speech bubble pops in from its avatar, and the avatar
+  bobs while the words type out, so a new remark is noticed without a toast.
+*/
+@keyframes bubble-in {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.92);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(-1px) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes bot-talk {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0);
+  }
+  25% {
+    transform: translateY(-2px) rotate(-3deg);
+  }
+  75% {
+    transform: translateY(-1px) rotate(2deg);
+  }
+}
+
+@keyframes link-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.bubble-in {
+  animation: bubble-in 320ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+  transform-origin: 0 50%;
+}
+
+.bot-talk {
+  animation: bot-talk 420ms ease-in-out infinite;
+}
+
+.link-in {
+  animation: link-in 260ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bubble-in,
+  .bot-talk,
+  .link-in {
+    animation: none;
+  }
+}
+
 /* react-chessboard draws its rank/file labels as absolutely positioned spans
    inside each square, while a piece at rest is an ordinary in-flow div. CSS
    paints positioned elements above in-flow ones whatever the DOM order, so the

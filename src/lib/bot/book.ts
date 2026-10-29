@@ -95,6 +95,12 @@ export function pickBookMove(book: Book, fen: string, random = Math.random): Boo
   return moves[moves.length - 1] ?? null;
 }
 
+/** The games that went exactly this way, move for move. A transposition into
+ * a game does not count here: this is for "I played this game against …". */
+export function gamesOnLine(games: BotBookGame[], line: string[]): BotBookGame[] {
+  return games.filter((g) => g.moves.length >= line.length && line.every((san, i) => g.moves[i] === san));
+}
+
 /** The games grouped by opening family, most played first. */
 export function groupOpenings(games: BotBookGame[]): OpeningGroup[] {
   const groups = new Map<string, BotBookGame[]>();
