@@ -146,6 +146,7 @@ export function BotGame({
   botAvatarSrc,
   youAvatarSrc,
   onChangeAvatar,
+  speech: showSpeech = true,
   onExit,
 }: {
   botName: string;
@@ -164,6 +165,8 @@ export function BotGame({
   youAvatarSrc: string;
   /** Opens the avatar picker for one side; the game carries on underneath. */
   onChangeAvatar?: (who: "bot" | "me") => void;
+  /** The speech bubble; off from the settings page. */
+  speech?: boolean;
   onExit: () => void;
 }) {
   const viewGame = (g: BotBookGame) => ({ href: gameHref(g.public_id), label: "View game" });
@@ -444,8 +447,8 @@ export function BotGame({
 
         <aside className="flex min-w-0 flex-col gap-3">
           <section aria-label="Game" className="flex flex-col gap-3 rounded-xl bg-ink-card p-4">
-            <BotSpeech avatar={botAvatarSrc} name={`${name} bot`} speech={speech} />
-            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-ink-line pt-3">
+            {showSpeech && <BotSpeech avatar={botAvatarSrc} name={`${name} bot`} speech={speech} />}
+            <div className={`flex flex-wrap items-center justify-between gap-2 ${showSpeech ? "border-t border-ink-line pt-3" : ""}`}>
               <p aria-live="polite" className="text-[15px] font-[520] text-ink-text">
                 {status}
               </p>

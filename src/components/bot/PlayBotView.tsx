@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import { Avatar } from "@/components/avatar/Avatar";
 import { AvatarPicker } from "@/components/avatar/AvatarPicker";
+import { usePreferences } from "@/components/PreferencesProvider";
 import { ELO_MIN } from "@/hooks/useBotEngine";
 import { api } from "@/lib/api";
 import { userMessage } from "@/lib/apiError";
@@ -44,6 +45,7 @@ export function PlayBotView({ slug }: { slug: string }) {
   // Faces. The bot's is saved on the player, yours on your account; null is
   // the default (for you, the photo from the navbar if you uploaded one).
   const { email, profilePic } = useAppSelector((s) => s.auth);
+  const { preferences } = usePreferences();
   const [botAvatar, setBotAvatar] = useState<number | null>(null);
   const [myAvatar, setMyAvatar] = useState<number | null>(null);
   const [picking, setPicking] = useState<"bot" | "me" | null>(null);
@@ -146,6 +148,7 @@ export function PlayBotView({ slug }: { slug: string }) {
           botAvatarSrc={botSrc}
           youAvatarSrc={mySrc}
           onChangeAvatar={setPicking}
+          speech={preferences.bot_speech}
           onExit={() => setPlaying(false)}
         />
         {pickers}

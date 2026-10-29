@@ -291,6 +291,58 @@ export const api = {
     return fetchJson(`${API_BASE}/auth/me/`);
   },
 
+  /** Any of the settings switches; the rest stay as they are. */
+  setMyPreferences(preferences: Partial<import("@/types").Preferences>): Promise<import("@/types").Me> {
+    return fetchJson(`${API_BASE}/auth/me/`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ preferences }),
+    });
+  },
+
+  setMyName(first_name: string, last_name: string): Promise<import("@/types").Me> {
+    return fetchJson(`${API_BASE}/auth/me/`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ first_name, last_name }),
+    });
+  },
+
+  /** Signs out every other session; the tokens returned keep this one. */
+  changePassword(current_password: string, new_password: string): Promise<{ access: string; refresh: string; email: string }> {
+    return fetchJson(`${API_BASE}/auth/password/change/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ current_password, new_password }),
+    });
+  },
+
+  /** The same answer whether or not the email has an account. */
+  forgotPassword(email: string): Promise<{ detail: string }> {
+    return fetchJson(`${API_BASE}/auth/password/forgot/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+  },
+
+  resetPassword(email: string, code: string, password: string): Promise<{ detail: string }> {
+    return fetchJson(`${API_BASE}/auth/password/reset/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, code, password }),
+    });
+  },
+
+  /** Deletes the account and everything in it. */
+  deleteAccount(password: string): Promise<void> {
+    return fetchJson(`${API_BASE}/auth/me/`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password }),
+    });
+  },
+
   setMyAvatar(avatar: number | null): Promise<import("@/types").Me> {
     return fetchJson(`${API_BASE}/auth/me/`, {
       method: "PATCH",
