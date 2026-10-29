@@ -1,6 +1,7 @@
 import { ActiveImportsIndicator } from "@/components/import/ActiveImportsIndicator";
 import { ActiveImportsProvider } from "@/components/import/ActiveImportsProvider";
 import { AuthGate } from "@/components/AuthGate";
+import { PreferencesProvider } from "@/components/PreferencesProvider";
 import { Navbar } from "@/components/ui/Navbar";
 
 /**
@@ -15,11 +16,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         is nothing to report on the login screen.
       */}
       <ActiveImportsProvider>
-        <Navbar />
-        <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          {children}
-        </main>
-        <ActiveImportsIndicator />
+        <PreferencesProvider>
+          <Navbar />
+          <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+            {children}
+          </main>
+          <ActiveImportsIndicator />
+        </PreferencesProvider>
       </ActiveImportsProvider>
     </AuthGate>
   );

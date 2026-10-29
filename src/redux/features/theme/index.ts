@@ -1,4 +1,4 @@
-import { LOAD_THEME, TOGGLE_THEME } from "@/redux/actions/actionTypes";
+import { LOAD_THEME, SET_THEME, TOGGLE_THEME } from "@/redux/actions/actionTypes";
 import { THEME_KEY, initialThemeMode, type ThemeMode } from "@/lib/theme";
 
 interface ThemeState {
@@ -28,6 +28,16 @@ const themeReducer = (state = initialState, action: any): ThemeState => {
         }
       }
       return { mode, loaded: true };
+    }
+    case SET_THEME: {
+      if (typeof window === "undefined") return state;
+      try {
+        if (action.payload) localStorage.setItem(THEME_KEY, action.payload);
+        else localStorage.removeItem(THEME_KEY);
+      } catch {
+        // Blocked storage: it still applies for this visit.
+      }
+      return { mode: action.payload ?? initialThemeMode(), loaded: true };
     }
     default:
       return state;

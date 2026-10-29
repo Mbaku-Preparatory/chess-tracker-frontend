@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -19,6 +19,21 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Arrived from /forgot-password with a new password set, or from deleting
+  // the account in settings.
+  const [arrived, setArrived] = useState<string | null>(null);
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    let deleted = false;
+    try {
+      deleted = sessionStorage.getItem("cs_account_deleted") === "1";
+      sessionStorage.removeItem("cs_account_deleted");
+    } catch {
+      // Blocked storage: no note.
+    }
+    if (q.get("reset") === "1") setArrived("Password changed. Sign in with your new password.");
+    else if (deleted) setArrived("Your account has been deleted.");
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -46,6 +61,11 @@ export default function LoginPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="card space-y-4 p-6">
+          {arrived && !error && (
+            <p role="status" className="rounded-lg bg-brand-50 px-4 py-3 text-sm text-brand-700 dark:bg-brand-900/30 dark:text-brand-300">
+              {arrived}
+            </p>
+          )}
           {error && (
             <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
               {error}
@@ -69,9 +89,14 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Password
-            </label>
+            <div className="mb-1.5 flex items-baseline justify-between">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Password
+              </label>
+              <Link href="/forgot-password" className="text-sm font-medium text-brand-600 hover:text-brand-700">
+                Forgot password?
+              </Link>
+            </div>
             <div className="relative">
               <input
                 id="password"

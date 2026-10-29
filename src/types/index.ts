@@ -128,6 +128,17 @@ export interface Me {
   date_joined: string;
   /** Their avatar (lib/avatars), or null for the default. */
   avatar: number | null;
+  preferences: Preferences;
+}
+
+/** The settings page's switches, saved on the account. */
+export interface Preferences {
+  /** Mbaku, the assistant: off until switched on. */
+  mbaku_enabled: boolean;
+  /** The bot's speech bubble while you play it. */
+  bot_speech: boolean;
+  /** "Email me when this is done" starts ticked on imports. */
+  import_emails: boolean;
 }
 
 export interface PlayerDetail extends Player {

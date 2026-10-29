@@ -8,6 +8,7 @@ import type { ImportJob } from "@/types";
 import { userMessage } from "@/lib/apiError";
 import { useActiveImports } from "./ActiveImportsProvider";
 import { NotifyMeCheckbox } from "@/components/ui/NotifyMeCheckbox";
+import { usePreferences } from "@/components/PreferencesProvider";
 
 interface ChessResultsImportSectionProps {
   slug: string;
@@ -71,7 +72,12 @@ export function ChessResultsImportSection({
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [jobError, setJobError] = useState<string | null>(null);
-  const [notifyEmail, setNotifyEmail] = useState(false);
+  // Starts as the settings page says; the box still changes it for this one.
+  const { preferences, loaded: preferencesLoaded } = usePreferences();
+  const [notifyEmail, setNotifyEmail] = useState(preferences.import_emails);
+  useEffect(() => {
+    if (preferencesLoaded) setNotifyEmail(preferences.import_emails);
+  }, [preferencesLoaded, preferences.import_emails]);
 
   // The app-shell pill polls on its own timer; nudging it means starting or
   // cancelling an import shows up there immediately rather than up to 3s late.

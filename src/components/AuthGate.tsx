@@ -11,7 +11,7 @@ import { loadAuthFromStorage } from "@/redux/actions/auth";
  * get bounced off them, since "log in" is meaningless once you already are.
  */
 function isAuthPath(pathname: string): boolean {
-  return pathname === "/login" || pathname === "/signup" || pathname === "/verify-email";
+  return pathname === "/login" || pathname === "/signup" || pathname === "/verify-email" || pathname === "/forgot-password";
 }
 
 /**

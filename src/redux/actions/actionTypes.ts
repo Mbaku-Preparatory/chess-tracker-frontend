@@ -18,3 +18,4 @@ export const FETCH_PLAYER_DETAIL_PENDING = "playerDetail/fetch_pending";
 // ── Theme ─────────────────────────────────────────────
 export const LOAD_THEME = "theme/load";
 export const TOGGLE_THEME = "theme/toggle";
+export const SET_THEME = "theme/set";
