@@ -510,12 +510,20 @@ getOpeningExplorer(
     blitz_rating: number | null;
     title: string | null;
     birth_year: number | null;
+    /** A re-import of their chess-results games, when one was due. */
+    import_job: import("@/types").ImportJob | null;
   }> {
     return fetchJson(`${API_BASE}/players/${slug}/sync-fide/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(fideId ? { fide_id: fideId } : {}),
     });
+  },
+
+  /** Sent when a player's page opens: the server re-imports their
+   * chess-results games unless it did in the last day. */
+  refreshGames(slug: string): Promise<{ queued: boolean; job?: import("@/types").ImportJob }> {
+    return fetchJson(`${API_BASE}/players/${slug}/refresh-games/`, { method: "POST" });
   },
 
   createPlayer(payload: {

@@ -184,7 +184,7 @@ export function AskAssistant({ slug, playerName, isSelf = false }: AskAssistantP
                   : `Ask ${ASSISTANT_NAME} — e.g. which opening do they score worst with?`
             }
             disabled={loading}
-            className="input w-full resize-none"
+            className="block w-full resize-none rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 disabled:opacity-60 dark:border-dark-border dark:bg-dark-elevated dark:text-gray-100 dark:placeholder-gray-500"
           />
           <div className="flex items-center justify-between gap-3">
             <span className="text-xs text-gray-400 dark:text-gray-500">
