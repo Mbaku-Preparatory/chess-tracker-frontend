@@ -34,14 +34,6 @@ export interface Book {
   games: number;
 }
 
-export interface OpeningGroup {
-  /** The opening family, which is also the group's key. */
-  name: string;
-  games: BotBookGame[];
-  /** The most played lines inside it, for the row's subtitle. */
-  variations: string[];
-}
-
 export const positionKey = (fen: string) => fen.split(" ").slice(0, 4).join(" ");
 
 function recency(date: string | null, now: number): number {
@@ -99,25 +91,4 @@ export function pickBookMove(book: Book, fen: string, random = Math.random): Boo
  * a game does not count here: this is for "I played this game against …". */
 export function gamesOnLine(games: BotBookGame[], line: string[]): BotBookGame[] {
   return games.filter((g) => g.moves.length >= line.length && line.every((san, i) => g.moves[i] === san));
-}
-
-/** The games grouped by opening family, most played first. */
-export function groupOpenings(games: BotBookGame[]): OpeningGroup[] {
-  const groups = new Map<string, BotBookGame[]>();
-  for (const game of games) {
-    const name = game.opening_family || game.opening_name || "Other openings";
-    const list = groups.get(name);
-    if (list) list.push(game);
-    else groups.set(name, [game]);
-  }
-  return [...groups.entries()]
-    .map(([name, list]) => {
-      const counts = new Map<string, number>();
-      for (const g of list) {
-        if (g.opening_name && g.opening_name !== name) counts.set(g.opening_name, (counts.get(g.opening_name) ?? 0) + 1);
-      }
-      const variations = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 2).map(([v]) => v);
-      return { name, games: list, variations };
-    })
-    .sort((a, b) => b.games.length - a.games.length || a.name.localeCompare(b.name));
 }
