@@ -78,9 +78,9 @@ function Switch({ on, onChange, labelledBy }: { on: boolean; onChange: (on: bool
  */
 export default function SettingsPage() {
   const dispatch = useAppDispatch();
-  const { email, profilePic } = useAppSelector((s) => s.auth);
+  const email = useAppSelector((s) => s.auth.email);
   const themeMode = useAppSelector((s) => s.theme.mode);
-  const { preferences, update } = usePreferences();
+  const { preferences, update, setAvatar: showAvatar } = usePreferences();
 
   const [me, setMe] = useState<Me | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -132,7 +132,7 @@ export default function SettingsPage() {
   if (loadError) return <p className="py-16 text-center text-sm text-red-600 dark:text-red-400">{loadError}</p>;
   if (!me) return <div className="mx-auto mt-4 h-96 max-w-2xl animate-pulse rounded-xl bg-gray-100 dark:bg-dark-elevated" />;
 
-  const defaultSrc = profilePic || avatarSrc(defaultAvatar(email ?? me.email));
+  const defaultSrc = avatarSrc(defaultAvatar(email ?? me.email));
   const faceSrc = me.avatar ? avatarSrc(me.avatar) : defaultSrc;
   const nameChanged = firstName.trim() !== me.first_name || lastName.trim() !== me.last_name;
 
@@ -157,10 +157,12 @@ export default function SettingsPage() {
     setPicking(false);
     const before = me;
     setMe((m) => (m ? { ...m, avatar } : m));
+    showAvatar(avatar);
     try {
       setMe(await api.setMyAvatar(avatar));
     } catch (err) {
       setMe(before);
+      showAvatar(before?.avatar ?? null);
       setNameNote({ kind: "error", text: userMessage(err, "Couldn't save that avatar.") });
     }
   }
@@ -392,7 +394,7 @@ export default function SettingsPage() {
           title="Your avatar"
           current={me.avatar}
           defaultSrc={defaultSrc}
-          defaultLabel={profilePic ? "Your photo" : "Default"}
+          defaultLabel="Default"
           onPick={pickAvatar}
           onClose={() => setPicking(false)}
         />
