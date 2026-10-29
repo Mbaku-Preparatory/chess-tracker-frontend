@@ -14,10 +14,12 @@ import { CardSkeleton } from "@/components/ui/LoadingSkeleton";
 import { PerformanceSplitCard } from "@/components/players/PerformanceSplitCard";
 import { OpeningBreakdownCard } from "@/components/players/OpeningBreakdownCard";
 import { GamesTable } from "@/components/players/GamesTable";
+import { useActiveImports } from "@/components/import/ActiveImportsProvider";
 import { useRefetchWhenImportFinishes } from "@/components/import/useRefetchWhenImportFinishes";
 
 function FideSection({ slug, fideId }: { slug: string; fideId: string | null }) {
   const dispatch = useAppDispatch();
+  const { refresh: refreshImports } = useActiveImports();
   const [syncing, setSyncing] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [inputId, setInputId] = useState("");
@@ -29,7 +31,9 @@ function FideSection({ slug, fideId }: { slug: string; fideId: string | null }) 
     try {
       const data = await api.syncFide(slug, id);
       const fields = data.updated_fields.filter((f) => f !== "updated_at");
-      setMessage(fields.length ? `Updated: ${fields.join(", ")}` : "Already up to date");
+      const synced = fields.length ? `Updated: ${fields.join(", ")}` : "Already up to date";
+      setMessage(data.import_job ? `${synced}. Checking chess-results for new games…` : synced);
+      if (data.import_job) refreshImports();
       dispatch(fetchPlayerDetail(slug));
       setShowInput(false);
     } catch (err: any) {
@@ -37,7 +41,7 @@ function FideSection({ slug, fideId }: { slug: string; fideId: string | null }) 
     } finally {
       setSyncing(false);
     }
-  }, [slug, dispatch]);
+  }, [slug, dispatch, refreshImports]);
 
   if (fideId) {
     return (
@@ -64,7 +68,7 @@ function FideSection({ slug, fideId }: { slug: string; fideId: string | null }) 
             </>
           )}
         </button>
-        {message && <span className="text-xs text-gray-500">{message}</span>}
+        {message && <span className="text-xs text-gray-500 dark:text-gray-400">{message}</span>}
       </div>
     );
   }
@@ -123,6 +127,15 @@ export default function PlayerDetailPage() {
   useEffect(() => {
     if (slug) dispatch(fetchPlayerDetail(slug));
   }, [dispatch, slug]);
+
+  // Games played since the last import: the server re-imports from
+  // chess-results at most once a day, and the pill in the corner shows it.
+  // When it finishes, the hook below pulls the page again.
+  const { refresh: refreshImports } = useActiveImports();
+  useEffect(() => {
+    if (!slug) return;
+    api.refreshGames(slug).then((r) => r.queued && refreshImports()).catch(() => {});
+  }, [slug, refreshImports]);
 
   // An import finishing in the worker changes this page's data without the
   // page knowing. Pull it again rather than leaving a stale "0 games" behind.
