@@ -357,6 +357,21 @@ export interface PrepSummary {
   trends: PrepTrend[];
 }
 
+/** One of a player's games in the bot's opening book (players/services/bot_book.py). */
+export interface BotBookGame {
+  opening_family: string;
+  opening_name: string;
+  eco: string;
+  date: string | null;
+  /** The first 40 plies as SAN. */
+  moves: string[];
+}
+
+export interface BotBook {
+  color: "white" | "black";
+  games: BotBookGame[];
+}
+
 // ── Background import jobs ───────────────────────────────────────────────────
 
 export type ImportJobStatus =

@@ -298,6 +298,11 @@ export const api = {
     return fetchJson(`${API_BASE}/players/${slug}/prep-summary/${qs}`);
   },
 
+  /** The player's games as `color`, as openings and first moves, for "Play <player> bot". */
+  getBotBook(slug: string, color: "white" | "black"): Promise<import("@/types").BotBook> {
+    return fetchJson(`${API_BASE}/players/${slug}/bot-book/?color=${color}`);
+  },
+
   getPrepGames(
     slug: string,
     moves: string[],
