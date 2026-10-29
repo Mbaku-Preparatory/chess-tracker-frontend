@@ -11,7 +11,7 @@ export const dynamic = "force-static";
 export function GET() {
   const text = `# Chess Preparatory
 
-> Public profiles for every FIDE-rated chess player: official FIDE ratings and world and national ranks, monthly rating history, and over-the-board games with results and openings. A chess book reader that opens any chess book PDF on a board, and turns exercise books into puzzles. Accounts add opponent scouting and preparation tools.
+> Public profiles for every FIDE-rated chess player: official FIDE ratings and world and national ranks, monthly rating history, and over-the-board games with results and openings. A chess bot of any FIDE-rated player, built from their games. A chess book reader that opens any chess book PDF on a board, and turns exercise books into puzzles. Accounts add opponent scouting and preparation tools.
 
 ## Player profiles
 
@@ -27,6 +27,13 @@ export function GET() {
 - Query parameters: tc=classical|rapid|blitz (default classical), list=overall|women|juniors|girls (default overall), fed=<FIDE federation code, e.g. KEN> (default the world), page=<n>.
 - Juniors and girls are players under 20 on 1 January. Tied ratings share a rank. Overall world and federation ranks match the ranks shown on each profile.
 
+## Create your own chess bot
+
+- [Chess bot](${SITE_URL}/chess-bot): play a bot of any FIDE-rated player, built from their over-the-board games on chess-results.com. For up to ten moves it plays only moves the player chose in that position, weighted by how often and how recently; after that Stockfish plays at a strength from 1320 to 2900, starting at the player's FIDE rating. It runs in the browser.
+- Without an account: one free game. A free account adds unlimited games and bots of the opponents a user scouts.
+- Link to a player's bot directly: ${SITE_URL}/chess-bot?fide=<fide-id>. Each player profile links to it.
+- Players with no games with moves on chess-results have no bot.
+
 ## Chess books
 
 - [Chess books](${SITE_URL}/chess-books): upload a chess book as a PDF (scans included, up to 50 MB, algebraic notation) and read it with a board beside the page: every move and diagram the reader finds opens as a position, lines can be stepped through, and any move can be played from any position and checked with an engine. A book typeset in a chess font becomes its exercises, as puzzles solved on the board.
@@ -37,6 +44,7 @@ export function GET() {
 
 - [Home](${SITE_URL}/): what the site is, and player search by name or FIDE ID
 - [Rankings](${SITE_URL}/rankings): world and per-federation player rankings
+- [Chess bot](${SITE_URL}/chess-bot): play a bot of any FIDE-rated player, from their games
 - [Chess books](${SITE_URL}/chess-books): the book reader and exercise solver, with demo books
 - [Sitemap](${SITE_URL}/sitemap.xml): every active player's profile
 - [Privacy policy](${SITE_URL}/privacy)

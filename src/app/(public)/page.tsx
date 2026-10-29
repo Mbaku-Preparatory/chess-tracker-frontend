@@ -64,6 +64,10 @@ const FAQ = [
     a: "Scouting and preparation: import an opponent's games from chess-results, Chess.com and Lichess, see the openings they play and how they score with them, and plan your preparation. And your chess books: upload a PDF and read it with a board, or solve its exercises.",
   },
   {
+    q: "Can I play a bot of a real chess player?",
+    a: "Yes. Search any FIDE-rated player and play a bot built from their tournament games: it opens the way they do, move for move, then plays at the strength you choose. The first game is free, without an account.",
+  },
+  {
     q: "Can I read a chess book here?",
     a: "Yes. Upload a chess book as a PDF, scans included, and every move and diagram in it opens on a board beside the page. A book of exercises becomes puzzles to solve. The book stays on your device; the server keeps only where the moves are. Demo books are free to read without an account.",
   },
@@ -206,6 +210,24 @@ export default async function LandingPage() {
               <p className="text-[16px] leading-[1.5] text-ink-muted">{part.body}</p>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section aria-labelledby="bot-heading" className="grid items-center gap-8 rounded-xl bg-ink-card p-8 sm:p-12 md:grid-cols-[3fr_2fr]">
+        <div className="flex flex-col items-start gap-4">
+          <p className="text-[13px] uppercase tracking-[0.1em] text-accent-soft">Create your own bot</p>
+          <h2 id="bot-heading" className="max-w-[22ch] text-balance text-[28px] font-[480] leading-[1.2] tracking-[0.015em] sm:text-[32px]">
+            Play a bot of any player, built from their games
+          </h2>
+          <p className="max-w-[56ch] text-[16px] leading-[1.5] text-ink-muted">
+            Pick a player. The bot plays their openings, move for move from their tournament games, then plays at the strength you choose.
+            Rehearse against your next opponent before you meet them.
+          </p>
+        </div>
+        <div className="flex md:justify-end">
+          <Link href="/chess-bot" className="rounded-pill bg-accent px-6 py-3 text-[16px] font-[480] text-accent-on hover:bg-accent-soft">
+            Create your bot
+          </Link>
         </div>
       </section>
 

@@ -2,13 +2,14 @@
 
 import { Chess } from "chess.js";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Avatar } from "@/components/avatar/Avatar";
 import { useBotEngine } from "@/hooks/useBotEngine";
 import { BOOK_MOVES, BOOK_PLIES, bookMoves, buildBook, gamesOnLine, pickBookMove, type Book } from "@/lib/bot/book";
 import { buildPgn, pgnFilename } from "@/lib/chess/pgn";
-import type { BotBookGame, PlayerDetail } from "@/types";
+import type { BotBookGame } from "@/types";
 
 import { BotSpeech, type Speech } from "./BotSpeech";
 
@@ -40,11 +41,38 @@ interface LeftBook {
 
 const moveLabel = (ply: number, san: string) => `${Math.floor(ply / 2) + 1}${ply % 2 === 0 ? "." : "…"} ${san}`;
 
-function Plate({ name, rating, color, tag, avatar }: { name: string; rating: number | string | null; color: Color; tag?: string; avatar: string }) {
+function Plate({
+  name,
+  rating,
+  color,
+  tag,
+  avatar,
+  onAvatarClick,
+}: {
+  name: string;
+  rating: number | string | null;
+  color: Color;
+  tag?: string;
+  avatar: string;
+  /** Set when the face can be changed from here, mid-game included. */
+  onAvatarClick?: () => void;
+}) {
   return (
     <div className="flex min-w-0 items-center gap-2 px-0.5 text-[14px]">
       <span className="relative shrink-0">
-        <Avatar src={avatar} size={32} />
+        {onAvatarClick ? (
+          <button
+            type="button"
+            onClick={onAvatarClick}
+            aria-label={`Change the avatar for ${name}`}
+            title="Change avatar"
+            className="block rounded-full outline-none ring-accent hover:ring-2 focus-visible:ring-2"
+          >
+            <Avatar src={avatar} size={32} />
+          </button>
+        ) : (
+          <Avatar src={avatar} size={32} />
+        )}
         {/* Which colour they have, as a dot on the avatar. */}
         <span
           aria-hidden
@@ -83,8 +111,6 @@ function gameLabel(g: BotBookGame): string {
   return `${g.opponent || "an unnamed opponent"}${g.opponent_rating ? ` (${g.opponent_rating})` : ""}${g.event ? ` at the ${g.event.replace(/^the /i, "")}` : ""}${year}`;
 }
 
-const viewGame = (g: BotBookGame) => ({ href: `/games/${g.public_id}`, label: "View game" });
-
 /** "I've played Nf6 here in 9 of my 14 games." */
 function bookLine(book: Book, fen: string, san: string): string {
   const moves = bookMoves(book, fen);
@@ -109,16 +135,25 @@ function facedLine(book: Book, fen: string, ply: number, single: BotBookGame | n
 }
 
 export function BotGame({
-  player,
+  botName: name,
+  botRating,
+  gameHref = (publicId) => `/games/${publicId}`,
+  guest,
   youName,
   botColor,
   games,
   elo,
   botAvatarSrc,
   youAvatarSrc,
+  onChangeAvatar,
   onExit,
 }: {
-  player: PlayerDetail;
+  botName: string;
+  botRating: number | null;
+  /** Where "View game" goes: the scouting copy in the app, or the public page. */
+  gameHref?: (publicId: string) => string;
+  /** The public page's one free game: no "New game", and a sign-up card. */
+  guest?: { signupHref: string };
   /** The account holder's name for their plate and the PGN. */
   youName: string;
   botColor: Color;
@@ -127,9 +162,11 @@ export function BotGame({
   elo: number;
   botAvatarSrc: string;
   youAvatarSrc: string;
+  /** Opens the avatar picker for one side; the game carries on underneath. */
+  onChangeAvatar?: (who: "bot" | "me") => void;
   onExit: () => void;
 }) {
-  const name = player.full_name;
+  const viewGame = (g: BotBookGame) => ({ href: gameHref(g.public_id), label: "View game" });
   const youColor: Color = botColor === "white" ? "black" : "white";
   const book = useMemo(() => buildBook(games), [games]);
   const engine = useBotEngine();
@@ -359,6 +396,8 @@ export function BotGame({
           : `${name} bot to move.`
         : "Your move.";
 
+  const Heading = guest ? "h2" : "h1";
+
   // The move list as rows of two, the moves played from their games marked.
   const rows: Played[][] = [];
   moves.forEach((m, i) => (i % 2 === 0 ? rows.push([m]) : rows[rows.length - 1].push(m)));
@@ -380,9 +419,10 @@ export function BotGame({
           Back
         </button>
         <div className="min-w-0 sm:pt-0.5">
-          <h1 className="text-balance text-[18px] font-[520] leading-tight text-ink-text sm:text-[22px]">
+          {/* The public page has its own h1 above this. */}
+          <Heading className="text-balance text-[18px] font-[520] leading-tight text-ink-text sm:text-[22px]">
             Playing {name} bot
-          </h1>
+          </Heading>
           <p className="mt-1 flex flex-wrap gap-x-3 text-[13px] text-ink-faint">
             <span>You play {youColor === "white" ? "White" : "Black"}</span>
             <span>Bot strength {elo}</span>
@@ -396,9 +436,9 @@ export function BotGame({
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
         <section aria-label="Board" className="flex justify-center">
           <div className="flex w-full max-w-[min(100%,calc(100dvh-190px))] flex-col gap-1.5 lg:max-w-[min(100%,calc(100dvh-270px))]">
-            <Plate name={name} rating={player.standard_rating ?? player.rapid_rating ?? player.blitz_rating} color={botColor} tag={`Bot · ${elo}`} avatar={botAvatarSrc} />
+            <Plate name={name} rating={botRating} color={botColor} tag={`Bot · ${elo}`} avatar={botAvatarSrc} onAvatarClick={onChangeAvatar && (() => onChangeAvatar("bot"))} />
             <Board fen={fen} orientation={youColor} squareStyles={squareStyles} onDrop={tryMove} onSquareClick={onSquareClick} />
-            <Plate name={youName} rating={null} color={youColor} avatar={youAvatarSrc} />
+            <Plate name={youName} rating={null} color={youColor} avatar={youAvatarSrc} onAvatarClick={onChangeAvatar && (() => onChangeAvatar("me"))} />
           </div>
         </section>
 
@@ -449,7 +489,7 @@ export function BotGame({
             {[
               { label: "Take back", onClick: takeBack, disabled: takeBackTo < 0 },
               { label: "Resign", onClick: () => setResigned(true), disabled: !!result || ply === 0 },
-              { label: "New game", onClick: newGame, disabled: ply === 0 },
+              ...(guest ? [] : [{ label: "New game", onClick: newGame, disabled: ply === 0 }]),
               { label: "Download PGN", onClick: download, disabled: ply === 0 },
             ].map((a) => (
               <button
@@ -463,6 +503,22 @@ export function BotGame({
               </button>
             ))}
           </div>
+
+          {guest && (
+            <section aria-label="Free game" className={`flex flex-col gap-3 rounded-xl p-4 ${result ? "bg-accent/15" : "bg-ink-card"}`}>
+              <p className="text-[15px] font-[520] text-ink-text">{result ? "That was your free game." : "This is your free game."}</p>
+              <p className="text-[14px] text-ink-muted">
+                Create a free account to play {name} bot again, build a bot from any opponent you scout, and prepare against
+                their openings.
+              </p>
+              <Link
+                href={guest.signupHref}
+                className="self-start rounded-pill bg-accent px-5 py-2 text-[15px] font-[520] text-accent-on hover:bg-accent-soft"
+              >
+                Create a free account
+              </Link>
+            </section>
+          )}
         </aside>
       </div>
     </div>

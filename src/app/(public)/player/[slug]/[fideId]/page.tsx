@@ -177,6 +177,18 @@ export default async function PublicPlayerPage({ params, searchParams }: { param
           {!player.isActive && <span className="text-ink-faint">Inactive on FIDE&apos;s list</span>}
         </p>
         <p className="max-w-[68ch] text-[16px] leading-[1.6] text-ink-muted">{summary(player, fed.name)}</p>
+        {/* Unless we know there is nothing to build it from. */}
+        {(player.stats.games > 0 || !player.gamesFetchedAt) && (
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-2">
+            <Link
+              href={`/chess-bot?fide=${player.fideId}`}
+              className="rounded-pill bg-accent px-5 py-2.5 text-[15px] font-[480] text-accent-on hover:bg-accent-soft"
+            >
+              Play {player.fullName} bot
+            </Link>
+            <span className="text-[14px] text-ink-faint">A bot that opens the way {player.fullName} does, from their games.</span>
+          </p>
+        )}
       </header>
 
       <ProfileRefresher
