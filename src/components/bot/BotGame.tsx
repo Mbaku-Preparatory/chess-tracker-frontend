@@ -112,9 +112,7 @@ export function BotGame({
   player,
   me,
   botColor,
-  openingLabel,
   games,
-  allGames,
   elo,
   botAvatarSrc,
   youAvatarSrc,
@@ -123,12 +121,8 @@ export function BotGame({
   player: PlayerDetail;
   me: PlayerDetail | null;
   botColor: Color;
-  openingLabel: string;
-  /** The games of the chosen opening: the bot follows these first. */
+  /** The player's games in the bot's colour: its book. */
   games: BotBookGame[];
-  /** All the player's games in this colour: a game that leaves the chosen
-   * opening for another of theirs is still in their prep. */
-  allGames: BotBookGame[];
   elo: number;
   botAvatarSrc: string;
   youAvatarSrc: string;
@@ -136,27 +130,21 @@ export function BotGame({
 }) {
   const name = player.full_name;
   const youColor: Color = botColor === "white" ? "black" : "white";
-  const openingBook = useMemo(() => buildBook(games), [games]);
-  const fullBook = useMemo(() => buildBook(allGames), [allGames]);
+  const book = useMemo(() => buildBook(games), [games]);
   const engine = useBotEngine();
 
   const [moves, setMoves] = useState<Played[]>([]);
   const [leftBook, setLeftBook] = useState<LeftBook | null>(null);
   // What the bot says, in its speech bubble.
   const opener =
-    games === allGames
-      ? botColor === "white"
-        ? "Let's play. I'll open the way I do in my games."
-        : "Let's play. Your move: I'll answer the way I do in my games."
-      : `Let's play. I'm going for my ${openingLabel}.`;
+    botColor === "white"
+      ? "Let's play. I'll open the way I do in my games."
+      : "Let's play. Your move: I'll answer the way I do in my games.";
   const speechId = useRef(0);
   const [speech, setSpeech] = useState<Speech>({ id: 0, text: opener });
   const say = useCallback((text: string, link?: Speech["link"]) => setSpeech({ id: ++speechId.current, text, link }), []);
   // The one game of theirs the board is following, once it is down to one.
   const singleRef = useRef<string | null>(null);
-  // The game left the chosen opening for another of the player's: still
-  // their prep, but not what was picked.
-  const [outside, setOutside] = useState(false);
   const [resigned, setResigned] = useState(false);
   const [thinking, setThinking] = useState(false);
   const [engineError, setEngineError] = useState(false);
@@ -185,21 +173,17 @@ export function BotGame({
   // games, the engine at the chosen strength after.
   const leftRef = useRef(leftBook);
   leftRef.current = leftBook;
-  const outsideRef = useRef(outside);
-  outsideRef.current = outside;
   const sans = moves.map((m) => m.san);
   useEffect(() => {
     if (!botToMove) return;
     let cancelled = false;
 
     if (!leftRef.current && ply < BOOK_PLIES) {
-      const book = bookMoves(openingBook, fen).length ? openingBook : fullBook;
       const pick = pickBookMove(book, fen);
       if (pick) {
         const timer = setTimeout(() => {
           if (cancelled) return;
-          const nowOutside = book !== openingBook && games !== allGames;
-          const on = gamesOnLine(allGames, [...sans, pick.san]);
+          const on = gamesOnLine(games, [...sans, pick.san]);
           if (on.length === 1) {
             const g = on[0];
             const again = singleRef.current === g.public_id;
@@ -212,11 +196,9 @@ export function BotGame({
             );
           } else {
             singleRef.current = null;
-            const left = nowOutside && !outsideRef.current ? ` We're out of my ${openingLabel} now, but this is still my prep.` : "";
             // The bot's first move would cut "Let's play" off before it is read.
-            say((ply === 0 ? "Let's play. " : "") + bookLine(book, fen, pick.san) + left);
+            say((ply === 0 ? "Let's play. " : "") + bookLine(book, fen, pick.san));
           }
-          setOutside(nowOutside);
           play(pick.san, true);
         }, BOOK_DELAY_MS);
         return () => {
@@ -225,7 +207,7 @@ export function BotGame({
         };
       }
       setLeftBook({ ply });
-      const on = gamesOnLine(allGames, sans);
+      const on = gamesOnLine(games, sans);
       if (on.length === 1) {
         const g = on[0];
         say(`My game against ${gameLabel(g)} ended here. I ${RESULT_VERB[g.result] ?? "played"} that one. From here I play at ${elo}.`, viewGame(g));
@@ -265,19 +247,19 @@ export function BotGame({
         return false;
       }
       // Still in their prep only if one of their games reached this move.
-      if (!leftBook && ply < BOOK_PLIES && !bookMoves(fullBook, fen).some((m) => m.san === san)) {
+      if (!leftBook && ply < BOOK_PLIES && !bookMoves(book, fen).some((m) => m.san === san)) {
         setLeftBook({ ply });
-        const on = gamesOnLine(allGames, sans);
+        const on = gamesOnLine(games, sans);
         const single = on.length === 1 ? on[0] : null;
         say(
-          `${moveLabel(ply, san)}? I've never faced that.${facedLine(fullBook, fen, ply, single)} From here I play at ${elo}.`,
+          `${moveLabel(ply, san)}? I've never faced that.${facedLine(book, fen, ply, single)} From here I play at ${elo}.`,
           single ? viewGame(single) : undefined,
         );
       }
       play(san, false);
       return true;
     },
-    [result, chess, youColor, fen, leftBook, ply, fullBook, allGames, sans, elo, play, say],
+    [result, chess, youColor, fen, leftBook, ply, book, games, sans, elo, play, say],
   );
 
   const onSquareClick = useCallback(
@@ -316,7 +298,6 @@ export function BotGame({
     setLeftBook(null);
     singleRef.current = null;
     say(opener);
-    setOutside(false);
     setResigned(false);
     setEngineError(false);
     setSelected(null);
@@ -344,7 +325,6 @@ export function BotGame({
     if (leftBook && leftBook.ply >= takeBackTo) setLeftBook(null);
     singleRef.current = null;
     say("Take two. Your move.");
-    setOutside(false);
     setResigned(false);
     setEngineError(false);
     setSelected(null);
@@ -398,11 +378,11 @@ export function BotGame({
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
-          Openings
+          Back
         </button>
         <div className="min-w-0 sm:pt-0.5">
           <h1 className="text-balance text-[18px] font-[520] leading-tight text-ink-text sm:text-[22px]">
-            {name} bot · {openingLabel}
+            Playing {name} bot
           </h1>
           <p className="mt-1 flex flex-wrap gap-x-3 text-[13px] text-ink-faint">
             <span>You play {youColor === "white" ? "White" : "Black"}</span>
@@ -434,7 +414,7 @@ export function BotGame({
                 <span className="rounded-pill bg-amber-500/15 px-2.5 py-0.5 text-[12px] font-[520] text-amber-700 dark:text-amber-400">Engine · {elo}</span>
               ) : (
                 <span className="rounded-pill bg-accent/15 px-2.5 py-0.5 text-[12px] font-[520] text-accent-soft">
-                  In prep{outside ? " · another opening" : ""}{ply > 0 ? ` · move ${Math.floor((ply - 1) / 2) + 1}` : ""}
+                  In prep{ply > 0 ? ` · move ${Math.floor((ply - 1) / 2) + 1}` : ""}
                 </span>
               )}
             </div>
