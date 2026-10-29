@@ -7,8 +7,10 @@ import { usePathname, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { Logo } from "@/components/ui/Logo";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { clearAuth, setProfilePic } from "@/redux/actions/auth";
+import { clearAuth } from "@/redux/actions/auth";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { usePreferences } from "@/components/PreferencesProvider";
+import { avatarSrc, defaultAvatar } from "@/lib/avatars";
 import { BurgerButton } from "@/components/ui/BurgerButton";
 
 // The app's sections, in the bar on a desktop and in the burger menu below it.
@@ -22,12 +24,14 @@ export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const { token, refreshToken, email, profilePic } = useAppSelector((s) => s.auth);
+  const { token, refreshToken, email } = useAppSelector((s) => s.auth);
+  // Your avatar: the one picked in settings, or the default for your email.
+  const { avatar } = usePreferences();
+  const face = avatarSrc(avatar ?? defaultAvatar(email ?? "you"));
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -77,19 +81,6 @@ export function Navbar() {
     router.replace("/login");
   }
 
-  function handleProfilePicChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      dispatch(setProfilePic(ev.target?.result as string));
-    };
-    reader.readAsDataURL(file);
-    e.target.value = "";
-  }
-
-  const initials = email ? email[0].toUpperCase() : "?";
-
   const isActive = (href: string) => pathname.startsWith(href);
 
   return (
@@ -138,50 +129,18 @@ export function Navbar() {
                 className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full ring-2 ring-brand-600/20 transition-all hover:ring-brand-600/50 focus:outline-none"
                 title="Profile"
               >
-                {profilePic ? (
-                  <img src={profilePic} alt="Profile" className="h-full w-full object-cover" />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-brand-600 text-sm font-bold text-white">
-                    {initials}
-                  </div>
-                )}
+                <img src={face} alt="" className="h-full w-full object-cover" />
               </button>
 
               {/* Profile dropdown */}
               {dropdownOpen && (
                 <div className="absolute right-0 top-12 z-50 w-56 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg dark:border-dark-border dark:bg-dark-elevated">
-                  {/* Avatar + upload */}
                   <div className="flex flex-col items-center px-4 pt-5 pb-4">
-                    <div
-                      className="group relative h-16 w-16 cursor-pointer"
-                      onClick={() => fileInputRef.current?.click()}
-                      title="Change profile picture"
-                    >
-                      {profilePic ? (
-                        <img src={profilePic} alt="Profile" className="h-full w-full rounded-full object-cover" />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center rounded-full bg-brand-600 text-2xl font-bold text-white">
-                          {initials}
-                        </div>
-                      )}
-                      {/* Camera overlay on hover */}
-                      <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-6 w-6 text-white">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
-                        </svg>
-                      </div>
-                    </div>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleProfilePicChange}
-                    />
-                    <p className="mt-1.5 text-xs text-gray-400">Tap to change photo</p>
+                    <Link href="/settings" onClick={() => setDropdownOpen(false)} title="Change your avatar in Settings" className="rounded-full">
+                      <img src={face} alt="" className="h-16 w-16 rounded-full" />
+                    </Link>
                     {email && (
-                      <p className="mt-1 max-w-full truncate text-sm font-medium text-gray-700 dark:text-gray-200">
+                      <p className="mt-2 max-w-full truncate text-sm font-medium text-gray-700 dark:text-gray-200">
                         {email}
                       </p>
                     )}
@@ -306,9 +265,7 @@ export function Navbar() {
               {token ? (
                 <>
                   <div className="flex items-center gap-3 px-4 py-2">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-600 text-sm font-bold text-white">
-                      {profilePic ? <img src={profilePic} alt="" className="h-full w-full object-cover" /> : initials}
-                    </div>
+                    <img src={face} alt="" className="h-9 w-9 shrink-0 rounded-full" />
                     {email && <p className="min-w-0 truncate text-sm font-medium text-gray-700 dark:text-gray-200">{email}</p>}
                   </div>
                   <Link

@@ -3,14 +3,12 @@ import {
   CLEAR_AUTH,
   LOAD_AUTH,
   SET_AUTH,
-  SET_PROFILE_PIC,
 } from "@/redux/actions/actionTypes";
 
 interface AuthState {
   token: string | null;
   refreshToken: string | null;
   email: string | null;
-  profilePic: string | null;
   initialized: boolean;
 }
 
@@ -18,7 +16,6 @@ const initialState: AuthState = {
   token: null,
   refreshToken: null,
   email: null,
-  profilePic: null,
   initialized: false,
 };
 
@@ -26,12 +23,12 @@ const initialState: AuthState = {
 const authReducer = (state = initialState, action: any): AuthState => {
   switch (action.type) {
     case LOAD_AUTH:
+      authStorage.dropOldPhoto();
       return {
         ...state,
         token: authStorage.getToken(),
         refreshToken: authStorage.getRefreshToken(),
         email: authStorage.getEmail(),
-        profilePic: authStorage.getProfilePic(),
         initialized: true,
       };
 
@@ -46,10 +43,6 @@ const authReducer = (state = initialState, action: any): AuthState => {
         email: action.payload.email,
         initialized: true,
       };
-
-    case SET_PROFILE_PIC:
-      authStorage.setProfilePic(action.payload);
-      return { ...state, profilePic: action.payload };
 
     case CLEAR_AUTH:
       authStorage.clear();

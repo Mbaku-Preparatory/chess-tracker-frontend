@@ -1,7 +1,6 @@
 // ── Auth ──────────────────────────────────────────────
 export const LOAD_AUTH = "auth/load";
 export const SET_AUTH = "auth/set";
-export const SET_PROFILE_PIC = "auth/setProfilePic";
 export const CLEAR_AUTH = "auth/clear";
 
 // ── Players ───────────────────────────────────────────
