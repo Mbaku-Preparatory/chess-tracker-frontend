@@ -6,9 +6,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Avatar } from "@/components/avatar/Avatar";
 import { useBotEngine } from "@/hooks/useBotEngine";
-import { BOOK_MOVES, BOOK_PLIES, bookMoves, buildBook, pickBookMove, type Book } from "@/lib/bot/book";
+import { BOOK_MOVES, BOOK_PLIES, bookMoves, buildBook, gamesOnLine, pickBookMove, type Book } from "@/lib/bot/book";
 import { buildPgn, pgnFilename } from "@/lib/chess/pgn";
 import type { BotBookGame, PlayerDetail } from "@/types";
+
+import { BotSpeech, type Speech } from "./BotSpeech";
 
 const Board = dynamic(() => import("@/components/analysis/Board"), {
   ssr: false,
@@ -31,10 +33,9 @@ interface Played {
   book: boolean;
 }
 
-/** Where the game left the player's games, and how to say so. */
+/** Where the game left the player's games. */
 interface LeftBook {
   ply: number;
-  text: string;
 }
 
 const moveLabel = (ply: number, san: string) => `${Math.floor(ply / 2) + 1}${ply % 2 === 0 ? "." : "…"} ${san}`;
@@ -72,22 +73,39 @@ function resultOf(chess: Chess, resigned: boolean, botColor: Color, name: string
   return null;
 }
 
-/** " In their games Kamau faced 4… Nf6 (9 games) and 4… d6 (3) here." */
-function facedNote(book: Book, fen: string, ply: number, name: string): string {
-  const moves = bookMoves(book, fen);
-  if (!moves.length) return "";
-  const shown = moves.slice(0, 3).map((m, i) => `${moveLabel(ply, m.san)} (${m.count}${i === 0 ? (m.count === 1 ? " game" : " games") : ""})`);
-  const more = moves.length > shown.length ? ", or something else" : "";
-  const list = shown.length === 1 ? shown[0] : `${shown.slice(0, -1).join(", ")} and ${shown[shown.length - 1]}`;
-  return ` In their games ${name} faced ${list}${more} here.`;
+const RESULT_VERB = { win: "won", loss: "lost", draw: "drew" } as const;
+
+/** "Kamau, Peter (1850) at the Nairobi Open, 2024" */
+function gameLabel(g: BotBookGame): string {
+  const y = g.date?.slice(0, 4);
+  // "Kenya Open 2025" already says when.
+  const year = y && !g.event.includes(y) ? `, ${y}` : "";
+  return `${g.opponent || "an unnamed opponent"}${g.opponent_rating ? ` (${g.opponent_rating})` : ""}${g.event ? ` at the ${g.event.replace(/^the /i, "")}` : ""}${year}`;
 }
 
-/** "Kamau played Nf6 in 9 of 14 games here." */
-function bookNote(book: Book, fen: string, san: string, name: string): string {
+const viewGame = (g: BotBookGame) => ({ href: `/games/${g.public_id}`, label: "View game" });
+
+/** "I've played Nf6 here in 9 of my 14 games." */
+function bookLine(book: Book, fen: string, san: string): string {
   const moves = bookMoves(book, fen);
   const total = moves.reduce((sum, m) => sum + m.count, 0);
   const count = moves.find((m) => m.san === san)?.count ?? 0;
-  return total === 1 ? `${name} played ${san} in their one game here.` : `${name} played ${san} in ${count} of ${total} games here.`;
+  return total === 1 ? `${san}. I played it here in my one game.` : `${san}. I've played it here in ${count} of my ${total} games.`;
+}
+
+/** " In my games I faced 4… Nf6 (9 games) and 4… d6 (3) here." */
+function facedLine(book: Book, fen: string, ply: number, single: BotBookGame | null): string {
+  const moves = bookMoves(book, fen);
+  if (!moves.length) return "";
+  if (single && moves.length === 1) return ` In my game against ${single.opponent || "them"}, I faced ${moveLabel(ply, moves[0].san)} here.`;
+  const shown = moves.slice(0, 3).map((m, i) => `${moveLabel(ply, m.san)} (${m.count}${i === 0 ? (m.count === 1 ? " game" : " games") : ""})`);
+  const list =
+    moves.length > shown.length
+      ? `${shown.join(", ")} and others`
+      : shown.length === 1
+        ? shown[0]
+        : `${shown.slice(0, -1).join(", ")} and ${shown[shown.length - 1]}`;
+  return ` In my games I faced ${list} here.`;
 }
 
 export function BotGame({
@@ -124,7 +142,18 @@ export function BotGame({
 
   const [moves, setMoves] = useState<Played[]>([]);
   const [leftBook, setLeftBook] = useState<LeftBook | null>(null);
-  const [note, setNote] = useState<string | null>(null);
+  // What the bot says, in its speech bubble.
+  const opener =
+    games === allGames
+      ? botColor === "white"
+        ? "Let's play. I'll open the way I do in my games."
+        : "Let's play. Your move: I'll answer the way I do in my games."
+      : `Let's play. I'm going for my ${openingLabel}.`;
+  const speechId = useRef(0);
+  const [speech, setSpeech] = useState<Speech>({ id: 0, text: opener });
+  const say = useCallback((text: string, link?: Speech["link"]) => setSpeech({ id: ++speechId.current, text, link }), []);
+  // The one game of theirs the board is following, once it is down to one.
+  const singleRef = useRef<string | null>(null);
   // The game left the chosen opening for another of the player's: still
   // their prep, but not what was picked.
   const [outside, setOutside] = useState(false);
@@ -156,6 +185,9 @@ export function BotGame({
   // games, the engine at the chosen strength after.
   const leftRef = useRef(leftBook);
   leftRef.current = leftBook;
+  const outsideRef = useRef(outside);
+  outsideRef.current = outside;
+  const sans = moves.map((m) => m.san);
   useEffect(() => {
     if (!botToMove) return;
     let cancelled = false;
@@ -166,8 +198,25 @@ export function BotGame({
       if (pick) {
         const timer = setTimeout(() => {
           if (cancelled) return;
-          setNote(bookNote(book, fen, pick.san, name));
-          setOutside(book !== openingBook && games !== allGames);
+          const nowOutside = book !== openingBook && games !== allGames;
+          const on = gamesOnLine(allGames, [...sans, pick.san]);
+          if (on.length === 1) {
+            const g = on[0];
+            const again = singleRef.current === g.public_id;
+            singleRef.current = g.public_id;
+            say(
+              again
+                ? `${pick.san}, still following my game against ${g.opponent || "them"}.`
+                : `${pick.san}. Ah, I've been here once before: against ${gameLabel(g)}. I ${RESULT_VERB[g.result] ?? "played"} that one.`,
+              viewGame(g),
+            );
+          } else {
+            singleRef.current = null;
+            const left = nowOutside && !outsideRef.current ? ` We're out of my ${openingLabel} now, but this is still my prep.` : "";
+            // The bot's first move would cut "Let's play" off before it is read.
+            say((ply === 0 ? "Let's play. " : "") + bookLine(book, fen, pick.san) + left);
+          }
+          setOutside(nowOutside);
           play(pick.san, true);
         }, BOOK_DELAY_MS);
         return () => {
@@ -175,12 +224,19 @@ export function BotGame({
           clearTimeout(timer);
         };
       }
-      setLeftBook({ ply, text: `${name}'s games stop here. From now on the bot plays at ${elo}.` });
+      setLeftBook({ ply });
+      const on = gamesOnLine(allGames, sans);
+      if (on.length === 1) {
+        const g = on[0];
+        say(`My game against ${gameLabel(g)} ended here. I ${RESULT_VERB[g.result] ?? "played"} that one. From here I play at ${elo}.`, viewGame(g));
+      } else {
+        say(`That's where my games run out. From here I play at ${elo}.`);
+      }
     } else if (!leftRef.current) {
-      setLeftBook({ ply, text: `That's ${BOOK_MOVES} moves of ${name}'s prep. From now on the bot plays at ${elo}.` });
+      setLeftBook({ ply });
+      say(`That's ${BOOK_MOVES} moves of my prep. From here I play at ${elo}.`);
     }
 
-    setNote(null);
     setThinking(true);
     engine.bestMove(fen, elo).then((uci) => {
       if (cancelled) return;
@@ -210,15 +266,18 @@ export function BotGame({
       }
       // Still in their prep only if one of their games reached this move.
       if (!leftBook && ply < BOOK_PLIES && !bookMoves(fullBook, fen).some((m) => m.san === san)) {
-        setLeftBook({
-          ply,
-          text: `You left ${name}'s prep with ${moveLabel(ply, san)}: none of their games reached it.${facedNote(fullBook, fen, ply, name)} From now on the bot plays at ${elo}.`,
-        });
+        setLeftBook({ ply });
+        const on = gamesOnLine(allGames, sans);
+        const single = on.length === 1 ? on[0] : null;
+        say(
+          `${moveLabel(ply, san)}? I've never faced that.${facedLine(fullBook, fen, ply, single)} From here I play at ${elo}.`,
+          single ? viewGame(single) : undefined,
+        );
       }
       play(san, false);
       return true;
     },
-    [result, chess, youColor, fen, leftBook, ply, fullBook, name, elo, play],
+    [result, chess, youColor, fen, leftBook, ply, fullBook, allGames, sans, elo, play, say],
   );
 
   const onSquareClick = useCallback(
@@ -255,7 +314,8 @@ export function BotGame({
     engine.cancel();
     setMoves([]);
     setLeftBook(null);
-    setNote(null);
+    singleRef.current = null;
+    say(opener);
     setOutside(false);
     setResigned(false);
     setEngineError(false);
@@ -264,6 +324,16 @@ export function BotGame({
 
   // Back to the last position with you to move, and back into their prep if
   // the game left it after that.
+  const resultText = result?.text ?? null;
+  useEffect(() => {
+    if (!resultText) return;
+    if (resigned) return say("Thanks for the game. Another one?");
+    if (chess.isCheckmate()) return say(chess.turn() === youColor[0] ? "Checkmate! Good game." : "Checkmate. Well played, you got me.");
+    say("A draw. Good fight.");
+    // Said once, when the game ends.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resultText]);
+
   const yourParity = youColor === "white" ? 0 : 1;
   let takeBackTo = ply - 1;
   while (takeBackTo >= 0 && takeBackTo % 2 !== yourParity) takeBackTo -= 1;
@@ -272,7 +342,8 @@ export function BotGame({
     engine.cancel();
     setMoves((prev) => prev.slice(0, takeBackTo));
     if (leftBook && leftBook.ply >= takeBackTo) setLeftBook(null);
-    setNote(null);
+    singleRef.current = null;
+    say("Take two. Your move.");
     setOutside(false);
     setResigned(false);
     setEngineError(false);
@@ -353,16 +424,20 @@ export function BotGame({
         </section>
 
         <aside className="flex min-w-0 flex-col gap-3">
-          <section aria-label="Game" aria-live="polite" className="flex flex-col gap-2 rounded-xl bg-ink-card p-4">
-            <p className="text-[15px] font-[520] text-ink-text">{status}</p>
-            {leftBook ? (
-              <p className="text-[14px] text-amber-700 dark:text-amber-400">{leftBook.text}</p>
-            ) : (
-              <p className="text-[14px] text-accent-soft">
-                In {name}&apos;s prep{ply > 0 ? `, move ${Math.floor((ply - 1) / 2) + 1}` : ""}
-                {outside ? `, in another of their openings (not the ${openingLabel})` : ""}.{note ? ` ${note}` : ""}
+          <section aria-label="Game" className="flex flex-col gap-3 rounded-xl bg-ink-card p-4">
+            <BotSpeech avatar={botAvatarSrc} name={`${name} bot`} speech={speech} />
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-ink-line pt-3">
+              <p aria-live="polite" className="text-[15px] font-[520] text-ink-text">
+                {status}
               </p>
-            )}
+              {leftBook ? (
+                <span className="rounded-pill bg-amber-500/15 px-2.5 py-0.5 text-[12px] font-[520] text-amber-700 dark:text-amber-400">Engine · {elo}</span>
+              ) : (
+                <span className="rounded-pill bg-accent/15 px-2.5 py-0.5 text-[12px] font-[520] text-accent-soft">
+                  In prep{outside ? " · another opening" : ""}{ply > 0 ? ` · move ${Math.floor((ply - 1) / 2) + 1}` : ""}
+                </span>
+              )}
+            </div>
           </section>
 
           <section aria-label="Moves" className="max-h-[45vh] overflow-y-auto rounded-xl bg-ink-card p-2 lg:max-h-[calc(100dvh-460px)] lg:min-h-[160px]">

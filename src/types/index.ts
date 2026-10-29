@@ -378,6 +378,12 @@ export interface BotBookGame {
   date: string | null;
   /** The first 40 plies as SAN. */
   moves: string[];
+  public_id: string;
+  opponent: string;
+  opponent_rating: number | null;
+  /** The player's result in it. */
+  result: GameResult;
+  event: string;
 }
 
 export interface BotBook {
