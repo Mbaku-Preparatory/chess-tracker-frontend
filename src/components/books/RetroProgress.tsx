@@ -28,9 +28,10 @@ export function RetroProgress({ value, label }: { value: number | null; label: s
           box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.25);
         }
         :root.dark .retro-trough { --retro-trough: #1b1f18; border-color: #5a5f55; }
+        /* By left, not transform: it crosses whatever width the bar has. */
         @keyframes retro-marquee {
-          from { transform: translateX(-${3 * (BLOCK + GAP)}px); }
-          to { transform: translateX(var(--retro-width, 320px)); }
+          from { left: -${3 * (BLOCK + GAP)}px; }
+          to { left: 100%; }
         }
         .retro-marquee { animation: retro-marquee 1.6s linear infinite; }
         @media (prefers-reduced-motion: reduce) {
@@ -43,8 +44,8 @@ export function RetroProgress({ value, label }: { value: number | null; label: s
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={percent ?? undefined}
-        className="retro-trough relative h-[18px] w-full max-w-[360px] overflow-hidden"
-        style={{ ["--retro-width" as string]: "360px" }}
+        // A short bar on a phone; on a wide screen it runs up to the row's buttons.
+        className="retro-trough relative h-[18px] w-full max-w-[360px] overflow-hidden lg:max-w-none"
       >
         {percent === null ? (
           <div
