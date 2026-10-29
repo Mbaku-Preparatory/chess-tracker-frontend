@@ -16,10 +16,6 @@ const LINKS = [
   { href: "/home", label: "My Opponents" },
   // the user's own chess books: exercises, or a reader for scans
   { href: "/books", label: "Books" },
-  // you as a player, in the slot the repertoire used to hold. Unconditional:
-  // everyone has a profile from the moment they register, which is the whole
-  // reason the row is created eagerly.
-  { href: "/me", label: "My Profile" },
 ];
 
 export function Navbar() {
