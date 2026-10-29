@@ -44,8 +44,8 @@ export function PlayBotView({ slug }: { slug: string }) {
 
   // Faces. The bot's is saved on the player, yours on your account; null is
   // the default (for you, the photo from the navbar if you uploaded one).
-  const { email, profilePic } = useAppSelector((s) => s.auth);
-  const { preferences } = usePreferences();
+  const email = useAppSelector((s) => s.auth.email);
+  const { preferences, setAvatar: showAvatar } = usePreferences();
   const [botAvatar, setBotAvatar] = useState<number | null>(null);
   const [myAvatar, setMyAvatar] = useState<number | null>(null);
   const [picking, setPicking] = useState<"bot" | "me" | null>(null);
@@ -89,7 +89,7 @@ export function PlayBotView({ slug }: { slug: string }) {
   const name = player.full_name;
   const botDefaultSrc = avatarSrc(defaultAvatar(player.public_id));
   const botSrc = avatarSrc(resolveAvatar(botAvatar, player.public_id));
-  const myDefaultSrc = profilePic || avatarSrc(defaultAvatar(email ?? "you"));
+  const myDefaultSrc = avatarSrc(defaultAvatar(email ?? "you"));
   const mySrc = myAvatar ? avatarSrc(myAvatar) : myDefaultSrc;
 
   // Shown at once, saved behind; put back if the save fails.
@@ -97,7 +97,8 @@ export function PlayBotView({ slug }: { slug: string }) {
     setPicking(null);
     setAvatarError(null);
     const before = who === "bot" ? botAvatar : myAvatar;
-    const set = who === "bot" ? setBotAvatar : setMyAvatar;
+    // Yours shows in the navbar too.
+    const set = who === "bot" ? setBotAvatar : (n: number | null) => (setMyAvatar(n), showAvatar(n));
     set(avatar);
     (who === "bot" ? api.setBotAvatar(slug, avatar) : api.setMyAvatar(avatar)).catch((err) => {
       set(before);
@@ -125,7 +126,7 @@ export function PlayBotView({ slug }: { slug: string }) {
           title="Your avatar"
           current={myAvatar}
           defaultSrc={myDefaultSrc}
-          defaultLabel={profilePic ? "Your photo" : "Default"}
+          defaultLabel="Default"
           onPick={(n) => pickAvatar("me", n)}
           onClose={() => setPicking(null)}
         />
