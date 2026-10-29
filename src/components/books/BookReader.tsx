@@ -677,15 +677,10 @@ export function BookReader({ source, backHref = "/books" }: { source: BookSource
     return () => window.removeEventListener("scroll", onScroll);
   }, [doc]);
 
-  useEffect(() => {
-    try {
-      if (doc) localStorage.setItem(LAST_PAGE_KEY(id), String(page));
-    } catch {
-      // private window: nothing to remember with
-    }
-  }, [page, doc, id]);
-
-  // back to where the reader left off
+  // Back to where the reader left off. Before the save below, and the save
+  // waits for it: on opening, `page` is still 1, and saving that first wrote
+  // over the page being restored, so every book reopened at the start.
+  const restored = useRef(false);
   useEffect(() => {
     if (!doc) return;
     let saved = 1;
@@ -694,8 +689,21 @@ export function BookReader({ source, backHref = "/books" }: { source: BookSource
     } catch {
       saved = 1;
     }
-    if (saved > 1) requestAnimationFrame(() => pageEls.current.get(saved - 1)?.scrollIntoView({ block: "start" }));
+    if (saved > 1) {
+      setPage(saved);
+      requestAnimationFrame(() => pageEls.current.get(saved - 1)?.scrollIntoView({ block: "start" }));
+    }
+    restored.current = true;
   }, [doc, id]);
+
+  useEffect(() => {
+    if (!doc || !restored.current) return;
+    try {
+      localStorage.setItem(LAST_PAGE_KEY(id), String(page));
+    } catch {
+      // private window: nothing to remember with
+    }
+  }, [page, doc, id]);
 
   const register = useCallback((n: number, el: HTMLElement | null) => {
     if (el) pageEls.current.set(n, el);
