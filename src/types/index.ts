@@ -57,6 +57,8 @@ export interface Player {
   title: string | null;
   bio: string;
   profile_image: string | null;
+  /** The face on this player's bot (lib/avatars), or null for the default. */
+  bot_avatar?: number | null;
   accounts: PlayerAccount[];
   games_count?: number;
   game_source_counts?: {
@@ -115,6 +117,17 @@ export interface Game {
   source: GameSource;
   source_url: string | null;
   notes: string | null;
+}
+
+/** GET /auth/me/: the signed-in account. */
+export interface Me {
+  username: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  date_joined: string;
+  /** Their avatar (lib/avatars), or null for the default. */
+  avatar: number | null;
 }
 
 export interface PlayerDetail extends Player {

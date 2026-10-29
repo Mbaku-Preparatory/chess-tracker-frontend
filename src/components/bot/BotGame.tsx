@@ -4,6 +4,7 @@ import { Chess } from "chess.js";
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { Avatar } from "@/components/avatar/Avatar";
 import { useBotEngine } from "@/hooks/useBotEngine";
 import { BOOK_MOVES, BOOK_PLIES, bookMoves, buildBook, pickBookMove, type Book } from "@/lib/bot/book";
 import { buildPgn, pgnFilename } from "@/lib/chess/pgn";
@@ -38,13 +39,17 @@ interface LeftBook {
 
 const moveLabel = (ply: number, san: string) => `${Math.floor(ply / 2) + 1}${ply % 2 === 0 ? "." : "…"} ${san}`;
 
-function Plate({ name, rating, color, tag }: { name: string; rating: number | string | null; color: Color; tag?: string }) {
+function Plate({ name, rating, color, tag, avatar }: { name: string; rating: number | string | null; color: Color; tag?: string; avatar: string }) {
   return (
     <div className="flex min-w-0 items-center gap-2 px-0.5 text-[14px]">
-      <span
-        aria-hidden
-        className={`h-3 w-3 shrink-0 rounded-full border ${color === "white" ? "border-neutral-300 bg-white" : "border-neutral-600 bg-neutral-900"}`}
-      />
+      <span className="relative shrink-0">
+        <Avatar src={avatar} size={32} />
+        {/* Which colour they have, as a dot on the avatar. */}
+        <span
+          aria-hidden
+          className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border ${color === "white" ? "border-neutral-400 bg-white" : "border-neutral-500 bg-neutral-900"}`}
+        />
+      </span>
       <span className="min-w-0 truncate font-[520] text-ink-text">{name}</span>
       {tag && <span className="shrink-0 rounded-pill bg-ink-raised px-2 py-0.5 text-[11px] font-[520] uppercase tracking-wide text-ink-muted">{tag}</span>}
       {rating && <span className="ml-auto shrink-0 text-[13px] tabular-nums text-ink-faint">{rating}</span>}
@@ -67,6 +72,16 @@ function resultOf(chess: Chess, resigned: boolean, botColor: Color, name: string
   return null;
 }
 
+/** " In their games Kamau faced 4… Nf6 (9 games) and 4… d6 (3) here." */
+function facedNote(book: Book, fen: string, ply: number, name: string): string {
+  const moves = bookMoves(book, fen);
+  if (!moves.length) return "";
+  const shown = moves.slice(0, 3).map((m, i) => `${moveLabel(ply, m.san)} (${m.count}${i === 0 ? (m.count === 1 ? " game" : " games") : ""})`);
+  const more = moves.length > shown.length ? ", or something else" : "";
+  const list = shown.length === 1 ? shown[0] : `${shown.slice(0, -1).join(", ")} and ${shown[shown.length - 1]}`;
+  return ` In their games ${name} faced ${list}${more} here.`;
+}
+
 /** "Kamau played Nf6 in 9 of 14 games here." */
 function bookNote(book: Book, fen: string, san: string, name: string): string {
   const moves = bookMoves(book, fen);
@@ -83,6 +98,8 @@ export function BotGame({
   games,
   allGames,
   elo,
+  botAvatarSrc,
+  youAvatarSrc,
   onExit,
 }: {
   player: PlayerDetail;
@@ -95,6 +112,8 @@ export function BotGame({
    * opening for another of theirs is still in their prep. */
   allGames: BotBookGame[];
   elo: number;
+  botAvatarSrc: string;
+  youAvatarSrc: string;
   onExit: () => void;
 }) {
   const name = player.full_name;
@@ -193,7 +212,7 @@ export function BotGame({
       if (!leftBook && ply < BOOK_PLIES && !bookMoves(fullBook, fen).some((m) => m.san === san)) {
         setLeftBook({
           ply,
-          text: `You left ${name}'s prep with ${moveLabel(ply, san)}: none of their games reached it. From now on the bot plays at ${elo}.`,
+          text: `You left ${name}'s prep with ${moveLabel(ply, san)}: none of their games reached it.${facedNote(fullBook, fen, ply, name)} From now on the bot plays at ${elo}.`,
         });
       }
       play(san, false);
@@ -327,9 +346,9 @@ export function BotGame({
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
         <section aria-label="Board" className="flex justify-center">
           <div className="flex w-full max-w-[min(100%,calc(100dvh-190px))] flex-col gap-1.5 lg:max-w-[min(100%,calc(100dvh-270px))]">
-            <Plate name={name} rating={player.standard_rating ?? player.rapid_rating ?? player.blitz_rating} color={botColor} tag={`Bot · ${elo}`} />
+            <Plate name={name} rating={player.standard_rating ?? player.rapid_rating ?? player.blitz_rating} color={botColor} tag={`Bot · ${elo}`} avatar={botAvatarSrc} />
             <Board fen={fen} orientation={youColor} squareStyles={squareStyles} onDrop={tryMove} onSquareClick={onSquareClick} />
-            <Plate name={youName} rating={youRating} color={youColor} />
+            <Plate name={youName} rating={youRating} color={youColor} avatar={youAvatarSrc} />
           </div>
         </section>
 

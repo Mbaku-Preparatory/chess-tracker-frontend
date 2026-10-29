@@ -3,10 +3,14 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { Avatar } from "@/components/avatar/Avatar";
+import { AvatarPicker } from "@/components/avatar/AvatarPicker";
 import { ELO_MIN } from "@/hooks/useBotEngine";
 import { api } from "@/lib/api";
 import { userMessage } from "@/lib/apiError";
+import { avatarSrc, defaultAvatar, resolveAvatar } from "@/lib/avatars";
 import { groupOpenings } from "@/lib/bot/book";
+import { useAppSelector } from "@/redux/hooks";
 import type { BotBookGame, PlayerDetail } from "@/types";
 
 import { BotGame } from "./BotGame";
@@ -39,6 +43,14 @@ export function PlayBotView({ slug }: { slug: string }) {
   const [opening, setOpening] = useState<string | null>(null);
   const [elo, setElo] = useState<number | null>(null);
   const [playing, setPlaying] = useState(false);
+
+  // Faces. The bot's is saved on the player, yours on your account; null is
+  // the default (for you, the photo from the navbar if you uploaded one).
+  const { email, profilePic } = useAppSelector((s) => s.auth);
+  const [botAvatar, setBotAvatar] = useState<number | null>(null);
+  const [myAvatar, setMyAvatar] = useState<number | null>(null);
+  const [picking, setPicking] = useState<"bot" | "me" | null>(null);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
   // The list can be long: bring the slider into view once an opening is picked.
   const strengthRef = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -51,6 +63,7 @@ export function PlayBotView({ slug }: { slug: string }) {
       .then(([p, white, black]) => {
         if (cancelled) return;
         setPlayer(p);
+        setBotAvatar(p.bot_avatar ?? null);
         setBooks({ white: white.games, black: black.games });
         // Start on the colour they have more games in.
         setColor(black.games.length > white.games.length ? "black" : "white");
@@ -58,6 +71,7 @@ export function PlayBotView({ slug }: { slug: string }) {
       .catch((err) => !cancelled && setError(userMessage(err, "Couldn't load this player's games.")));
     // Not having a profile of your own is fine: the plate says "You".
     api.getMyPlayer().then((m) => !cancelled && setMe(m.player)).catch(() => {});
+    api.getMe().then((m) => !cancelled && setMyAvatar(m.avatar)).catch(() => {});
     return () => {
       cancelled = true;
     };
@@ -76,6 +90,24 @@ export function PlayBotView({ slug }: { slug: string }) {
   }
 
   const name = player.full_name;
+  const botDefaultSrc = avatarSrc(defaultAvatar(player.public_id));
+  const botSrc = avatarSrc(resolveAvatar(botAvatar, player.public_id));
+  const myDefaultSrc = profilePic || avatarSrc(defaultAvatar(me?.public_id ?? email ?? "you"));
+  const mySrc = myAvatar ? avatarSrc(myAvatar) : myDefaultSrc;
+
+  // Shown at once, saved behind; put back if the save fails.
+  function pickAvatar(who: "bot" | "me", avatar: number | null) {
+    setPicking(null);
+    setAvatarError(null);
+    const before = who === "bot" ? botAvatar : myAvatar;
+    const set = who === "bot" ? setBotAvatar : setMyAvatar;
+    set(avatar);
+    (who === "bot" ? api.setBotAvatar(slug, avatar) : api.setMyAvatar(avatar)).catch((err) => {
+      set(before);
+      setAvatarError(userMessage(err, "Couldn't save that avatar. Try again."));
+    });
+  }
+
   const openingLabel = opening === ALL ? "All openings" : (opening ?? "");
 
   if (playing && opening) {
@@ -90,6 +122,8 @@ export function PlayBotView({ slug }: { slug: string }) {
         games={chosenGames}
         allGames={colorGames}
         elo={elo ?? defaultElo}
+        botAvatarSrc={botSrc}
+        youAvatarSrc={mySrc}
         onExit={() => setPlaying(false)}
       />
     );
@@ -117,6 +151,49 @@ export function PlayBotView({ slug }: { slug: string }) {
           </p>
         </div>
       </header>
+
+      <section aria-label="Avatars" className="flex flex-col gap-2 rounded-xl bg-ink-card p-4">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+          {[
+            { who: "bot" as const, src: botSrc, label: `${name} bot` },
+            { who: "me" as const, src: mySrc, label: me?.full_name ?? "You" },
+          ].map((a) => (
+            <div key={a.who} className="flex min-w-0 items-center gap-3">
+              <button type="button" onClick={() => setPicking(a.who)} className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label={`Change the avatar for ${a.label}`}>
+                <Avatar src={a.src} size={52} />
+              </button>
+              <div className="min-w-0">
+                <p className="truncate text-[15px] font-[520] text-ink-text">{a.label}</p>
+                <button type="button" onClick={() => setPicking(a.who)} className="text-[13px] text-accent-soft underline">
+                  Change avatar
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+        {avatarError && <p className="text-[13px] text-red-600 dark:text-red-400">{avatarError}</p>}
+      </section>
+
+      {picking === "bot" && (
+        <AvatarPicker
+          title={`Avatar for ${name} bot`}
+          current={botAvatar}
+          defaultSrc={botDefaultSrc}
+          defaultLabel="Default"
+          onPick={(n) => pickAvatar("bot", n)}
+          onClose={() => setPicking(null)}
+        />
+      )}
+      {picking === "me" && (
+        <AvatarPicker
+          title="Your avatar"
+          current={myAvatar}
+          defaultSrc={myDefaultSrc}
+          defaultLabel={profilePic ? "Your photo" : "Default"}
+          onPick={(n) => pickAvatar("me", n)}
+          onClose={() => setPicking(null)}
+        />
+      )}
 
       <section aria-label="Openings" className="flex flex-col gap-3 rounded-xl bg-ink-card p-4">
         <div role="tablist" className="flex w-fit gap-1 rounded-lg bg-ink-raised p-1">
