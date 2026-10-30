@@ -5,9 +5,8 @@ import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 
 import { api } from "@/lib/api";
-import { ChessComImportSection } from "@/components/import/ChessComImportSection";
 import { ChessResultsImportSection } from "@/components/import/ChessResultsImportSection";
-import { LichessImportSection } from "@/components/import/LichessImportSection";
+import { OnlineImportSection } from "@/components/import/OnlineImportSection";
 import { ImportResultPanel } from "@/components/import/ImportResultPanel";
 import type { PlayerDetail, PGNImportResult } from "@/types";
 import { userMessage } from "@/lib/apiError";
@@ -304,7 +303,8 @@ export default function PlayerImportPage() {
       {/* Active source panel */}
       <div className="mb-8">
         {activeSource === "chesscom" && (
-          <ChessComImportSection
+          <OnlineImportSection
+            platform="chesscom"
             slug={slug}
             accounts={player.accounts ?? []}
             onUpdated={refreshPlayer}
@@ -312,7 +312,8 @@ export default function PlayerImportPage() {
         )}
 
         {activeSource === "lichess" && (
-          <LichessImportSection
+          <OnlineImportSection
+            platform="lichess"
             slug={slug}
             accounts={player.accounts ?? []}
             onUpdated={refreshPlayer}
