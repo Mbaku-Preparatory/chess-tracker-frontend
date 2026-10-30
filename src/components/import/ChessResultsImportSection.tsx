@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
-import { GRAPHQL_URL } from "@/lib/site";
 import type { ImportJob } from "@/types";
 import { userMessage } from "@/lib/apiError";
+import { searchPublicPlayers, type PlayerSearchResult } from "@/lib/publicGraphql";
 import { useActiveImports } from "./ActiveImportsProvider";
 import { NotifyMeCheckbox } from "@/components/ui/NotifyMeCheckbox";
 import { usePreferences } from "@/components/PreferencesProvider";
@@ -22,28 +22,6 @@ const POLL_INTERVAL_MS = 2000;
 
 function isTerminal(job: ImportJob): boolean {
   return job.status === "succeeded" || job.status === "failed" || job.status === "cancelled";
-}
-
-type Candidate = { fideId: string; fullName: string; federation: string; standardRating: number | null };
-
-/**
- * Players on FIDE's rating list matching a name. Answered from our own copy of
- * the list, so it costs no request to FIDE or chess-results.
- */
-async function searchRatingList(name: string): Promise<Candidate[]> {
-  const res = await fetch(GRAPHQL_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      query: `query Search($q: String!) {
-        searchPublicPlayers(query: $q, limit: 8) { fideId fullName federation standardRating }
-      }`,
-      variables: { q: name },
-    }),
-  });
-  if (!res.ok) throw new Error("Search failed. Try again.");
-  const body = await res.json();
-  return body?.data?.searchPublicPlayers ?? [];
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
@@ -68,7 +46,7 @@ export function ChessResultsImportSection({
   const [starting, setStarting] = useState(false);
   const [fideInput, setFideInput] = useState("");
   const [nameInput, setNameInput] = useState("");
-  const [candidates, setCandidates] = useState<Candidate[] | null>(null);
+  const [candidates, setCandidates] = useState<PlayerSearchResult[] | null>(null);
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [jobError, setJobError] = useState<string | null>(null);
@@ -173,7 +151,7 @@ export function ChessResultsImportSection({
     setError(null);
     setSearching(true);
     try {
-      const found = await searchRatingList(nameInput.trim());
+      const found = await searchPublicPlayers(nameInput.trim());
       setCandidates(found);
       if (found.length === 0) setError("No rated players found with that name.");
     } catch (err) {

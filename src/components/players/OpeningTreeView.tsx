@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { gameRef } from "@/lib/gameRef";
-import { ColorBadge, ResultBadge, EcoBadge } from "@/components/ui/Badge";
+import { ColorBadge, EcoBadge } from "@/components/ui/Badge";
+import { GameFilters, NO_FILTERS, hasFilters, type GameFilterValues } from "./GameFilters";
 import { GamesTable } from "./GamesTable";
-import type { OpeningStat, Game, GameSource, GameResult, PaginatedResponse, ColorChoice } from "@/types";
+import type { OpeningStat, Game, GameSource, GameResult, PaginatedResponse } from "@/types";
 
 interface OpeningTreeViewProps {
   slug: string;
@@ -299,40 +300,12 @@ function FamilyRow({ group, slug, sourceFilter, resultFilter, yearFilter }: Fami
   );
 }
 
-const SOURCE_OPTIONS: { value: GameSource | ""; label: string }[] = [
-  { value: "", label: "All sources" },
-  { value: "chess_results", label: "Chess-Results (OTB)" },
-  { value: "chess_com", label: "Chess.com" },
-  { value: "lichess", label: "Lichess" },
-  { value: "pgn_import", label: "PGN import" },
-  { value: "manual", label: "Manual" },
-];
-
-const RESULT_OPTIONS: { value: GameResult | ""; label: string }[] = [
-  { value: "", label: "All results" },
-  { value: "win", label: "Wins" },
-  { value: "draw", label: "Draws" },
-  { value: "loss", label: "Losses" },
-];
-
-const CURRENT_YEAR = new Date().getFullYear();
-const YEAR_OPTIONS = [
-  { value: "", label: "All years" },
-  ...Array.from({ length: CURRENT_YEAR - 2009 }, (_, i) => {
-    const y = String(CURRENT_YEAR - i);
-    return { value: y, label: y };
-  }),
-];
-
 export function OpeningTreeView({ slug }: OpeningTreeViewProps) {
   const [families, setFamilies] = useState<FamilyGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [colorFilter, setColorFilter] = useState<"" | ColorChoice>("");
-  const [sourceFilter, setSourceFilter] = useState<GameSource | "">("");
-  const [resultFilter, setResultFilter] = useState<GameResult | "">("");
-  const [yearFilter, setYearFilter] = useState("");
-  const [openingSearch, setOpeningSearch] = useState("");
+  const [filters, setFilters] = useState<GameFilterValues>(NO_FILTERS);
+  const { color: colorFilter, source: sourceFilter, result: resultFilter, year: yearFilter } = filters;
 
   useEffect(() => {
     setLoading(true);
@@ -349,7 +322,7 @@ export function OpeningTreeView({ slug }: OpeningTreeViewProps) {
       .finally(() => setLoading(false));
   }, [slug, sourceFilter, resultFilter, yearFilter]);
 
-  const needle = openingSearch.trim().toLowerCase();
+  const needle = filters.search.trim().toLowerCase();
 
   const filtered = families
     .map((f) => {
@@ -367,90 +340,16 @@ export function OpeningTreeView({ slug }: OpeningTreeViewProps) {
     })
     .filter((f) => f.variations.length > 0);
 
-  const hasActiveFilters = Boolean(colorFilter || sourceFilter || resultFilter || yearFilter || openingSearch);
-
-  const selectCls =
-    "rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-700 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-dark-border dark:bg-dark-elevated dark:text-gray-200 dark:focus:border-brand-500";
+  const hasActiveFilters = hasFilters(filters);
 
   return (
     <div>
-      {/* Filters — always visible */}
-      <div className="mb-5 flex flex-wrap items-center gap-3">
-        {/* Color pills */}
-        <div className="flex items-center gap-1.5">
-          {(["", "white", "black"] as const).map((c) => (
-            <button
-              key={c}
-              onClick={() => setColorFilter(c)}
-              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                colorFilter === c
-                  ? "bg-brand-600 text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-dark-elevated dark:text-gray-300 dark:hover:bg-dark-muted"
-              }`}
-            >
-              {c === "" ? "All colors" : c === "white" ? "As White" : "As Black"}
-            </button>
-          ))}
-        </div>
-
-        <span className="h-4 w-px bg-gray-200 dark:bg-dark-border" />
-
-        {/* Result pills */}
-        <div className="flex items-center gap-1.5">
-          {RESULT_OPTIONS.map((r) => (
-            <button
-              key={r.value}
-              onClick={() => setResultFilter(r.value)}
-              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                resultFilter === r.value
-                  ? "bg-brand-600 text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-dark-elevated dark:text-gray-300 dark:hover:bg-dark-muted"
-              }`}
-            >
-              {r.label}
-            </button>
-          ))}
-        </div>
-
-        <span className="h-4 w-px bg-gray-200 dark:bg-dark-border" />
-
-        {/* Source selector */}
-        <select
-          value={sourceFilter}
-          onChange={(e) => setSourceFilter(e.target.value as GameSource | "")}
-          className={selectCls}
-        >
-          {SOURCE_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
-          ))}
-        </select>
-
-        {/* Year selector */}
-        <select
-          value={yearFilter}
-          onChange={(e) => setYearFilter(e.target.value)}
-          className={selectCls}
-        >
-          {YEAR_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
-          ))}
-        </select>
-
-        {/* Opening search */}
-        <input
-          type="text"
-          value={openingSearch}
-          onChange={(e) => setOpeningSearch(e.target.value)}
-          placeholder="Search openings… e.g. Sicilian, B12"
-          className={selectCls + " min-w-[200px]"}
-        />
-
-        {!loading && (
-          <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">
-            {filtered.length} opening family{filtered.length !== 1 ? "s" : ""}
-          </span>
-        )}
-      </div>
+      <GameFilters
+        value={filters}
+        onChange={setFilters}
+        searchPlaceholder="Search openings… e.g. Sicilian, B12"
+        count={loading ? undefined : `${filtered.length} opening ${filtered.length === 1 ? "family" : "families"}`}
+      />
 
       {error ? (
         <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">

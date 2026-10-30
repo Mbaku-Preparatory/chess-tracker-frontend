@@ -8,8 +8,9 @@
  */
 
 import { CURRENT_FEDERATIONS } from "./federations";
+import { graphqlGet } from "./publicGraphql";
 import { rankingsPath } from "./rankings";
-import { GRAPHQL_URL, SITE_URL } from "./site";
+import { SITE_URL } from "./site";
 
 export const SITEMAP_REVALIDATE = 86_400;
 
@@ -28,17 +29,8 @@ export const STATIC_PAGES = [
 
 type Entry = { fideId: string; slug: string; lastModified: string | null };
 
-async function graphql<T>(query: string, variables: Record<string, unknown> = {}): Promise<T> {
-  const params = new URLSearchParams({ query, variables: JSON.stringify(variables) });
-  const response = await fetch(`${GRAPHQL_URL}?${params}`, {
-    headers: { Accept: "application/json" },
-    next: { revalidate: SITEMAP_REVALIDATE },
-  });
-  if (!response.ok) throw new Error(`GraphQL answered ${response.status}`);
-  const body = await response.json();
-  if (body.errors?.length) throw new Error(body.errors[0].message);
-  return body.data;
-}
+const graphql = <T,>(query: string, variables: Record<string, unknown> = {}) =>
+  graphqlGet<T>(query, variables, { next: { revalidate: SITEMAP_REVALIDATE } });
 
 export async function playerChunkCount(): Promise<number> {
   const data = await graphql<{ publicSitemapChunks: number }>("{ publicSitemapChunks }");

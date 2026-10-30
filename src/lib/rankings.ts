@@ -11,8 +11,7 @@
  */
 
 import { FEDERATIONS } from "./federations";
-import { BackendUnavailable } from "./publicPlayer";
-import { GRAPHQL_URL } from "./site";
+import { graphqlGet } from "./publicGraphql";
 
 export const TIME_CONTROLS = [
   { key: "classical", label: "Classical", api: "STANDARD" },
@@ -87,26 +86,14 @@ query Rankings($tc: RankingTimeControl!, $list: RankingCategory!, $fed: String!,
 }`;
 
 export async function fetchRankings(view: RankingsView): Promise<Rankings> {
-  const params = new URLSearchParams({
-    query: RANKINGS_QUERY,
-    variables: JSON.stringify({
-      tc: TIME_CONTROLS.find((t) => t.key === view.tc)!.api,
-      list: LISTS.find((l) => l.key === view.list)!.api,
-      fed: view.fed,
-      page: view.page,
-    }),
+  const variables = {
+    tc: TIME_CONTROLS.find((t) => t.key === view.tc)!.api,
+    list: LISTS.find((l) => l.key === view.list)!.api,
+    fed: view.fed,
+    page: view.page,
+  };
+  const data = await graphqlGet<{ publicRankings: Rankings }>(RANKINGS_QUERY, variables, {
+    next: { revalidate: 3600, tags: ["rankings"] },
   });
-  let response: Response;
-  try {
-    response = await fetch(`${GRAPHQL_URL}?${params}`, {
-      headers: { Accept: "application/json" },
-      next: { revalidate: 3600, tags: ["rankings"] },
-    });
-  } catch (err) {
-    throw new BackendUnavailable(String(err));
-  }
-  if (!response.ok) throw new BackendUnavailable(`GraphQL answered ${response.status}`);
-  const body = await response.json();
-  if (body.errors?.length) throw new BackendUnavailable(body.errors[0].message);
-  return body.data.publicRankings;
+  return data.publicRankings;
 }

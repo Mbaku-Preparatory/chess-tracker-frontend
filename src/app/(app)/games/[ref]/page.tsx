@@ -7,6 +7,7 @@ import { AnalysisView, type AnalysisViewProps } from "@/components/analysis/Anal
 import { api } from "@/lib/api";
 import { pgnFilename, pgnHeaders } from "@/lib/chess/pgn";
 import { scoresFromPlayerResult, scoresFromResultTag } from "@/lib/chessScore";
+import { formatGameDate } from "@/lib/games";
 
 type Loaded = Awaited<ReturnType<typeof api.getGamePgn>>;
 
@@ -39,7 +40,7 @@ function toView({ pgn_text, game, player }: Loaded): AnalysisViewProps {
     result,
     title: `${white.name} vs ${black.name}`,
     details: [
-      game.date_played && new Date(`${game.date_played}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }),
+      formatGameDate(game.date_played),
       game.event && `${game.event}${game.round ? ` · Round ${game.round}` : ""}`,
       game.opening_name,
     ],

@@ -9,7 +9,7 @@ import { BotSetup, defaultBotElo, startingColor, type BotColor as Color } from "
 import { PlayerSearch } from "@/components/public/PlayerSearch";
 import { authStorage } from "@/lib/auth";
 import { avatarSrc, defaultAvatar } from "@/lib/avatars";
-import { GRAPHQL_URL } from "@/lib/site";
+import { graphqlPost } from "@/lib/publicGraphql";
 import type { BotBookGame } from "@/types";
 
 /** The one free game, remembered on this device. Signed-in visitors have no limit. */
@@ -62,19 +62,6 @@ type BookRow = {
   result: string;
   event: string;
 };
-
-async function graphql<T>(query: string, variables: Record<string, unknown>): Promise<T> {
-  const response = await fetch(GRAPHQL_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query, variables }),
-  });
-  const body = await response.json().catch(() => null);
-  if (!response.ok || !body || body.errors?.length) {
-    throw new Error(body?.errors?.[0]?.message ?? "Something went wrong. Try again in a moment.");
-  }
-  return body.data as T;
-}
 
 /** The private book's shape, so the same game screen plays both. */
 const toBookGame = (g: BookRow): BotBookGame => ({
@@ -133,7 +120,7 @@ export function PublicBot({ initialFideId }: { initialFideId?: string }) {
     const stale = () => mine !== ticket.current;
     setFindingNote("Looking up their games…");
     try {
-      let player = (await graphql<{ publicPlayer: PublicPlayer | null }>(PLAYER, { fideId })).publicPlayer;
+      let player = (await graphqlPost<{ publicPlayer: PublicPlayer | null }>(PLAYER, { fideId })).publicPlayer;
       if (!player) return setPhase({ kind: "search", message: "FIDE doesn't rate that player. Try another name." });
       const target: Target = {
         fideId: player.fideId,
@@ -147,7 +134,7 @@ export function PublicBot({ initialFideId }: { initialFideId?: string }) {
       if (!player.gamesFetchedAt) {
         setFindingNote(`Finding ${target.fullName}'s games on chess-results.com. This can take a minute.`);
         if (!player.refreshStatus) {
-          const { requestProfileRefresh } = await graphql<{ requestProfileRefresh: { outcome: string } }>(REFRESH, { fideId });
+          const { requestProfileRefresh } = await graphqlPost<{ requestProfileRefresh: { outcome: string } }>(REFRESH, { fideId });
           if (requestProfileRefresh.outcome === "busy" || requestProfileRefresh.outcome === "refused") {
             if (!stale()) setPhase({ kind: "search", message: "We can't fetch new games right now. Try again in a few minutes, or pick another player." });
             return;
@@ -161,12 +148,12 @@ export function PublicBot({ initialFideId }: { initialFideId?: string }) {
           }
           await new Promise((r) => setTimeout(r, POLL_EVERY_MS));
           if (stale()) return;
-          player = (await graphql<{ publicPlayer: PublicPlayer | null }>(PLAYER, { fideId })).publicPlayer;
+          player = (await graphqlPost<{ publicPlayer: PublicPlayer | null }>(PLAYER, { fideId })).publicPlayer;
         }
       }
 
       const [white, black] = await Promise.all(
-        (["WHITE", "BLACK"] as const).map((c) => graphql<{ publicBotBook: BookRow[] }>(BOOK, { fideId, color: c })),
+        (["WHITE", "BLACK"] as const).map((c) => graphqlPost<{ publicBotBook: BookRow[] }>(BOOK, { fideId, color: c })),
       );
       if (stale()) return;
       const books = { white: white.publicBotBook.map(toBookGame), black: black.publicBotBook.map(toBookGame) };

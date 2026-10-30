@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { revalidatePlayer } from "@/app/(public)/player/actions";
-import { GRAPHQL_URL } from "@/lib/site";
+import { graphqlPost } from "@/lib/publicGraphql";
 
 const POLL_EVERY_MS = 3000;
 const SLOW_AFTER_MS = 90 * 1000;
@@ -19,20 +19,8 @@ const PARTS: { key: Part; label: string; source: string }[] = [
   { key: "games", label: "Games", source: "chess-results.com" },
 ];
 
-async function graphql<T>(query: string, variables: Record<string, unknown>): Promise<T | null> {
-  try {
-    const response = await fetch(GRAPHQL_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query, variables }),
-    });
-    if (!response.ok) return null;
-    const body = await response.json();
-    return body.data ?? null;
-  } catch {
-    return null;
-  }
-}
+/** A failed request is a miss, not an error: the poll asks again. */
+const graphql = <T,>(query: string, variables: Record<string, unknown>) => graphqlPost<T>(query, variables).catch(() => null);
 
 /**
  * Fetches this profile's history and games when they are missing or stale,

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+import { formatGameDate } from "@/lib/games";
 import { gamePath } from "@/lib/publicGame";
 import { GAMES_PAGE_SIZE, profilePath, type PlayerRef, type PublicGame } from "@/lib/publicPlayer";
 
@@ -24,15 +25,7 @@ const RESULT_LABEL: Record<PublicGame["result"], string> = {
   "*": "*",
 };
 
-function formatDate(date: string | null): string {
-  if (!date) return "—";
-  return new Date(`${date}T00:00:00Z`).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  });
-}
+const formatDate = (date: string | null) => formatGameDate(date) ?? "—";
 
 /** A side of a game: a link when we know whose profile it is. */
 function Side({ name, elo, profile, self }: { name: string; elo: number | null; profile: PlayerRef | null; self: boolean }) {
