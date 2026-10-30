@@ -30,7 +30,7 @@ export function PublicMenu() {
   // Get started / Open app stay in the bar beside the burger, so not here too.
   const links = [
     { href: "/rankings", label: "Rankings" },
-    { href: "/chess-bot", label: "Chess bot" },
+    { href: "/chess-bot", label: "Create your own bot" },
     { href: "/chess-books", label: "Books" },
   ];
 
