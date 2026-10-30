@@ -80,6 +80,30 @@
     display: none;
   }
 
+  /* The opposite: a scroll bar that is always there, for a pane people
+     might not think to scroll (the book reader's two columns). Styling it
+     is what keeps it showing on a Mac, where plain ones fade out. */
+  .shown-scrollbar {
+    overflow-y: scroll;
+    scrollbar-width: auto;
+    scrollbar-color: rgb(var(--ink-faint) / 0.6) rgb(var(--ink-raised));
+  }
+  .shown-scrollbar::-webkit-scrollbar {
+    width: 12px;
+  }
+  .shown-scrollbar::-webkit-scrollbar-track {
+    background: rgb(var(--ink-raised));
+    border-radius: 6px;
+  }
+  .shown-scrollbar::-webkit-scrollbar-thumb {
+    background: rgb(var(--ink-faint) / 0.6);
+    border: 3px solid rgb(var(--ink-raised));
+    border-radius: 6px;
+  }
+  .shown-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgb(var(--ink-faint));
+  }
+
   .card {
     @apply rounded-xl border border-gray-200 bg-white shadow-sm dark:border-dark-border dark:bg-dark-surface;
   }
