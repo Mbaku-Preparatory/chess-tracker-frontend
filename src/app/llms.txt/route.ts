@@ -37,7 +37,8 @@ export function GET() {
 ## Chess books
 
 - [Chess books](${SITE_URL}/chess-books): upload a chess book as a PDF (scans included, up to 50 MB, algebraic notation) and read it with a board beside the page: every move and diagram the reader finds opens as a position, lines can be stepped through, and any move can be played from any position and checked with an engine. A book typeset in a chess font becomes its exercises, as puzzles solved on the board.
-- The book stays with its owner: the server keeps an index of where moves and diagrams sit, deletes the file, and the reader draws the owner's own copy in their browser. Uploaded books are private to the account.
+- The book stays with its owner: the server keeps an index of where moves and diagrams sit, deletes the file, and the reader draws the owner's own copy in their browser. Uploaded books are private to the account (or, for a try without one, to the browser that uploaded it).
+- Without an account: try it with your own book at ${SITE_URL}/chess-books/try. One book per device and ten minutes of reading; the first 50 pages of a scanned book are read (an exercise book is read whole). Creating a free account moves the book into it, already read, and the whole book can then be read. A book nobody claims is deleted after a day.
 - Demo books: public-domain books anyone can read without an account, at ${SITE_URL}/book/<slug>. Each carries schema.org Book data. The list is on the chess books page.
 
 ## Pages
