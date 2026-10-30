@@ -4,12 +4,17 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { gameRef } from "@/lib/gameRef";
 import { ColorBadge, EcoBadge } from "@/components/ui/Badge";
+import { GamesTable } from "@/components/games/GamesTable";
+import { Pagination } from "@/components/games/Pagination";
+import { DEFAULT_PAGE_SIZE, rowFromGame } from "@/lib/games";
+import { DeleteGameButton } from "./DeleteGameButton";
 import { GameFilters, NO_FILTERS, hasFilters, type GameFilterValues } from "./GameFilters";
-import { GamesTable } from "./GamesTable";
 import type { OpeningStat, Game, GameSource, GameResult, PaginatedResponse } from "@/types";
 
 interface OpeningTreeViewProps {
   slug: string;
+  /** The scouted player, for their side of each game. */
+  playerName: string;
 }
 
 interface FamilyGroup {
@@ -69,6 +74,7 @@ function ScoreBar({ score }: { score: number }) {
 interface VariationRowProps {
   stat: OpeningStat;
   slug: string;
+  playerName: string;
   sourceFilter: GameSource | "";
   resultFilter: GameResult | "";
   yearFilter: string;
@@ -76,11 +82,12 @@ interface VariationRowProps {
   onToggle: () => void;
 }
 
-function VariationRow({ stat, slug, sourceFilter, resultFilter, yearFilter, isExpanded, onToggle }: VariationRowProps) {
+function VariationRow({ stat, slug, playerName, sourceFilter, resultFilter, yearFilter, isExpanded, onToggle }: VariationRowProps) {
   const [games, setGames] = useState<Game[] | null>(null);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [error, setError] = useState<string | null>(null);
 
   function handleGameDeleted(gameId: string) {
@@ -92,12 +99,12 @@ function VariationRow({ stat, slug, sourceFilter, resultFilter, yearFilter, isEx
   useEffect(() => {
     if (isExpanded) {
       setGames(null);
-      loadGames(1);
+      loadGames(1, pageSize);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sourceFilter, resultFilter, yearFilter]);
 
-  async function loadGames(p = 1) {
+  async function loadGames(p: number, size: number) {
     setLoading(true);
     setError(null);
     try {
@@ -108,10 +115,12 @@ function VariationRow({ stat, slug, sourceFilter, resultFilter, yearFilter, isEx
         ...(resultFilter ? { result: resultFilter } : {}),
         ...(yearFilter ? { year: yearFilter } : {}),
         page: p,
+        page_size: size,
       });
-      setGames((prev) => (p === 1 ? data.results : [...(prev ?? []), ...data.results]));
+      setGames(data.results);
       setTotal(data.count);
       setPage(p);
+      setPageSize(size);
     } catch {
       setError("Failed to load games.");
     } finally {
@@ -122,7 +131,7 @@ function VariationRow({ stat, slug, sourceFilter, resultFilter, yearFilter, isEx
   function handleToggle() {
     onToggle();
     if (!isExpanded && games === null) {
-      loadGames(1);
+      loadGames(1, pageSize);
     }
   }
 
@@ -190,18 +199,13 @@ function VariationRow({ stat, slug, sourceFilter, resultFilter, yearFilter, isEx
             <p className="text-sm text-red-600">{error}</p>
           ) : games && games.length > 0 ? (
             <>
-              <GamesTable games={games} onDeleted={handleGameDeleted} />
-              {total > games.length && (
-                <div className="mt-3 text-center">
-                  <button
-                    onClick={() => loadGames(page + 1)}
-                    disabled={loading}
-                    className="text-xs font-medium text-brand-600 hover:text-brand-700 disabled:opacity-50"
-                  >
-                    {loading ? "Loading…" : `Show more (${total - games.length} remaining)`}
-                  </button>
-                </div>
-              )}
+              <div className={`flex flex-col gap-3 ${loading ? "opacity-60" : ""}`}>
+                <GamesTable
+                  rows={games.map((g) => rowFromGame(g, playerName))}
+                  rowAction={(row) => <DeleteGameButton gameRef={row.key} onDeleted={handleGameDeleted} />}
+                />
+                <Pagination count={total} page={page} pageSize={pageSize} onChange={loadGames} label={`${stat.opening_name} games pages`} />
+              </div>
             </>
           ) : (
             <p className="text-sm text-gray-500">No games found.</p>
@@ -215,12 +219,13 @@ function VariationRow({ stat, slug, sourceFilter, resultFilter, yearFilter, isEx
 interface FamilyRowProps {
   group: FamilyGroup;
   slug: string;
+  playerName: string;
   sourceFilter: GameSource | "";
   resultFilter: GameResult | "";
   yearFilter: string;
 }
 
-function FamilyRow({ group, slug, sourceFilter, resultFilter, yearFilter }: FamilyRowProps) {
+function FamilyRow({ group, slug, playerName, sourceFilter, resultFilter, yearFilter }: FamilyRowProps) {
   const [open, setOpen] = useState(false);
   const [expandedVariations, setExpandedVariations] = useState<Set<string>>(new Set());
 
@@ -286,6 +291,7 @@ function FamilyRow({ group, slug, sourceFilter, resultFilter, yearFilter }: Fami
                 key={key}
                 stat={stat}
                 slug={slug}
+                playerName={playerName}
                 sourceFilter={sourceFilter}
                 resultFilter={resultFilter}
                 yearFilter={yearFilter}
@@ -300,7 +306,7 @@ function FamilyRow({ group, slug, sourceFilter, resultFilter, yearFilter }: Fami
   );
 }
 
-export function OpeningTreeView({ slug }: OpeningTreeViewProps) {
+export function OpeningTreeView({ slug, playerName }: OpeningTreeViewProps) {
   const [families, setFamilies] = useState<FamilyGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -368,6 +374,7 @@ export function OpeningTreeView({ slug }: OpeningTreeViewProps) {
               key={group.family}
               group={group}
               slug={slug}
+              playerName={playerName}
               sourceFilter={sourceFilter}
               resultFilter={resultFilter}
               yearFilter={yearFilter}

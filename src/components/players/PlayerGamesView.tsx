@@ -79,8 +79,8 @@ export function PlayerGamesView({ slug }: { slug: string }) {
         ))}
       </div>
 
-      {slug && activeTab === "games" && <AllGamesView slug={slug} />}
-      {slug && activeTab === "openings" && <OpeningTreeView slug={slug} />}
+      {slug && activeTab === "games" && <AllGamesView slug={slug} playerName={player?.full_name ?? ""} />}
+      {slug && activeTab === "openings" && <OpeningTreeView slug={slug} playerName={player?.full_name ?? ""} />}
     </div>
   );
 }

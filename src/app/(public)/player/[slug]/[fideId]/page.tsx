@@ -2,19 +2,21 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 
-import { GamesTable } from "@/components/public/profile/GamesTable";
+import { GamesTable } from "@/components/games/GamesTable";
+import { Pagination } from "@/components/games/Pagination";
 import { PerformancePanel } from "@/components/public/profile/PerformancePanel";
 import { PendingChart, PendingRows } from "@/components/public/profile/Pending";
 import { ProfileRefresher } from "@/components/public/profile/ProfileRefresher";
 import { RatingCard } from "@/components/public/profile/RatingCard";
 import { RatingHistoryChart } from "@/components/public/profile/RatingHistoryChart";
 import { federationFor } from "@/lib/federations";
+import { pagedHref, pageSizeOf, rowFromPublicGame } from "@/lib/games";
 import { fetchPublicPlayer, profilePath, titledName, type PublicPlayer } from "@/lib/publicPlayer";
 import { series } from "@/lib/ratingSeries";
 import { SHARE_IMAGE, SITE_URL } from "@/lib/site";
 
 type Params = Promise<{ slug: string; fideId: string }>;
-type SearchParams = Promise<{ page?: string }>;
+type SearchParams = Promise<{ page?: string; size?: string }>;
 
 // Anything older is refreshed when someone looks: FIDE publishes monthly.
 const STALE_AFTER_MS = 30 * 24 * 60 * 60 * 1000;
@@ -28,11 +30,13 @@ const TITLE_NAMES: Record<string, string> = {
 async function load(params: Params, searchParams?: SearchParams) {
   const { slug, fideId } = await params;
   if (!/^\d{1,20}$/.test(fideId)) notFound();
-  const pageParam = Number((await searchParams)?.page ?? 1);
+  const query = await searchParams;
+  const pageParam = Number(query?.page ?? 1);
   const page = Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1;
-  const player = await fetchPublicPlayer(fideId, page);
+  const pageSize = pageSizeOf(query?.size);
+  const player = await fetchPublicPlayer(fideId, page, pageSize);
   if (!player) notFound();
-  return { slug, page, player };
+  return { slug, page, pageSize, player };
 }
 
 function stale(fetchedAt: string | null): boolean {
@@ -103,11 +107,11 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 }
 
 export default async function PublicPlayerPage({ params, searchParams }: { params: Params; searchParams: SearchParams }) {
-  const { slug, page, player } = await load(params, searchParams);
+  const { slug, page, pageSize, player } = await load(params, searchParams);
   const canonical = profilePath(player);
   // The FIDE ID is the address; the name part is for people. A stale or
   // mistyped name redirects instead of serving a duplicate page.
-  if (slug !== player.slug) permanentRedirect(page > 1 ? `${canonical}?page=${page}` : canonical);
+  if (slug !== player.slug) permanentRedirect(pagedHref(canonical, page, pageSize));
 
   const fed = federationFor(player.federation);
   const needsRefresh = stale(player.historyFetchedAt) || stale(player.gamesFetchedAt);
@@ -244,7 +248,10 @@ export default async function PublicPlayerPage({ params, searchParams }: { param
           <span className="text-[13px] tabular-nums text-ink-faint">{player.games.count.toLocaleString("en")} total</span>
         </div>
         {player.games.count > 0 ? (
-          <GamesTable games={player.games.results} count={player.games.count} page={page} fideId={player.fideId} basePath={canonical} />
+          <>
+            <GamesTable rows={player.games.results.map((g) => rowFromPublicGame(g, player.fideId))} />
+            <Pagination count={player.games.count} page={page} pageSize={pageSize} basePath={canonical} anchor="games" />
+          </>
         ) : !player.gamesFetchedAt ? (
           <PendingRows label="Fetching games from chess-results.com…" />
         ) : (

@@ -13,7 +13,8 @@ import { SectionContainer } from "@/components/ui/SectionContainer";
 import { CardSkeleton } from "@/components/ui/LoadingSkeleton";
 import { PerformanceSplitCard } from "@/components/players/PerformanceSplitCard";
 import { OpeningBreakdownCard } from "@/components/players/OpeningBreakdownCard";
-import { GamesTable } from "@/components/players/GamesTable";
+import { GamesTable } from "@/components/games/GamesTable";
+import { rowFromGame } from "@/lib/games";
 import { useActiveImports } from "@/components/import/ActiveImportsProvider";
 import { usePreferences } from "@/components/PreferencesProvider";
 import { useRefetchWhenImportFinishes } from "@/components/import/useRefetchWhenImportFinishes";
@@ -387,7 +388,9 @@ export default function PlayerDetailPage() {
             </Link>
           }
         >
-          <GamesTable games={player.recent_games} />
+          <div className="rounded-xl bg-ink-card p-4 sm:p-6">
+            <GamesTable rows={player.recent_games.map((g) => rowFromGame(g, player.full_name))} />
+          </div>
         </SectionContainer>
       )}
 

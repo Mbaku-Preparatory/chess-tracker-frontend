@@ -72,12 +72,10 @@ export type PublicPlayer = {
   games: { count: number; results: PublicGame[] };
 };
 
-export const GAMES_PAGE_SIZE = 20;
-
 const REF = "fideId fullName slug title";
 
 export const PROFILE_QUERY = `
-query PublicProfile($fideId: String!, $page: Int!) {
+query PublicProfile($fideId: String!, $page: Int!, $pageSize: Int!) {
   publicPlayer(fideId: $fideId) {
     fideId fullName slug federation sex title womenTitle birthYear isActive
     standardRating rapidRating blitzRating standardGames rapidGames blitzGames
@@ -90,7 +88,7 @@ query PublicProfile($fideId: String!, $page: Int!) {
       white { games wins draws losses }
       black { games wins draws losses }
     }
-    games(page: $page, pageSize: ${GAMES_PAGE_SIZE}) {
+    games(page: $page, pageSize: $pageSize) {
       count
       results {
         publicId whiteName blackName whiteElo blackElo result event eventCountry
@@ -106,16 +104,16 @@ export const playerTag = (fideId: string) => `public-player:${fideId}`;
 /** The profile, or null when FIDE does not rate this ID. Throws
  * BackendUnavailable when the API cannot answer, so the page can say so
  * rather than claim the player does not exist. */
-export async function fetchPublicPlayer(fideId: string, page = 1): Promise<PublicPlayer | null> {
-  const player = await queryPublicPlayer(fideId, page, { next: { revalidate: 3600, tags: [playerTag(fideId)] } });
+export async function fetchPublicPlayer(fideId: string, page: number, pageSize: number): Promise<PublicPlayer | null> {
+  const player = await queryPublicPlayer(fideId, page, pageSize, { next: { revalidate: 3600, tags: [playerTag(fideId)] } });
   // The data cache cannot tell a profile from "not rated", so a cached null
   // is asked again live: a player the next list or a refresh adds would
   // otherwise 404 for up to an hour.
-  return player ?? queryPublicPlayer(fideId, page, { cache: "no-store" });
+  return player ?? queryPublicPlayer(fideId, page, pageSize, { cache: "no-store" });
 }
 
-async function queryPublicPlayer(fideId: string, page: number, caching: RequestInit): Promise<PublicPlayer | null> {
-  return (await graphqlGet<{ publicPlayer: PublicPlayer | null }>(PROFILE_QUERY, { fideId, page }, caching)).publicPlayer;
+async function queryPublicPlayer(fideId: string, page: number, pageSize: number, caching: RequestInit): Promise<PublicPlayer | null> {
+  return (await graphqlGet<{ publicPlayer: PublicPlayer | null }>(PROFILE_QUERY, { fideId, page, pageSize }, caching)).publicPlayer;
 }
 
 /** "CM Oluka Robert Mcligeyo", the way chess sites and FIDE write a titled name. */

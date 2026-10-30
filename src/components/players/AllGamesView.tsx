@@ -3,83 +3,20 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { gameRef } from "@/lib/gameRef";
+import { GamesTable } from "@/components/games/GamesTable";
+import { Pagination } from "@/components/games/Pagination";
+import { DEFAULT_PAGE_SIZE, rowFromGame } from "@/lib/games";
+import { DeleteGameButton } from "./DeleteGameButton";
 import { GameFilters, NO_FILTERS, hasFilters, ratingParams, type GameFilterValues } from "./GameFilters";
-import { GamesTable } from "./GamesTable";
 import type { Game, PaginatedResponse } from "@/types";
 
 interface AllGamesViewProps {
   slug: string;
+  /** The scouted player, for their side of each game. */
+  playerName: string;
 }
 
-const PAGE_SIZE = 20;
-
-// ── Pagination ────────────────────────────────────────────────────────────────
-
-function pageWindow(page: number, totalPages: number): (number | "…")[] {
-  if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
-  const pages: (number | "…")[] = [1];
-  const left = Math.max(2, page - 2);
-  const right = Math.min(totalPages - 1, page + 2);
-  if (left > 2) pages.push("…");
-  for (let i = left; i <= right; i++) pages.push(i);
-  if (right < totalPages - 1) pages.push("…");
-  pages.push(totalPages);
-  return pages;
-}
-
-function Pagination({
-  page,
-  totalPages,
-  onPageChange,
-}: {
-  page: number;
-  totalPages: number;
-  onPageChange: (p: number) => void;
-}) {
-  const btnBase =
-    "min-w-[2rem] rounded-lg px-2 py-1.5 text-xs font-medium transition-colors";
-  const active = `${btnBase} bg-brand-600 text-white`;
-  const inactive = `${btnBase} text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-dark-elevated`;
-  const nav = `${btnBase} text-gray-500 hover:bg-gray-100 disabled:opacity-40 dark:text-gray-400 dark:hover:bg-dark-elevated`;
-
-  return (
-    <div className="mt-4 flex items-center justify-center gap-1">
-      <button
-        onClick={() => onPageChange(page - 1)}
-        disabled={page <= 1}
-        className={nav}
-      >
-        ‹
-      </button>
-
-      {pageWindow(page, totalPages).map((p, i) =>
-        p === "…" ? (
-          <span key={`ellipsis-${i}`} className="px-1 text-xs text-gray-400">
-            …
-          </span>
-        ) : (
-          <button
-            key={p}
-            onClick={() => onPageChange(p)}
-            className={p === page ? active : inactive}
-          >
-            {p}
-          </button>
-        )
-      )}
-
-      <button
-        onClick={() => onPageChange(page + 1)}
-        disabled={page >= totalPages}
-        className={nav}
-      >
-        ›
-      </button>
-    </div>
-  );
-}
-
-export function AllGamesView({ slug }: AllGamesViewProps) {
+export function AllGamesView({ slug, playerName }: AllGamesViewProps) {
   const [games, setGames] = useState<Game[]>([]);
   const [total, setTotal] = useState(0);
 
@@ -88,15 +25,11 @@ export function AllGamesView({ slug }: AllGamesViewProps) {
     setTotal((prev) => prev - 1);
   }
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [filters, setFilters] = useState<GameFilterValues>(NO_FILTERS);
-
-  // Reset to page 1 when any filter changes
-  useEffect(() => {
-    setPage(1);
-  }, [filters]);
 
   useEffect(() => {
     setLoading(true);
@@ -111,6 +44,7 @@ export function AllGamesView({ slug }: AllGamesViewProps) {
         ...ratingParams(rating),
         ...(search ? { search } : {}),
         page,
+        page_size: pageSize,
       })
       .then((data: PaginatedResponse<Game>) => {
         setGames(data.results);
@@ -118,16 +52,20 @@ export function AllGamesView({ slug }: AllGamesViewProps) {
       })
       .catch(() => setError("Failed to load games."))
       .finally(() => setLoading(false));
-  }, [slug, filters, page]);
+  }, [slug, filters, page, pageSize]);
 
-  const totalPages = Math.ceil(total / PAGE_SIZE);
   const hasActiveFilters = hasFilters(filters);
 
   return (
     <div>
       <GameFilters
         value={filters}
-        onChange={setFilters}
+        onChange={(f) => {
+          // In the same render as the filter: page 5 of the old list may not
+          // exist in the new one.
+          setFilters(f);
+          setPage(1);
+        }}
         showRating
         searchPlaceholder="Search opponent, event, opening…"
         count={loading ? undefined : `${total} game${total !== 1 ? "s" : ""}`}
@@ -146,11 +84,21 @@ export function AllGamesView({ slug }: AllGamesViewProps) {
         </div>
       ) : games.length > 0 ? (
         <>
-          <GamesTable games={games} onDeleted={handleGameDeleted} />
-
-          {totalPages > 1 && (
-            <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-          )}
+          <div className="flex flex-col gap-4 rounded-xl bg-ink-card p-4 sm:p-6">
+            <GamesTable
+              rows={games.map((g) => rowFromGame(g, playerName))}
+              rowAction={(row) => <DeleteGameButton gameRef={row.key} onDeleted={handleGameDeleted} />}
+            />
+            <Pagination
+              count={total}
+              page={page}
+              pageSize={pageSize}
+              onChange={(p, size) => {
+                setPage(p);
+                setPageSize(size);
+              }}
+            />
+          </div>
         </>
       ) : (
         <div className="rounded-xl border border-dashed border-gray-300 py-16 text-center dark:border-dark-border">
