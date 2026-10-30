@@ -20,9 +20,30 @@ export interface GameFilterValues {
   search: string;
 }
 
-export const NO_FILTERS: GameFilterValues = { color: "", result: "", source: "", year: "", rating: "", search: "" };
-
 export const hasFilters = (f: GameFilterValues) => Object.values(f).some(Boolean);
+
+/**
+ * The filters in the page's URL, so a refresh keeps them:
+ * ?color=black&result=win&source=chess_results&year=2024&rating=2400-&q=sicilian.
+ * Anything not one of the choices offered is dropped.
+ */
+export function filtersFromParams(params: { get(name: string): string | null }): GameFilterValues {
+  const pick = <T extends string>(value: string | null, allowed: readonly T[]): T | "" =>
+    allowed.includes(value as T) ? (value as T) : "";
+  return {
+    color: pick(params.get("color"), ["white", "black"] as const),
+    result: pick(params.get("result"), ["win", "draw", "loss"] as const),
+    source: pick(params.get("source"), Object.keys(GAME_SOURCES) as GameSource[]),
+    year: pick(params.get("year"), YEAR_OPTIONS.map((o) => o.value)),
+    rating: pick(params.get("rating"), RATING_OPTIONS.map((o) => o.value)),
+    search: params.get("q") ?? "",
+  };
+}
+
+/** The filters as URL parameters; an unset filter removes its parameter. */
+export function filterParams(f: GameFilterValues) {
+  return { color: f.color, result: f.result, source: f.source, year: f.year, rating: f.rating, q: f.search };
+}
 
 /** The rating band as the games endpoint's min_rating / max_rating. */
 export function ratingParams(band: string): { min_rating?: string; max_rating?: string } {

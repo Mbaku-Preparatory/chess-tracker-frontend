@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { replaceQuery } from "@/lib/urlState";
 
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { fetchPlayerDetail } from "@/redux/actions/playerDetail";
@@ -16,7 +18,16 @@ type Tab = "games" | "openings";
 export function PlayerGamesView({ slug }: { slug: string }) {
   const dispatch = useAppDispatch();
   const { player, error } = useAppSelector((s) => s.playerDetail);
-  const [activeTab, setActiveTab] = useState<Tab>("games");
+  // The tab is in the URL (?tab=openings), with the filters, so a refresh
+  // opens where you were.
+  const params = useSearchParams();
+  const [activeTab, setActiveTab] = useState<Tab>(() => (params.get("tab") === "openings" ? "openings" : "games"));
+
+  function switchTab(tab: Tab) {
+    setActiveTab(tab);
+    // The filters carry over; the page belongs to the other tab's list.
+    replaceQuery({ tab: tab === "openings" ? tab : null, page: null, size: null });
+  }
 
   useEffect(() => {
     if (slug) dispatch(fetchPlayerDetail(slug));
@@ -71,7 +82,7 @@ export function PlayerGamesView({ slug }: { slug: string }) {
         {tabs.map((tab) => (
           <button
             key={tab.value}
-            onClick={() => setActiveTab(tab.value)}
+            onClick={() => switchTab(tab.value)}
             className={`-mb-px px-4 py-2.5 text-sm font-medium transition-colors ${
               activeTab === tab.value
                 ? "border-b-2 border-brand-600 text-brand-600"

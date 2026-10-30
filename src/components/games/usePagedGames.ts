@@ -50,14 +50,20 @@ function place<T>(items: (T | undefined)[], offset: number, results: T[]): (T | 
  * - Fetched games are kept by position, so changing the page size reuses
  *   them, and deleting one closes the gap the way the server will.
  */
-export function usePagedGames<T>(fetchGames: FetchGames<T>, resetKey: string, seed?: GamesSeed<T>) {
+export function usePagedGames<T>(
+  fetchGames: FetchGames<T>,
+  resetKey: string,
+  seed?: GamesSeed<T>,
+  /** Where to open when nothing is seeded: the page and size in the URL. */
+  initial?: { page: number; pageSize: number },
+) {
   const [store, setStore] = useState<Store<T>>(() => ({
     key: resetKey,
     items: seed ? place([], seed.offset, seed.results) : [],
     count: seed ? seed.count : null,
   }));
-  const [page, setPage] = useState(seed?.page ?? 1);
-  const [pageSize, setPageSizeState] = useState(seed?.pageSize ?? DEFAULT_PAGE_SIZE);
+  const [page, setPage] = useState(seed?.page ?? initial?.page ?? 1);
+  const [pageSize, setPageSizeState] = useState(seed?.pageSize ?? initial?.pageSize ?? DEFAULT_PAGE_SIZE);
   const [error, setError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
 
@@ -117,13 +123,10 @@ export function usePagedGames<T>(fetchGames: FetchGames<T>, resetKey: string, se
   const slice = count === null ? null : items.slice(start, Math.min(start + pageSize, count));
   const rows = slice && slice.every((r) => r !== undefined) && slice.length === Math.max(0, Math.min(pageSize, count! - start)) ? (slice as T[]) : null;
 
-  /** A new page size, keeping the first game on screen on screen. Returns
-   * the page that lands on. */
-  function setPageSize(size: number): number {
-    const landed = Math.floor(start / size) + 1;
+  /** A new page size, keeping the first game on screen on screen. */
+  function setPageSize(size: number) {
     setPageSizeState(size);
-    setPage(landed);
-    return landed;
+    setPage(Math.floor(start / size) + 1);
   }
 
   /** Drops a game the user deleted, as the server has. */

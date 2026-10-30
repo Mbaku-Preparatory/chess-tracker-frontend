@@ -18,6 +18,7 @@ export function PagedGamesTable<T>({
   resetKey,
   toRow,
   seed,
+  start,
   rowAction,
   basePath,
   onPageChange,
@@ -30,6 +31,8 @@ export function PagedGamesTable<T>({
   resetKey: string;
   toRow: (item: T) => GameRow;
   seed?: GamesSeed<T>;
+  /** The page and size to open on, from the URL. */
+  start?: { page: number; pageSize: number };
   /** One more control per row. `remove` takes the game off the list once it is deleted. */
   rowAction?: (row: GameRow, remove: () => void) => React.ReactNode;
   /** Pages are also links (?page=&size=), for a list a search engine should follow. */
@@ -40,18 +43,29 @@ export function PagedGamesTable<T>({
   empty?: string;
   label?: string;
 }) {
-  const list = usePagedGames(fetchGames, resetKey, seed);
+  const list = usePagedGames(fetchGames, resetKey, seed, start);
   const top = useRef<HTMLDivElement>(null);
 
   const onCountRef = useRef(onCount);
   onCountRef.current = onCount;
   useEffect(() => onCountRef.current?.(list.count), [list.count]);
 
+  // Told whenever the page or size changes, whatever changed it (the pager,
+  // new filters going back to page 1, a page past the end after a delete),
+  // so a URL kept in step stays right. Not on the first render: that is
+  // where the URL already is.
+  const onPageChangeRef = useRef(onPageChange);
+  onPageChangeRef.current = onPageChange;
+  const shown = useRef({ page: list.page, pageSize: list.pageSize });
+  useEffect(() => {
+    if (shown.current.page === list.page && shown.current.pageSize === list.pageSize) return;
+    shown.current = { page: list.page, pageSize: list.pageSize };
+    onPageChangeRef.current?.(list.page, list.pageSize);
+  }, [list.page, list.pageSize]);
+
   function go(page: number, pageSize: number) {
-    let landed = page;
-    if (pageSize !== list.pageSize) landed = list.setPageSize(pageSize);
+    if (pageSize !== list.pageSize) list.setPageSize(pageSize);
     else list.setPage(page);
-    onPageChange?.(landed, pageSize);
     // From the pager under a long page, back up to its first game.
     if (top.current && top.current.getBoundingClientRect().top < 0) top.current.scrollIntoView({ block: "start" });
   }
