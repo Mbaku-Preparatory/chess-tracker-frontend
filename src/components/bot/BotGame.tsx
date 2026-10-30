@@ -7,11 +7,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Avatar } from "@/components/avatar/Avatar";
 import { useBotEngine } from "@/hooks/useBotEngine";
-import { BOOK_MOVES, BOOK_PLIES, bookMoves, buildBook, gamesOnLine, pickBookMove, type Book } from "@/lib/bot/book";
+import { BOOK_MOVES, BOOK_PLIES, bookMoves, buildBook, gamesOnLine, pickBookMove, type Book, type BookMove } from "@/lib/bot/book";
 import { buildPgn, pgnFilename } from "@/lib/chess/pgn";
 import type { BotBookGame } from "@/types";
 
-import { BotSpeech, type Speech } from "./BotSpeech";
+import { BotSpeech, type Speech, type SpeechChoice } from "./BotSpeech";
 
 const Board = dynamic(() => import("@/components/analysis/Board"), {
   ssr: false,
@@ -37,6 +37,15 @@ interface Played {
 /** Where the game left the player's games. */
 interface LeftBook {
   ply: number;
+}
+
+/** The other moves they played where the bot just played one of theirs. */
+interface Alternatives {
+  /** The bot's move they replace. */
+  ply: number;
+  /** The one game being followed before that move, to put back. */
+  single: string | null;
+  moves: BookMove[];
 }
 
 const moveLabel = (ply: number, san: string) => `${Math.floor(ply / 2) + 1}${ply % 2 === 0 ? "." : "…"} ${san}`;
@@ -176,6 +185,7 @@ export function BotGame({
 
   const [moves, setMoves] = useState<Played[]>([]);
   const [leftBook, setLeftBook] = useState<LeftBook | null>(null);
+  const [alternatives, setAlternatives] = useState<Alternatives | null>(null);
   // What the bot says, in its speech bubble.
   const opener =
     botColor === "white"
@@ -202,13 +212,41 @@ export function BotGame({
   const botToMove = !result && chess.turn() === botColor[0];
   const ply = moves.length;
 
-  const play = useCallback((san: string, book: boolean) => {
+  /** Plays `san` as move `at`, dropping anything after it. */
+  const play = useCallback((at: number, san: string, book: boolean) => {
     setMoves((prev) => {
-      const c = new Chess(prev.length ? prev[prev.length - 1].fen : START_FEN);
+      const before = prev.slice(0, at);
+      const c = new Chess(before.length ? before[before.length - 1].fen : START_FEN);
       const m = c.move(san);
-      return [...prev, { san: m.san, from: m.from, to: m.to, fen: c.fen(), book }];
+      return [...before, { san: m.san, from: m.from, to: m.to, fen: c.fen(), book }];
     });
   }, []);
+
+  /** One of their moves after `line`, said aloud, with the others they played
+   * there offered instead. `swapped`: asked for in place of the one it played. */
+  function playBook(line: string[], from: string, san: string, swapped = false) {
+    const at = line.length;
+    const others = bookMoves(book, from).filter((m) => m.san !== san);
+    setAlternatives(others.length ? { ply: at, single: singleRef.current, moves: others } : null);
+    const ask = others.length ? " Try another?" : "";
+    const on = gamesOnLine(games, [...line, san]);
+    if (on.length === 1) {
+      const g = on[0];
+      const again = singleRef.current === g.public_id;
+      singleRef.current = g.public_id;
+      say(
+        (again
+          ? `${san}, still following my game against ${g.opponent || "them"}.`
+          : `${san}. Ah, I've been here once before: against ${gameLabel(g)}. I ${RESULT_VERB[g.result] ?? "played"} that one.`) + ask,
+        viewGame(g),
+      );
+    } else {
+      singleRef.current = null;
+      // The bot's first move would cut "Let's play" off before it is read.
+      say((at === 0 && !swapped ? "Let's play. " : "") + bookLine(book, from, san) + ask);
+    }
+    play(at, san, true);
+  }
 
   // The bot's turn: one of the player's moves while the game is in their
   // games, the engine at the chosen strength after.
@@ -223,24 +261,7 @@ export function BotGame({
       const pick = pickBookMove(book, fen);
       if (pick) {
         const timer = setTimeout(() => {
-          if (cancelled) return;
-          const on = gamesOnLine(games, [...sans, pick.san]);
-          if (on.length === 1) {
-            const g = on[0];
-            const again = singleRef.current === g.public_id;
-            singleRef.current = g.public_id;
-            say(
-              again
-                ? `${pick.san}, still following my game against ${g.opponent || "them"}.`
-                : `${pick.san}. Ah, I've been here once before: against ${gameLabel(g)}. I ${RESULT_VERB[g.result] ?? "played"} that one.`,
-              viewGame(g),
-            );
-          } else {
-            singleRef.current = null;
-            // The bot's first move would cut "Let's play" off before it is read.
-            say((ply === 0 ? "Let's play. " : "") + bookLine(book, fen, pick.san));
-          }
-          play(pick.san, true);
+          if (!cancelled) playBook(sans, fen, pick.san);
         }, BOOK_DELAY_MS);
         return () => {
           cancelled = true;
@@ -267,7 +288,7 @@ export function BotGame({
       if (!uci) return setEngineError(true);
       const c = new Chess(fen);
       const m = c.move({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci[4] });
-      play(m.san, false);
+      play(ply, m.san, false);
     });
     return () => {
       cancelled = true;
@@ -297,7 +318,7 @@ export function BotGame({
           single ? viewGame(single) : undefined,
         );
       }
-      play(san, false);
+      play(ply, san, false);
       return true;
     },
     [result, chess, youColor, fen, leftBook, ply, book, games, sans, elo, play, say],
@@ -337,6 +358,7 @@ export function BotGame({
     engine.cancel();
     setMoves([]);
     setLeftBook(null);
+    setAlternatives(null);
     singleRef.current = null;
     say(opener);
     setResigned(false);
@@ -364,6 +386,7 @@ export function BotGame({
     engine.cancel();
     setMoves((prev) => prev.slice(0, takeBackTo));
     if (leftBook && leftBook.ply >= takeBackTo) setLeftBook(null);
+    setAlternatives(null);
     singleRef.current = null;
     say("Take two. Your move.");
     setResigned(false);
@@ -400,6 +423,19 @@ export function BotGame({
         : "Your move.";
 
   const Heading = guest ? "h2" : "h1";
+
+  // Its other moves, while its own is the last on the board.
+  const choices: SpeechChoice[] =
+    alternatives && alternatives.ply === ply - 1 && !result
+      ? alternatives.moves.map((m) => ({
+          san: m.san,
+          count: m.count,
+          onPick: () => {
+            singleRef.current = alternatives.single;
+            playBook(sans.slice(0, alternatives.ply), alternatives.ply ? moves[alternatives.ply - 1].fen : START_FEN, m.san, true);
+          },
+        }))
+      : [];
 
   // The move list as rows of two, the moves played from their games marked.
   const rows: Played[][] = [];
@@ -447,7 +483,7 @@ export function BotGame({
 
         <aside className="flex min-w-0 flex-col gap-3">
           <section aria-label="Game" className="flex flex-col gap-3 rounded-xl bg-ink-card p-4">
-            {showSpeech && <BotSpeech avatar={botAvatarSrc} name={`${name} bot`} speech={speech} />}
+            {showSpeech && <BotSpeech avatar={botAvatarSrc} name={`${name} bot`} speech={speech} choices={choices} />}
             <div className={`flex flex-wrap items-center justify-between gap-2 ${showSpeech ? "border-t border-ink-line pt-3" : ""}`}>
               <p aria-live="polite" className="text-[15px] font-[520] text-ink-text">
                 {status}

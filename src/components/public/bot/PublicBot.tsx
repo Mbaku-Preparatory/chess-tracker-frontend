@@ -5,22 +5,18 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Avatar } from "@/components/avatar/Avatar";
 import { BotGame } from "@/components/bot/BotGame";
+import { BotSetup, defaultBotElo, startingColor, type BotColor as Color } from "@/components/bot/BotSetup";
 import { PlayerSearch } from "@/components/public/PlayerSearch";
-import { ELO_MIN } from "@/hooks/useBotEngine";
 import { authStorage } from "@/lib/auth";
 import { avatarSrc, defaultAvatar } from "@/lib/avatars";
 import { GRAPHQL_URL } from "@/lib/site";
 import type { BotBookGame } from "@/types";
-
-type Color = "white" | "black";
 
 /** The one free game, remembered on this device. Signed-in visitors have no limit. */
 const FREE_KEY = "cs_free_bot";
 /** How long to wait for a player's games to arrive from chess-results. */
 const POLL_EVERY_MS = 3000;
 const GIVE_UP_AFTER_MS = 4 * 60 * 1000;
-const SLIDER_MAX = 2900;
-const UNRATED_ELO = 1500;
 
 interface Target {
   fideId: string;
@@ -111,9 +107,6 @@ function writeFree(target: Target) {
   }
 }
 
-const cap = (c: Color) => c[0].toUpperCase() + c.slice(1);
-const other = (c: Color): Color => (c === "white" ? "black" : "white");
-
 /**
  * "Create your own bot", for anyone: pick any FIDE-rated player, and play a
  * bot that opens the way they do, from the games chess-results published.
@@ -184,7 +177,7 @@ export function PublicBot({ initialFideId }: { initialFideId?: string }) {
         });
       }
       // The bot plays the colour they have more games in; you take the other.
-      setColor(books.black.length > books.white.length ? "black" : "white");
+      setColor(startingColor(books));
       setElo(null);
       setPhase({ kind: "setup", target, books });
     } catch (err) {
@@ -234,7 +227,7 @@ export function PublicBot({ initialFideId }: { initialFideId?: string }) {
           youName="You"
           botColor={color}
           games={books[color]}
-          elo={elo ?? Math.min(SLIDER_MAX, Math.max(ELO_MIN, target.rating ?? UNRATED_ELO))}
+          elo={elo ?? defaultBotElo(target.rating)}
           botAvatarSrc={avatarSrc(defaultAvatar(target.fideId))}
           youAvatarSrc={avatarSrc(defaultAvatar("you"))}
           onExit={() => (signedIn ? setPhase({ kind: "setup", target, books }) : setPhase({ kind: "used", name: target.fullName }))}
@@ -257,94 +250,37 @@ export function PublicBot({ initialFideId }: { initialFideId?: string }) {
 
   if (phase.kind === "setup") {
     const { target, books } = phase;
-    const defaultElo = Math.min(SLIDER_MAX, Math.max(ELO_MIN, target.rating ?? UNRATED_ELO));
-    const strength = elo ?? defaultElo;
-    const games = books[color];
     return (
-      <section aria-label="Your bot" className="flex flex-col gap-5 rounded-xl bg-ink-card p-6 sm:p-8">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex min-w-0 items-center gap-3">
-            <Avatar src={avatarSrc(defaultAvatar(target.fideId))} size={56} />
-            <div className="min-w-0">
-              <h2 className="truncate text-[22px] font-[480] leading-tight">{target.fullName} bot</h2>
-              <p className="text-[14px] text-ink-muted">
-                Built from {books.white.length + books.black.length} of their games on chess-results.com
-              </p>
+      <BotSetup
+        name={target.fullName}
+        rating={target.rating}
+        books={books}
+        color={color}
+        onColorChange={setColor}
+        elo={elo}
+        onEloChange={setElo}
+        onPlay={() => {
+          if (!signedIn) writeFree(target);
+          setPhase({ kind: "playing", target, books });
+        }}
+        header={
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex min-w-0 items-center gap-3">
+              <Avatar src={avatarSrc(defaultAvatar(target.fideId))} size={56} />
+              <div className="min-w-0">
+                <h2 className="truncate text-[22px] font-[480] leading-tight">{target.fullName} bot</h2>
+                <p className="text-[14px] text-ink-muted">
+                  Built from {books.white.length + books.black.length} of their games on chess-results.com
+                </p>
+              </div>
             </div>
+            <button type="button" onClick={() => setPhase({ kind: "search" })} className="text-[14px] text-accent-soft underline">
+              Choose another player
+            </button>
           </div>
-          <button type="button" onClick={() => setPhase({ kind: "search" })} className="text-[14px] text-accent-soft underline">
-            Choose another player
-          </button>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3">
-          <span className="text-[15px] font-[480]">You play</span>
-          <div role="radiogroup" aria-label="Your colour" className="flex w-fit gap-1 rounded-lg bg-ink-raised p-1">
-            {(["white", "black"] as Color[]).map((c) => {
-              const active = color === other(c);
-              const theirs = books[other(c)].length;
-              return (
-                <button
-                  key={c}
-                  role="radio"
-                  aria-checked={active}
-                  type="button"
-                  disabled={theirs === 0}
-                  onClick={() => setColor(other(c))}
-                  className={`flex items-center gap-2 rounded-md px-4 py-1.5 text-[14px] font-[480] disabled:opacity-40 ${
-                    active ? "bg-ink-card text-ink-text shadow" : "text-ink-muted hover:text-ink-text"
-                  }`}
-                >
-                  <span
-                    aria-hidden
-                    className={`h-3 w-3 rounded-full border ${c === "white" ? "border-neutral-300 bg-white" : "border-neutral-600 bg-neutral-900"}`}
-                  />
-                  {cap(c)}
-                </button>
-              );
-            })}
-          </div>
-          <span className="text-[13px] text-ink-faint">
-            {games.length} of their games as {cap(color)}
-          </span>
-        </div>
-
-        <div className="flex flex-col gap-3">
-          <div className="flex items-baseline justify-between gap-3">
-            <label htmlFor="public-bot-elo" className="text-[15px] font-[480]">
-              Bot strength
-            </label>
-            <span className="text-[22px] font-[480] tabular-nums">{strength}</span>
-          </div>
-          <input
-            id="public-bot-elo"
-            type="range"
-            min={ELO_MIN}
-            max={SLIDER_MAX}
-            step={10}
-            value={strength}
-            onChange={(e) => setElo(Number(e.target.value))}
-            className="w-full accent-[rgb(var(--accent))]"
-          />
-          <p className="text-[13px] text-ink-faint">
-            {target.rating ? `${target.fullName}'s FIDE rating: ${target.rating}` : `Unrated, so the bot starts at ${UNRATED_ELO}`}
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-4">
-          <button
-            type="button"
-            onClick={() => {
-              if (!signedIn) writeFree(target);
-              setPhase({ kind: "playing", target, books });
-            }}
-            className="rounded-pill bg-accent px-6 py-3 text-[16px] font-[480] text-accent-on hover:bg-accent-soft"
-          >
-            Play as {cap(other(color))}
-          </button>
-          {!signedIn && <span className="text-[13px] text-ink-faint">Without an account you get one free game.</span>}
-        </div>
-      </section>
+        }
+        note={signedIn ? undefined : "Without an account you get one free game."}
+      />
     );
   }
 
