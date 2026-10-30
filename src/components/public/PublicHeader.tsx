@@ -19,7 +19,7 @@ export function PublicHeader() {
             Rankings
           </Link>
           <Link href="/chess-bot" className="whitespace-nowrap rounded-pill px-3 py-2 text-[15px] text-ink-muted hover:bg-ink-raised hover:text-ink-text sm:px-4">
-            Chess bot
+            Create your own bot
           </Link>
           <Link href="/chess-books" className="whitespace-nowrap rounded-pill px-3 py-2 text-[15px] text-ink-muted hover:bg-ink-raised hover:text-ink-text sm:px-4">
             Books

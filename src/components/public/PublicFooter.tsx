@@ -11,7 +11,7 @@ export function PublicFooter() {
         <nav className="flex flex-wrap gap-x-5 gap-y-2">
           <Link href="/rankings" className="hover:text-ink-muted">Rankings</Link>
           <Link href="/rankings/countries" className="hover:text-ink-muted">Rankings by country</Link>
-          <Link href="/chess-bot" className="hover:text-ink-muted">Play a player&apos;s bot</Link>
+          <Link href="/chess-bot" className="hover:text-ink-muted">Create your own bot</Link>
           <Link href="/chess-books" className="hover:text-ink-muted">Chess books</Link>
           <Link href="/privacy" className="hover:text-ink-muted">Privacy</Link>
           <AuthLink href="/login" className="hover:text-ink-muted">Log in</AuthLink>

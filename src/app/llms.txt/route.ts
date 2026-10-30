@@ -29,7 +29,7 @@ export function GET() {
 
 ## Create your own chess bot
 
-- [Chess bot](${SITE_URL}/chess-bot): play a bot of any FIDE-rated player, built from their over-the-board games on chess-results.com. For up to ten moves it plays only moves the player chose in that position, weighted by how often and how recently; after that Stockfish plays at a strength from 1320 to 2900, starting at the player's FIDE rating. It runs in the browser.
+- [Create your own chess bot](${SITE_URL}/chess-bot): play a bot of any FIDE-rated player, built from their over-the-board games on chess-results.com. For up to ten moves it plays only moves the player chose in that position, weighted by how often and how recently; after that Stockfish plays at a strength from 1320 to 2900, starting at the player's FIDE rating. It runs in the browser.
 - Without an account: one free game. A free account adds unlimited games and bots of the opponents a user scouts.
 - Link to a player's bot directly: ${SITE_URL}/chess-bot?fide=<fide-id>. Each player profile links to it.
 - Players with no games with moves on chess-results have no bot.
@@ -37,14 +37,15 @@ export function GET() {
 ## Chess books
 
 - [Chess books](${SITE_URL}/chess-books): upload a chess book as a PDF (scans included, up to 50 MB, algebraic notation) and read it with a board beside the page: every move and diagram the reader finds opens as a position, lines can be stepped through, and any move can be played from any position and checked with an engine. A book typeset in a chess font becomes its exercises, as puzzles solved on the board.
-- The book stays with its owner: the server keeps an index of where moves and diagrams sit, deletes the file, and the reader draws the owner's own copy in their browser. Uploaded books are private to the account.
+- The book stays with its owner: the server keeps an index of where moves and diagrams sit, deletes the file, and the reader draws the owner's own copy in their browser. Uploaded books are private to the account (or, for a try without one, to the browser that uploaded it).
+- Without an account: try it with your own book at ${SITE_URL}/chess-books/try. One book per device and ten minutes of reading; the first 50 pages of a scanned book are read (an exercise book is read whole). Creating a free account moves the book into it, already read, and the whole book can then be read. A book nobody claims is deleted after a day.
 - Demo books: public-domain books anyone can read without an account, at ${SITE_URL}/book/<slug>. Each carries schema.org Book data. The list is on the chess books page.
 
 ## Pages
 
 - [Home](${SITE_URL}/): what the site is, and player search by name or FIDE ID
 - [Rankings](${SITE_URL}/rankings): world and per-federation player rankings
-- [Chess bot](${SITE_URL}/chess-bot): play a bot of any FIDE-rated player, from their games
+- [Create your own chess bot](${SITE_URL}/chess-bot): play a bot of any FIDE-rated player, from their games
 - [Chess books](${SITE_URL}/chess-books): the book reader and exercise solver, with demo books
 - [Sitemap](${SITE_URL}/sitemap.xml): every active player's profile
 - [Privacy policy](${SITE_URL}/privacy)
