@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { AuthLink } from "@/components/public/AuthLink";
 import { readGuestBook, TRIAL_MS, writeGuestBook, type GuestBook } from "@/lib/guestBook";
 
 /**
@@ -46,9 +46,9 @@ export function TrialBar({ used }: { used: number }) {
         </span>{" "}
         <span className="text-ink-muted">of your free try. Create a free account to keep this book.</span>
       </p>
-      <Link href="/signup" className="rounded-pill bg-accent px-4 py-1.5 text-[14px] font-[520] text-accent-on hover:bg-accent-soft">
+      <AuthLink href="/signup" className="rounded-pill bg-accent px-4 py-1.5 text-[14px] font-[520] text-accent-on hover:bg-accent-soft">
         Create a free account
-      </Link>
+      </AuthLink>
     </div>
   );
 }
@@ -63,12 +63,12 @@ export function TrialOver({ title }: { title: string }) {
         it, add more books, and keep your place in each.
       </p>
       <div className="flex flex-wrap gap-3">
-        <Link href="/signup" className="rounded-pill bg-accent px-6 py-3 text-[16px] font-[480] text-accent-on hover:bg-accent-soft">
+        <AuthLink href="/signup" className="rounded-pill bg-accent px-6 py-3 text-[16px] font-[480] text-accent-on hover:bg-accent-soft">
           Create a free account
-        </Link>
-        <Link href="/login" className="rounded-pill border border-ink-text/80 px-6 py-3 text-[16px] text-ink-text hover:bg-ink-raised">
+        </AuthLink>
+        <AuthLink href="/login" className="rounded-pill border border-ink-text/80 px-6 py-3 text-[16px] text-ink-text hover:bg-ink-raised">
           Log in
-        </Link>
+        </AuthLink>
       </div>
     </section>
   );

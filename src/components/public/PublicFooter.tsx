@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AuthLink } from "@/components/public/AuthLink";
 
 export function PublicFooter() {
   return (
@@ -13,7 +14,7 @@ export function PublicFooter() {
           <Link href="/chess-bot" className="hover:text-ink-muted">Play a player&apos;s bot</Link>
           <Link href="/chess-books" className="hover:text-ink-muted">Chess books</Link>
           <Link href="/privacy" className="hover:text-ink-muted">Privacy</Link>
-          <Link href="/login" className="hover:text-ink-muted">Log in</Link>
+          <AuthLink href="/login" className="hover:text-ink-muted">Log in</AuthLink>
         </nav>
       </div>
     </footer>

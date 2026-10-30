@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { AuthLink } from "@/components/public/AuthLink";
 import { PlayerSearch } from "@/components/public/PlayerSearch";
 import { bookPath, fetchPublicBooks } from "@/lib/publicBook";
 import { profilePath } from "@/lib/publicPlayer";
@@ -272,18 +273,18 @@ export default async function LandingPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-3 md:justify-end">
-          <Link
+          <AuthLink
             href="/signup"
             className="whitespace-nowrap rounded-pill bg-accent px-6 py-3 text-[16px] font-[480] text-accent-on hover:bg-accent-soft"
           >
             Get started
-          </Link>
-          <Link
+          </AuthLink>
+          <AuthLink
             href="/login"
             className="whitespace-nowrap rounded-pill border border-ink-text/80 px-6 py-3 text-[16px] text-ink-text hover:bg-ink-raised"
           >
             Log in
-          </Link>
+          </AuthLink>
         </div>
       </section>
 

@@ -1,13 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Avatar } from "@/components/avatar/Avatar";
 import { BotGame } from "@/components/bot/BotGame";
 import { BotSetup, defaultBotElo, startingColor, type BotColor as Color } from "@/components/bot/BotSetup";
+import { AuthLink } from "@/components/public/AuthLink";
 import { PlayerSearch } from "@/components/public/PlayerSearch";
-import { authStorage } from "@/lib/auth";
+import { useSignedIn } from "@/hooks/useSignedIn";
 import { avatarSrc, defaultAvatar } from "@/lib/avatars";
 import { graphqlPost } from "@/lib/publicGraphql";
 import type { BotBookGame } from "@/types";
@@ -104,7 +104,8 @@ function writeFree(target: Target) {
  */
 export function PublicBot({ initialFideId }: { initialFideId?: string }) {
   const [phase, setPhase] = useState<Phase>({ kind: "search" });
-  const [signedIn, setSignedIn] = useState(false);
+  const session = useSignedIn();
+  const signedIn = session === true;
   const [color, setColor] = useState<Color>("white");
   const [elo, setElo] = useState<number | null>(null);
   const [findingNote, setFindingNote] = useState("Looking up their games…");
@@ -173,13 +174,19 @@ export function PublicBot({ initialFideId }: { initialFideId?: string }) {
   }, []);
 
   // Look once, on the client: the session and the free game live in localStorage.
+  const looked = useRef(false);
   useEffect(() => {
-    const isSignedIn = Boolean(authStorage.getToken());
-    setSignedIn(isSignedIn);
+    if (session === null || looked.current) return;
+    looked.current = true;
     const used = readFree();
-    if (used && !isSignedIn) return setPhase({ kind: "used", name: used.name });
+    if (used && !session) return setPhase({ kind: "used", name: used.name });
     if (initialFideId && /^\d{3,10}$/.test(initialFideId)) pick(initialFideId);
-  }, [initialFideId, pick]);
+  }, [session, initialFideId, pick]);
+
+  // Signed in from the tab "Create a free account" opened: no limit now.
+  useEffect(() => {
+    if (session) setPhase((p) => (p.kind === "used" ? { kind: "search" } : p));
+  }, [session]);
 
   if (phase.kind === "used") {
     return (
@@ -190,12 +197,12 @@ export function PublicBot({ initialFideId }: { initialFideId?: string }) {
           they actually play.
         </p>
         <div className="flex flex-wrap gap-3">
-          <Link href="/signup" className="rounded-pill bg-accent px-6 py-3 text-[16px] font-[480] text-accent-on hover:bg-accent-soft">
+          <AuthLink href="/signup" className="rounded-pill bg-accent px-6 py-3 text-[16px] font-[480] text-accent-on hover:bg-accent-soft">
             Create a free account
-          </Link>
-          <Link href="/login" className="rounded-pill border border-ink-text/80 px-6 py-3 text-[16px] text-ink-text hover:bg-ink-raised">
+          </AuthLink>
+          <AuthLink href="/login" className="rounded-pill border border-ink-text/80 px-6 py-3 text-[16px] text-ink-text hover:bg-ink-raised">
             Log in
-          </Link>
+          </AuthLink>
         </div>
       </section>
     );
@@ -210,7 +217,7 @@ export function PublicBot({ initialFideId }: { initialFideId?: string }) {
           botName={target.fullName}
           botRating={target.rating}
           gameHref={(publicId) => `/game/${publicId}`}
-          guest={signedIn ? undefined : { signupHref: "/signup" }}
+          guest={!signedIn}
           youName="You"
           botColor={color}
           games={books[color]}
