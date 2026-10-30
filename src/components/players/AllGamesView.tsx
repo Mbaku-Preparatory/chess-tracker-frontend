@@ -1,11 +1,13 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
 import { api } from "@/lib/api";
 import { PagedGamesTable } from "@/components/games/PagedGamesTable";
-import { rowFromGame } from "@/lib/games";
+import { DEFAULT_PAGE_SIZE, pageSizeOf, rowFromGame } from "@/lib/games";
+import { intParam, replaceQuery } from "@/lib/urlState";
 import { DeleteGameButton } from "./DeleteGameButton";
-import { GameFilters, NO_FILTERS, hasFilters, ratingParams, type GameFilterValues } from "./GameFilters";
+import { GameFilters, filterParams, filtersFromParams, hasFilters, ratingParams, type GameFilterValues } from "./GameFilters";
 
 interface AllGamesViewProps {
   slug: string;
@@ -14,7 +16,10 @@ interface AllGamesViewProps {
 }
 
 export function AllGamesView({ slug, playerName }: AllGamesViewProps) {
-  const [filters, setFilters] = useState<GameFilterValues>(NO_FILTERS);
+  // Filters, page and size live in the URL too, so a refresh keeps them.
+  const params = useSearchParams();
+  const [filters, setFilters] = useState<GameFilterValues>(() => filtersFromParams(params));
+  const [start] = useState(() => ({ page: intParam(params.get("page"), 1), pageSize: pageSizeOf(params.get("size")) }));
   const [total, setTotal] = useState<number | null>(null);
 
   const fetchGames = useCallback(
@@ -39,7 +44,10 @@ export function AllGamesView({ slug, playerName }: AllGamesViewProps) {
     <div>
       <GameFilters
         value={filters}
-        onChange={setFilters}
+        onChange={(f) => {
+          setFilters(f);
+          replaceQuery(filterParams(f));
+        }}
         showRating
         searchPlaceholder="Search opponent, event, opening…"
         count={total === null ? undefined : `${total} game${total !== 1 ? "s" : ""}`}
@@ -51,6 +59,8 @@ export function AllGamesView({ slug, playerName }: AllGamesViewProps) {
           resetKey={`${slug}|${JSON.stringify(filters)}`}
           toRow={(g) => rowFromGame(g, playerName)}
           rowAction={(row, remove) => <DeleteGameButton gameRef={row.key} onDeleted={remove} />}
+          start={start}
+          onPageChange={(page, size) => replaceQuery({ page: page > 1 ? page : null, size: size !== DEFAULT_PAGE_SIZE ? size : null })}
           onCount={setTotal}
           empty={hasFilters(filters) ? "No games match the current filters." : "No games found."}
         />

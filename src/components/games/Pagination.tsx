@@ -18,7 +18,16 @@ function pageWindow(page: number, pages: number): (number | "…")[] {
 const item = "inline-flex min-w-9 items-center justify-center rounded-pill px-3 py-1.5 tabular-nums";
 const idle = `${item} text-ink-muted hover:bg-ink-raised hover:text-ink-text`;
 const current = `${item} bg-ink-raised font-[520] text-ink-text`;
-const off = `${item} text-ink-faint opacity-50`;
+const off = `${item} text-ink-faint opacity-40`;
+
+/** ‹ and ›, drawn rather than typed, so they sit centred at any size. */
+function Chevron({ back }: { back?: boolean }) {
+  return (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.4} aria-hidden>
+      <path strokeLinecap="round" strokeLinejoin="round" d={back ? "M15 18l-6-6 6-6" : "M9 6l6 6-6 6"} />
+    </svg>
+  );
+}
 
 /**
  * Pages of a games list, and how many to a page.
@@ -81,7 +90,13 @@ export function Pagination({
 
       {pages > 1 && (
         <nav aria-label={label} className="flex items-center gap-1">
-          {page > 1 ? to(page - 1, "Previous", idle, { rel: "prev" }) : <span className={off}>Previous</span>}
+          {page > 1 ? (
+            to(page - 1, <Chevron back />, idle, { rel: "prev", "aria-label": "Previous page" })
+          ) : (
+            <span className={off} aria-hidden>
+              <Chevron back />
+            </span>
+          )}
           {/* Numbers from a tablet up; a phone has room for "3 of 32". */}
           <span className="hidden items-center gap-1 sm:flex">
             {pageWindow(page, pages).map((p, i) =>
@@ -97,7 +112,13 @@ export function Pagination({
           <span className="px-2 tabular-nums text-ink-faint sm:hidden">
             {page} of {pages}
           </span>
-          {page < pages ? to(page + 1, "Next", idle, { rel: "next" }) : <span className={off}>Next</span>}
+          {page < pages ? (
+            to(page + 1, <Chevron />, idle, { rel: "next", "aria-label": "Next page" })
+          ) : (
+            <span className={off} aria-hidden>
+              <Chevron />
+            </span>
+          )}
         </nav>
       )}
 

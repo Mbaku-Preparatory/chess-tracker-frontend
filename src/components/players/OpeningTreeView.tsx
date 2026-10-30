@@ -1,12 +1,14 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { ColorBadge, EcoBadge } from "@/components/ui/Badge";
 import { PagedGamesTable } from "@/components/games/PagedGamesTable";
 import { rowFromGame } from "@/lib/games";
 import { DeleteGameButton } from "./DeleteGameButton";
-import { GameFilters, NO_FILTERS, hasFilters, type GameFilterValues } from "./GameFilters";
+import { replaceQuery } from "@/lib/urlState";
+import { GameFilters, filterParams, filtersFromParams, hasFilters, type GameFilterValues } from "./GameFilters";
 import type { OpeningStat, GameSource, GameResult } from "@/types";
 
 interface OpeningTreeViewProps {
@@ -257,7 +259,9 @@ export function OpeningTreeView({ slug, playerName }: OpeningTreeViewProps) {
   const [families, setFamilies] = useState<FamilyGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filters, setFilters] = useState<GameFilterValues>(NO_FILTERS);
+  // Kept in the URL, so a refresh keeps them. This tab has no rating filter.
+  const params = useSearchParams();
+  const [filters, setFilters] = useState<GameFilterValues>(() => ({ ...filtersFromParams(params), rating: "" }));
   const { color: colorFilter, source: sourceFilter, result: resultFilter, year: yearFilter } = filters;
 
   useEffect(() => {
@@ -299,7 +303,11 @@ export function OpeningTreeView({ slug, playerName }: OpeningTreeViewProps) {
     <div>
       <GameFilters
         value={filters}
-        onChange={setFilters}
+        onChange={(f) => {
+          setFilters(f);
+          // All Games' rating filter is not this tab's to clear.
+          replaceQuery({ ...filterParams(f), rating: undefined });
+        }}
         searchPlaceholder="Search openings… e.g. Sicilian, B12"
         count={loading ? undefined : `${filtered.length} opening ${filtered.length === 1 ? "family" : "families"}`}
       />
