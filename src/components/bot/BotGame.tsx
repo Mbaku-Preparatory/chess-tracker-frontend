@@ -2,10 +2,10 @@
 
 import { Chess } from "chess.js";
 import dynamic from "next/dynamic";
-import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Avatar } from "@/components/avatar/Avatar";
+import { AuthLink } from "@/components/public/AuthLink";
 import { useBotEngine } from "@/hooks/useBotEngine";
 import { BOOK_MOVES, BOOK_PLIES, bookMoves, buildBook, gamesOnLine, pickBookMove, type Book, type BookMove } from "@/lib/bot/book";
 import { buildPgn, pgnFilename } from "@/lib/chess/pgn";
@@ -163,7 +163,7 @@ export function BotGame({
   /** Where "View game" goes: the scouting copy in the app, or the public page. */
   gameHref?: (publicId: string) => string;
   /** The public page's one free game: no "New game", and a sign-up card. */
-  guest?: { signupHref: string };
+  guest?: boolean;
   /** The account holder's name for their plate and the PGN. */
   youName: string;
   botColor: Color;
@@ -550,12 +550,9 @@ export function BotGame({
                 Create a free account to play {name} bot again, build a bot from any opponent you scout, and prepare against
                 their openings.
               </p>
-              <Link
-                href={guest.signupHref}
-                className="self-start rounded-pill bg-accent px-5 py-2 text-[15px] font-[520] text-accent-on hover:bg-accent-soft"
-              >
+              <AuthLink href="/signup" className="self-start rounded-pill bg-accent px-5 py-2 text-[15px] font-[520] text-accent-on hover:bg-accent-soft">
                 Create a free account
-              </Link>
+              </AuthLink>
             </section>
           )}
         </aside>

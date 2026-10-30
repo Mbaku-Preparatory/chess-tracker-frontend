@@ -5,8 +5,9 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { AuthLink } from "@/components/public/AuthLink";
 import { BurgerButton } from "@/components/ui/BurgerButton";
-import { authStorage } from "@/lib/auth";
+import { useSignedIn } from "@/hooks/useSignedIn";
 
 /**
  * The public header's menu on phones and tablets (below lg): everything the
@@ -16,9 +17,7 @@ import { authStorage } from "@/lib/auth";
 export function PublicMenu() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const [signedIn, setSignedIn] = useState(false);
-
-  useEffect(() => setSignedIn(Boolean(authStorage.getToken())), []);
+  const signedIn = useSignedIn() === true;
   useEffect(() => setOpen(false), [pathname]);
   useEffect(() => {
     if (!open) return;
@@ -33,7 +32,6 @@ export function PublicMenu() {
     { href: "/rankings", label: "Rankings" },
     { href: "/chess-bot", label: "Chess bot" },
     { href: "/chess-books", label: "Books" },
-    ...(signedIn ? [] : [{ href: "/login", label: "Log in" }]),
   ];
 
   return (
@@ -64,6 +62,13 @@ export function PublicMenu() {
                   </Link>
                 </li>
               ))}
+              {!signedIn && (
+                <li>
+                  <AuthLink href="/login" className={item}>
+                    Log in
+                  </AuthLink>
+                </li>
+              )}
             </ul>
             <div className="mx-auto flex max-w-[1200px] items-center justify-between border-t border-ink-line/60 px-8 py-3 sm:px-10">
               <span className="text-[15px] text-ink-muted">Theme</span>

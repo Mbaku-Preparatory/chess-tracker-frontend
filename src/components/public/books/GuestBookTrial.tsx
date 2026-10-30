@@ -1,13 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { BookConverting } from "@/components/books/BookConverting";
 import { BookExercises } from "@/components/books/BookExercises";
 import { BookReader } from "@/components/books/BookReader";
-import { authStorage } from "@/lib/auth";
+import { AuthLink } from "@/components/public/AuthLink";
+import { useSignedIn } from "@/hooks/useSignedIn";
 import { keepBookFile } from "@/lib/bookFiles";
 import { getBook, isConverting, type BookDetail } from "@/lib/books";
 import { forgetGuestBook, readGuestBook, TRIAL_MS, uploadGuestBook, writeGuestBook, type GuestBook } from "@/lib/guestBook";
@@ -32,13 +32,14 @@ export function GuestBookTrial() {
   const [uploading, setUploading] = useState(false);
   const uploadRef = useRef<AbortController | null>(null);
 
+  // Signed in, here or in the tab "Create a free account" opened: the app's
+  // Books page is the real thing (and the book is claimed into it).
+  const session = useSignedIn();
   useEffect(() => {
-    if (authStorage.getToken()) {
-      router.replace("/books");
-      return;
-    }
-    setTrial(readGuestBook());
-  }, [router]);
+    if (session === null) return;
+    if (session) router.replace("/books");
+    else setTrial((t) => (t === undefined ? readGuestBook() : t));
+  }, [session, router]);
 
   const load = useCallback(async (t: GuestBook) => {
     try {
@@ -95,9 +96,9 @@ export function GuestBookTrial() {
   if (trial?.claimed) {
     return (
       <Notice title={`“${trial.title}” is in your account.`}>
-        <Link href="/login" className="rounded-pill bg-accent px-6 py-3 text-[16px] font-[480] text-accent-on hover:bg-accent-soft">
+        <AuthLink href="/login" className="rounded-pill bg-accent px-6 py-3 text-[16px] font-[480] text-accent-on hover:bg-accent-soft">
           Log in to read it
-        </Link>
+        </AuthLink>
       </Notice>
     );
   }
@@ -147,9 +148,9 @@ export function GuestBookTrial() {
   if (book === null) {
     return (
       <Notice title={`“${trial.title}” was only kept for a day.`}>
-        <Link href="/signup" className="rounded-pill bg-accent px-6 py-3 text-[16px] font-[480] text-accent-on hover:bg-accent-soft">
+        <AuthLink href="/signup" className="rounded-pill bg-accent px-6 py-3 text-[16px] font-[480] text-accent-on hover:bg-accent-soft">
           Create a free account to upload books
-        </Link>
+        </AuthLink>
       </Notice>
     );
   }
@@ -180,9 +181,9 @@ export function GuestBookTrial() {
       partNote={
         <>
           That&apos;s as far as a free try reads: the first {n(book.pageCount)} of {n(book.pdfPageCount)} pages.{" "}
-          <Link href="/signup" className="text-accent-soft underline">
+          <AuthLink href="/signup" className="text-accent-soft underline">
             Create a free account
-          </Link>{" "}
+          </AuthLink>{" "}
           and the book moves into it; read the whole of it from there.
         </>
       }
