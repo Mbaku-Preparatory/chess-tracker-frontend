@@ -47,6 +47,9 @@ type Node = ReaderIndex["nodes"][number];
 
 const FEN = 0, SAN = 1, PARENT = 2, NEXT = 3;
 const LAST_PAGE_KEY = (id: string) => `book-reader-page:${id}`;
+/** The reader's least height on a big screen, and the space left under it. */
+const MIN_FRAME = 520;
+const FRAME_GAP = 32; // the app's own padding under its pages
 const EMPTY_FEN = "8/8/8/8/8/8/8/8 w - - 0 1";
 
 /** A move played on the board rather than read from the book. */
@@ -477,6 +480,7 @@ export function BookReader({ source, backHref = "/books" }: { source: BookSource
   const pageEls = useRef(new Map<number, HTMLElement>());
   // On a big screen the pages scroll in their own pane (the window, below).
   const pane = useRef<HTMLDivElement>(null);
+  const frame = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -712,6 +716,27 @@ export function BookReader({ source, backHref = "/books" }: { source: BookSource
     }
   }, [page, doc, id]);
 
+  // From lg the reader fills the screen from wherever it starts (under the
+  // app's bar, or under a public page's introduction), so the window has
+  // nothing left to scroll and the two columns are the only scroll bars.
+  // Never below MIN_FRAME: with a long introduction above, the window
+  // scrolls a little rather than the board getting squeezed.
+  useEffect(() => {
+    const el = frame.current;
+    if (!el) return;
+    if (!wide) {
+      el.style.removeProperty("height");
+      return;
+    }
+    const fit = () => {
+      const top = el.getBoundingClientRect().top + window.scrollY;
+      el.style.height = `${Math.max(MIN_FRAME, window.innerHeight - top - FRAME_GAP)}px`;
+    };
+    fit();
+    window.addEventListener("resize", fit);
+    return () => window.removeEventListener("resize", fit);
+  }, [wide, doc, index]);
+
   const register = useCallback((n: number, el: HTMLElement | null) => {
     if (el) pageEls.current.set(n, el);
     else pageEls.current.delete(n);
@@ -736,11 +761,10 @@ export function BookReader({ source, backHref = "/books" }: { source: BookSource
   }
 
   return (
-    // From lg the reader is the height of the screen below the site's bar and
-    // the page's padding (8.5rem), so the window itself doesn't scroll; the
-    // book and the board each scroll in their own column, with a scroll bar
-    // that stays in sight: not everyone thinks to scroll a pane.
-    <div className={`mx-auto flex w-full max-w-[1240px] flex-col gap-4 lg:h-[calc(100dvh-8.5rem)] lg:pb-0 ${sheet ? "pb-[75dvh]" : "pb-8"}`}>
+    // From lg the book and the board each scroll in their own column, with a
+    // scroll bar that stays in sight (not everyone thinks to scroll a pane);
+    // the effect above sizes this to the screen.
+    <div ref={frame} className={`mx-auto flex w-full max-w-[1240px] flex-col gap-4 lg:pb-0 ${sheet ? "pb-[75dvh]" : "pb-8"}`}>
       <header className="flex flex-wrap items-center gap-3">
         <Link href={backHref} className="rounded-pill border-2 border-accent px-3.5 py-1 text-[14px] font-[520] text-ink-text hover:bg-accent/10">
           Back
