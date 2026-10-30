@@ -334,7 +334,7 @@ function Panel({
       style={drag ? { transform: `translateY(${drag}px)`, transition: "none" } : undefined}
       className={`fixed inset-x-0 bottom-0 z-30 flex max-h-[85dvh] flex-col gap-2 overflow-y-auto rounded-t-2xl bg-ink-card px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-6px_24px_rgba(0,0,0,0.18)] transition-transform duration-200 motion-reduce:transition-none ${
         open ? "translate-y-0" : "pointer-events-none translate-y-full"
-      } lg:pointer-events-auto lg:sticky lg:top-20 lg:z-auto lg:max-h-none lg:translate-y-0 lg:gap-3 lg:overflow-visible lg:rounded-xl lg:p-4 lg:shadow-none`}
+      } lg:pointer-events-auto lg:static lg:z-auto lg:h-full lg:max-h-none lg:translate-y-0 lg:gap-3 lg:overflow-y-scroll lg:rounded-xl lg:p-4 lg:shadow-none lg:shown-scrollbar`}
     >
       {/* the handle: where a swipe down starts, on a phone */}
       <div aria-hidden="true" className="mx-auto h-1.5 w-10 shrink-0 rounded-full bg-ink-line lg:hidden" />
@@ -475,6 +475,8 @@ export function BookReader({ source, backHref = "/books" }: { source: BookSource
   const wide = useWide();
   const [page, setPage] = useState(1);
   const pageEls = useRef(new Map<number, HTMLElement>());
+  // On a big screen the pages scroll in their own pane (the window, below).
+  const pane = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -667,15 +669,20 @@ export function BookReader({ source, backHref = "/books" }: { source: BookSource
   useEffect(() => {
     if (!doc) return;
     const onScroll = () => {
+      // A third of the way down whatever is scrolling: the pane on a big
+      // screen, the window on a phone.
+      const box = wide ? pane.current?.getBoundingClientRect() : null;
+      const line = box ? box.top + box.height / 3 : window.innerHeight / 3;
       let top = 1;
       for (const [n, el] of pageEls.current) {
-        if (el.getBoundingClientRect().top < window.innerHeight / 3) top = Math.max(top, n + 1);
+        if (el.getBoundingClientRect().top < line) top = Math.max(top, n + 1);
       }
       setPage(top);
     };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [doc]);
+    // Capture: a scroll inside the pane doesn't bubble up to the window.
+    window.addEventListener("scroll", onScroll, { passive: true, capture: true });
+    return () => window.removeEventListener("scroll", onScroll, { capture: true });
+  }, [doc, wide]);
 
   // Back to where the reader left off. Before the save below, and the save
   // waits for it: on opening, `page` is still 1, and saving that first wrote
@@ -729,7 +736,11 @@ export function BookReader({ source, backHref = "/books" }: { source: BookSource
   }
 
   return (
-    <div className={`mx-auto flex w-full max-w-[1240px] flex-col gap-4 lg:pb-8 ${sheet ? "pb-[75dvh]" : "pb-8"}`}>
+    // From lg the reader is the height of the screen below the site's bar and
+    // the page's padding (8.5rem), so the window itself doesn't scroll; the
+    // book and the board each scroll in their own column, with a scroll bar
+    // that stays in sight: not everyone thinks to scroll a pane.
+    <div className={`mx-auto flex w-full max-w-[1240px] flex-col gap-4 lg:h-[calc(100dvh-8.5rem)] lg:pb-0 ${sheet ? "pb-[75dvh]" : "pb-8"}`}>
       <header className="flex flex-wrap items-center gap-3">
         <Link href={backHref} className="rounded-pill border-2 border-accent px-3.5 py-1 text-[14px] font-[520] text-ink-text hover:bg-accent/10">
           Back
@@ -751,12 +762,14 @@ export function BookReader({ source, backHref = "/books" }: { source: BookSource
         </label>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
-        <main className="mx-auto flex w-full max-w-[780px] flex-col gap-7">
-          {index.pages.map((p, i) => (
-            <PdfPage key={i} doc={doc} number={i} page={p} current={current} onPick={pick} register={register} />
-          ))}
-        </main>
+      <div className="grid gap-6 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1fr)_380px]">
+        <div ref={pane} data-book-pane className="lg:h-full lg:overflow-y-scroll lg:rounded-xl lg:pr-2 lg:shown-scrollbar">
+          <main className="mx-auto flex w-full max-w-[780px] flex-col gap-7 lg:py-1">
+            {index.pages.map((p, i) => (
+              <PdfPage key={i} doc={doc} number={i} page={p} current={current} onPick={pick} register={register} />
+            ))}
+          </main>
+        </div>
         <Panel
           nodes={index.nodes}
           current={current}
