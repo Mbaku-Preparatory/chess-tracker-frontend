@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { AnalysisView } from "@/components/analysis/AnalysisView";
 import { buildPgn, pgnFilename } from "@/lib/chess/pgn";
 import { NO_SCORES, scoresFromResultTag } from "@/lib/chessScore";
+import { formatGameDate } from "@/lib/games";
 import { fetchPublicGame, gamePath } from "@/lib/publicGame";
 import { profilePath, titledName } from "@/lib/publicPlayer";
 import { SHARE_IMAGE, SITE_URL } from "@/lib/site";
@@ -18,11 +19,7 @@ async function load(params: Params) {
   return game;
 }
 
-function formatDate(date: string | null): string | null {
-  return date
-    ? new Date(`${date}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })
-    : null;
-}
+const formatDate = (date: string | null) => formatGameDate(date, "long");
 
 /** "Carlsen vs Nakamura": what someone searching for a game types. */
 function names(game: Awaited<ReturnType<typeof load>>) {

@@ -5,19 +5,7 @@ import { useEffect, useId, useRef, useState } from "react";
 
 import { federationFor } from "@/lib/federations";
 import { profilePath, titledName } from "@/lib/publicPlayer";
-import { GRAPHQL_URL } from "@/lib/site";
-
-export type PlayerSearchResult = {
-  fideId: string;
-  fullName: string;
-  slug: string;
-  title: string;
-  womenTitle: string;
-  federation: string;
-  standardRating: number | null;
-  rapidRating: number | null;
-  blitzRating: number | null;
-};
+import { searchPublicPlayers, type PlayerSearchResult } from "@/lib/publicGraphql";
 
 type Status =
   | { kind: "idle" }
@@ -25,12 +13,6 @@ type Status =
   | { kind: "results" }
   | { kind: "empty"; query: string }
   | { kind: "error"; message: string };
-
-const SEARCH = `query Search($q: String!) {
-  searchPublicPlayers(query: $q, limit: 8) {
-    fideId fullName slug title womenTitle federation standardRating rapidRating blitzRating
-  }
-}`;
 
 const DEBOUNCE_MS = 200;
 // The backend needs a word of three letters before it searches; asking with
@@ -87,26 +69,15 @@ export function PlayerSearch({
     setStatus({ kind: "searching" });
     const timer = setTimeout(async () => {
       try {
-        const response = await fetch(GRAPHQL_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query: SEARCH, variables: { q } }),
-        });
-        const body = await response.json();
+        const found = await searchPublicPlayers(q);
         if (ticket !== latest.current) return; // a newer query has been asked
-        if (!response.ok || body.errors?.length) {
-          setResults([]);
-          setStatus({ kind: "error", message: body.errors?.[0]?.message ?? "Search is unavailable right now. Try again shortly." });
-          return;
-        }
-        const found: PlayerSearchResult[] = body.data.searchPublicPlayers;
         setResults(found);
         setActive(found.length ? 0 : -1);
         setStatus(found.length ? { kind: "results" } : { kind: "empty", query: q });
-      } catch {
+      } catch (err) {
         if (ticket !== latest.current) return;
         setResults([]);
-        setStatus({ kind: "error", message: "Search is unavailable right now. Try again shortly." });
+        setStatus({ kind: "error", message: err instanceof Error ? err.message : "Search is unavailable right now. Try again shortly." });
       }
     }, DEBOUNCE_MS);
     return () => clearTimeout(timer);

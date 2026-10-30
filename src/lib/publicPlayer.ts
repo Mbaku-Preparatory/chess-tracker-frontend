@@ -6,7 +6,7 @@
  * hour and tagged; the refresh tells Next to drop the tag when it finishes.
  */
 
-import { GRAPHQL_URL } from "./site";
+import { graphqlGet } from "./publicGraphql";
 
 export type RatingPoint = {
   month: string; // YYYY-MM-DD, the first of the list's month
@@ -103,8 +103,6 @@ query PublicProfile($fideId: String!, $page: Int!) {
 
 export const playerTag = (fideId: string) => `public-player:${fideId}`;
 
-export class BackendUnavailable extends Error {}
-
 /** The profile, or null when FIDE does not rate this ID. Throws
  * BackendUnavailable when the API cannot answer, so the page can say so
  * rather than claim the player does not exist. */
@@ -117,20 +115,7 @@ export async function fetchPublicPlayer(fideId: string, page = 1): Promise<Publi
 }
 
 async function queryPublicPlayer(fideId: string, page: number, caching: RequestInit): Promise<PublicPlayer | null> {
-  const params = new URLSearchParams({
-    query: PROFILE_QUERY,
-    variables: JSON.stringify({ fideId, page }),
-  });
-  let response: Response;
-  try {
-    response = await fetch(`${GRAPHQL_URL}?${params}`, { headers: { Accept: "application/json" }, ...caching });
-  } catch (err) {
-    throw new BackendUnavailable(String(err));
-  }
-  if (!response.ok) throw new BackendUnavailable(`GraphQL answered ${response.status}`);
-  const body = await response.json();
-  if (body.errors?.length) throw new BackendUnavailable(body.errors[0].message);
-  return body.data.publicPlayer;
+  return (await graphqlGet<{ publicPlayer: PublicPlayer | null }>(PROFILE_QUERY, { fideId, page }, caching)).publicPlayer;
 }
 
 /** "CM Oluka Robert Mcligeyo", the way chess sites and FIDE write a titled name. */

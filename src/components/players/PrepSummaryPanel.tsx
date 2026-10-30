@@ -6,6 +6,7 @@ import { Chess } from "chess.js";
 import { Chessboard } from "react-chessboard";
 import { api } from "@/lib/api";
 import { gameRef } from "@/lib/gameRef";
+import { formatGameDate, gameSource } from "@/lib/games";
 import { ColorBadge, ResultBadge } from "@/components/ui/Badge";
 import type { PrepSummary, PrepTree, PrepTreeNode, Game } from "@/types";
 
@@ -52,45 +53,12 @@ function moveLabel(index: number): string {
 
 // ── Meta helpers ──────────────────────────────────────────────────────────────
 
-function sourceLabel(s: string) {
-  const m: Record<string, string> = {
-    chess_results: "OTB",
-    chess_com: "Chess.com",
-    lichess: "Lichess",
-    pgn_import: "PGN",
-    manual: "Manual",
-  };
-  return m[s] ?? s;
-}
-
-function sourceColor(s: string) {
-  const m: Record<string, string> = {
-    chess_results: "bg-amber-500",
-    chess_com: "bg-emerald-500",
-    lichess: "bg-violet-500",
-    pgn_import: "bg-blue-400",
-    manual: "bg-gray-400",
-  };
-  return m[s] ?? "bg-gray-400";
-}
-
 function formatDate(iso: string | null) {
   if (!iso) return "—";
   return new Date(iso).toLocaleDateString("en-GB", { year: "numeric", month: "short" });
 }
 
 // ── Game row ─────────────────────────────────────────────────────────────────
-
-function sourceMeta(source: string): { label: string; dot: string } {
-  const map: Record<string, { label: string; dot: string }> = {
-    chess_results: { label: "OTB", dot: "bg-amber-500" },
-    chess_com:     { label: "Chess.com", dot: "bg-emerald-500" },
-    lichess:       { label: "Lichess", dot: "bg-violet-500" },
-    pgn_import:    { label: "PGN", dot: "bg-blue-400" },
-    manual:        { label: "Manual", dot: "bg-gray-400" },
-  };
-  return map[source] ?? { label: source, dot: "bg-gray-400" };
-}
 
 function GameRow({
   game,
@@ -99,11 +67,9 @@ function GameRow({
   game: Game;
   onOpenViewer: (g: Game) => void;
 }) {
-  const { label, dot } = sourceMeta(game.source);
+  const { short: label, dot } = gameSource(game.source);
   const isOnline = game.source === "chess_com" || game.source === "lichess";
-  const dateStr = game.date_played
-    ? new Date(game.date_played).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
-    : null;
+  const dateStr = formatGameDate(game.date_played);
 
   const inner = (
     <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-left transition hover:bg-gray-50 dark:border-dark-border dark:bg-dark-surface dark:hover:bg-dark-elevated">
@@ -538,8 +504,8 @@ export function PrepSummaryPanel({ slug }: { slug: string }) {
                   key={src}
                   className="flex items-center gap-1.5 rounded-full border border-gray-200 px-2.5 py-1 text-xs text-gray-700 dark:border-dark-border dark:text-gray-300"
                 >
-                  <span className={`h-2 w-2 rounded-full ${sourceColor(src)}`} />
-                  {sourceLabel(src)}: {n}
+                  <span className={`h-2 w-2 rounded-full ${gameSource(src).dot}`} />
+                  {gameSource(src).short}: {n}
                 </span>
               ))}
             </div>

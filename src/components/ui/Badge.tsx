@@ -1,3 +1,5 @@
+import { gameSource } from "@/lib/games";
+
 type BadgeVariant = "default" | "eco" | "win" | "draw" | "loss" | "white" | "black";
 
 interface BadgeProps {
@@ -47,17 +49,9 @@ const SOURCE_STYLES: Record<string, string> = {
   manual: "bg-gray-100 text-gray-600 border border-gray-200",
 };
 
-const SOURCE_LABELS: Record<string, string> = {
-  chess_com: "Chess.com",
-  lichess: "Lichess",
-  chess_results: "OTB",
-  pgn_import: "PGN",
-  manual: "Manual",
-};
-
 export function SourceBadge({ source }: { source: string }) {
   const style = SOURCE_STYLES[source] ?? SOURCE_STYLES.manual;
-  const label = SOURCE_LABELS[source] ?? source;
+  const label = gameSource(source).short;
   return (
     <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${style}`}>
       {label}

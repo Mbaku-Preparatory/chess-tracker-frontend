@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ViewButton } from "@/components/ui/ViewButton";
 import { api } from "@/lib/api";
 import { gameRef } from "@/lib/gameRef";
+import { formatGameDate } from "@/lib/games";
 
 interface GamesTableProps {
   games: Game[];
@@ -77,13 +78,7 @@ export function GamesTable({ games, loading, onDeleted }: GamesTableProps) {
                   className="cursor-pointer transition-colors hover:bg-brand-50/60 active:bg-brand-50 dark:hover:bg-brand-900/20 dark:active:bg-brand-900/30"
                 >
                   <td className="whitespace-nowrap px-4 py-3 text-gray-500 dark:text-gray-400">
-                    {game.date_played
-                      ? new Date(game.date_played).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })
-                      : "—"}
+                    {formatGameDate(game.date_played) ?? "—"}
                   </td>
                   <td className="max-w-[180px] truncate px-4 py-3 text-gray-900 dark:text-gray-200">
                     {game.event}
