@@ -3,19 +3,24 @@ import { GetPlayerQuery } from "@/api/graphql/queries/players";
 import { FETCH_PLAYER_DETAIL, FETCH_PLAYER_DETAIL_PENDING } from "@/redux/actions/actionTypes";
 import { userMessage } from "@/lib/apiError";
 
+// GraphQL sends the choice fields as enum names ("BLACK", "LOSS",
+// "CHESS_RESULTS"); everything else, REST included, uses the values. Left as
+// they came, a game played as Black read as White's on the player page.
+const choice = (v: unknown) => (typeof v === "string" ? v.toLowerCase() : v);
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mapGame = (g: Record<string, unknown>) => ({
   id: g.id,
   event: g.event,
   opponent_name: g.opponentName,
   opponent_rating: g.opponentRating,
-  color_played: g.colorPlayed,
-  result: g.result,
+  color_played: choice(g.colorPlayed),
+  result: choice(g.result),
   eco_code: g.ecoCode,
   opening_name: g.openingName,
   date_played: g.datePlayed,
   num_moves: g.numMoves,
-  source: g.source,
+  source: choice(g.source),
   source_url: g.sourceUrl,
 });
 
