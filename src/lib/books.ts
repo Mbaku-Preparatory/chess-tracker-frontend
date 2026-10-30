@@ -9,6 +9,7 @@
  */
 
 import graphqlClient from "@/api/graphqlClient";
+import { graphqlPost } from "@/lib/publicGraphql";
 
 export type BookStatus = "pending" | "running" | "succeeded" | "failed";
 export type BookKind = "exercises" | "reader";
@@ -30,6 +31,10 @@ export type Book = {
   notifyEmail: boolean;
   sha256: string;
   createdAt: string;
+  /** Pages in the whole PDF; pageCount can be fewer (see readInPart). */
+  pdfPageCount: number;
+  /** Only the first pageCount pages were read: a book from the guest trial. */
+  readInPart: boolean;
 };
 
 export type BookExerciseSummary = { number: number; white: string; black: string; event: string; verified: boolean };
@@ -53,7 +58,7 @@ export type BookExercise = {
 };
 
 const BOOK_FIELDS =
-  "publicId title status error kind exerciseCount verifiedCount progress pageCount pagesDone diagramCount moveCount notifyEmail sha256 createdAt";
+  "publicId title status error kind exerciseCount verifiedCount progress pageCount pagesDone diagramCount moveCount notifyEmail sha256 createdAt pdfPageCount readInPart";
 
 async function query<T>(text: string, variables: Record<string, unknown> = {}): Promise<T> {
   const response = await graphqlClient({ data: { query: text, variables } });
@@ -68,31 +73,60 @@ export async function myBooks(): Promise<Book[]> {
   return (await query<{ myBooks: Book[] }>(`{ myBooks { ${BOOK_FIELDS} } }`)).myBooks;
 }
 
-export async function getBook(publicId: string): Promise<BookDetail | null> {
-  const data = await query<{ book: BookDetail | null }>(
-    `query($id: String!) { book(publicId: $id) { ${BOOK_FIELDS} renumbered missingSolutions
-       exercises { number white black event verified } } }`,
-    { id: publicId },
-  );
+const DETAIL_FIELDS = `${BOOK_FIELDS} renumbered missingSolutions exercises { number white black event verified }`;
+
+/**
+ * One book with its exercises: the account's own, or, with `guestKey`, the
+ * book tried without an account (lib/guestBook.ts), asked for with no login.
+ */
+export async function getBook(publicId: string, guestKey?: string): Promise<BookDetail | null> {
+  if (guestKey) {
+    const data = await graphqlPost<{ guestBook: BookDetail | null }>(
+      `query($id: String!, $key: String!) { guestBook(publicId: $id, key: $key) { ${DETAIL_FIELDS} } }`,
+      { id: publicId, key: guestKey },
+    );
+    return data.guestBook;
+  }
+  const data = await query<{ book: BookDetail | null }>(`query($id: String!) { book(publicId: $id) { ${DETAIL_FIELDS} } }`, { id: publicId });
   return data.book;
 }
 
 /** One exercise, with what its page needs about the book around it. */
-export async function getBookExercise(
-  publicId: string,
-  number: number,
-): Promise<{ exercise: BookExercise | null; title: string; numbers: number[] }> {
-  const data = await query<{ bookExercise: BookExercise | null; book: { title: string; exercises: { number: number }[] } | null }>(
-    `query($id: String!, $n: Int!) {
-       bookExercise(publicId: $id, number: $n) { number white black event date fen pgn verified problem }
-       book(publicId: $id) { title exercises { number } } }`,
-    { id: publicId, n: number },
-  );
+export type ExerciseWithBook = { exercise: BookExercise | null; title: string; numbers: number[] };
+
+const EXERCISE_FIELDS = "number white black event date fen pgn verified problem";
+
+/** One exercise, with what its page needs about the book around it. `guestKey` as in getBook. */
+export async function getBookExercise(publicId: string, number: number, guestKey?: string): Promise<ExerciseWithBook> {
+  type Answer = { exercise: BookExercise | null; book: { title: string; exercises: { number: number }[] } | null };
+  const data = guestKey
+    ? await graphqlPost<Answer>(
+        `query($id: String!, $key: String!, $n: Int!) {
+           exercise: guestBookExercise(publicId: $id, key: $key, number: $n) { ${EXERCISE_FIELDS} }
+           book: guestBook(publicId: $id, key: $key) { title exercises { number } } }`,
+        { id: publicId, key: guestKey, n: number },
+      )
+    : await query<Answer>(
+        `query($id: String!, $n: Int!) {
+           exercise: bookExercise(publicId: $id, number: $n) { ${EXERCISE_FIELDS} }
+           book(publicId: $id) { title exercises { number } } }`,
+        { id: publicId, n: number },
+      );
   return {
-    exercise: data.bookExercise,
+    exercise: data.exercise,
     title: data.book?.title ?? "",
     numbers: data.book?.exercises.map((e) => e.number) ?? [],
   };
+}
+
+/** After signing up: the book tried as a guest becomes this account's. Null
+ * when the key no longer opens anything (claimed already, or expired). */
+export async function claimGuestBook(publicId: string, key: string): Promise<Book | null> {
+  const data = await query<{ claimGuestBook: { book: Book | null } }>(
+    `mutation($id: String!, $key: String!) { claimGuestBook(publicId: $id, key: $key) { book { ${BOOK_FIELDS} } } }`,
+    { id: publicId, key },
+  );
+  return data.claimGuestBook.book;
 }
 
 export async function deleteBook(publicId: string): Promise<boolean> {

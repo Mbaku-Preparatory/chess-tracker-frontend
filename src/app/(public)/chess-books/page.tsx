@@ -93,7 +93,8 @@ export default async function ChessBooksPage() {
           puzzles to solve. The book stays on your device.
         </p>
         <div className="flex flex-wrap gap-3">
-          <Link href="/signup" className="rounded-pill bg-accent px-6 py-3 text-[16px] font-[480] text-accent-on hover:bg-accent-soft">
+          {/* No account needed: a ten-minute try with your own book. */}
+          <Link href="/chess-books/try" className="rounded-pill bg-accent px-6 py-3 text-[16px] font-[480] text-accent-on hover:bg-accent-soft">
             Upload a book
           </Link>
           {books[0] && (
