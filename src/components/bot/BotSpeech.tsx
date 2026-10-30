@@ -12,6 +12,14 @@ export interface Speech {
   link?: { href: string; label: string };
 }
 
+/** A move the bot could have played instead, offered as a button. */
+export interface SpeechChoice {
+  san: string;
+  /** Games of theirs that played it. */
+  count: number;
+  onPick: () => void;
+}
+
 /** Milliseconds per character: quick enough to read along, slow enough to see. */
 const TYPE_MS = 16;
 
@@ -22,7 +30,18 @@ const reducedMotion = () => typeof window !== "undefined" && window.matchMedia("
  * bubble that pops in and types the remark out. Screen readers get the whole
  * remark at once from the hidden copy, not every letter.
  */
-export function BotSpeech({ avatar, name, speech }: { avatar: string; name: string; speech: Speech }) {
+export function BotSpeech({
+  avatar,
+  name,
+  speech,
+  choices = [],
+}: {
+  avatar: string;
+  name: string;
+  speech: Speech;
+  /** Its other moves here, while you can still ask for one. */
+  choices?: SpeechChoice[];
+}) {
   const [shown, setShown] = useState(speech.text.length);
 
   useEffect(() => {
@@ -72,6 +91,22 @@ export function BotSpeech({ avatar, name, speech }: { avatar: string; name: stri
             </svg>
             <span className="sr-only">(opens in a new tab)</span>
           </a>
+        )}
+        {choices.length > 0 && !typing && (
+          <div role="group" aria-label="Play another move instead" className="link-in relative mt-2 flex flex-wrap gap-1.5">
+            {choices.map((c) => (
+              <button
+                key={c.san}
+                type="button"
+                onClick={c.onPick}
+                title={`Play ${c.san} instead (${c.count} ${c.count === 1 ? "game" : "games"})`}
+                className="inline-flex items-baseline gap-1 rounded-pill border border-accent/60 px-2.5 py-0.5 text-[13px] font-[520] text-accent-soft hover:bg-accent hover:text-accent-on"
+              >
+                {c.san}
+                <span className="text-[11px] font-normal opacity-70">{c.count}</span>
+              </button>
+            ))}
+          </div>
         )}
       </div>
     </div>

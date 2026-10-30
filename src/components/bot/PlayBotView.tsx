@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import { Avatar } from "@/components/avatar/Avatar";
 import { AvatarPicker } from "@/components/avatar/AvatarPicker";
 import { usePreferences } from "@/components/PreferencesProvider";
-import { ELO_MIN } from "@/hooks/useBotEngine";
 import { api } from "@/lib/api";
 import { userMessage } from "@/lib/apiError";
 import { avatarSrc, defaultAvatar, resolveAvatar } from "@/lib/avatars";
@@ -14,17 +13,7 @@ import { useAppSelector } from "@/redux/hooks";
 import type { BotBookGame, PlayerDetail } from "@/types";
 
 import { BotGame } from "./BotGame";
-
-type Color = "white" | "black";
-
-/** The slider's top. The engine goes higher, but nobody we scout does. */
-const SLIDER_MAX = 2900;
-/** An unrated player's bot starts here. */
-const UNRATED_ELO = 1500;
-/** Fewer games than this, and the bot leaves the book early: say so. */
-const FEW_GAMES = 5;
-
-const clampElo = (elo: number) => Math.min(SLIDER_MAX, Math.max(ELO_MIN, elo));
+import { BotSetup, defaultBotElo, startingColor, type BotColor as Color } from "./BotSetup";
 
 /**
  * "Play <player> bot": pick a colour and a strength (their FIDE rating to
@@ -60,7 +49,7 @@ export function PlayBotView({ slug }: { slug: string }) {
         setBotAvatar(p.bot_avatar ?? null);
         setBooks({ white: white.games, black: black.games });
         // Start on the colour they have more games in.
-        setColor(black.games.length > white.games.length ? "black" : "white");
+        setColor(startingColor({ white: white.games, black: black.games }));
       })
       .catch((err) => !cancelled && setError(userMessage(err, "Couldn't load this player's games.")));
     api
@@ -77,9 +66,6 @@ export function PlayBotView({ slug }: { slug: string }) {
   }, [slug]);
 
   const rating = player ? (player.standard_rating ?? player.rapid_rating ?? player.blitz_rating) : null;
-  const defaultElo = clampElo(rating ?? UNRATED_ELO);
-
-  const colorGames = books?.[color] ?? [];
 
   if (error) return <p className="py-16 text-center text-sm text-red-600 dark:text-red-400">{error}</p>;
   if (!player || !books) {
@@ -106,7 +92,7 @@ export function PlayBotView({ slug }: { slug: string }) {
     });
   }
 
-  const strength = elo ?? defaultElo;
+  const strength = elo ?? defaultBotElo(rating);
 
   // Both the setup and the game open these.
   const pickers = (
@@ -141,10 +127,10 @@ export function PlayBotView({ slug }: { slug: string }) {
           // A new choice is a new game.
           key={`${color}-${strength}`}
           botName={player.full_name}
-          botRating={player.standard_rating ?? player.rapid_rating ?? player.blitz_rating}
+          botRating={rating}
           youName={youName}
           botColor={color}
-          games={colorGames}
+          games={books[color]}
           elo={strength}
           botAvatarSrc={botSrc}
           youAvatarSrc={mySrc}
@@ -156,9 +142,6 @@ export function PlayBotView({ slug }: { slug: string }) {
       </>
     );
   }
-
-  const other = (c: Color): Color => (c === "white" ? "black" : "white");
-  const cap = (c: Color) => c[0].toUpperCase() + c.slice(1);
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-5">
@@ -204,91 +187,24 @@ export function PlayBotView({ slug }: { slug: string }) {
 
       {pickers}
 
-      <section aria-label="Game" className="flex flex-col gap-4 rounded-xl bg-ink-card p-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <span className="text-[15px] font-[520] text-ink-text">You play</span>
-          <div role="radiogroup" aria-label="Your colour" className="flex w-fit gap-1 rounded-lg bg-ink-raised p-1">
-            {(["white", "black"] as Color[]).map((c) => {
-              // The bot plays the other colour, so its book is that side's games.
-              const active = color === other(c);
-              return (
-                <button
-                  key={c}
-                  role="radio"
-                  aria-checked={active}
-                  type="button"
-                  onClick={() => setColor(other(c))}
-                  className={`flex items-center gap-2 rounded-md px-4 py-1.5 text-[14px] font-[520] ${
-                    active ? "bg-ink-card text-ink-text shadow" : "text-ink-muted hover:text-ink-text"
-                  }`}
-                >
-                  <span
-                    aria-hidden
-                    className={`h-3 w-3 rounded-full border ${c === "white" ? "border-neutral-300 bg-white" : "border-neutral-600 bg-neutral-900"}`}
-                  />
-                  {cap(c)}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {colorGames.length === 0 ? (
-          <p className="rounded-lg bg-ink-raised/60 p-4 text-[14px] text-ink-muted">
-            None of {name}&apos;s games as {cap(color)} have moves we can read.{" "}
+      <BotSetup
+        name={name}
+        rating={rating}
+        books={books}
+        color={color}
+        onColorChange={setColor}
+        elo={elo}
+        onEloChange={setElo}
+        onPlay={() => setPlaying(true)}
+        emptyHint={
+          <>
             <Link href={`/players/${slug}/import`} className="text-accent-soft underline">
               Import games
             </Link>{" "}
             to build this side of the bot.
-          </p>
-        ) : (
-          <>
-            <div className="flex flex-col gap-3">
-              <div className="flex items-baseline justify-between gap-3">
-                <label htmlFor="bot-elo" className="text-[15px] font-[520] text-ink-text">
-                  Bot strength
-                </label>
-                <span className="text-[22px] font-[520] tabular-nums text-ink-text">{strength}</span>
-              </div>
-              <input
-                id="bot-elo"
-                type="range"
-                min={ELO_MIN}
-                max={SLIDER_MAX}
-                step={10}
-                value={strength}
-                onChange={(e) => setElo(Number(e.target.value))}
-                className="w-full accent-[rgb(var(--accent))]"
-              />
-              <p className="flex flex-wrap items-center gap-x-2 text-[13px] text-ink-faint">
-                <span>
-                  {rating ? `${name}'s FIDE rating: ${rating}` : `${name} has no FIDE rating, so the bot starts at ${UNRATED_ELO}`}
-                </span>
-                {strength !== defaultElo && (
-                  <button type="button" onClick={() => setElo(null)} className="text-accent-soft underline">
-                    Reset
-                  </button>
-                )}
-              </p>
-              {rating !== null && rating < ELO_MIN && (
-                <p className="text-[13px] text-ink-faint">The engine plays no weaker than {ELO_MIN}.</p>
-              )}
-              {colorGames.length < FEW_GAMES && (
-                <p className="text-[13px] text-amber-700 dark:text-amber-400">
-                  Only {colorGames.length} {colorGames.length === 1 ? "game" : "games"} as {cap(color)}, so the bot will leave {name}&apos;s moves early.
-                </p>
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={() => setPlaying(true)}
-              className="self-start rounded-pill bg-accent px-5 py-2 text-[15px] font-[520] text-accent-on hover:opacity-90"
-            >
-              Play as {cap(other(color))}
-            </button>
           </>
-        )}
-      </section>
+        }
+      />
     </div>
   );
 }
