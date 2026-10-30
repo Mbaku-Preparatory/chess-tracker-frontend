@@ -15,7 +15,7 @@ type Tab = "games" | "openings";
 
 export function PlayerGamesView({ slug }: { slug: string }) {
   const dispatch = useAppDispatch();
-  const { player, loading } = useAppSelector((s) => s.playerDetail);
+  const { player, error } = useAppSelector((s) => s.playerDetail);
   const [activeTab, setActiveTab] = useState<Tab>("games");
 
   useEffect(() => {
@@ -30,7 +30,11 @@ export function PlayerGamesView({ slug }: { slug: string }) {
     }, [dispatch, slug])
   );
 
-  if (loading) {
+  // The skeleton only until this player is here. Not on a refetch (an import
+  // finishing): that unmounted the list, losing its page and filters, and
+  // the first visit fetched its games twice.
+  const current = player && (player.slug === slug || player.public_id === slug);
+  if (!current && !error) {
     return (
       <div className="space-y-6">
         <CardSkeleton />

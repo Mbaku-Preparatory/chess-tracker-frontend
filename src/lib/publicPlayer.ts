@@ -6,7 +6,7 @@
  * hour and tagged; the refresh tells Next to drop the tag when it finishes.
  */
 
-import { graphqlGet } from "./publicGraphql";
+import { graphqlGet, graphqlPost } from "./publicGraphql";
 
 export type RatingPoint = {
   month: string; // YYYY-MM-DD, the first of the list's month
@@ -74,6 +74,11 @@ export type PublicPlayer = {
 
 const REF = "fideId fullName slug title";
 
+const GAME_FIELDS = `
+  publicId whiteName blackName whiteElo blackElo result event eventCountry
+  date round eco openingName plyCount site moves
+  white { ${REF} } black { ${REF} }`;
+
 export const PROFILE_QUERY = `
 query PublicProfile($fideId: String!, $page: Int!, $pageSize: Int!) {
   publicPlayer(fideId: $fideId) {
@@ -88,14 +93,7 @@ query PublicProfile($fideId: String!, $page: Int!, $pageSize: Int!) {
       white { games wins draws losses }
       black { games wins draws losses }
     }
-    games(page: $page, pageSize: $pageSize) {
-      count
-      results {
-        publicId whiteName blackName whiteElo blackElo result event eventCountry
-        date round eco openingName plyCount site moves
-        white { ${REF} } black { ${REF} }
-      }
-    }
+    games(page: $page, pageSize: $pageSize) { count results { ${GAME_FIELDS} } }
   }
 }`;
 
@@ -114,6 +112,18 @@ export async function fetchPublicPlayer(fideId: string, page: number, pageSize: 
 
 async function queryPublicPlayer(fideId: string, page: number, pageSize: number, caching: RequestInit): Promise<PublicPlayer | null> {
   return (await graphqlGet<{ publicPlayer: PublicPlayer | null }>(PROFILE_QUERY, { fideId, page, pageSize }, caching)).publicPlayer;
+}
+
+const GAMES_QUERY = `
+query PublicGames($fideId: String!, $page: Int!, $pageSize: Int!) {
+  publicPlayer(fideId: $fideId) { games(page: $page, pageSize: $pageSize) { count results { ${GAME_FIELDS} } } }
+}`;
+
+/** One page of a profile's games, from the browser: the games table fetches
+ * the blocks after the one the server rendered. */
+export async function fetchPublicGames(fideId: string, page: number, pageSize: number): Promise<PublicPlayer["games"]> {
+  const data = await graphqlPost<{ publicPlayer: { games: PublicPlayer["games"] } | null }>(GAMES_QUERY, { fideId, page, pageSize });
+  return data.publicPlayer?.games ?? { count: 0, results: [] };
 }
 
 /** "CM Oluka Robert Mcligeyo", the way chess sites and FIDE write a titled name. */

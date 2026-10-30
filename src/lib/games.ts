@@ -30,9 +30,17 @@ export function formatGameDate(date: string | null | undefined, month: "short" |
   return new Date(`${date.slice(0, 10)}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month, year: "numeric", timeZone: "UTC" });
 }
 
-/** The games table's page sizes; the first is the default. The backend caps a page at 100. */
-export const PAGE_SIZES = [10, 20, 50, 100] as const;
-export const DEFAULT_PAGE_SIZE: number = PAGE_SIZES[0];
+/** The games table's "per page" choices. */
+export const PAGE_SIZES = [5, 10, 20, 50] as const;
+export const DEFAULT_PAGE_SIZE: number = 10;
+
+/**
+ * How many games one request fetches, for a page size: 50 up to 10 a page
+ * (five pages of 10), two pages' worth above that (40 for 20, 100 for 50).
+ * Always a multiple of the page size, so a page never straddles two fetches,
+ * and at most 100, the server's cap.
+ */
+export const fetchSize = (pageSize: number) => (pageSize <= 10 ? 50 : pageSize * 2);
 
 /** A page size from a URL or a picker: one of PAGE_SIZES, else the default. */
 export function pageSizeOf(value: unknown): number {
