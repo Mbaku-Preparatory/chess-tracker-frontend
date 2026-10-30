@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<title>Chess Preparatory engine</title>
+</head>
+<body>
+<script>
+/*
+ * The site's Stockfish (/stockfish.js, the same build the analysis board and
+ * the bot run), for the mobile app. React Native has no WebAssembly worker,
+ * so the app keeps this page open in a hidden WebView and talks UCI to it:
+ *
+ *   app -> page   window.uci("go depth 18")      one UCI command per call
+ *   page -> app   ReactNativeWebView.postMessage  every line the engine prints
+ *
+ * Served from the site so the worker is same-origin with the page. "ready"
+ * is sent once the worker is up; "error ..." if it can't start.
+ */
+(function () {
+  var send = function (line) {
+    if (window.ReactNativeWebView) window.ReactNativeWebView.postMessage(line);
+  };
+  var engine;
+  try {
+    engine = new Worker("/stockfish.js");
+  } catch (e) {
+    send("error " + (e && e.message ? e.message : "the engine could not start"));
+    return;
+  }
+  engine.onmessage = function (e) { send(String(e.data)); };
+  engine.onerror = function (e) { send("error " + (e && e.message ? e.message : "the engine stopped")); };
+  window.uci = function (command) { engine.postMessage(String(command)); };
+  send("ready");
+})();
+</script>
+</body>
+</html>
