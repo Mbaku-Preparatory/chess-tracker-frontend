@@ -31,11 +31,16 @@ import { api } from "@/lib/api";
 import { userMessage } from "@/lib/apiError";
 import { bookFile, keepBookFile, sha256Of } from "@/lib/bookFiles";
 import type { Book, ReaderIndex } from "@/lib/books";
+import { guestBookReader } from "@/lib/guestBook";
 import { bookIndexUrl, bookPdfUrl } from "@/lib/publicBook";
 
 /** Where a book's index and PDF come from: the owner's account and device,
  * or the public routes of a demo book. */
-export type BookSource = { kind: "own"; book: Book } | { kind: "public"; slug: string; title: string; sha256: string };
+export type BookSource =
+  | { kind: "own"; book: Book }
+  | { kind: "public"; slug: string; title: string; sha256: string }
+  // Tried without an account: read with its key (lib/guestBook.ts).
+  | { kind: "guest"; publicId: string; key: string; title: string; sha256: string };
 
 async function publicFetch<T>(url: string, read: (r: Response) => Promise<T>): Promise<T> {
   const response = await fetch(url);
@@ -103,7 +108,7 @@ function lineThrough(nodes: Node[], n: number): number[] {
 
 // ── The PDF, from this device ────────────────────────────────────────────────
 
-function OpenYourCopy({ book, onFile }: { book: Book; onFile: (file: Blob) => void }) {
+function OpenYourCopy({ book, onFile }: { book: Pick<Book, "title" | "sha256">; onFile: (file: Blob) => void }) {
   const [problem, setProblem] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
 
@@ -456,12 +461,25 @@ function useWide(): boolean {
   return wide;
 }
 
-export function BookReader({ source, backHref = "/books" }: { source: BookSource; backHref?: string }) {
+export function BookReader({
+  source,
+  backHref = "/books",
+  partNote,
+  above,
+}: {
+  source: BookSource;
+  backHref?: string;
+  /** After the last page read, when the book was read only in part (the guest trial's 50 pages). */
+  partNote?: React.ReactNode;
+  /** Above the reader: the trial's time left. */
+  above?: React.ReactNode;
+}) {
   const title = source.kind === "own" ? source.book.title : source.title;
   const sha256 = source.kind === "own" ? source.book.sha256 : source.sha256;
   // Primitives, so a parent re-rendering with a fresh `source` object does
   // not fetch the book again.
-  const publicId = source.kind === "own" ? source.book.publicId : null;
+  const publicId = source.kind === "own" ? source.book.publicId : source.kind === "guest" ? source.publicId : null;
+  const guestKey = source.kind === "guest" ? source.key : null;
   const slug = source.kind === "public" ? source.slug : null;
   const id = publicId ?? `public:${slug}`;
   const [index, setIndex] = useState<ReaderIndex | null>(null);
@@ -484,7 +502,12 @@ export function BookReader({ source, backHref = "/books" }: { source: BookSource
 
   useEffect(() => {
     let cancelled = false;
-    const index = publicId !== null ? api.getBookReader(publicId) : publicFetch(bookIndexUrl(slug as string), (r) => r.json());
+    const index =
+      guestKey !== null && publicId !== null
+        ? guestBookReader(publicId, guestKey)
+        : publicId !== null
+          ? api.getBookReader(publicId)
+          : publicFetch(bookIndexUrl(slug as string), (r) => r.json());
     index.then(
       (i) => !cancelled && setIndex(i),
       (err) => !cancelled && setError(userMessage(err)),
@@ -510,7 +533,7 @@ export function BookReader({ source, backHref = "/books" }: { source: BookSource
     return () => {
       cancelled = true;
     };
-  }, [publicId, slug, sha256]);
+  }, [publicId, guestKey, slug, sha256]);
 
   useEffect(() => {
     if (!file) return;
@@ -748,7 +771,8 @@ export function BookReader({ source, backHref = "/books" }: { source: BookSource
   };
 
   if (error) return <p className="py-16 text-center text-sm text-red-600">{error}</p>;
-  if (file === null && source.kind === "own") return <OpenYourCopy book={source.book} onFile={setFile} />;
+  // Not on this device (another browser, or its storage cleared): ask for it.
+  if (file === null && source.kind !== "public") return <OpenYourCopy book={{ title, sha256 }} onFile={setFile} />;
   if (!index || !doc || !file) {
     return (
       <div className="mx-auto mt-8 flex h-40 max-w-4xl flex-col items-center justify-center gap-2 rounded-xl bg-ink-card text-[14px] text-ink-faint">
@@ -756,7 +780,8 @@ export function BookReader({ source, backHref = "/books" }: { source: BookSource
       </div>
     );
   }
-  if (doc.numPages !== index.pages.length) {
+  // Fewer pages in the index is a book read in part; more cannot be this file.
+  if (doc.numPages < index.pages.length) {
     return <p className="py-16 text-center text-sm text-red-600">This copy of the book has a different number of pages from the one uploaded.</p>;
   }
 
@@ -765,6 +790,7 @@ export function BookReader({ source, backHref = "/books" }: { source: BookSource
     // scroll bar that stays in sight (not everyone thinks to scroll a pane);
     // the effect above sizes this to the screen.
     <div ref={frame} className={`mx-auto flex w-full max-w-[1240px] flex-col gap-4 lg:pb-0 ${sheet ? "pb-[75dvh]" : "pb-8"}`}>
+      {above}
       <header className="flex flex-wrap items-center gap-3">
         <Link href={backHref} className="rounded-pill border-2 border-accent px-3.5 py-1 text-[14px] font-[520] text-ink-text hover:bg-accent/10">
           Back
@@ -792,6 +818,9 @@ export function BookReader({ source, backHref = "/books" }: { source: BookSource
             {index.pages.map((p, i) => (
               <PdfPage key={i} doc={doc} number={i} page={p} current={current} onPick={pick} register={register} />
             ))}
+            {index.pages.length < doc.numPages && partNote && (
+              <aside className="rounded-xl bg-ink-card p-6 text-[15px] leading-relaxed text-ink-muted">{partNote}</aside>
+            )}
           </main>
         </div>
         <Panel

@@ -11,12 +11,12 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { ReadABook } from "@/components/books/ReadABook";
-import { RetroProgress } from "@/components/books/RetroProgress";
+import { BookConverting } from "@/components/books/BookConverting";
 import { NotifyMeCheckbox } from "@/components/ui/NotifyMeCheckbox";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { api } from "@/lib/api";
 import { userMessage, wasAborted } from "@/lib/apiError";
-import { forgetBookFile, keepBookFile, sha256Of } from "@/lib/bookFiles";
+import { bookFile, forgetBookFile, keepBookFile, sha256Of } from "@/lib/bookFiles";
 import { deleteBook, isConverting, myBooks, type Book } from "@/lib/books";
 
 const POLL_MS = 3000;
@@ -25,28 +25,11 @@ const n = (x: number) => x.toLocaleString("en");
 
 function status(book: Book): string {
   if (book.status === "failed") return book.error || "This book could not be converted.";
-  if (book.kind === "reader") return `Reader · ${n(book.diagramCount)} diagrams · ${n(book.moveCount)} moves`;
+  if (book.kind === "reader") {
+    const part = book.readInPart ? ` · first ${n(book.pageCount)} of ${n(book.pdfPageCount)} pages` : "";
+    return `Reader${part} · ${n(book.diagramCount)} diagrams · ${n(book.moveCount)} moves`;
+  }
   return `${n(book.exerciseCount)} exercises · ${n(book.verifiedCount)} verified`;
-}
-
-function Converting({ book }: { book: Book }) {
-  const label =
-    book.progress === null
-      ? "Opening the book…"
-      : book.pagesDone >= book.pageCount
-        ? "Linking every move to its position…"
-        : `Reading page ${n(book.pagesDone + 1)} of ${n(book.pageCount)}…`;
-  return (
-    <div className="mt-2 flex flex-col gap-1">
-      <RetroProgress value={book.progress} label={label} />
-      {book.progress !== null && (
-        <p className="text-[13px] text-gray-500 dark:text-gray-400">
-          A scanned book takes a few minutes.{" "}
-          {book.notifyEmail ? "You can leave this page: we'll email you when it's done." : "You can leave this page and come back."}
-        </p>
-      )}
-    </div>
-  );
 }
 
 export default function BooksPage() {
@@ -100,6 +83,14 @@ export default function BooksPage() {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = "";
     }
+  }
+
+  /** A book kept from the guest trial was read 50 pages in: upload it again
+   * (this device's copy, or the one chosen) and all of it is read, in its place. */
+  async function readAll(book: Book) {
+    const kept = await bookFile(book.sha256);
+    if (kept) void upload(new File([kept], `${book.title}.pdf`, { type: "application/pdf" }));
+    else fileRef.current?.click();
   }
 
   function cancelUpload() {
@@ -203,7 +194,10 @@ export default function BooksPage() {
                   <span className="font-semibold text-gray-900 dark:text-gray-100">{book.title}</span>
                 )}
                 {isConverting(book) ? (
-                  <Converting book={book} />
+                  <BookConverting
+                    book={book}
+                    note={book.notifyEmail ? "You can leave this page: we'll email you when it's done." : "You can leave this page and come back."}
+                  />
                 ) : (
                   <p className={`mt-0.5 text-sm ${book.status === "failed" ? "text-red-600 dark:text-red-400" : "text-gray-500 dark:text-gray-400"}`}>
                     {status(book)}
@@ -216,6 +210,16 @@ export default function BooksPage() {
                     <Link href={`/books/${book.publicId}`} className="rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-700">
                       {book.kind === "reader" ? "Read" : "Open"}
                     </Link>
+                    {book.readInPart && (
+                      <button
+                        type="button"
+                        onClick={() => void readAll(book)}
+                        disabled={uploading}
+                        className="rounded-lg border border-brand-600 px-3 py-1.5 text-sm font-semibold text-brand-600 hover:bg-brand-50 disabled:opacity-50 dark:hover:bg-brand-900/20"
+                      >
+                        Read the whole book
+                      </button>
+                    )}
                     {book.kind === "exercises" && (
                       <button
                         type="button"

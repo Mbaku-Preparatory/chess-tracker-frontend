@@ -1,6 +1,7 @@
 import { ActiveImportsIndicator } from "@/components/import/ActiveImportsIndicator";
 import { ActiveImportsProvider } from "@/components/import/ActiveImportsProvider";
 import { AuthGate } from "@/components/AuthGate";
+import { ClaimGuestBook } from "@/components/books/ClaimGuestBook";
 import { PreferencesProvider } from "@/components/PreferencesProvider";
 import { Navbar } from "@/components/ui/Navbar";
 
@@ -22,6 +23,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             {children}
           </main>
           <ActiveImportsIndicator />
+          <ClaimGuestBook />
         </PreferencesProvider>
       </ActiveImportsProvider>
     </AuthGate>
