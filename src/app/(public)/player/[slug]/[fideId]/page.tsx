@@ -2,15 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 
-import { GamesTable } from "@/components/games/GamesTable";
-import { Pagination } from "@/components/games/Pagination";
 import { PerformancePanel } from "@/components/public/profile/PerformancePanel";
+import { PublicGames } from "@/components/public/profile/PublicGames";
 import { PendingChart, PendingRows } from "@/components/public/profile/Pending";
 import { ProfileRefresher } from "@/components/public/profile/ProfileRefresher";
 import { RatingCard } from "@/components/public/profile/RatingCard";
 import { RatingHistoryChart } from "@/components/public/profile/RatingHistoryChart";
 import { federationFor } from "@/lib/federations";
-import { pagedHref, pageSizeOf, rowFromPublicGame } from "@/lib/games";
+import { fetchSize, pagedHref, pageSizeOf } from "@/lib/games";
 import { fetchPublicPlayer, profilePath, titledName, type PublicPlayer } from "@/lib/publicPlayer";
 import { series } from "@/lib/ratingSeries";
 import { SHARE_IMAGE, SITE_URL } from "@/lib/site";
@@ -34,9 +33,13 @@ async function load(params: Params, searchParams?: SearchParams) {
   const pageParam = Number(query?.page ?? 1);
   const page = Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1;
   const pageSize = pageSizeOf(query?.size);
-  const player = await fetchPublicPlayer(fideId, page, pageSize);
+  // The block of games holding this page, as the table fetches them: 50 at
+  // 10 a page, so pages 1-5 are one request.
+  const block = fetchSize(pageSize);
+  const blockIndex = Math.floor(((page - 1) * pageSize) / block);
+  const player = await fetchPublicPlayer(fideId, blockIndex + 1, block);
   if (!player) notFound();
-  return { slug, page, pageSize, player };
+  return { slug, page, pageSize, player, blockOffset: blockIndex * block };
 }
 
 function stale(fetchedAt: string | null): boolean {
@@ -107,7 +110,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 }
 
 export default async function PublicPlayerPage({ params, searchParams }: { params: Params; searchParams: SearchParams }) {
-  const { slug, page, pageSize, player } = await load(params, searchParams);
+  const { slug, page, pageSize, player, blockOffset } = await load(params, searchParams);
   const canonical = profilePath(player);
   // The FIDE ID is the address; the name part is for people. A stale or
   // mistyped name redirects instead of serving a duplicate page.
@@ -248,10 +251,11 @@ export default async function PublicPlayerPage({ params, searchParams }: { param
           <span className="text-[13px] tabular-nums text-ink-faint">{player.games.count.toLocaleString("en")} total</span>
         </div>
         {player.games.count > 0 ? (
-          <>
-            <GamesTable rows={player.games.results.map((g) => rowFromPublicGame(g, player.fideId))} />
-            <Pagination count={player.games.count} page={page} pageSize={pageSize} basePath={canonical} anchor="games" />
-          </>
+          <PublicGames
+            fideId={player.fideId}
+            basePath={canonical}
+            seed={{ offset: blockOffset, count: player.games.count, results: player.games.results, page, pageSize }}
+          />
         ) : !player.gamesFetchedAt ? (
           <PendingRows label="Fetching games from chess-results.com…" />
         ) : (

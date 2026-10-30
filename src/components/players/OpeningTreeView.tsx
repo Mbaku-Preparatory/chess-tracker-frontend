@@ -1,15 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { gameRef } from "@/lib/gameRef";
 import { ColorBadge, EcoBadge } from "@/components/ui/Badge";
-import { GamesTable } from "@/components/games/GamesTable";
-import { Pagination } from "@/components/games/Pagination";
-import { DEFAULT_PAGE_SIZE, rowFromGame } from "@/lib/games";
+import { PagedGamesTable } from "@/components/games/PagedGamesTable";
+import { rowFromGame } from "@/lib/games";
 import { DeleteGameButton } from "./DeleteGameButton";
 import { GameFilters, NO_FILTERS, hasFilters, type GameFilterValues } from "./GameFilters";
-import type { OpeningStat, Game, GameSource, GameResult, PaginatedResponse } from "@/types";
+import type { OpeningStat, GameSource, GameResult } from "@/types";
 
 interface OpeningTreeViewProps {
   slug: string;
@@ -83,57 +81,20 @@ interface VariationRowProps {
 }
 
 function VariationRow({ stat, slug, playerName, sourceFilter, resultFilter, yearFilter, isExpanded, onToggle }: VariationRowProps) {
-  const [games, setGames] = useState<Game[] | null>(null);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
-  const [error, setError] = useState<string | null>(null);
-
-  function handleGameDeleted(gameId: string) {
-    setGames((prev) => prev ? prev.filter((g) => gameRef(g) !== gameId) : prev);
-    setTotal((prev) => prev - 1);
-  }
-
-  // Reset games when any filter changes
-  useEffect(() => {
-    if (isExpanded) {
-      setGames(null);
-      loadGames(1, pageSize);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sourceFilter, resultFilter, yearFilter]);
-
-  async function loadGames(p: number, size: number) {
-    setLoading(true);
-    setError(null);
-    try {
-      const data: PaginatedResponse<Game> = await api.getPlayerGames(slug, {
+  // A line's games, fetched when it is opened and refetched when a filter changes.
+  const fetchGames = useCallback(
+    (offset: number, limit: number) =>
+      api.getPlayerGames(slug, {
         eco_code: stat.eco_code,
         color_played: stat.color_choice,
         ...(sourceFilter ? { source: sourceFilter } : {}),
         ...(resultFilter ? { result: resultFilter } : {}),
         ...(yearFilter ? { year: yearFilter } : {}),
-        page: p,
-        page_size: size,
-      });
-      setGames(data.results);
-      setTotal(data.count);
-      setPage(p);
-      setPageSize(size);
-    } catch {
-      setError("Failed to load games.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  function handleToggle() {
-    onToggle();
-    if (!isExpanded && games === null) {
-      loadGames(1, pageSize);
-    }
-  }
+        page: offset / limit + 1,
+        page_size: limit,
+      }),
+    [slug, stat.eco_code, stat.color_choice, sourceFilter, resultFilter, yearFilter],
+  );
 
   const variationLabel = (() => {
     const colonIdx = stat.opening_name.indexOf(":");
@@ -146,7 +107,7 @@ function VariationRow({ stat, slug, playerName, sourceFilter, resultFilter, year
     <div className="border-t border-gray-100 first:border-t-0 dark:border-dark-border">
       {/* Variation header row */}
       <button
-        onClick={handleToggle}
+        onClick={onToggle}
         className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-gray-50 active:bg-gray-100 dark:hover:bg-dark-elevated dark:active:bg-dark-muted"
       >
         {/* Expand indicator */}
@@ -189,27 +150,13 @@ function VariationRow({ stat, slug, playerName, sourceFilter, resultFilter, year
       {/* Games panel */}
       {isExpanded && (
         <div className="border-t border-gray-100 bg-gray-50/60 px-4 pb-4 pt-3 dark:border-dark-border dark:bg-dark-bg/40">
-          {loading && games === null ? (
-            <div className="space-y-2">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="h-10 animate-pulse rounded bg-gray-200 dark:bg-dark-elevated" />
-              ))}
-            </div>
-          ) : error ? (
-            <p className="text-sm text-red-600">{error}</p>
-          ) : games && games.length > 0 ? (
-            <>
-              <div className={`flex flex-col gap-3 ${loading ? "opacity-60" : ""}`}>
-                <GamesTable
-                  rows={games.map((g) => rowFromGame(g, playerName))}
-                  rowAction={(row) => <DeleteGameButton gameRef={row.key} onDeleted={handleGameDeleted} />}
-                />
-                <Pagination count={total} page={page} pageSize={pageSize} onChange={loadGames} label={`${stat.opening_name} games pages`} />
-              </div>
-            </>
-          ) : (
-            <p className="text-sm text-gray-500">No games found.</p>
-          )}
+          <PagedGamesTable
+            fetchGames={fetchGames}
+            resetKey={[sourceFilter, resultFilter, yearFilter].join("|")}
+            toRow={(g) => rowFromGame(g, playerName)}
+            rowAction={(row, remove) => <DeleteGameButton gameRef={row.key} onDeleted={remove} />}
+            label={`${stat.opening_name} games pages`}
+          />
         </div>
       )}
     </div>

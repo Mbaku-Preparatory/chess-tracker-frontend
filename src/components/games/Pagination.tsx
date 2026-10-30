@@ -1,8 +1,5 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-
 import { PAGE_SIZES, pagedHref } from "@/lib/games";
 
 /** The pages to show as numbers: the ends, and two either side of this one. */
@@ -24,20 +21,17 @@ const current = `${item} bg-ink-raised font-[520] text-ink-text`;
 const off = `${item} text-ink-faint opacity-50`;
 
 /**
- * Pages of a games list, and how many to a page. The list is fetched one page
- * at a time (offset and limit on the server), so this only ever asks for a
- * page number and a size.
+ * Pages of a games list, and how many to a page.
  *
- * With `basePath`, the pages are links (?page=&size=), for lists a search
- * engine should follow (the public profile); with `onChange`, buttons. Changing the size goes back
- * to the first page, since page 7 of 10 is not page 7 of 50.
+ * With `basePath` the pages are real links (?page=&size=), so a search engine
+ * can follow them, but a click is still handled here, without loading the
+ * page again. Changing the size keeps the first game on screen in view.
  */
 export function Pagination({
   count,
   page,
   pageSize,
   basePath,
-  anchor,
   onChange,
   label = "Games pages",
 }: {
@@ -45,12 +39,9 @@ export function Pagination({
   page: number;
   pageSize: number;
   basePath?: string;
-  /** The list's id, so a link lands on it rather than the top of the page. */
-  anchor?: string;
-  onChange?: (page: number, pageSize: number) => void;
+  onChange: (page: number, pageSize: number) => void;
   label?: string;
 }) {
-  const router = useRouter();
   const pages = Math.max(1, Math.ceil(count / pageSize));
   if (count === 0) return null;
 
@@ -60,21 +51,26 @@ export function Pagination({
   function to(p: number, children: React.ReactNode, className: string, extra?: { rel?: string; "aria-label"?: string; "aria-current"?: "page" }) {
     if (basePath !== undefined) {
       return (
-        <Link href={pagedHref(basePath, p, pageSize, anchor)} className={className} {...extra}>
+        <a
+          href={pagedHref(basePath, p, pageSize)}
+          onClick={(e) => {
+            // A new tab or window still gets the link.
+            if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+            e.preventDefault();
+            onChange(p, pageSize);
+          }}
+          className={className}
+          {...extra}
+        >
           {children}
-        </Link>
+        </a>
       );
     }
     return (
-      <button type="button" onClick={() => onChange?.(p, pageSize)} className={className} {...extra}>
+      <button type="button" onClick={() => onChange(p, pageSize)} className={className} {...extra}>
         {children}
       </button>
     );
-  }
-
-  function resize(size: number) {
-    if (basePath !== undefined) router.push(pagedHref(basePath, 1, size, anchor));
-    else onChange?.(1, size);
   }
 
   return (
@@ -110,7 +106,7 @@ export function Pagination({
           Per page
           <select
             value={pageSize}
-            onChange={(e) => resize(Number(e.target.value))}
+            onChange={(e) => onChange(page, Number(e.target.value))}
             className="rounded-lg border border-ink-line bg-ink-card px-2 py-1 text-[13px] text-ink-text"
           >
             {PAGE_SIZES.map((s) => (
