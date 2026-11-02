@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAppDispatch } from "@/redux/hooks";
 import { setAuth } from "@/redux/actions/auth";
-import { userMessage } from "@/lib/apiError";
+import { loginRefusal } from "@/lib/apiError";
 import { Logo } from "@/components/ui/Logo";
 
 export default function LoginPage() {
@@ -44,7 +44,12 @@ export default function LoginPage() {
       dispatch(setAuth({ token: data.access, refreshToken: data.refresh, email: data.email }));
       router.replace("/home");
     } catch (err) {
-      setError(userMessage(err, "Login failed."));
+      const refusal = loginRefusal(err);
+      if (refusal.unverifiedEmail) {
+        router.replace(`/verify-email?email=${encodeURIComponent(refusal.unverifiedEmail)}`);
+        return;
+      }
+      setError(refusal.message);
     } finally {
       setLoading(false);
     }
