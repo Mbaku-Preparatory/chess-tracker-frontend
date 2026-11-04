@@ -2,8 +2,8 @@
  * Public player profiles: the backend's `publicPlayer` query, typed.
  *
  * Fetched on the server, as a GET so Next can cache it. A profile changes at
- * most monthly (FIDE's list) or when a refresh lands, so it is cached for an
- * hour and tagged; the refresh tells Next to drop the tag when it finishes.
+ * most monthly (FIDE's list) or when a refresh lands, so it is cached for a
+ * week and tagged; the refresh tells Next to drop the tag when it finishes.
  */
 
 import { graphqlGet, graphqlPost } from "./publicGraphql";
@@ -99,19 +99,30 @@ query PublicProfile($fideId: String!, $page: Int!, $pageSize: Int!) {
 
 export const playerTag = (fideId: string) => `public-player:${fideId}`;
 
+/**
+ * How long a rendered profile is kept, in seconds. The profile page is cached
+ * whole (HTML on Vercel's CDN), so a crawler or a second visitor costs no
+ * server render, and this fetch's lifetime is the page's: Next keeps a page no
+ * longer than the shortest-lived fetch on it.
+ *
+ * A week, because the data moves monthly. A refresh landing drops the page at
+ * once (revalidatePlayer); a new monthly FIDE list shows within a week.
+ */
+export const PROFILE_REVALIDATE = 7 * 24 * 60 * 60;
+
 /** The profile, or null when FIDE does not rate this ID. Throws
  * BackendUnavailable when the API cannot answer, so the page can say so
- * rather than claim the player does not exist. */
+ * rather than claim the player does not exist (an error is never cached).
+ *
+ * A null is cached like a profile: a page that is kept cannot make an uncached
+ * request (that would turn it back into a render per visit). So an ID opened
+ * before FIDE's list had it 404s until the week is out. Rare: nothing links
+ * to a player who is not on the list yet. */
 export async function fetchPublicPlayer(fideId: string, page: number, pageSize: number): Promise<PublicPlayer | null> {
-  const player = await queryPublicPlayer(fideId, page, pageSize, { next: { revalidate: 3600, tags: [playerTag(fideId)] } });
-  // The data cache cannot tell a profile from "not rated", so a cached null
-  // is asked again live: a player the next list or a refresh adds would
-  // otherwise 404 for up to an hour.
-  return player ?? queryPublicPlayer(fideId, page, pageSize, { cache: "no-store" });
-}
-
-async function queryPublicPlayer(fideId: string, page: number, pageSize: number, caching: RequestInit): Promise<PublicPlayer | null> {
-  return (await graphqlGet<{ publicPlayer: PublicPlayer | null }>(PROFILE_QUERY, { fideId, page, pageSize }, caching)).publicPlayer;
+  const data = await graphqlGet<{ publicPlayer: PublicPlayer | null }>(PROFILE_QUERY, { fideId, page, pageSize }, {
+    next: { revalidate: PROFILE_REVALIDATE, tags: [playerTag(fideId)] },
+  });
+  return data.publicPlayer;
 }
 
 const GAMES_QUERY = `

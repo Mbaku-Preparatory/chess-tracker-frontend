@@ -19,6 +19,7 @@ export function PagedGamesTable<T>({
   toRow,
   seed,
   start,
+  openAt,
   rowAction,
   basePath,
   onPageChange,
@@ -33,6 +34,9 @@ export function PagedGamesTable<T>({
   seed?: GamesSeed<T>;
   /** The page and size to open on, from the URL. */
   start?: { page: number; pageSize: number };
+  /** A page to move to after the first render: the URL's, on a page whose
+   * cached HTML always holds the first (the public profile). */
+  openAt?: { page: number; pageSize: number } | null;
   /** One more control per row. `remove` takes the game off the list once it is deleted. */
   rowAction?: (row: GameRow, remove: () => void) => React.ReactNode;
   /** Pages are also links (?page=&size=), for a list a search engine should follow. */
@@ -62,6 +66,15 @@ export function PagedGamesTable<T>({
     shown.current = { page: list.page, pageSize: list.pageSize };
     onPageChangeRef.current?.(list.page, list.pageSize);
   }, [list.page, list.pageSize]);
+
+  const listRef = useRef(list);
+  listRef.current = list;
+  useEffect(() => {
+    if (!openAt) return;
+    const { pageSize, setPage, setPageSize } = listRef.current;
+    if (openAt.pageSize !== pageSize) setPageSize(openAt.pageSize);
+    setPage(openAt.page);
+  }, [openAt]);
 
   function go(page: number, pageSize: number) {
     if (pageSize !== list.pageSize) list.setPageSize(pageSize);

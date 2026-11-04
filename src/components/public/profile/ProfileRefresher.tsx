@@ -9,6 +9,14 @@ import { graphqlPost } from "@/lib/publicGraphql";
 const POLL_EVERY_MS = 3000;
 const SLOW_AFTER_MS = 90 * 1000;
 const GIVE_UP_AFTER_MS = 4 * 60 * 1000;
+// Anything older is refreshed when someone looks: FIDE publishes monthly.
+const STALE_AFTER_MS = 30 * 24 * 60 * 60 * 1000;
+
+/** Judged here, at view time: the page is cached for days, so the server's
+ * clock at render time says nothing about now. */
+function stale(fetchedAt: string | null): boolean {
+  return !fetchedAt || Date.now() - new Date(fetchedAt).getTime() > STALE_AFTER_MS;
+}
 
 type Part = "history" | "games";
 type PartState = "fetching" | "done" | "ready";
@@ -38,18 +46,18 @@ export function ProfileRefresher({
   fideId,
   historyFetchedAt,
   gamesFetchedAt,
-  needed,
   queued,
 }: {
   fideId: string;
   historyFetchedAt: string | null;
   gamesFetchedAt: string | null;
-  needed: boolean;
   queued: boolean;
 }) {
   const router = useRouter();
+  // Missing is always stale too, so the panel shows exactly when a part is
+  // missing, and the first render needs no clock (it must match the server's).
   const missing = historyFetchedAt == null || gamesFetchedAt == null;
-  const [phase, setPhase] = useState<Phase>((needed || queued) && missing ? "working" : "hidden");
+  const [phase, setPhase] = useState<Phase>(missing ? "working" : "hidden");
   const [parts, setParts] = useState<Record<Part, PartState>>({
     history: historyFetchedAt ? "ready" : "fetching",
     games: gamesFetchedAt ? "ready" : "fetching",
@@ -58,11 +66,11 @@ export function ProfileRefresher({
   // What the page was rendered with. Read once: a part landing re-renders the
   // page and hands this component new props, and that must not restart the
   // whole request.
-  const initial = useRef({ historyFetchedAt, gamesFetchedAt, needed, queued });
+  const initial = useRef({ historyFetchedAt, gamesFetchedAt, queued });
 
   useEffect(() => {
     const start = initial.current;
-    if (!start.needed && !start.queued) return;
+    if (!stale(start.historyFetchedAt) && !stale(start.gamesFetchedAt) && !start.queued) return;
     let cancelled = false;
     const startedAt = Date.now();
     const seen = { history: start.historyFetchedAt, games: start.gamesFetchedAt };

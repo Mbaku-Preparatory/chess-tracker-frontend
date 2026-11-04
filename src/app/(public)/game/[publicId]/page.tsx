@@ -11,6 +11,12 @@ import { SHARE_IMAGE, SITE_URL } from "@/lib/site";
 
 type Params = Promise<{ publicId: string }>;
 
+/** Rendered on its first visit, then kept (see the profile page): a game
+ * never changes, so a crawler's second look should cost nothing. */
+export function generateStaticParams() {
+  return [];
+}
+
 async function load(params: Params) {
   const { publicId } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(publicId)) notFound();
