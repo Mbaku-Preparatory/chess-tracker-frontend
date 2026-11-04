@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { userMessage } from "@/lib/apiError";
 import { Logo } from "@/components/ui/Logo";
+import { GoogleSignIn, OrDivider } from "@/components/GoogleSignIn";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -63,6 +64,9 @@ export default function SignupPage() {
               {error}
             </div>
           )}
+
+          <GoogleSignIn context="signup" onError={setError} />
+          <OrDivider />
 
           <div className="flex gap-3">
             <div className="flex-1">

@@ -129,6 +129,8 @@ export interface Me {
   /** Their avatar (lib/avatars), or null for the default. */
   avatar: number | null;
   preferences: Preferences;
+  /** False for a Google sign-up that has not set a password. */
+  has_password?: boolean;
 }
 
 /** The settings page's switches, saved on the account. */
