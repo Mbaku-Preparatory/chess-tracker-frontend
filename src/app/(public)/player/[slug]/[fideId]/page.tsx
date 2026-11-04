@@ -9,16 +9,22 @@ import { ProfileRefresher } from "@/components/public/profile/ProfileRefresher";
 import { RatingCard } from "@/components/public/profile/RatingCard";
 import { RatingHistoryChart } from "@/components/public/profile/RatingHistoryChart";
 import { federationFor } from "@/lib/federations";
-import { fetchSize, pagedHref, pageSizeOf } from "@/lib/games";
+import { DEFAULT_PAGE_SIZE, fetchSize } from "@/lib/games";
 import { fetchPublicPlayer, profilePath, titledName, type PublicPlayer } from "@/lib/publicPlayer";
 import { series } from "@/lib/ratingSeries";
 import { SHARE_IMAGE, SITE_URL } from "@/lib/site";
 
 type Params = Promise<{ slug: string; fideId: string }>;
-type SearchParams = Promise<{ page?: string; size?: string }>;
 
-// Anything older is refreshed when someone looks: FIDE publishes monthly.
-const STALE_AFTER_MS = 30 * 24 * 60 * 60 * 1000;
+/**
+ * Each profile is rendered on its first visit, then kept and served from the
+ * CDN (PROFILE_REVALIDATE). None are built ahead: there are ~450k. Nothing in
+ * the render may depend on the request (search params, cookies, the clock), or
+ * every visit is a fresh render again; ?page=&size= is read in the browser.
+ */
+export function generateStaticParams() {
+  return [];
+}
 
 const TITLE_NAMES: Record<string, string> = {
   GM: "Grandmaster", IM: "International Master", FM: "FIDE Master", CM: "Candidate Master",
@@ -26,24 +32,15 @@ const TITLE_NAMES: Record<string, string> = {
   WCM: "Woman Candidate Master",
 };
 
-async function load(params: Params, searchParams?: SearchParams) {
+async function load(params: Params) {
   const { slug, fideId } = await params;
   if (!/^\d{1,20}$/.test(fideId)) notFound();
-  const query = await searchParams;
-  const pageParam = Number(query?.page ?? 1);
-  const page = Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1;
-  const pageSize = pageSizeOf(query?.size);
-  // The block of games holding this page, as the table fetches them: 50 at
-  // 10 a page, so pages 1-5 are one request.
-  const block = fetchSize(pageSize);
-  const blockIndex = Math.floor(((page - 1) * pageSize) / block);
-  const player = await fetchPublicPlayer(fideId, blockIndex + 1, block);
+  // The first block of games, as the table fetches them: 50 at 10 a page, so
+  // pages 1-5 are in the HTML. Another page in the URL is fetched by the
+  // browser (PublicGames).
+  const player = await fetchPublicPlayer(fideId, 1, fetchSize(DEFAULT_PAGE_SIZE));
   if (!player) notFound();
-  return { slug, page, pageSize, player, blockOffset: blockIndex * block };
-}
-
-function stale(fetchedAt: string | null): boolean {
-  return !fetchedAt || Date.now() - new Date(fetchedAt).getTime() > STALE_AFTER_MS;
+  return { slug, player };
 }
 
 /** The facts an answer engine is asked about, as one plain paragraph. */
@@ -109,15 +106,14 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   };
 }
 
-export default async function PublicPlayerPage({ params, searchParams }: { params: Params; searchParams: SearchParams }) {
-  const { slug, page, pageSize, player, blockOffset } = await load(params, searchParams);
+export default async function PublicPlayerPage({ params }: { params: Params }) {
+  const { slug, player } = await load(params);
   const canonical = profilePath(player);
   // The FIDE ID is the address; the name part is for people. A stale or
   // mistyped name redirects instead of serving a duplicate page.
-  if (slug !== player.slug) permanentRedirect(pagedHref(canonical, page, pageSize));
+  if (slug !== player.slug) permanentRedirect(canonical);
 
   const fed = federationFor(player.federation);
-  const needsRefresh = stale(player.historyFetchedAt) || stale(player.gamesFetchedAt);
   const history = player.ratingHistory;
   const titleName = TITLE_NAMES[player.title] ?? TITLE_NAMES[player.womenTitle];
 
@@ -202,7 +198,6 @@ export default async function PublicPlayerPage({ params, searchParams }: { param
         fideId={player.fideId}
         historyFetchedAt={player.historyFetchedAt}
         gamesFetchedAt={player.gamesFetchedAt}
-        needed={needsRefresh}
         queued={player.refreshStatus != null}
       />
 
@@ -254,7 +249,7 @@ export default async function PublicPlayerPage({ params, searchParams }: { param
           <PublicGames
             fideId={player.fideId}
             basePath={canonical}
-            seed={{ offset: blockOffset, count: player.games.count, results: player.games.results, page, pageSize }}
+            seed={{ offset: 0, count: player.games.count, results: player.games.results, page: 1, pageSize: DEFAULT_PAGE_SIZE }}
           />
         ) : !player.gamesFetchedAt ? (
           <PendingRows label="Fetching games from chess-results.com…" />

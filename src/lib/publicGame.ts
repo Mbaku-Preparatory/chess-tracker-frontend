@@ -1,11 +1,12 @@
 /**
  * One public game (a chess-results game on someone's profile), for its own
  * page at /game/<publicId>. Fetched on the server; a played game never
- * changes, so it is cached for a day.
+ * changes, so it is cached for a week, and the page with it (see
+ * PROFILE_REVALIDATE: a page lives as long as its shortest-lived fetch).
  */
 
 import { graphqlGet } from "./publicGraphql";
-import type { PublicGame } from "./publicPlayer";
+import { PROFILE_REVALIDATE, type PublicGame } from "./publicPlayer";
 
 const REF = "fideId fullName slug title";
 
@@ -24,7 +25,7 @@ export const gamePath = (publicId: string) => `/game/${publicId}`;
  * when the API cannot answer, so the page can say so rather than 404. */
 export async function fetchPublicGame(publicId: string): Promise<PublicGame | null> {
   const data = await graphqlGet<{ publicGame: PublicGame | null }>(GAME_QUERY, { publicId }, {
-    next: { revalidate: 86_400, tags: [`public-game:${publicId}`] },
+    next: { revalidate: PROFILE_REVALIDATE, tags: [`public-game:${publicId}`] },
   });
   return data.publicGame;
 }
