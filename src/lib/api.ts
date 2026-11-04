@@ -335,12 +335,13 @@ export const api = {
     });
   },
 
-  /** Deletes the account and everything in it. */
-  deleteAccount(password: string): Promise<void> {
+  /** Deletes the account and everything in it. Confirmed with the password,
+   * or with the email address for an account that has none (Google sign-up). */
+  deleteAccount(confirm: { password: string } | { confirm_email: string }): Promise<void> {
     return fetchJson(`${API_BASE}/auth/me/`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password }),
+      body: JSON.stringify(confirm),
     });
   },
 
@@ -498,6 +499,16 @@ getOpeningExplorer(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
+    });
+  },
+
+  /** Signs in with the ID token from Google's button, creating the account
+   * if there is none. `created` is true for a new account. */
+  googleSignIn(credential: string): Promise<{ access: string; refresh: string; email: string; created: boolean }> {
+    return fetchJson(`${API_BASE}/auth/google/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ credential }),
     });
   },
 

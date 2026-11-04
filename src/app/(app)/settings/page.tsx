@@ -187,13 +187,19 @@ export default function SettingsPage() {
     if (next !== confirm) return setPasswordNote({ kind: "error", text: "The new passwords don't match." });
     setChanging(true);
     try {
-      const tokens = await api.changePassword(current, next);
+      const tokens = await api.changePassword(hasPassword ? current : "", next);
       // Every other session was signed out; these keep this one.
       dispatch(setAuth({ token: tokens.access, refreshToken: tokens.refresh, email: tokens.email }));
       setCurrent("");
       setNext("");
       setConfirm("");
-      setPasswordNote({ kind: "ok", text: "Password changed. Your other devices have been signed out." });
+      setPasswordNote({
+        kind: "ok",
+        text: hasPassword
+          ? "Password changed. Your other devices have been signed out."
+          : "Password set. You can now sign in with your email too.",
+      });
+      if (me) setMe({ ...me, has_password: true });
     } catch (err) {
       setPasswordNote({ kind: "error", text: userMessage(err, "Couldn't change your password.") });
     } finally {
@@ -206,7 +212,7 @@ export default function SettingsPage() {
     setDeleting(true);
     setDeleteError(null);
     try {
-      await api.deleteAccount(deletePassword);
+      await api.deleteAccount(hasPassword ? { password: deletePassword } : { confirm_email: deletePassword });
       // Signing out sends AuthGate to /login, which reads this and says so.
       // Not a query string: AuthGate's own redirect would drop it.
       try {
@@ -220,6 +226,9 @@ export default function SettingsPage() {
       setDeleting(false);
     }
   }
+
+  // A Google sign-up has no password until they set one here.
+  const hasPassword = me.has_password !== false;
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -312,12 +321,21 @@ export default function SettingsPage() {
           )}
         </Section>
 
-        <Section title="Password" hint="Changing it signs you out on your other devices.">
+        <Section
+          title="Password"
+          hint={
+            hasPassword
+              ? "Changing it signs you out on your other devices."
+              : "You sign in with Google. Set a password to sign in with your email address too."
+          }
+        >
           <form onSubmit={changePassword} className="flex flex-col gap-4">
-            <div>
-              <label htmlFor="current-password" className={label}>Current password</label>
-              <input id="current-password" type="password" value={current} onChange={(e) => setCurrent(e.target.value)} className={input} autoComplete="current-password" required />
-            </div>
+            {hasPassword && (
+              <div>
+                <label htmlFor="current-password" className={label}>Current password</label>
+                <input id="current-password" type="password" value={current} onChange={(e) => setCurrent(e.target.value)} className={input} autoComplete="current-password" required />
+              </div>
+            )}
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label htmlFor="new-password" className={label}>New password</label>
@@ -329,8 +347,8 @@ export default function SettingsPage() {
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <button type="submit" disabled={changing || !current || !next || !confirm} className="btn-primary disabled:opacity-50">
-                {changing ? "Changing…" : "Change password"}
+              <button type="submit" disabled={changing || (hasPassword && !current) || !next || !confirm} className="btn-primary disabled:opacity-50">
+                {changing ? "Saving…" : hasPassword ? "Change password" : "Set password"}
               </button>
               {passwordNote && <Note kind={passwordNote.kind}>{passwordNote.text}</Note>}
             </div>
@@ -353,8 +371,17 @@ export default function SettingsPage() {
           ) : (
             <form onSubmit={deleteAccount} className="flex flex-col gap-4">
               <div>
-                <label htmlFor="delete-password" className={label}>Your password</label>
-                <input id="delete-password" type="password" value={deletePassword} onChange={(e) => setDeletePassword(e.target.value)} className={input} autoComplete="current-password" required />
+                {hasPassword ? (
+                  <>
+                    <label htmlFor="delete-password" className={label}>Your password</label>
+                    <input id="delete-password" type="password" value={deletePassword} onChange={(e) => setDeletePassword(e.target.value)} className={input} autoComplete="current-password" required />
+                  </>
+                ) : (
+                  <>
+                    <label htmlFor="delete-password" className={label}>Your email address</label>
+                    <input id="delete-password" type="email" value={deletePassword} onChange={(e) => setDeletePassword(e.target.value)} className={input} autoComplete="off" spellCheck={false} required />
+                  </>
+                )}
               </div>
               <div>
                 <label htmlFor="delete-word" className={label}>
