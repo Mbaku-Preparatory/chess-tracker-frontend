@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { GoogleSignIn } from "@/components/GoogleSignIn";
+import { LichessLogo } from "@/components/ui/LichessLogo";
 import { startLichess } from "@/lib/lichessAuth";
 
 /**
@@ -24,7 +25,9 @@ export function SocialSignIn({ context, onError }: { context: "signin" | "signup
   );
 }
 
-/** Sized to sit under Google's button: same height, pill, at most 400px. */
+/** Google's button as a template (it draws its own, so this one copies it):
+ * the same height, pill, border, type and colours in each theme, with the
+ * logo beside the words. Two buttons that match read as one set of choices. */
 function LichessButton({ context }: { context: "signin" | "signup" }) {
   const [leaving, setLeaving] = useState(false);
   return (
@@ -35,9 +38,10 @@ function LichessButton({ context }: { context: "signin" | "signup" }) {
         setLeaving(true);
         startLichess("signin").catch(() => setLeaving(false));
       }}
-      className="mx-auto flex h-10 w-full max-w-[400px] items-center justify-center rounded-full border border-gray-300 bg-white text-sm font-medium text-gray-800 hover:bg-gray-50 disabled:opacity-60 dark:border-dark-border dark:bg-dark-elevated dark:text-gray-100 dark:hover:bg-dark-border"
+      className="mx-auto flex h-10 w-full max-w-[400px] items-center justify-center gap-2.5 rounded-full border border-[#dadce0] bg-white px-3 text-sm font-medium tracking-[0.25px] text-[#3c4043] hover:bg-[#f8faff] disabled:opacity-60 dark:border-[#202124] dark:bg-[#202124] dark:text-[#e8eaed] dark:hover:bg-[#2b2c2f]"
     >
-      {leaving ? "Opening Lichess…" : context === "signup" ? "Sign up with Lichess" : "Continue with Lichess"}
+      <LichessLogo size={20} className="shrink-0" />
+      <span>{leaving ? "Opening Lichess…" : context === "signup" ? "Sign up with Lichess" : "Continue with Lichess"}</span>
     </button>
   );
 }

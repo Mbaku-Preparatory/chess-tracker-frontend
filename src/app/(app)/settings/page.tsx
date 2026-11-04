@@ -10,6 +10,7 @@ import { api } from "@/lib/api";
 import { userMessage } from "@/lib/apiError";
 import { avatarSrc, defaultAvatar } from "@/lib/avatars";
 import { startLichess } from "@/lib/lichessAuth";
+import { LichessLogo } from "@/components/ui/LichessLogo";
 import { THEME_KEY } from "@/lib/theme";
 import { clearAuth, setAuth } from "@/redux/actions/auth";
 import { setTheme } from "@/redux/actions/theme";
@@ -348,11 +349,14 @@ export default function SettingsPage() {
 
         <Section title="Connected accounts" hint="Sign in with these instead of your password.">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Lichess</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {me.linked?.lichess ? `Connected as ${me.linked.lichess.username}` : "Not connected"}
-              </p>
+            <div className="flex items-center gap-3">
+              <LichessLogo size={28} className="shrink-0 text-gray-900 dark:text-gray-100" />
+              <div>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Lichess</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {me.linked?.lichess ? `Connected as ${me.linked.lichess.username}` : "Not connected"}
+                </p>
+              </div>
             </div>
             {me.linked?.lichess ? (
               <button type="button" onClick={disconnectLichess} disabled={lichessBusy || !hasPassword} className="btn-secondary disabled:opacity-50">
