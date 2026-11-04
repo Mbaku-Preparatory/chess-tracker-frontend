@@ -792,7 +792,7 @@ export function BookReader({
     <div ref={frame} className={`mx-auto flex w-full max-w-[1240px] flex-col gap-4 lg:pb-0 ${sheet ? "pb-[75dvh]" : "pb-8"}`}>
       {above}
       <header className="flex flex-wrap items-center gap-3">
-        <Link href={backHref} className="rounded-pill border-2 border-accent px-3.5 py-1 text-[14px] font-[520] text-ink-text hover:bg-accent/10">
+        <Link href={backHref} className="hidden rounded-pill border-2 border-accent px-3.5 py-1 text-[14px] font-[520] text-ink-text hover:bg-accent/10 sm:inline">
           Back
         </Link>
         <h1 className="min-w-0 flex-1 truncate text-[18px] font-[520] text-ink-text sm:text-[22px]">{title}</h1>

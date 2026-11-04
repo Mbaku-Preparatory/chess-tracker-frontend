@@ -60,7 +60,7 @@ export function PlayerPrepView({ slug }: { slug: string }) {
                 </svg>
                 Import Games
               </Link>
-              <Link href={`/players/${slug}`} className="btn-secondary text-sm">
+              <Link href={`/players/${slug}`} className="btn-secondary text-sm max-sm:hidden">
                 Back to profile
               </Link>
             </div>

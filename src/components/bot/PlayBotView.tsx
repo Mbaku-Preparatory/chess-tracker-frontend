@@ -148,7 +148,7 @@ export function PlayBotView({ slug }: { slug: string }) {
       <header className="flex flex-col items-start gap-3 sm:flex-row">
         <Link
           href={`/players/${slug}`}
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-pill border-2 border-accent px-3.5 py-1.5 text-[14px] font-[520] text-accent-soft hover:bg-accent hover:text-accent-on"
+          className="hidden shrink-0 items-center gap-1.5 rounded-pill border-2 border-accent px-3.5 py-1.5 text-[14px] font-[520] text-accent-soft hover:bg-accent hover:text-accent-on sm:inline-flex"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
