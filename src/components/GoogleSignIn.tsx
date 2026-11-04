@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { api } from "@/lib/api";
-import { userMessage } from "@/lib/apiError";
+import { loginRefusal } from "@/lib/apiError";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { setAuth } from "@/redux/actions/auth";
 
@@ -53,7 +53,8 @@ export function GoogleSignIn({ context, onError }: { context: "signin" | "signup
         dispatch(setAuth({ token: data.access, refreshToken: data.refresh, email: data.email }));
         router.replace("/home");
       } catch (err) {
-        onErrorRef.current(userMessage(err, "Google sign-in didn't work. Try again, or use your email."));
+        // loginRefusal shows the backend's own words for a suspended account.
+        onErrorRef.current(loginRefusal(err).message);
         setBusy(false);
       }
     },
@@ -92,17 +93,6 @@ export function GoogleSignIn({ context, onError }: { context: "signin" | "signup
       {/* Holds the button's height while Google's script loads, so the form below doesn't jump. */}
       <div ref={holder} className={`flex min-h-[44px] justify-center ${busy ? "pointer-events-none opacity-50" : ""}`} />
       {busy && <p className="mt-2 text-center text-sm text-gray-500 dark:text-gray-400">Signing you in…</p>}
-    </div>
-  );
-}
-
-/** The line between the Google button and the email form. */
-export function OrDivider() {
-  return (
-    <div className="flex items-center gap-3 text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500">
-      <span className="h-px flex-1 bg-gray-200 dark:bg-dark-border" />
-      or with email
-      <span className="h-px flex-1 bg-gray-200 dark:bg-dark-border" />
     </div>
   );
 }

@@ -15,12 +15,14 @@ function isAuthPath(pathname: string): boolean {
 }
 
 /**
- * Paths under AuthGate readable without a login: only the auth pages. Public
- * pages (the landing page, player profiles, /privacy) live in the (public)
- * route group, outside AuthGate, so they never come through here.
+ * Paths under AuthGate readable without a login: the auth pages, and the page
+ * Lichess sends people back to (signed out when signing in, signed in when
+ * connecting from Settings, so it is not an auth path either). Public pages
+ * (the landing page, player profiles, /privacy) live in the (public) route
+ * group, outside AuthGate, so they never come through here.
  */
 function isPublicPath(pathname: string): boolean {
-  return isAuthPath(pathname);
+  return isAuthPath(pathname) || pathname === "/auth/lichess";
 }
 
 export function AuthGate({ children }: { children: React.ReactNode }) {

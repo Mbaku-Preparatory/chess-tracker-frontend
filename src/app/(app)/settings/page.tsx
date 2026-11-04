@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { api } from "@/lib/api";
 import { userMessage } from "@/lib/apiError";
 import { avatarSrc, defaultAvatar } from "@/lib/avatars";
+import { startLichess } from "@/lib/lichessAuth";
 import { THEME_KEY } from "@/lib/theme";
 import { clearAuth, setAuth } from "@/redux/actions/auth";
 import { setTheme } from "@/redux/actions/theme";
@@ -98,6 +99,10 @@ export default function SettingsPage() {
   // Appearance: "system" when no choice is saved.
   const [themeChoice, setThemeChoice] = useState<"light" | "dark" | "system">("system");
 
+  // Connected accounts
+  const [lichessNote, setLichessNote] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
+  const [lichessBusy, setLichessBusy] = useState(false);
+
   // Password
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
@@ -121,6 +126,12 @@ export default function SettingsPage() {
         setLastName(m.last_name);
       })
       .catch((err) => setLoadError(userMessage(err, "Couldn't load your settings.")));
+    // Back from connecting Lichess (app/(app)/auth/lichess).
+    const q = new URLSearchParams(window.location.search);
+    if (q.get("lichess") === "connected") {
+      setLichessNote({ kind: "ok", text: "Lichess connected. You can now sign in with it." });
+      window.history.replaceState(window.history.state, "", window.location.pathname);
+    }
     try {
       const saved = localStorage.getItem(THEME_KEY);
       setThemeChoice(saved === "light" || saved === "dark" ? saved : "system");
@@ -204,6 +215,20 @@ export default function SettingsPage() {
       setPasswordNote({ kind: "error", text: userMessage(err, "Couldn't change your password.") });
     } finally {
       setChanging(false);
+    }
+  }
+
+  async function disconnectLichess() {
+    setLichessBusy(true);
+    setLichessNote(null);
+    try {
+      const { linked } = await api.disconnectLichess();
+      if (me) setMe({ ...me, linked });
+      setLichessNote({ kind: "ok", text: "Lichess disconnected." });
+    } catch (err) {
+      setLichessNote({ kind: "error", text: userMessage(err, "Couldn't disconnect Lichess.") });
+    } finally {
+      setLichessBusy(false);
     }
   }
 
@@ -321,12 +346,52 @@ export default function SettingsPage() {
           )}
         </Section>
 
+        <Section title="Connected accounts" hint="Sign in with these instead of your password.">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Lichess</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {me.linked?.lichess ? `Connected as ${me.linked.lichess.username}` : "Not connected"}
+              </p>
+            </div>
+            {me.linked?.lichess ? (
+              <button type="button" onClick={disconnectLichess} disabled={lichessBusy || !hasPassword} className="btn-secondary disabled:opacity-50">
+                {lichessBusy ? "Disconnecting…" : "Disconnect"}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setLichessBusy(true);
+                  startLichess("connect").catch(() => setLichessBusy(false));
+                }}
+                disabled={lichessBusy}
+                className="btn-secondary disabled:opacity-50"
+              >
+                {lichessBusy ? "Opening Lichess…" : "Connect Lichess"}
+              </button>
+            )}
+          </div>
+          {me.linked?.lichess && !hasPassword && (
+            <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
+              Lichess is how you sign in, so set a password below before disconnecting it.
+            </p>
+          )}
+          {lichessNote && (
+            <div className="mt-3">
+              <Note kind={lichessNote.kind}>{lichessNote.text}</Note>
+            </div>
+          )}
+        </Section>
+
         <Section
           title="Password"
           hint={
             hasPassword
               ? "Changing it signs you out on your other devices."
-              : "You sign in with Google. Set a password to sign in with your email address too."
+              : me.linked?.lichess
+                ? "You sign in with Lichess. Set a password to sign in with your email address too."
+                : "You sign in with Google. Set a password to sign in with your email address too."
           }
         >
           <form onSubmit={changePassword} className="flex flex-col gap-4">
