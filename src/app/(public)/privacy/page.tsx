@@ -63,6 +63,15 @@ export default function PrivacyPolicyPage() {
           in Settings removes the link.
         </p>
         <p>
+          <strong className="font-[480] text-ink-text">Signing in with Chess.com.</strong>{" "}
+          If you choose &ldquo;Continue with Chess.com&rdquo;, or connect Chess.com in Settings,
+          Chess.com tells us your Chess.com account ID, your username, your email address, and
+          whether Chess.com has verified that address. We keep the account ID and username, for the
+          same reasons as with Lichess, and the email goes on your account. We ask Chess.com for
+          nothing else: not your games, friends or ratings through this sign-in, and we do not keep
+          access to your Chess.com account. Disconnecting Chess.com in Settings removes the link.
+        </p>
+        <p>
           <strong className="font-[480] text-ink-text">Chess data.</strong>{" "}
           Games, opponent profiles, opening statistics, and performance summaries. Some of this you
           enter or upload yourself (for example, PGN files). The rest is fetched on your instruction
@@ -227,6 +236,11 @@ export default function PrivacyPolicyPage() {
             <strong className="font-[480] text-ink-text">Lichess</strong>{" "}
             &mdash; only if you sign in with Lichess or connect it: it confirms which Lichess account
             is yours and gives us its username, profile name and email address.
+          </li>
+          <li>
+            <strong className="font-[480] text-ink-text">Chess.com</strong>{" "}
+            &mdash; only if you sign in with Chess.com or connect it: it confirms which Chess.com
+            account is yours and gives us its username and email address.
           </li>
         </ul>
         <p>

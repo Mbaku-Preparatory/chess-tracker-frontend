@@ -129,7 +129,7 @@ export interface Me {
   /** Their avatar (lib/avatars), or null for the default. */
   avatar: number | null;
   preferences: Preferences;
-  /** False for a Google or Lichess sign-up that has not set a password. */
+  /** False for a Google, Lichess or Chess.com sign-up that has not set a password. */
   has_password?: boolean;
   linked?: Linked;
 }
@@ -137,6 +137,7 @@ export interface Me {
 /** Other sites' accounts that sign in to this one. */
 export interface Linked {
   lichess: { username: string } | null;
+  chesscom?: { username: string } | null;
 }
 
 /** The settings page's switches, saved on the account. */
