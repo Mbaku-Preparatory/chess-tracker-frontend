@@ -70,7 +70,7 @@ export function PlayerGamesView({ slug }: { slug: string }) {
         }
         actions={
           player && (
-            <Link href={`/players/${slug}`} className="btn-secondary text-sm">
+            <Link href={`/players/${slug}`} className="btn-secondary text-sm max-sm:hidden">
               Back to profile
             </Link>
           )
