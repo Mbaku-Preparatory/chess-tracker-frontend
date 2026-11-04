@@ -53,6 +53,16 @@ export default function PrivacyPolicyPage() {
           policy.
         </p>
         <p>
+          <strong className="font-[480] text-ink-text">Signing in with Lichess.</strong>{" "}
+          If you choose &ldquo;Continue with Lichess&rdquo;, or connect Lichess in Settings, Lichess
+          tells us your Lichess account ID, your username, the name on your profile if you gave one,
+          and your email address. We keep the account ID and username, to recognise you next time
+          and to show which Lichess account is connected; the name and email go on your account as
+          they would at signup. We do not keep access to your Lichess account: the permission
+          Lichess gives us is used once to read these details, then cancelled. Disconnecting Lichess
+          in Settings removes the link.
+        </p>
+        <p>
           <strong className="font-[480] text-ink-text">Chess data.</strong>{" "}
           Games, opponent profiles, opening statistics, and performance summaries. Some of this you
           enter or upload yourself (for example, PGN files). The rest is fetched on your instruction
@@ -212,6 +222,11 @@ export default function PrivacyPolicyPage() {
             <strong className="font-[480] text-ink-text">Google</strong>{" "}
             &mdash; only if you sign in with Google: it confirms who you are and gives us your name
             and email address.
+          </li>
+          <li>
+            <strong className="font-[480] text-ink-text">Lichess</strong>{" "}
+            &mdash; only if you sign in with Lichess or connect it: it confirms which Lichess account
+            is yours and gives us its username, profile name and email address.
           </li>
         </ul>
         <p>

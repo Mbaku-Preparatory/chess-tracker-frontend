@@ -9,7 +9,7 @@ import { useAppDispatch } from "@/redux/hooks";
 import { setAuth } from "@/redux/actions/auth";
 import { loginRefusal } from "@/lib/apiError";
 import { Logo } from "@/components/ui/Logo";
-import { GoogleSignIn, OrDivider } from "@/components/GoogleSignIn";
+import { SocialSignIn } from "@/components/SocialSignIn";
 
 export default function LoginPage() {
   const dispatch = useAppDispatch();
@@ -78,8 +78,7 @@ export default function LoginPage() {
             </div>
           )}
 
-          <GoogleSignIn context="signin" onError={setError} />
-          <OrDivider />
+          <SocialSignIn context="signin" onError={setError} />
 
           <div>
             <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">

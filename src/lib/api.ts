@@ -512,6 +512,29 @@ getOpeningExplorer(
     });
   },
 
+  /** The code Lichess sent this tab back with. Signs in (or creates the
+   * account), or with `connect` links Lichess to the signed-in account. */
+  lichessSignIn(body: {
+    code: string;
+    code_verifier: string;
+    redirect_uri: string;
+    connect: boolean;
+  }): Promise<
+    | { access: string; refresh: string; email: string; created: boolean }
+    | { linked: import("@/types").Linked }
+  > {
+    return fetchJson(`${API_BASE}/auth/lichess/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  },
+
+  /** Unlinks Lichess. Refused while it is the account's only way in. */
+  disconnectLichess(): Promise<{ linked: import("@/types").Linked }> {
+    return fetchJson(`${API_BASE}/auth/lichess/`, { method: "DELETE" });
+  },
+
   logout(refreshToken: string): Promise<void> {
     return fetchJson(`${API_BASE}/auth/logout/`, {
       method: "POST",
