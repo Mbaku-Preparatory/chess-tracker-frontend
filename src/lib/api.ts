@@ -512,27 +512,25 @@ getOpeningExplorer(
     });
   },
 
-  /** The code Lichess sent this tab back with. Signs in (or creates the
-   * account), or with `connect` links Lichess to the signed-in account. */
-  lichessSignIn(body: {
-    code: string;
-    code_verifier: string;
-    redirect_uri: string;
-    connect: boolean;
-  }): Promise<
+  /** The code Lichess or Chess.com sent this tab back with. Signs in (or
+   * creates the account), or with `connect` links it to the signed-in account. */
+  linkedSignIn(
+    provider: import("@/lib/linkedAuth").Provider,
+    body: { code: string; code_verifier: string; redirect_uri: string; connect: boolean },
+  ): Promise<
     | { access: string; refresh: string; email: string; created: boolean }
     | { linked: import("@/types").Linked }
   > {
-    return fetchJson(`${API_BASE}/auth/lichess/`, {
+    return fetchJson(`${API_BASE}/auth/${provider}/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
   },
 
-  /** Unlinks Lichess. Refused while it is the account's only way in. */
-  disconnectLichess(): Promise<{ linked: import("@/types").Linked }> {
-    return fetchJson(`${API_BASE}/auth/lichess/`, { method: "DELETE" });
+  /** Unlinks Lichess or Chess.com. Refused while it is the account's only way in. */
+  disconnectLinked(provider: import("@/lib/linkedAuth").Provider): Promise<{ linked: import("@/types").Linked }> {
+    return fetchJson(`${API_BASE}/auth/${provider}/`, { method: "DELETE" });
   },
 
   logout(refreshToken: string): Promise<void> {

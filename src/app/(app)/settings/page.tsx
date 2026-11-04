@@ -9,13 +9,13 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { api } from "@/lib/api";
 import { userMessage } from "@/lib/apiError";
 import { avatarSrc, defaultAvatar } from "@/lib/avatars";
-import { startLichess } from "@/lib/lichessAuth";
-import { LichessLogo } from "@/components/ui/LichessLogo";
+import { enabledProviders, providerName, startLinkedSignIn, type Provider } from "@/lib/linkedAuth";
+import { ProviderLogo } from "@/components/ui/ProviderLogo";
 import { THEME_KEY } from "@/lib/theme";
 import { clearAuth, setAuth } from "@/redux/actions/auth";
 import { setTheme } from "@/redux/actions/theme";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import type { Me, Preferences } from "@/types";
+import type { Linked, Me, Preferences } from "@/types";
 
 const input =
   "block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-dark-border dark:bg-dark-elevated dark:text-gray-100 dark:placeholder-gray-500";
@@ -101,8 +101,8 @@ export default function SettingsPage() {
   const [themeChoice, setThemeChoice] = useState<"light" | "dark" | "system">("system");
 
   // Connected accounts
-  const [lichessNote, setLichessNote] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
-  const [lichessBusy, setLichessBusy] = useState(false);
+  // Which provider this page was just sent back from, connected.
+  const [justConnected, setJustConnected] = useState<Provider | null>(null);
 
   // Password
   const [current, setCurrent] = useState("");
@@ -127,10 +127,10 @@ export default function SettingsPage() {
         setLastName(m.last_name);
       })
       .catch((err) => setLoadError(userMessage(err, "Couldn't load your settings.")));
-    // Back from connecting Lichess (app/(app)/auth/lichess).
-    const q = new URLSearchParams(window.location.search);
-    if (q.get("lichess") === "connected") {
-      setLichessNote({ kind: "ok", text: "Lichess connected. You can now sign in with it." });
+    // Back from connecting an account (components/LinkedReturn).
+    const back = new URLSearchParams(window.location.search).get("connected");
+    if (back === "lichess" || back === "chesscom") {
+      setJustConnected(back);
       window.history.replaceState(window.history.state, "", window.location.pathname);
     }
     try {
@@ -219,20 +219,6 @@ export default function SettingsPage() {
     }
   }
 
-  async function disconnectLichess() {
-    setLichessBusy(true);
-    setLichessNote(null);
-    try {
-      const { linked } = await api.disconnectLichess();
-      if (me) setMe({ ...me, linked });
-      setLichessNote({ kind: "ok", text: "Lichess disconnected." });
-    } catch (err) {
-      setLichessNote({ kind: "error", text: userMessage(err, "Couldn't disconnect Lichess.") });
-    } finally {
-      setLichessBusy(false);
-    }
-  }
-
   async function deleteAccount(e: React.FormEvent) {
     e.preventDefault();
     setDeleting(true);
@@ -255,6 +241,8 @@ export default function SettingsPage() {
 
   // A Google sign-up has no password until they set one here.
   const hasPassword = me.has_password !== false;
+  // How an account with no password gets in, for the Password hint.
+  const signsInWith = me.linked?.lichess ? "Lichess" : me.linked?.chesscom ? "Chess.com" : "Google";
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -348,44 +336,18 @@ export default function SettingsPage() {
         </Section>
 
         <Section title="Connected accounts" hint="Sign in with these instead of your password.">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <LichessLogo size={28} className="shrink-0 text-gray-900 dark:text-gray-100" />
-              <div>
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Lichess</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {me.linked?.lichess ? `Connected as ${me.linked.lichess.username}` : "Not connected"}
-                </p>
-              </div>
-            </div>
-            {me.linked?.lichess ? (
-              <button type="button" onClick={disconnectLichess} disabled={lichessBusy || !hasPassword} className="btn-secondary disabled:opacity-50">
-                {lichessBusy ? "Disconnecting…" : "Disconnect"}
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => {
-                  setLichessBusy(true);
-                  startLichess("connect").catch(() => setLichessBusy(false));
-                }}
-                disabled={lichessBusy}
-                className="btn-secondary disabled:opacity-50"
-              >
-                {lichessBusy ? "Opening Lichess…" : "Connect Lichess"}
-              </button>
-            )}
+          <div className="flex flex-col gap-5">
+            {enabledProviders().map((provider) => (
+              <ConnectedRow
+                key={provider}
+                provider={provider}
+                username={me.linked?.[provider]?.username ?? null}
+                hasPassword={hasPassword}
+                justConnected={justConnected === provider}
+                onLinked={(linked) => setMe({ ...me, linked })}
+              />
+            ))}
           </div>
-          {me.linked?.lichess && !hasPassword && (
-            <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
-              Lichess is how you sign in, so set a password below before disconnecting it.
-            </p>
-          )}
-          {lichessNote && (
-            <div className="mt-3">
-              <Note kind={lichessNote.kind}>{lichessNote.text}</Note>
-            </div>
-          )}
         </Section>
 
         <Section
@@ -393,9 +355,7 @@ export default function SettingsPage() {
           hint={
             hasPassword
               ? "Changing it signs you out on your other devices."
-              : me.linked?.lichess
-                ? "You sign in with Lichess. Set a password to sign in with your email address too."
-                : "You sign in with Google. Set a password to sign in with your email address too."
+              : `You sign in with ${signsInWith}. Set a password to sign in with your email address too.`
           }
         >
           <form onSubmit={changePassword} className="flex flex-col gap-4">
@@ -494,6 +454,87 @@ export default function SettingsPage() {
           onPick={pickAvatar}
           onClose={() => setPicking(false)}
         />
+      )}
+    </div>
+  );
+}
+
+/** One provider in Connected accounts: who is connected, and the button to
+ * connect or disconnect. Disconnect waits for a password while this provider
+ * may be the account's only way in. */
+function ConnectedRow({
+  provider,
+  username,
+  hasPassword,
+  justConnected,
+  onLinked,
+}: {
+  provider: Provider;
+  username: string | null;
+  hasPassword: boolean;
+  justConnected: boolean;
+  onLinked: (linked: Linked) => void;
+}) {
+  const name = providerName(provider);
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
+  useEffect(() => {
+    if (justConnected) setNote({ kind: "ok", text: `${name} connected. You can now sign in with it.` });
+  }, [justConnected, name]);
+
+  async function disconnect() {
+    setBusy(true);
+    setNote(null);
+    try {
+      const { linked } = await api.disconnectLinked(provider);
+      onLinked(linked);
+      setNote({ kind: "ok", text: `${name} disconnected.` });
+    } catch (err) {
+      setNote({ kind: "error", text: userMessage(err, `Couldn't disconnect ${name}.`) });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center text-gray-900 dark:text-gray-100">
+            <ProviderLogo provider={provider} size={28} />
+          </span>
+          <div>
+            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{name}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{username ? `Connected as ${username}` : "Not connected"}</p>
+          </div>
+        </div>
+        {username ? (
+          <button type="button" onClick={disconnect} disabled={busy || !hasPassword} className="btn-secondary disabled:opacity-50">
+            {busy ? "Disconnecting…" : "Disconnect"}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => {
+              setBusy(true);
+              startLinkedSignIn(provider, "connect").catch(() => setBusy(false));
+            }}
+            disabled={busy}
+            className="btn-secondary disabled:opacity-50"
+          >
+            {busy ? `Opening ${name}…` : `Connect ${name}`}
+          </button>
+        )}
+      </div>
+      {username && !hasPassword && (
+        <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
+          {name} may be how you sign in, so set a password below before disconnecting it.
+        </p>
+      )}
+      {note && (
+        <div className="mt-3">
+          <Note kind={note.kind}>{note.text}</Note>
+        </div>
       )}
     </div>
   );
