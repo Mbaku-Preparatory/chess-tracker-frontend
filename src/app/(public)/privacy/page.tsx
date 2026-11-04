@@ -6,7 +6,7 @@ export const metadata: Metadata = {
     "How Chess Preparatory collects, uses, stores, and deletes your data across the web app and the Android app.",
 };
 
-const LAST_UPDATED = "14 August 2026";
+const LAST_UPDATED = "5 November 2026";
 const CONTACT_EMAIL = "bakutarb@gmail.com";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -41,6 +41,16 @@ export default function PrivacyPolicyPage() {
           password is stored only as a salted cryptographic hash &mdash; we never store or have
           access to the password itself. We send a six-digit code to your email address to confirm
           you own it.
+        </p>
+        <p>
+          <strong className="font-[480] text-ink-text">Signing in with Google.</strong>{" "}
+          If you choose &ldquo;Continue with Google&rdquo;, Google tells us your name, your email
+          address, and that Google has verified that address. That is all we receive: no password,
+          and no access to your Gmail, contacts, files or anything else in your Google account. We
+          use these details to create your account or sign you in to the one you already have with
+          that email address, and for nothing else. An account made this way has no password until
+          you set one in Settings. Google handles its side of the sign-in under its own privacy
+          policy.
         </p>
         <p>
           <strong className="font-[480] text-ink-text">Chess data.</strong>{" "}
@@ -178,7 +188,7 @@ export default function PrivacyPolicyPage() {
           HTTPS.
         </p>
         <p>
-          Four other companies process data on our behalf, each for one purpose and nothing else:
+          These other companies handle data for us, each for one purpose and nothing else:
         </p>
         <ul className="ml-5 list-disc space-y-1">
           <li>
@@ -198,6 +208,11 @@ export default function PrivacyPolicyPage() {
             <strong className="font-[480] text-ink-text">Paystack</strong>{" "}
             &mdash; the email address and amount for a tip you choose to send, on the web app only.
           </li>
+          <li>
+            <strong className="font-[480] text-ink-text">Google</strong>{" "}
+            &mdash; only if you sign in with Google: it confirms who you are and gives us your name
+            and email address.
+          </li>
         </ul>
         <p>
           These are infrastructure suppliers, not partners we share data with commercially. None of
@@ -212,7 +227,9 @@ export default function PrivacyPolicyPage() {
           database.
         </p>
         <p>
-          To delete your entire account and all data associated with it, email{" "}
+          To delete your entire account and all data associated with it, use{" "}
+          <strong className="font-[480] text-ink-text">Delete account</strong> in Settings on the
+          web app, which removes it immediately. Or email{" "}
           <a
             className="font-[480] text-accent-soft underline-offset-4 hover:underline"
             href={`mailto:${CONTACT_EMAIL}?subject=Account%20deletion%20request`}
