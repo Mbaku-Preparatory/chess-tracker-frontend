@@ -180,7 +180,6 @@ export function AnalysisView(props: AnalysisViewProps) {
   const engine = useEngine(fen, { enabled: prefs.engine && !solving, depth: DEPTHS[prefs.depth].depth, capMs: DEPTHS[prefs.depth].capMs });
   const top = engine.lines[0] ?? null;
 
-  const [selected, setSelected] = useState<string | null>(null);
   const [sharing, setSharing] = useState(false);
   const [lichessBusy, setLichessBusy] = useState(false);
   const finished = result === "1-0" || result === "0-1" || result === "1/2-1/2";
@@ -191,19 +190,19 @@ export function AnalysisView(props: AnalysisViewProps) {
   // solver's own, which they can carry on, step through, or take back to try
   // the exercise again.
   const attempt = useCallback(
-    (from: string, to: string) => {
+    (from: string, to: string, promotion?: string) => {
       // Already off the book's line: the move just carries it on.
-      if (line.inBranch) return line.play(from, to);
+      if (line.inBranch) return line.play(from, to, promotion);
       const expected = mainMoves[index + 1];
-      if (!expected) return line.play(from, to);
+      if (!expected) return line.play(from, to, promotion);
       let san: string;
       try {
-        san = new Chess(fen).move({ from, to, promotion: "q" }).san;
+        san = new Chess(fen).move({ from, to, promotion }).san;
       } catch {
         return false;
       }
       if (clean(san) !== clean(expected.san)) {
-        if (!line.play(from, to)) return false;
+        if (!line.play(from, to, promotion)) return false;
         setFeedback({ ok: false, text: `${san} is not the book's move. Explore it here, or take it back and try again.` });
         return true;
       }
@@ -259,39 +258,18 @@ export function AnalysisView(props: AnalysisViewProps) {
     return () => window.removeEventListener("keydown", onKey);
   }, [index, last, goTo]);
 
-  const onSquareClick = useCallback(
-    (square: string) => {
-      if (selected === square) return setSelected(null);
-      if (selected && line.legalTargets(selected).includes(square)) {
-        if (solving) attempt(selected, square);
-        else line.play(selected, square);
-        return setSelected(null);
-      }
-      setSelected(line.legalTargets(square).length > 0 ? square : null);
-    },
-    [selected, line, solving, attempt],
-  );
-  const onDrop = useCallback(
-    (from: string, to: string) => {
-      setSelected(null);
-      return solving ? attempt(from, to) : line.play(from, to);
-    },
+  const onMove = useCallback(
+    (from: string, to: string, promotion?: string) => (solving ? attempt(from, to, promotion) : line.play(from, to, promotion)),
     [line, solving, attempt],
   );
   const toMove = start.fen.split(" ")[1] === "b" ? "Black" : "White";
 
-  const squareStyles = useMemo(() => {
+  const highlights = useMemo(() => {
     const styles: Record<string, React.CSSProperties> = {};
     const last = index >= 0 ? moves[index] : null;
     if (last) {
       styles[last.from] = { backgroundColor: "rgba(255, 214, 10, 0.4)" };
       styles[last.to] = { backgroundColor: "rgba(255, 214, 10, 0.55)" };
-    }
-    if (selected) {
-      styles[selected] = { backgroundColor: "rgba(246,195,68,0.8)" };
-      for (const sq of line.legalTargets(selected)) {
-        styles[sq] = { background: "radial-gradient(circle, rgba(20,20,20,0.30) 22%, transparent 24%)" };
-      }
     }
     const best = top?.pv[0];
     if (prefs.engine && best) {
@@ -299,7 +277,7 @@ export function AnalysisView(props: AnalysisViewProps) {
       styles[best.slice(2, 4)] = { backgroundColor: "rgba(0,200,80,0.55)" };
     }
     return styles;
-  }, [index, moves, selected, line, top, prefs.engine]);
+  }, [index, moves, top, prefs.engine]);
 
   function download() {
     const url = URL.createObjectURL(new Blob([pgn], { type: "application/x-chess-pgn" }));
@@ -382,7 +360,7 @@ export function AnalysisView(props: AnalysisViewProps) {
           {bar("vertical", "hidden sm:flex")}
           <div className="flex w-full max-w-[min(100%,calc(100dvh-190px))] flex-col gap-1.5 lg:max-w-[min(100%,calc(100dvh-270px))]">
             <Plate side={topSide} color={orientation === "white" ? "black" : "white"} />
-            <Board fen={fen} orientation={orientation} squareStyles={squareStyles} onDrop={onDrop} onSquareClick={onSquareClick} />
+            <Board fen={fen} orientation={orientation} highlights={highlights} onMove={onMove} />
             <Plate side={bottomSide} color={orientation} />
             {bar("horizontal", "mt-0.5 sm:hidden")}
             {/* On a phone the controls sit under the board, where a thumb is. */}

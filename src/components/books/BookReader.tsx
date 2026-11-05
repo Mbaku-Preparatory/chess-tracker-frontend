@@ -22,11 +22,11 @@ import { Chess } from "chess.js";
 import Link from "next/link";
 import type { PDFDocumentProxy } from "pdfjs-dist";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Chessboard } from "react-chessboard";
 
 import { EnginePanel } from "@/components/analysis/EnginePanel";
 import { useEngine } from "@/hooks/useEngine";
 import { DEPTHS, useAnalysisPrefs } from "@/lib/analysisPrefs";
+import Board from "@/components/analysis/Board";
 import { api } from "@/lib/api";
 import { userMessage } from "@/lib/apiError";
 import { bookFile, keepBookFile, sha256Of } from "@/lib/bookFiles";
@@ -69,14 +69,6 @@ const clean = (san: string) => san.replace(/[+#!?]/g, "");
 function numberOf(fen: string): string {
   const f = fen.split(" ");
   return `${f[5]}${f[1] === "w" ? "." : "..."}`;
-}
-
-function legalTargets(fen: string, from: string): string[] {
-  try {
-    return new Chess(fen).moves({ square: from as never, verbose: true }).map((m) => m.to);
-  } catch {
-    return [];
-  }
 }
 
 function moveLabel(nodes: Node[], n: number): string {
@@ -274,7 +266,7 @@ function Panel({
   at: number;
   go: (n: number) => void;
   /** A move on the board. False when it was not legal. */
-  play: (from: string, to: string) => boolean;
+  play: (from: string, to: string, promotion?: string) => boolean;
   selectOwn: (k: number) => void;
   /** One step back or forward, or null when there is nowhere to go. */
   back: (() => void) | null;
@@ -291,10 +283,6 @@ function Panel({
   const moved = current === null ? null : onOwn ? own[at] : lastMove(nodes, current);
   const toMove = fen.split(" ")[1] === "w" ? "White" : "Black";
   const listRef = useRef<HTMLDivElement>(null);
-  // A tapped piece, waiting for its square. Tied to the position it was
-  // tapped in, so stepping elsewhere forgets it.
-  const [tapped, setTapped] = useState<{ fen: string; square: string } | null>(null);
-  const selected = tapped?.fen === fen ? tapped.square : null;
   // swiping the sheet down puts it away
   const [drag, setDrag] = useState(0);
   const dragStart = useRef<number | null>(null);
@@ -303,25 +291,10 @@ function Panel({
     listRef.current?.querySelector("[data-on]")?.scrollIntoView({ block: "nearest" });
   }, [current, at]);
 
-  const onSquareClick = (square: string) => {
-    if (current === null) return;
-    if (selected === square) return setTapped(null);
-    if (selected && legalTargets(fen, selected).includes(square)) {
-      play(selected, square);
-      return setTapped(null);
-    }
-    setTapped(legalTargets(fen, square).length > 0 ? { fen, square } : null);
-  };
-
-  const squareStyles: Record<string, React.CSSProperties> = moved
-    ? { [moved.from]: { background: "rgba(255, 221, 0, 0.38)" }, [moved.to]: { background: "rgba(255, 221, 0, 0.38)" } }
-    : {};
-  if (selected) {
-    squareStyles[selected] = { backgroundColor: "rgba(246,195,68,0.8)" };
-    for (const sq of legalTargets(fen, selected)) {
-      squareStyles[sq] = { background: "radial-gradient(circle, rgba(20,20,20,0.30) 22%, transparent 24%)" };
-    }
-  }
+  const highlights = useMemo<Record<string, React.CSSProperties>>(
+    () => (moved ? { [moved.from]: { backgroundColor: "rgba(255, 221, 0, 0.38)" }, [moved.to]: { backgroundColor: "rgba(255, 221, 0, 0.38)" } } : {}),
+    [moved],
+  );
 
   // A finger on the board is moving a piece, not the sheet.
   const keep = (e: React.TouchEvent) => e.stopPropagation();
@@ -347,25 +320,7 @@ function Panel({
       {/* the handle: where a swipe down starts, on a phone */}
       <div aria-hidden="true" className="mx-auto h-1.5 w-10 shrink-0 rounded-full bg-ink-line lg:hidden" />
       <div onTouchStart={keep} onTouchMove={keep} onTouchEnd={keep} className="mx-auto w-full max-w-[min(100%,40dvh)] lg:max-w-none">
-        <Chessboard
-          options={{
-            position: fen,
-            // Play your own moves: the book is untouched, and a move that is
-            // not its next one opens the reader's own line instead.
-            allowDragging: current !== null,
-            onPieceDrop: ({ sourceSquare, targetSquare }) => {
-              setTapped(null);
-              return targetSquare ? play(sourceSquare, targetSquare) : false;
-            },
-            onSquareClick: ({ square }) => onSquareClick(square),
-            squareStyles,
-            arrows: [],
-            boardStyle: { borderRadius: "6px" },
-            darkSquareStyle: { backgroundColor: "#4a7c59" },
-            lightSquareStyle: { backgroundColor: "#f0d9b5" },
-            animationDurationInMs: 150,
-          }}
-        />
+        <Board fen={fen} orientation="white" highlights={highlights} onMove={current !== null ? play : undefined} rounded="6px" />
       </div>
       <div className="flex items-center justify-between gap-3">
         <p className="min-w-0 truncate text-[14px] text-ink-muted" aria-live="polite">
@@ -637,11 +592,11 @@ export function BookReader({
   /** A move played on the board. The book's next move walks forward along
    * the book; anything else starts, or carries on, the reader's own line. */
   const play = useCallback(
-    (from: string, to: string) => {
+    (from: string, to: string, promotion?: string) => {
       if (!nodes || current === null) return false;
       let m;
       try {
-        m = new Chess(onOwn ? ownHere[at].fen : nodes[current][FEN]).move({ from, to, promotion: "q" });
+        m = new Chess(onOwn ? ownHere[at].fen : nodes[current][FEN]).move({ from, to, promotion });
       } catch {
         return false;
       }

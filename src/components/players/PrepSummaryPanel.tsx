@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { Chess } from "chess.js";
-import { Chessboard } from "react-chessboard";
+import Board from "@/components/analysis/Board";
 import { api } from "@/lib/api";
 import { gameRef } from "@/lib/gameRef";
 import { formatGameDate, gameSource } from "@/lib/games";
@@ -222,18 +222,7 @@ function InteractivePrepTree({ tree, orientation, totalGames, slug, color, sourc
 
         {/* Board */}
         <div className="overflow-hidden rounded-xl shadow-lg">
-          <Chessboard
-            options={{
-              position: fen,
-              boardOrientation: orientation,
-              allowDragging: false,
-              squareStyles,
-              darkSquareStyle: { backgroundColor: "#4a7c59" },
-              lightSquareStyle: { backgroundColor: "#f0d9b5" },
-              animationDurationInMs: 150,
-              boardStyle: { borderRadius: "12px" },
-            }}
-          />
+          <Board fen={fen} orientation={orientation} highlights={squareStyles} rounded="12px" />
         </div>
       </div>
 
