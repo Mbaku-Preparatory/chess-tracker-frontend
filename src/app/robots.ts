@@ -18,6 +18,8 @@ export default function robots(): MetadataRoute.Robots {
         // A signed-in user's games and the master corpus. "/games" is not
         // "/game/…", the public game pages, for the same prefix reason.
         "/games", "/master-games", "/books",
+        // The phone app's frames for signed-in pages (app/(embed)).
+        "/embed",
         "/api/",
       ],
     },
