@@ -220,7 +220,6 @@ export function BotGame({
   const [resigned, setResigned] = useState(false);
   const [thinking, setThinking] = useState(false);
   const [engineError, setEngineError] = useState(false);
-  const [selected, setSelected] = useState<string | null>(null);
 
   // The whole game replayed, so repetition and the fifty-move rule are seen.
   const chess = useMemo(() => {
@@ -321,11 +320,11 @@ export function BotGame({
   }, [fen, botToMove]);
 
   const tryMove = useCallback(
-    (from: string, to: string): boolean => {
+    (from: string, to: string, promotion?: string): boolean => {
       if (result || chess.turn() !== youColor[0]) return false;
       let san: string;
       try {
-        san = new Chess(fen).move({ from, to, promotion: "q" }).san;
+        san = new Chess(fen).move({ from, to, promotion }).san;
       } catch {
         return false;
       }
@@ -345,35 +344,15 @@ export function BotGame({
     [result, chess, youColor, fen, leftBook, ply, book, games, sans, elo, play, say],
   );
 
-  const onSquareClick = useCallback(
-    (square: string) => {
-      if (selected === square) return setSelected(null);
-      const targets = (sq: string) => chess.moves({ square: sq as never, verbose: true }).map((m) => m.to as string);
-      if (selected && targets(selected).includes(square)) {
-        tryMove(selected, square);
-        return setSelected(null);
-      }
-      const own = chess.get(square as never)?.color === youColor[0];
-      setSelected(own && targets(square).length ? square : null);
-    },
-    [selected, chess, tryMove, youColor],
-  );
-
-  const squareStyles = useMemo(() => {
+  const highlights = useMemo(() => {
     const styles: Record<string, React.CSSProperties> = {};
     const last = moves[moves.length - 1];
     if (last) {
       styles[last.from] = { backgroundColor: "rgba(255, 214, 10, 0.4)" };
       styles[last.to] = { backgroundColor: "rgba(255, 214, 10, 0.55)" };
     }
-    if (selected) {
-      styles[selected] = { backgroundColor: "rgba(246,195,68,0.8)" };
-      for (const m of chess.moves({ square: selected as never, verbose: true })) {
-        styles[m.to] = { background: "radial-gradient(circle, rgba(20,20,20,0.30) 22%, transparent 24%)" };
-      }
-    }
     return styles;
-  }, [moves, selected, chess]);
+  }, [moves]);
 
   function newGame() {
     engine.cancel();
@@ -384,7 +363,6 @@ export function BotGame({
     say(opener);
     setResigned(false);
     setEngineError(false);
-    setSelected(null);
   }
 
   // Back to the last position with you to move, and back into their prep if
@@ -412,7 +390,6 @@ export function BotGame({
     say("Take two. Your move.");
     setResigned(false);
     setEngineError(false);
-    setSelected(null);
   }
 
   function download() {
@@ -494,7 +471,7 @@ export function BotGame({
         <section aria-label="Board" className="flex justify-center">
           <div className="flex w-full max-w-[min(100%,calc(100dvh-190px))] flex-col gap-1.5 lg:max-w-[min(100%,calc(100dvh-270px))]">
             <Plate name={name} rating={botRating} color={botColor} tag={`Bot · ${elo}`} avatar={botAvatarSrc} onAvatarClick={onChangeAvatar && (() => onChangeAvatar("bot"))} />
-            <Board fen={fen} orientation={youColor} squareStyles={squareStyles} onDrop={tryMove} onSquareClick={onSquareClick} />
+            <Board fen={fen} orientation={youColor} highlights={highlights} onMove={result ? undefined : tryMove} side={youColor[0] as "w" | "b"} />
             <Plate name={youName} rating={null} color={youColor} avatar={youAvatarSrc} onAvatarClick={onChangeAvatar && (() => onChangeAvatar("me"))} />
           </div>
         </section>

@@ -68,15 +68,6 @@ export function fenAt(moves: ParsedMove[], index: number, start: string = START_
   return index >= 0 ? moves[index]?.fen ?? start : start;
 }
 
-export function legalTargets(fen: string, from: string): string[] {
-  try {
-    return new Chess(fen).moves({ square: from as never, verbose: true }).map((m) => m.to);
-  } catch {
-    // An unreachable position should disable the board, never crash it.
-    return [];
-  }
-}
-
 /**
  * Play a move from the current position.
  *
@@ -88,7 +79,9 @@ export function playMove(
   mainMoves: ParsedMove[],
   from: string,
   to: string,
-  start: string = START_FEN
+  start: string = START_FEN,
+  // The piece a pawn becomes, which the board asks for. Ignored otherwise.
+  promotion: string = "q"
 ): LineState | null {
   const moves = lineOf(mainMoves, state);
   const chess = new Chess(fenAt(moves, state.index, start));
@@ -96,10 +89,7 @@ export function playMove(
 
   let played;
   try {
-    // Always a queen. Under-promotion is rare enough that asking every time
-    // costs more than it saves, and a known simplification beats a silent
-    // wrong guess.
-    played = chess.move({ from, to, promotion: "q" });
+    played = chess.move({ from, to, promotion });
   } catch {
     return null;
   }

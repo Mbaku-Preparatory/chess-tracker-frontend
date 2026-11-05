@@ -7,7 +7,6 @@ import {
   type LineState,
   branchStartsAt,
   fenAt,
-  legalTargets as legalTargetsFrom,
   lineOf,
   movesOf,
   playMove,
@@ -31,9 +30,8 @@ export interface AnalysisLine {
   onBranch: boolean;
   /** On the branch, past where it leaves the game. */
   inBranch: boolean;
-  legalTargets: (from: string) => string[];
   /** False when the move was not legal from here. */
-  play: (from: string, to: string) => boolean;
+  play: (from: string, to: string, promotion?: string) => boolean;
   /** Step along the line the board is following. */
   goTo: (index: number) => void;
   /** Jump to a move of the game itself; the branch stays in the list. */
@@ -54,8 +52,8 @@ export function useAnalysisLine(mainMoves: ParsedMove[], start: string = START_F
   const startsAt = branchStartsAt(state.branch);
 
   const play = useCallback(
-    (from: string, to: string) => {
-      const next = playMove(state, mainMoves, from, to, start);
+    (from: string, to: string, promotion?: string) => {
+      const next = playMove(state, mainMoves, from, to, start, promotion);
       if (!next) return false;
       setState(next);
       return true;
@@ -81,7 +79,6 @@ export function useAnalysisLine(mainMoves: ParsedMove[], start: string = START_F
     [mainMoves]
   );
 
-  const legalTargets = useCallback((from: string) => legalTargetsFrom(fen, from), [fen]);
   const reset = useCallback(() => setState(INITIAL), []);
 
   // Memoised, and load-bearing. A fresh object every render makes every
@@ -99,13 +96,12 @@ export function useAnalysisLine(mainMoves: ParsedMove[], start: string = START_F
       branchStartsAt: startsAt,
       onBranch: state.onBranch,
       inBranch: state.onBranch && startsAt !== null && state.index >= startsAt,
-      legalTargets,
       play,
       goTo,
       selectMain,
       selectBranch,
       reset,
     }),
-    [moves, state.index, state.branch, state.onBranch, fen, startsAt, legalTargets, play, goTo, selectMain, selectBranch, reset]
+    [moves, state.index, state.branch, state.onBranch, fen, startsAt, play, goTo, selectMain, selectBranch, reset]
   );
 }
