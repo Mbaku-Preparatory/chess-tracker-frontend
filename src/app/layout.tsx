@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/next";
 
 import { NavigationMemory } from "@/components/NavigationMemory";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -40,6 +41,8 @@ export default function RootLayout({
             {children}
           </ThemeProvider>
         </StoreProvider>
+        {/* Vercel Web Analytics: cookieless page-view counts, no personal data. */}
+        <Analytics />
       </body>
     </html>
   );
