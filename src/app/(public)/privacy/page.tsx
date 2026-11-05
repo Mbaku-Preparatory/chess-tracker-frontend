@@ -6,7 +6,7 @@ export const metadata: Metadata = {
     "How Chess Preparatory collects, uses, stores, and deletes your data across the web app and the Android app.",
 };
 
-const LAST_UPDATED = "5 November 2026";
+const LAST_UPDATED = "6 November 2026";
 const CONTACT_EMAIL = "bakutarb@gmail.com";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -108,6 +108,12 @@ export default function PrivacyPolicyPage() {
           location, contacts, calendar, call logs, or the contents of your device storage. We do not
           sell your data, we do not share it with anyone for advertising, and we do not use it to
           build advertising profiles.
+        </p>
+        <p>
+          <strong className="font-[480] text-ink-text">Website visits.</strong>{" "}
+          The website uses Vercel Web Analytics to count page views: which pages are visited, the
+          referring site, and the country, browser, and device type. It sets no cookies, and it does
+          not identify you or follow you across days or across other sites.
         </p>
         <p>
           <strong className="font-[480] text-ink-text">Profile photo.</strong>{" "}
@@ -213,7 +219,8 @@ export default function PrivacyPolicyPage() {
           <li>
             <strong className="font-[480] text-ink-text">Railway</strong> and{" "}
             <strong className="font-[480] text-ink-text">Vercel</strong> &mdash;
-            hosting and database.
+            hosting and database. Vercel also provides the website&apos;s visit counts, as
+            described above.
           </li>
           <li>
             <strong className="font-[480] text-ink-text">Sentry</strong> &mdash;
