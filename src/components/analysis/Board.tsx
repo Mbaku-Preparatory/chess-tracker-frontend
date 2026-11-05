@@ -18,9 +18,10 @@ const PROMOTIONS: { piece: Promotion; name: string }[] = [
 const SELECTED = { backgroundColor: "rgba(246,195,68,0.8)" };
 const DOT = { background: "radial-gradient(circle, rgba(20,20,20,0.30) 22%, transparent 24%)" };
 const RING = { background: "radial-gradient(circle closest-side, transparent 80%, rgba(20,20,20,0.30) 82%, rgba(20,20,20,0.30) 99%, transparent 100%)" };
-// Red, so the square a piece is about to land on stands out from the yellow
-// of the piece picked up and of the last move.
-const HOVER = { backgroundColor: "rgba(220,38,38,0.55)", boxShadow: "inset 0 0 0 3px rgba(255,255,255,0.85)" };
+// The square under the pointer: red where the piece would capture, yellow
+// where it would only move.
+const HOVER_CAPTURE = { backgroundColor: "rgba(220,38,38,0.55)", boxShadow: "inset 0 0 0 3px rgba(255,255,255,0.85)" };
+const HOVER_MOVE = { backgroundColor: "rgba(246,195,68,0.5)", boxShadow: "inset 0 0 0 3px rgba(255,255,255,0.85)" };
 
 function legalMoves(fen: string): Move[] {
   try {
@@ -103,7 +104,7 @@ export default function Board({
     styles[active] = SELECTED;
     for (const m of moves) {
       if (m.from !== active) continue;
-      styles[m.to] = m.to === hover ? HOVER : m.captured ? RING : DOT;
+      styles[m.to] = m.to === hover ? (m.captured ? HOVER_CAPTURE : HOVER_MOVE) : m.captured ? RING : DOT;
     }
     return styles;
   }, [highlights, active, moves, hover]);
