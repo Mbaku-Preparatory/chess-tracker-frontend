@@ -467,6 +467,30 @@ export interface SubscriptionPlan {
   negotiated: boolean;
 }
 
+/** One grant of time on the billing page. Mirrors BillingView on the backend. */
+export interface BillingEntry {
+  /** A payment (by card, M-Pesa or recorded by hand), free time, or the trial. */
+  kind: "payment" | "free" | "trial";
+  plan: string | null;
+  period: "month" | "year" | null;
+  days: number;
+  amount: string;
+  currency: string;
+  /** Paystack's reference, or the M-Pesa code; empty for free time. */
+  reference: string;
+  given_at: string;
+  starts_at: string | null;
+  ends_at: string | null;
+}
+
+/** GET /api/subscriptions/billing/. */
+export interface Billing {
+  /** The last payment, or null if they have never paid. */
+  current_plan: BillingEntry | null;
+  /** Newest first. */
+  history: BillingEntry[];
+}
+
 /** GET /api/subscriptions/me/ (subscriptions/views.py on the backend). */
 export interface MySubscription {
   /** Whether the paywall is on at all. False: everything works for everyone. */

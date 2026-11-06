@@ -8,6 +8,7 @@
 
 export const SUBSCRIPTION_EXPIRED_PATH = "/subscription-expired";
 export const SUBSCRIBE_PATH = "/subscribe";
+export const BILLING_PATH = "/billing";
 
 /**
  * Pages a user whose access has run out can still open: their account, help,
@@ -15,7 +16,7 @@ export const SUBSCRIBE_PATH = "/subscribe";
  * sends them to SUBSCRIPTION_EXPIRED_PATH.
  */
 export function isOpenWithoutAccess(pathname: string): boolean {
-  return [SUBSCRIPTION_EXPIRED_PATH, SUBSCRIBE_PATH, "/settings", "/support"].includes(pathname);
+  return [SUBSCRIPTION_EXPIRED_PATH, SUBSCRIBE_PATH, BILLING_PATH, "/settings", "/support"].includes(pathname);
 }
 
 let redirecting = false;
@@ -38,6 +39,12 @@ export function formatPrice(amount: string, currency: string): string {
   const digits = Number.isInteger(n) ? 0 : 2;
   const formatted = n.toLocaleString("en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits });
   return currency === "USD" ? `$${formatted}` : `${currency} ${formatted}`;
+}
+
+/** "7 Nov 2026": for lists, where the year matters and the weekday doesn't. */
+export function formatShortDate(iso: string | null): string {
+  if (!iso) return "";
+  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
 
 /** "Friday 20 November". */

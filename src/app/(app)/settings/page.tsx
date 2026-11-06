@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 import { Avatar } from "@/components/avatar/Avatar";
 import { AvatarPicker } from "@/components/avatar/AvatarPicker";
@@ -12,7 +13,7 @@ import { userMessage } from "@/lib/apiError";
 import { avatarSrc, defaultAvatar } from "@/lib/avatars";
 import { enabledProviders, providerName, startLinkedSignIn, type Provider } from "@/lib/linkedAuth";
 import { ProviderLogo } from "@/components/ui/ProviderLogo";
-import { formatDate, SUBSCRIBE_PATH } from "@/lib/subscription";
+import { BILLING_PATH, formatDate } from "@/lib/subscription";
 import { THEME_KEY } from "@/lib/theme";
 import { clearAuth, setAuth } from "@/redux/actions/auth";
 import { setTheme } from "@/redux/actions/theme";
@@ -33,7 +34,8 @@ function Section({ title, hint, children, danger = false }: { title: string; hin
   );
 }
 
-/** Where their subscription stands. Hidden until the paywall is switched on. */
+/** Where their subscription stands, in a line; the details are on Billing.
+ * Hidden until the paywall is switched on. */
 function SubscriptionSection() {
   const { subscription: sub } = useSubscription();
   if (!sub || !sub.enforced) return null;
@@ -44,14 +46,12 @@ function SubscriptionSection() {
           : sub.state === "negotiated" ? `Access until ${formatDate(sub.access_until)}, as agreed with us.`
             : sub.paid_until ? `Your access ended on ${formatDate(sub.paid_until)}.` : "No subscription yet.";
   return (
-    <Section title="Subscription" hint="Pay ahead with M-Pesa or a card. Nothing renews automatically.">
+    <Section title="Subscription">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-gray-700 dark:text-gray-300">{line}</p>
-        {sub.state !== "staff" && (
-          <a href={SUBSCRIBE_PATH} className="btn-primary">
-            {sub.state === "paid" || sub.state === "negotiated" ? "Add more time" : "Subscribe"}
-          </a>
-        )}
+        <Link href={BILLING_PATH} className="btn-secondary">
+          Billing
+        </Link>
       </div>
     </Section>
   );

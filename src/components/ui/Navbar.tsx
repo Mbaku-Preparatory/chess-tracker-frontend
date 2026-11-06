@@ -12,6 +12,8 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { usePreferences } from "@/components/PreferencesProvider";
 import { avatarSrc, defaultAvatar } from "@/lib/avatars";
 import { BurgerButton } from "@/components/ui/BurgerButton";
+import { useSubscription } from "@/components/subscription/SubscriptionProvider";
+import { BILLING_PATH } from "@/lib/subscription";
 
 // The app's sections, in the bar on a desktop and in the burger menu below it.
 const LINKS = [
@@ -27,6 +29,9 @@ export function Navbar() {
   const profileRef = useRef<HTMLDivElement>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  // Billing appears once the paywall is on: until then there is nothing to bill.
+  const { subscription } = useSubscription();
+  const showBilling = Boolean(subscription?.enforced);
 
   const { token, refreshToken, email } = useAppSelector((s) => s.auth);
   // Your avatar: the one picked in settings, or the default for your email.
@@ -160,6 +165,21 @@ export function Navbar() {
                     </Link>
                   </div>
 
+                  {showBilling && (
+                    <div className="border-t border-gray-100 dark:border-dark-border">
+                      <Link
+                        href={BILLING_PATH}
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-dark-surface"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4" aria-hidden>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
+                        </svg>
+                        Billing
+                      </Link>
+                    </div>
+                  )}
+
                   {/* Support — in the dropdown rather than the main nav, on
                       purpose. Asking for money should be something you find,
                       not the thing that greets you. The mobile app puts it in
@@ -275,6 +295,15 @@ export function Navbar() {
                   >
                     Settings
                   </Link>
+                  {showBilling && (
+                    <Link
+                      href={BILLING_PATH}
+                      onClick={() => setMenuOpen(false)}
+                      className="block rounded-lg px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-dark-elevated"
+                    >
+                      Billing
+                    </Link>
+                  )}
                   <Link
                     href="/support"
                     onClick={() => setMenuOpen(false)}

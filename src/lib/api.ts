@@ -1,4 +1,5 @@
 import type {
+  Billing,
   AccountDelinkResult,
   AccountGamesDeleteResult,
   ChessComImportResult,
@@ -247,6 +248,11 @@ export const api = {
   /** Where this user stands, and the plans on sale to them in their currency. */
   getMySubscription(): Promise<MySubscription> {
     return fetchJson(`${API_BASE}/subscriptions/me/`);
+  },
+
+  /** The plan they last paid for, and every payment and free period. */
+  getBilling(): Promise<Billing> {
+    return fetchJson(`${API_BASE}/subscriptions/billing/`);
   },
 
   /**
