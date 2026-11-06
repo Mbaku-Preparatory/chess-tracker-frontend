@@ -7,6 +7,7 @@ import type {
   Payment,
   LichessImportResult,
   Game,
+  MySubscription,
   GamesFilter,
   OpeningStat,
   OpeningStudySuggestion,
@@ -24,6 +25,7 @@ import { authStorage } from "@/lib/auth";
 import { handleAuthFailure } from "@/lib/handleAuthFailure";
 import { refreshAccessToken } from "@/lib/refreshAccessToken";
 import { requestTracker } from "@/lib/request-tracker";
+import { sendToSubscriptionExpired } from "@/lib/subscription";
 
 const rawApiBase =
   process.env.NEXT_PUBLIC_API_BASE_URL ||
@@ -70,6 +72,10 @@ async function fetchJson<T>(url: string, init?: RequestInit, _retriedAfterRefres
         void handleAuthFailure();
       }
       const body = await res.json().catch(() => null);
+      // The paywall: free trial or subscription over. Not an auth failure —
+      // signing them out would be wrong — so they go to the page that can
+      // take a payment.
+      if (res.status === 402) sendToSubscriptionExpired();
       throw buildApiError(res.status, res.statusText, body);
     }
     if (res.status === 204) {
@@ -228,6 +234,26 @@ export const api = {
 
   getPayment(reference: string): Promise<Payment> {
     return fetchJson(`${API_BASE}/payments/${encodeURIComponent(reference)}/`);
+  },
+
+  // ── Subscriptions ─────────────────────────────────────────────────────────
+
+  /** Where this user stands, and the plans on sale to them in their currency. */
+  getMySubscription(): Promise<MySubscription> {
+    return fetchJson(`${API_BASE}/subscriptions/me/`);
+  },
+
+  /**
+   * Open a Paystack checkout for a plan. Only the plan's code is sent: the
+   * price and the days are the backend's, so nothing here can change them.
+   * Poll the returned payment with getPayment, as for a tip.
+   */
+  startSubscriptionCheckout(plan: string): Promise<Payment> {
+    return fetchJson(`${API_BASE}/subscriptions/checkout/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plan }),
+    });
   },
 
   // ── Background import jobs ─────────────────────────────────────────────────

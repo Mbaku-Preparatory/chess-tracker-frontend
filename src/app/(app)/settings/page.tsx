@@ -5,12 +5,14 @@ import { useEffect, useState } from "react";
 import { Avatar } from "@/components/avatar/Avatar";
 import { AvatarPicker } from "@/components/avatar/AvatarPicker";
 import { usePreferences } from "@/components/PreferencesProvider";
+import { useSubscription } from "@/components/subscription/SubscriptionProvider";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { api } from "@/lib/api";
 import { userMessage } from "@/lib/apiError";
 import { avatarSrc, defaultAvatar } from "@/lib/avatars";
 import { enabledProviders, providerName, startLinkedSignIn, type Provider } from "@/lib/linkedAuth";
 import { ProviderLogo } from "@/components/ui/ProviderLogo";
+import { formatDate, SUBSCRIBE_PATH } from "@/lib/subscription";
 import { THEME_KEY } from "@/lib/theme";
 import { clearAuth, setAuth } from "@/redux/actions/auth";
 import { setTheme } from "@/redux/actions/theme";
@@ -28,6 +30,30 @@ function Section({ title, hint, children, danger = false }: { title: string; hin
       {hint && <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{hint}</p>}
       <div className="mt-5">{children}</div>
     </section>
+  );
+}
+
+/** Where their subscription stands. Hidden until the paywall is switched on. */
+function SubscriptionSection() {
+  const { subscription: sub } = useSubscription();
+  if (!sub || !sub.enforced) return null;
+  const line =
+    sub.state === "staff" ? "Staff access: never expires."
+      : sub.state === "trial" ? `Free trial until ${formatDate(sub.access_until)}.`
+        : sub.state === "paid" ? `Subscribed until ${formatDate(sub.access_until)}.`
+          : sub.state === "negotiated" ? `Access until ${formatDate(sub.access_until)}, as agreed with us.`
+            : sub.paid_until ? `Your access ended on ${formatDate(sub.paid_until)}.` : "No subscription yet.";
+  return (
+    <Section title="Subscription" hint="Pay ahead with M-Pesa or a card. Nothing renews automatically.">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-gray-700 dark:text-gray-300">{line}</p>
+        {sub.state !== "staff" && (
+          <a href={SUBSCRIBE_PATH} className="btn-primary">
+            {sub.state === "paid" || sub.state === "negotiated" ? "Add more time" : "Subscribe"}
+          </a>
+        )}
+      </div>
+    </Section>
   );
 }
 
@@ -289,6 +315,8 @@ export default function SettingsPage() {
             </div>
           </form>
         </Section>
+
+        <SubscriptionSection />
 
         <Section title="Features" hint="Turn parts of the app on or off. Saved on your account, so they follow you to every device.">
           <ul className="flex flex-col divide-y divide-gray-100 dark:divide-dark-border">
