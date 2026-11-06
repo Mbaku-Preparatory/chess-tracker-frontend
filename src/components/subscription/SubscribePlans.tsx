@@ -258,11 +258,6 @@ export function SubscribePlans({ expired, returnedReference }: { expired: boolea
             )}
           </div>
         )}
-        <p className="text-xs">
-          Prices are shown for the country you appear to be in, from{" "}
-          <a href="https://db-ip.com" className="underline" target="_blank" rel="noopener noreferrer">IP geolocation by DB-IP</a>.
-          {" "}After your first payment, your card&apos;s country sets them.
-        </p>
       </div>
     </div>
   );
