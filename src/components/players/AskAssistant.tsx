@@ -20,7 +20,7 @@ import { Markdown } from "@/components/ui/Markdown";
  */
 
 // Provisional — the backend carries the same name in ASSISTANT_NAME.
-const ASSISTANT_NAME = "Mbaku";
+const ASSISTANT_NAME = "Mbaku AI";
 
 const SUGGESTED = [
   "Which openings does this player play most?",

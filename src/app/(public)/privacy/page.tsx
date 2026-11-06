@@ -87,11 +87,11 @@ export default function PrivacyPolicyPage() {
         </p>
         <p>
           <strong className="font-[480] text-ink-text">
-            Your conversations with Mbaku.
+            Your conversations with Mbaku AI.
           </strong>{" "}
           The questions you ask the in-app assistant and the answers it gives are stored against
           your account, so a conversation can be continued later. See{" "}
-          <em>The Mbaku assistant</em> below for who else sees them.
+          <em>The Mbaku AI assistant</em> below for who else sees them.
         </p>
         <p>
           <strong className="font-[480] text-ink-text">
@@ -139,7 +139,7 @@ export default function PrivacyPolicyPage() {
           its stack trace, your device model and Android version, the app version, and a trail of
           the screens you visited and buttons you pressed just beforehand. It does{" "}
           <strong className="font-[480] text-ink-text">not</strong> contain the
-          contents of anything you typed &mdash; not your questions to Mbaku, not your notes, not
+          contents of anything you typed &mdash; not your questions to Mbaku AI, not your notes, not
           your opponents&apos; names.
         </p>
         <p>
@@ -154,9 +154,9 @@ export default function PrivacyPolicyPage() {
         </p>
       </Section>
 
-      <Section title="The Mbaku assistant">
+      <Section title="The Mbaku AI assistant">
         <p>
-          Mbaku answers questions about an opponent in plain language. To do that, your question and
+          Mbaku AI answers questions about an opponent in plain language. To do that, your question and
           a summary of the data we already hold about that opponent &mdash; their name, ratings,
           game results, openings, and your head-to-head record &mdash; are sent to Anthropic, which
           operates the language model that writes the answer.
@@ -166,6 +166,16 @@ export default function PrivacyPolicyPage() {
           what you entered yourself. Your email address, your password, and your prep session notes
           are never included. Anthropic processes this on our behalf to generate the reply and does
           not use it to train models.
+        </p>
+        <p>
+          Mbaku AI is switched on for new accounts. Nothing is sent to Anthropic until you ask a
+          question, and you can turn Mbaku AI off at any time in Settings.
+        </p>
+        <p>
+          We read the questions people ask, to see whether Mbaku AI is useful and to improve its
+          answers. We also count how many questions each account asks per month, because each
+          account has a monthly allowance. Deleting an opponent deletes your conversations about
+          them; deleting your account deletes all of them, along with the count.
         </p>
       </Section>
 
@@ -238,7 +248,7 @@ export default function PrivacyPolicyPage() {
           </li>
           <li>
             <strong className="font-[480] text-ink-text">Anthropic</strong>{" "}
-            &mdash; the questions you ask Mbaku and the opponent summary sent with them.
+            &mdash; the questions you ask Mbaku AI and the opponent summary sent with them.
           </li>
           <li>
             <strong className="font-[480] text-ink-text">Paystack</strong>{" "}

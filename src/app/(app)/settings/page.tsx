@@ -68,7 +68,7 @@ function Note({ kind, children }: { kind: "ok" | "error"; children: React.ReactN
 const SWITCHES: { key: keyof Preferences; title: string; hint: string }[] = [
   {
     key: "mbaku_enabled",
-    title: "Mbaku",
+    title: "Mbaku AI",
     hint: "The assistant that answers questions about a player from their games, under Ask in their prep.",
   },
   {
