@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { api } from "@/lib/api";
+import type { AppError } from "@/lib/apiError";
 import { Markdown } from "@/components/ui/Markdown";
 
 /**
@@ -50,6 +51,11 @@ export function AskAssistant({ slug, playerName }: AskAssistantProps) {
   const [conversationId, setConversationId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // Known after the first answer of the visit: the monthly allowance
+  // (ASSISTANT_MONTHLY_QUESTIONS on the backend). Once it is used up the
+  // backend answers 429 with a sentence naming the reset date, shown as the
+  // error like any other.
+  const [allowance, setAllowance] = useState<{ left: number; limit: number } | null>(null);
 
   async function ask(text: string) {
     const trimmed = text.trim();
@@ -64,7 +70,19 @@ export function AskAssistant({ slug, playerName }: AskAssistantProps) {
       const result = await api.askAboutPlayer(slug, trimmed, conversationId);
       setConversationId(result.conversation_id);
       setTurns((prev) => [...prev, { role: "assistant", content: result.answer }]);
+      if (result.questions_left !== null && result.questions_limit !== null) {
+        setAllowance({ left: result.questions_left, limit: result.questions_limit });
+      }
     } catch (err) {
+      // The monthly allowance is used up: the backend's sentence names the
+      // reset date. Read from the body because a 429's message is otherwise
+      // the generic "too many requests" (lib/apiError.ts).
+      const body = (err as AppError).body as { code?: string; detail?: string } | undefined;
+      if (body?.code === "assistant_monthly_limit" && body.detail) {
+        setError(body.detail);
+        setAllowance((prev) => (prev ? { ...prev, left: 0 } : prev));
+        return;
+      }
       setError(
         err instanceof Error ? err.message : "Something went wrong. Try again."
       );
@@ -172,6 +190,12 @@ export function AskAssistant({ slug, playerName }: AskAssistantProps) {
           <div className="flex items-center justify-between gap-3">
             <span className="text-xs text-gray-400 dark:text-gray-500">
               {question.length}/{MAX_QUESTION}
+              {allowance && (
+                <>
+                  {" · "}
+                  {allowance.left} of {allowance.limit} questions left this month
+                </>
+              )}
             </span>
             <button
               type="submit"

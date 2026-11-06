@@ -134,7 +134,13 @@ export const api = {
     slug: string,
     question: string,
     conversationId?: number | null,
-  ): Promise<{ answer: string; conversation_id: number }> {
+  ): Promise<{
+    answer: string;
+    conversation_id: number;
+    /** This month's allowance after this answer. Null for staff, who are not counted. */
+    questions_left: number | null;
+    questions_limit: number | null;
+  }> {
     return fetchJson(`${API_BASE}/players/${slug}/ask/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
