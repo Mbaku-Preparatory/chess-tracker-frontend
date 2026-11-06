@@ -167,6 +167,16 @@ export default function PrivacyPolicyPage() {
           are never included. Anthropic processes this on our behalf to generate the reply and does
           not use it to train models.
         </p>
+        <p>
+          Mbaku AI is switched on for new accounts. Nothing is sent to Anthropic until you ask a
+          question, and you can turn Mbaku AI off at any time in Settings.
+        </p>
+        <p>
+          We read the questions people ask, to see whether Mbaku AI is useful and to improve its
+          answers. We also count how many questions each account asks per month, because each
+          account has a monthly allowance. Deleting an opponent deletes your conversations about
+          them; deleting your account deletes all of them, along with the count.
+        </p>
       </Section>
 
       <Section title="Subscriptions and tips (web only)">
