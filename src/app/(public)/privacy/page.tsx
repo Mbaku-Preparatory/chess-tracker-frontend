@@ -169,24 +169,34 @@ export default function PrivacyPolicyPage() {
         </p>
       </Section>
 
-      <Section title="Supporting the project (web only)">
+      <Section title="Subscriptions and tips (web only)">
         <p>
-          The web app has a page where you can send the developer a tip. It buys you nothing &mdash;
-          every feature is available whether or not you ever use it &mdash; and it is entirely
-          optional. <strong className="font-[480] text-ink-text">The Android
-          app does not include this.</strong>
+          Every account starts with a free trial. After that the app needs a subscription, paid
+          ahead on the web app by M-Pesa or card; nothing renews automatically. The web app also has
+          a page where you can send the developer a tip, which buys nothing extra.{" "}
+          <strong className="font-[480] text-ink-text">The Android app takes no payments.</strong>
         </p>
         <p>
-          Tips are handled by Paystack, which processes the payment. When you start one we send
-          Paystack the email address on your account, because they require one per transaction, plus
-          the amount and an internal reference. You enter your M-Pesa number or card details on
-          Paystack&rsquo;s own page, not ours &mdash; we never see them and they never reach our
-          servers.
+          To show prices in the right currency, we look up which country your IP address is in,
+          using a copy of DB-IP&rsquo;s IP-to-country database kept on our own server (IP
+          geolocation by{" "}
+          <a href="https://db-ip.com" className="underline">DB-IP</a>), so your address is not sent
+          to anyone for this. We do not store the result. After your first payment, the country of
+          the card that paid (or Kenya, for M-Pesa) sets your prices from then on, and we keep which
+          price group that put you in.
         </p>
         <p>
-          We keep a record of the payment: our reference, the amount, whether it succeeded, and
-          which account started it. Paystack keeps its own records as the payment processor and is
-          responsible for them under its own privacy policy.
+          Payments are handled by Paystack. When you start one we send Paystack the email address
+          on your account, because they require one per transaction, plus the amount and an internal
+          reference. You enter your M-Pesa number or card details on Paystack&rsquo;s own page, not
+          ours &mdash; we never see them and they never reach our servers.
+        </p>
+        <p>
+          We keep a record of each payment: our reference, the amount, whether it succeeded, which
+          account started it, and for a subscription, how many days of access it bought. Paystack
+          keeps its own records as the payment processor and is responsible for them under its own
+          privacy policy. Before your access runs out we email you a reminder, and once more on the
+          day it ends.
         </p>
       </Section>
 
@@ -232,7 +242,7 @@ export default function PrivacyPolicyPage() {
           </li>
           <li>
             <strong className="font-[480] text-ink-text">Paystack</strong>{" "}
-            &mdash; the email address and amount for a tip you choose to send, on the web app only.
+            &mdash; the email address and amount of a subscription or tip you pay for, on the web app only.
           </li>
           <li>
             <strong className="font-[480] text-ink-text">Google</strong>{" "}

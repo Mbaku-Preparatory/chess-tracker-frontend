@@ -451,4 +451,38 @@ export interface Payment {
   reused_existing?: boolean;
 }
 
+// ── Subscriptions ────────────────────────────────────────────────────────────
+
+/** A plan as this user is offered it. Mirrors MySubscriptionView. */
+export interface SubscriptionPlan {
+  code: string;
+  name: string;
+  period: "month" | "year";
+  days: number;
+  /** What they pay: their negotiated price when they have one. */
+  price: string;
+  /** The plan's own price, for showing a negotiated discount. */
+  list_price: string;
+  currency: string;
+  negotiated: boolean;
+}
+
+/** GET /api/subscriptions/me/ (subscriptions/views.py on the backend). */
+export interface MySubscription {
+  /** Whether the paywall is on at all. False: everything works for everyone. */
+  enforced: boolean;
+  /** May use the app right now: the one thing the redirect reads. */
+  allowed: boolean;
+  has_access: boolean;
+  state: "trial" | "paid" | "negotiated" | "staff" | "none";
+  access_until: string | null;
+  paid_until: string | null;
+  negotiated_until: string | null;
+  days_left: number;
+  country: string;
+  price_group: string;
+  currency: string;
+  plans: SubscriptionPlan[];
+}
+
 

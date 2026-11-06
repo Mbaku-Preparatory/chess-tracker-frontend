@@ -3,6 +3,7 @@ import axios from "axios";
 import { authStorage } from "@/lib/auth";
 import { handleAuthFailure } from "@/lib/handleAuthFailure";
 import { refreshAccessToken } from "@/lib/refreshAccessToken";
+import { sendToSubscriptionExpired } from "@/lib/subscription";
 
 // Derive the GraphQL URL from the REST API base so both stay in sync automatically.
 const API_BASE = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api").replace(/\/api\/?$/, "");
@@ -50,6 +51,14 @@ graphqlClient.interceptors.response.use(async (response) => {
 
   config._retriedAfterRefresh = true;
   return graphqlClient(config);
+});
+
+// The paywall answers signed-in GraphQL with HTTP 402 (the backend's
+// JWTGraphQLView). axios rejects on it; send them to the page that can take a
+// payment, and let the caller see the error as usual.
+graphqlClient.interceptors.response.use(undefined, (error) => {
+  if (error?.response?.status === 402) sendToSubscriptionExpired();
+  return Promise.reject(error);
 });
 
 export default graphqlClient;

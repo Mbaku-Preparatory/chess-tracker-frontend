@@ -28,9 +28,9 @@ function Support() {
         Buy the developer a coffee
       </h1>
       <p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-300">
-        Chess Preparatory is built and paid for by one person. Everything here is
-        free and stays free — tipping buys you nothing extra, which is rather the
-        point. It just keeps the servers on.
+        Chess Preparatory is built and paid for by one person. A tip is on top of
+        any subscription and buys nothing extra, which is rather the point. It
+        just keeps the servers on.
       </p>
 
       <div className="mt-6">
