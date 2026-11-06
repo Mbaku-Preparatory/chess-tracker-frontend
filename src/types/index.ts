@@ -142,7 +142,7 @@ export interface Linked {
 
 /** The settings page's switches, saved on the account. */
 export interface Preferences {
-  /** Mbaku, the assistant: off until switched on. */
+  /** Mbaku AI, the assistant: on unless switched off. */
   mbaku_enabled: boolean;
   /** The bot's speech bubble while you play it. */
   bot_speech: boolean;

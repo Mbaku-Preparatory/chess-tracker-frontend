@@ -7,7 +7,7 @@ import { useAppSelector } from "@/redux/hooks";
 import type { Preferences } from "@/types";
 
 /** What a page assumes until the account's answer arrives: the server's defaults. */
-export const DEFAULT_PREFERENCES: Preferences = { mbaku_enabled: false, bot_speech: true, import_emails: false };
+export const DEFAULT_PREFERENCES: Preferences = { mbaku_enabled: true, bot_speech: true, import_emails: false };
 
 interface PreferencesContext {
   preferences: Preferences;
