@@ -4,6 +4,7 @@ import { AuthGate } from "@/components/AuthGate";
 import { ClaimGuestBook } from "@/components/books/ClaimGuestBook";
 import { PreferencesProvider } from "@/components/PreferencesProvider";
 import { ResumePrepare } from "@/components/ResumePrepare";
+import { SendAttribution } from "@/components/SendAttribution";
 import { SubscriptionBanner } from "@/components/subscription/SubscriptionBanner";
 import { SubscriptionProvider } from "@/components/subscription/SubscriptionProvider";
 import { Navbar } from "@/components/ui/Navbar";
@@ -32,6 +33,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <ActiveImportsIndicator />
             <ClaimGuestBook />
             <ResumePrepare />
+            <SendAttribution />
           </PreferencesProvider>
         </ActiveImportsProvider>
       </SubscriptionProvider>
