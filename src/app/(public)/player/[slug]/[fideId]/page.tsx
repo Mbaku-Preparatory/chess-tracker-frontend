@@ -10,6 +10,7 @@ import { RatingCard } from "@/components/public/profile/RatingCard";
 import { RatingHistoryChart } from "@/components/public/profile/RatingHistoryChart";
 import { federationFor } from "@/lib/federations";
 import { DEFAULT_PAGE_SIZE, fetchSize } from "@/lib/games";
+import { preparePath } from "@/lib/prepare";
 import { fetchPublicPlayer, profilePath, titledName, type PublicPlayer } from "@/lib/publicPlayer";
 import { series } from "@/lib/ratingSeries";
 import { SHARE_IMAGE, SITE_URL } from "@/lib/site";
@@ -182,15 +183,28 @@ export default async function PublicPlayerPage({ params }: { params: Params }) {
         <p className="max-w-[68ch] text-[16px] leading-[1.6] text-ink-muted">{summary(player, fed.name)}</p>
         {/* Unless we know there is nothing to build it from. */}
         {(player.stats.games > 0 || !player.gamesFetchedAt) && (
-          <p className="flex flex-wrap items-center gap-x-3 gap-y-2">
-            <Link
-              href={`/chess-bot?fide=${player.fideId}`}
-              className="rounded-pill bg-accent px-5 py-2.5 text-[15px] font-[480] text-accent-on hover:bg-accent-soft"
-            >
-              Play {player.fullName} bot
-            </Link>
-            <span className="text-[14px] text-ink-faint">A bot that opens the way {player.fullName} does, from their games.</span>
-          </p>
+          <div className="space-y-2">
+            <p className="flex flex-wrap items-center gap-x-3 gap-y-2">
+              {/* The offer this page exists to make: most visitors are about to
+                  play this person. Same tab: it ends on their page in the app. */}
+              <Link
+                href={preparePath({ fideId: player.fideId, fullName: player.fullName, federation: player.federation })}
+                className="rounded-pill bg-accent px-5 py-2.5 text-[15px] font-[480] text-accent-on hover:bg-accent-soft"
+              >
+                Prepare against {player.fullName}
+              </Link>
+              <Link
+                href={`/chess-bot?fide=${player.fideId}`}
+                className="rounded-pill border border-ink-text/80 px-5 py-2.5 text-[15px] text-ink-text hover:bg-ink-raised"
+              >
+                Play {player.fullName} bot
+              </Link>
+            </p>
+            <p className="max-w-[68ch] text-[14px] text-ink-faint">
+              Prepare: their openings with each colour, results and full games, kept in your account.
+              The bot opens the way {player.fullName} does, from their games.
+            </p>
+          </div>
         )}
       </header>
 

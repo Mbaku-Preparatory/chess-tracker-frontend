@@ -3,6 +3,7 @@ import { ActiveImportsProvider } from "@/components/import/ActiveImportsProvider
 import { AuthGate } from "@/components/AuthGate";
 import { ClaimGuestBook } from "@/components/books/ClaimGuestBook";
 import { PreferencesProvider } from "@/components/PreferencesProvider";
+import { ResumePrepare } from "@/components/ResumePrepare";
 import { SubscriptionBanner } from "@/components/subscription/SubscriptionBanner";
 import { SubscriptionProvider } from "@/components/subscription/SubscriptionProvider";
 import { Navbar } from "@/components/ui/Navbar";
@@ -30,6 +31,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </main>
             <ActiveImportsIndicator />
             <ClaimGuestBook />
+            <ResumePrepare />
           </PreferencesProvider>
         </ActiveImportsProvider>
       </SubscriptionProvider>
