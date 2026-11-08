@@ -1,5 +1,5 @@
 /**
- * Icons for sharing a chess personality result.
+ * Icons for the share row (SharePanel).
  *
  * Brand marks are Simple Icons' paths (CC0, simple-icons 13.21.0, copied in
  * rather than installed), drawn in each network's own colour on the button.

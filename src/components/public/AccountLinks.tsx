@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { AuthLink } from "@/components/public/AuthLink";
-import { useOnChessPersonality } from "@/components/public/NotOnChessPersonality";
+import { useOnFunPage } from "@/components/public/FunPages";
 import { useSignedIn } from "@/hooks/useSignedIn";
 
 
@@ -17,8 +17,8 @@ import { useSignedIn } from "@/hooks/useSignedIn";
 export function AccountLinks({ primaryOnly = false }: { primaryOnly?: boolean }) {
   // Null until the client has looked: the signed-out links first, as the server rendered them.
   const signedIn = useSignedIn() === true;
-  // The chess personality test is just for fun: no way into the app from its pages.
-  const hidden = useOnChessPersonality();
+  // The fun pages (FunPages.tsx) have no way into the app.
+  const hidden = useOnFunPage();
 
   if (hidden) return null;
   if (signedIn) {
