@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AuthLink } from "@/components/public/AuthLink";
 import { BurgerButton } from "@/components/ui/BurgerButton";
-import { useOnChessPersonality } from "@/components/public/NotOnChessPersonality";
+import { useOnFunPage } from "@/components/public/FunPages";
 import { useSignedIn } from "@/hooks/useSignedIn";
 
 /**
@@ -19,7 +19,7 @@ export function PublicMenu() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const signedIn = useSignedIn() === true;
-  const onTest = useOnChessPersonality();
+  const onFunPage = useOnFunPage();
   useEffect(() => setOpen(false), [pathname]);
   useEffect(() => {
     if (!open) return;
@@ -35,6 +35,7 @@ export function PublicMenu() {
     { href: "/chess-bot", label: "Create your own bot" },
     { href: "/chess-books", label: "Books" },
     { href: "/chess-personality", label: "Chess personality" },
+    { href: "/guess-the-player", label: "Guess the player" },
   ];
 
   return (
@@ -65,7 +66,7 @@ export function PublicMenu() {
                   </Link>
                 </li>
               ))}
-              {!signedIn && !onTest && (
+              {!signedIn && !onFunPage && (
                 <li>
                   <AuthLink href="/login" className={item}>
                     Log in

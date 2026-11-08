@@ -101,6 +101,23 @@ async function topPlayers(): Promise<RankingEntry[]> {
   }
 }
 
+const FUN = [
+  {
+    href: "/guess-the-player",
+    eyebrow: "Daily puzzle",
+    title: "Guess the player",
+    body: "A mystery FIDE player every day, and eight guesses. Clues for federation, title, rating and age after each one.",
+    cta: "Play today's puzzle",
+  },
+  {
+    href: "/chess-personality",
+    eyebrow: "Chess personality test",
+    title: "What kind of chess player are you?",
+    body: "Twenty quick questions, then your chess personality, your four sliders and the famous player who plays like you.",
+    cta: "Take the test",
+  },
+];
+
 export default async function LandingPage() {
   const [top, books] = await Promise.all([topPlayers(), fetchPublicBooks()]);
   const demo = books[0] ?? null;
@@ -200,21 +217,21 @@ export default async function LandingPage() {
         </section>
       )}
 
-      <section aria-labelledby="personality-heading" className="grid items-center gap-8 rounded-xl bg-ink-card p-8 sm:p-12 md:grid-cols-[3fr_2fr]">
-        <div className="flex flex-col items-start gap-4">
-          <p className="text-[13px] uppercase tracking-[0.1em] text-accent-soft">Chess personality test</p>
-          <h2 id="personality-heading" className="max-w-[22ch] text-balance text-[28px] font-[480] leading-[1.2] tracking-[0.015em] sm:text-[32px]">
-            What kind of chess player are you?
-          </h2>
-          <p className="max-w-[56ch] text-[16px] leading-[1.5] text-ink-muted">
-            Twenty quick questions, then your chess personality, your four sliders and the famous player who plays like you.
-            Firestarter, Surgeon or Architect?
-          </p>
-        </div>
-        <div className="flex md:justify-end">
-          <Link href="/chess-personality" className="rounded-pill bg-accent px-6 py-3 text-[16px] font-[480] text-accent-on hover:bg-accent-soft">
-            Take the test
-          </Link>
+      <section aria-labelledby="fun-heading" className="flex flex-col gap-8">
+        <h2 id="fun-heading" className="text-[28px] font-[480] leading-[1.2] tracking-[0.015em] sm:text-[32px]">
+          Just for fun
+        </h2>
+        <div className="grid gap-4 md:grid-cols-2">
+          {FUN.map((f) => (
+            <article key={f.href} className="flex flex-col items-start gap-4 rounded-xl bg-ink-card p-8">
+              <p className="text-[13px] uppercase tracking-[0.1em] text-accent-soft">{f.eyebrow}</p>
+              <h3 className="text-balance text-[24px] font-[480] leading-[1.2]">{f.title}</h3>
+              <p className="max-w-[48ch] text-[16px] leading-[1.5] text-ink-muted">{f.body}</p>
+              <Link href={f.href} className="mt-auto rounded-pill bg-accent px-6 py-3 text-[16px] font-[480] text-accent-on hover:bg-accent-soft">
+                {f.cta}
+              </Link>
+            </article>
+          ))}
         </div>
       </section>
 

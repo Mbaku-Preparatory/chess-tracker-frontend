@@ -137,6 +137,12 @@ export default function PrivacyPolicyPage() {
           attached.
         </p>
         <p>
+          <strong className="font-[480] text-ink-text">Guess the player.</strong>{" "}
+          The daily puzzle also runs entirely in your browser, which keeps today&apos;s guesses and
+          your win statistics. Nothing about your games is sent to us, beyond counts of puzzles
+          started, finished and shared.
+        </p>
+        <p>
           <strong className="font-[480] text-ink-text">Profile photo.</strong>{" "}
           If you set a profile picture in the Android app, the app asks for permission to read the
           image you select. That image is stored only in local storage on your own device and is

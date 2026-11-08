@@ -27,6 +27,9 @@ export function PublicHeader() {
           <Link href="/chess-personality" className="whitespace-nowrap rounded-pill px-3 py-2 text-[15px] text-ink-muted hover:bg-ink-raised hover:text-ink-text sm:px-4">
             Chess personality
           </Link>
+          <Link href="/guess-the-player" className="whitespace-nowrap rounded-pill px-3 py-2 text-[15px] text-ink-muted hover:bg-ink-raised hover:text-ink-text sm:px-4">
+            Guess the player
+          </Link>
           <ThemeToggle className="text-ink-muted hover:bg-ink-raised hover:text-ink-text" />
           <AccountLinks />
         </div>
