@@ -6,7 +6,7 @@ export const metadata: Metadata = {
     "How Chess Preparatory collects, uses, stores, and deletes your data across the web app and the Android app.",
 };
 
-const LAST_UPDATED = "8 November 2026";
+const LAST_UPDATED = "9 November 2026";
 const CONTACT_EMAIL = "bakutarb@gmail.com";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -128,6 +128,13 @@ export default function PrivacyPolicyPage() {
           The website uses Vercel Web Analytics to count page views: which pages are visited, the
           referring site, and the country, browser, and device type. It sets no cookies, and it does
           not identify you or follow you across days or across other sites.
+        </p>
+        <p>
+          <strong className="font-[480] text-ink-text">The chess personality test.</strong>{" "}
+          The test runs entirely in your browser. Your answers are never sent to us; your browser
+          keeps only your last result, so the result page can say it is yours. We count how many
+          people start and finish the test and which personality they get, with no name or account
+          attached.
         </p>
         <p>
           <strong className="font-[480] text-ink-text">Profile photo.</strong>{" "}

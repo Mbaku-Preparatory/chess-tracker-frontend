@@ -14,7 +14,7 @@ export function PublicHeader() {
           <Logo size={30} />
           <span className="hidden whitespace-nowrap text-[17px] font-[480] tracking-[0.01em] sm:inline">Chess Preparatory</span>
         </Link>
-        <div className="hidden items-center gap-2 lg:flex">
+        <div className="hidden items-center gap-2 xl:flex">
           <Link href="/rankings" className="whitespace-nowrap rounded-pill px-3 py-2 text-[15px] text-ink-muted hover:bg-ink-raised hover:text-ink-text sm:px-4">
             Rankings
           </Link>
@@ -24,11 +24,14 @@ export function PublicHeader() {
           <Link href="/chess-books" className="whitespace-nowrap rounded-pill px-3 py-2 text-[15px] text-ink-muted hover:bg-ink-raised hover:text-ink-text sm:px-4">
             Books
           </Link>
+          <Link href="/chess-personality" className="whitespace-nowrap rounded-pill px-3 py-2 text-[15px] text-ink-muted hover:bg-ink-raised hover:text-ink-text sm:px-4">
+            Chess personality
+          </Link>
           <ThemeToggle className="text-ink-muted hover:bg-ink-raised hover:text-ink-text" />
           <AccountLinks />
         </div>
-        {/* Phones and tablets: the main button, and the rest behind a burger. */}
-        <div className="flex items-center gap-1 lg:hidden">
+        {/* Below xl (1280px): the main button, and the rest behind a burger. Four links, Log in and Get started do not fit at 1024. */}
+        <div className="flex items-center gap-1 xl:hidden">
           <AccountLinks primaryOnly />
           <PublicMenu />
         </div>

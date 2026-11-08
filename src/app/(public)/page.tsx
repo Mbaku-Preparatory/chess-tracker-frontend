@@ -200,6 +200,24 @@ export default async function LandingPage() {
         </section>
       )}
 
+      <section aria-labelledby="personality-heading" className="grid items-center gap-8 rounded-xl bg-ink-card p-8 sm:p-12 md:grid-cols-[3fr_2fr]">
+        <div className="flex flex-col items-start gap-4">
+          <p className="text-[13px] uppercase tracking-[0.1em] text-accent-soft">Chess personality test</p>
+          <h2 id="personality-heading" className="max-w-[22ch] text-balance text-[28px] font-[480] leading-[1.2] tracking-[0.015em] sm:text-[32px]">
+            What kind of chess player are you?
+          </h2>
+          <p className="max-w-[56ch] text-[16px] leading-[1.5] text-ink-muted">
+            Twenty quick questions, then your chess personality, your four sliders and the famous player who plays like you.
+            Firestarter, Surgeon or Architect?
+          </p>
+        </div>
+        <div className="flex md:justify-end">
+          <Link href="/chess-personality" className="rounded-pill bg-accent px-6 py-3 text-[16px] font-[480] text-accent-on hover:bg-accent-soft">
+            Take the test
+          </Link>
+        </div>
+      </section>
+
       <section aria-labelledby="profile-heading" className="flex flex-col gap-8">
         <h2 id="profile-heading" className="max-w-[24ch] text-balance text-[28px] font-[480] leading-[1.2] tracking-[0.015em] sm:text-[32px]">
           What a profile shows
