@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
 
+import { AttributionCapture } from "@/components/AttributionCapture";
 import { NavigationMemory } from "@/components/NavigationMemory";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { GlobalLoader } from "@/components/ui/GlobalLoader";
@@ -38,6 +39,7 @@ export default function RootLayout({
           <ThemeProvider>
             <GlobalLoader />
             <NavigationMemory />
+            <AttributionCapture />
             {children}
           </ThemeProvider>
         </StoreProvider>

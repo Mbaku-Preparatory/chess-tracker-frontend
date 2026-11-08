@@ -49,6 +49,14 @@ export default function PrivacyPolicyPage() {
           your account.
         </p>
         <p>
+          <strong className="font-[480] text-ink-text">Where you came from.</strong>{" "}
+          When you first visit, your browser notes how you arrived: the campaign tags on the link
+          you followed (such as utm_source, or an ad click ID), or, without them, which site sent
+          you (for example a Google search), and the first page you saw. This stays in your browser
+          unless you create an account; then it is saved on the account once, so we can tell which
+          channels bring people who stay. It is deleted with your account.
+        </p>
+        <p>
           <strong className="font-[480] text-ink-text">Signing in with Google.</strong>{" "}
           If you choose &ldquo;Continue with Google&rdquo;, Google tells us your name, your email
           address, and that Google has verified that address. That is all we receive: no password,

@@ -326,6 +326,15 @@ export const api = {
   },
 
   /** The signed-in account: names, email and the avatar they picked. */
+  /** Where a new account came from (lib/attribution.ts). Sent once; see SendAttribution. */
+  recordSignupSource(source: import("@/lib/attribution").Attribution): Promise<{ recorded: boolean }> {
+    return fetchJson(`${API_BASE}/auth/signup-source/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(source),
+    });
+  },
+
   getMe(): Promise<import("@/types").Me> {
     return fetchJson(`${API_BASE}/auth/me/`);
   },
