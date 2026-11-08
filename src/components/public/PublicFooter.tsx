@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AuthLink } from "@/components/public/AuthLink";
+import { NotOnChessPersonality } from "@/components/public/NotOnChessPersonality";
 
 export function PublicFooter() {
   return (
@@ -13,8 +14,11 @@ export function PublicFooter() {
           <Link href="/rankings/countries" className="hover:text-ink-muted">Rankings by country</Link>
           <Link href="/chess-bot" className="hover:text-ink-muted">Create your own bot</Link>
           <Link href="/chess-books" className="hover:text-ink-muted">Chess books</Link>
+          <Link href="/chess-personality" className="hover:text-ink-muted">Chess personality test</Link>
           <Link href="/privacy" className="hover:text-ink-muted">Privacy</Link>
-          <AuthLink href="/login" className="hover:text-ink-muted">Log in</AuthLink>
+          <NotOnChessPersonality>
+            <AuthLink href="/login" className="hover:text-ink-muted">Log in</AuthLink>
+          </NotOnChessPersonality>
         </nav>
       </div>
     </footer>

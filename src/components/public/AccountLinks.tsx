@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { AuthLink } from "@/components/public/AuthLink";
+import { useOnChessPersonality } from "@/components/public/NotOnChessPersonality";
 import { useSignedIn } from "@/hooks/useSignedIn";
 
 
@@ -16,7 +17,10 @@ import { useSignedIn } from "@/hooks/useSignedIn";
 export function AccountLinks({ primaryOnly = false }: { primaryOnly?: boolean }) {
   // Null until the client has looked: the signed-out links first, as the server rendered them.
   const signedIn = useSignedIn() === true;
+  // The chess personality test is just for fun: no way into the app from its pages.
+  const hidden = useOnChessPersonality();
 
+  if (hidden) return null;
   if (signedIn) {
     return (
       <Link href="/home" className="whitespace-nowrap rounded-pill bg-accent px-5 py-2 text-[15px] font-[480] text-accent-on hover:bg-accent-soft">

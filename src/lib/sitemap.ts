@@ -9,6 +9,7 @@
 
 import { CURRENT_FEDERATIONS } from "./federations";
 import { graphqlGet } from "./publicGraphql";
+import { TYPES } from "./chessPersonality";
 import { rankingsPath } from "./rankings";
 import { SITE_URL } from "./site";
 
@@ -24,6 +25,8 @@ export const STATIC_PAGES = [
   ...CURRENT_FEDERATIONS.map((f) => rankingsPath({ tc: "classical", list: "overall", fed: f.code, page: 1 })),
   "/chess-bot",
   "/chess-books",
+  "/chess-personality",
+  ...TYPES.map((t) => `/chess-personality/${t.slug}`),
   "/privacy",
 ];
 

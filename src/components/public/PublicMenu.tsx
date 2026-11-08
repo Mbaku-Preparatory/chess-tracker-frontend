@@ -7,10 +7,11 @@ import { useEffect, useState } from "react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AuthLink } from "@/components/public/AuthLink";
 import { BurgerButton } from "@/components/ui/BurgerButton";
+import { useOnChessPersonality } from "@/components/public/NotOnChessPersonality";
 import { useSignedIn } from "@/hooks/useSignedIn";
 
 /**
- * The public header's menu on phones and tablets (below lg): everything the
+ * The public header's menu on phones, tablets and small laptops (below xl): everything the
  * bar shows on a desktop, behind a burger. Rendered inside the sticky header,
  * which it hangs under.
  */
@@ -18,6 +19,7 @@ export function PublicMenu() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const signedIn = useSignedIn() === true;
+  const onTest = useOnChessPersonality();
   useEffect(() => setOpen(false), [pathname]);
   useEffect(() => {
     if (!open) return;
@@ -32,6 +34,7 @@ export function PublicMenu() {
     { href: "/rankings", label: "Rankings" },
     { href: "/chess-bot", label: "Create your own bot" },
     { href: "/chess-books", label: "Books" },
+    { href: "/chess-personality", label: "Chess personality" },
   ];
 
   return (
@@ -62,7 +65,7 @@ export function PublicMenu() {
                   </Link>
                 </li>
               ))}
-              {!signedIn && (
+              {!signedIn && !onTest && (
                 <li>
                   <AuthLink href="/login" className={item}>
                     Log in
