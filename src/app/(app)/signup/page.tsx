@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import { userMessage } from "@/lib/apiError";
 import { Logo } from "@/components/ui/Logo";
 import { SocialSignIn } from "@/components/SocialSignIn";
+import { peekPendingPrepare } from "@/lib/prepare";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -20,6 +21,10 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Who they came here to prepare against, if a profile's Prepare button sent
+  // them (lib/prepare.ts). Read after mount: localStorage is not there on the server.
+  const [preparing, setPreparing] = useState<string | null>(null);
+  useEffect(() => setPreparing(peekPendingPrepare()?.fullName ?? null), []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -54,7 +59,9 @@ export default function SignupPage() {
           <Logo size={48} variant="tile" className="mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Create your account</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Scout your opponents and prepare for your next game.
+            {preparing
+              ? `Then ${preparing}'s openings and games open straight away.`
+              : "Scout your opponents and prepare for your next game."}
           </p>
         </div>
 

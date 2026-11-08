@@ -3,9 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { api } from "@/lib/api";
+import { addFidePlayer } from "@/lib/addFidePlayer";
 import { userMessage } from "@/lib/apiError";
-import { duplicatePlayerFrom, duplicatePlayerHref } from "@/lib/duplicatePlayer";
 import { useActiveImports } from "@/components/import/ActiveImportsProvider";
 import {
   federationOf,
@@ -135,41 +134,16 @@ export function OpponentSearch({
       setAddingId(fideId);
       setAddError(null);
       try {
-        // No look-before-you-leap check any more. The server rejects a second
-        // row for a FIDE ID you already hold and hands back the one you have,
-        // which is both race-proof and — unlike a check built on the players
-        // list — able to see your own profile. See lib/duplicatePlayer.
-        const player = await api.createPlayer({
-          full_name: result.display_name,
-          fide_id: fideId,
-          federation: federationOf(result),
-        });
-
-        // Start pulling their games immediately, so the profile has something
-        // on it by the time it finishes opening.
-        try {
-          await api.createCareerImportJob(player.slug, fideId);
+        const { href, created } = await addFidePlayer(
+          { fullName: result.display_name, fideId, federation: federationOf(result) },
           // Let the pill pick the job up now rather than up to three seconds
           // later, so the profile knows to refetch when it finishes.
-          refreshActiveImports();
-        } catch {
-          // The profile exists either way; let them import by hand rather than
-          // stranding a half-made player behind an error.
-        }
-
-        onPlayerCreated?.();
+          refreshActiveImports
+        );
+        if (created) onPlayerCreated?.();
         setOpen(false);
-        router.push(`/players/${player.slug}`);
+        router.push(href);
       } catch (err) {
-        // 409 is not a failure — it means they already have this player, and
-        // the response says which row. Go there, exactly as a successful add
-        // would have.
-        const existing = duplicatePlayerFrom(err);
-        if (existing) {
-          setOpen(false);
-          router.push(duplicatePlayerHref(existing));
-          return;
-        }
         setAddError(userMessage(err, "Could not add this player."));
       } finally {
         setAddingId(null);

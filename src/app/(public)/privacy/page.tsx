@@ -6,7 +6,7 @@ export const metadata: Metadata = {
     "How Chess Preparatory collects, uses, stores, and deletes your data across the web app and the Android app.",
 };
 
-const LAST_UPDATED = "6 November 2026";
+const LAST_UPDATED = "8 November 2026";
 const CONTACT_EMAIL = "bakutarb@gmail.com";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -41,6 +41,12 @@ export default function PrivacyPolicyPage() {
           password is stored only as a salted cryptographic hash &mdash; we never store or have
           access to the password itself. We send a six-digit code to your email address to confirm
           you own it.
+        </p>
+        <p>
+          <strong className="font-[480] text-ink-text">Which days you use the app.</strong>{" "}
+          For each day you use the app while signed in, we keep the date (not the time, and not
+          what you did). It tells us whether people come back after signing up. It is deleted with
+          your account.
         </p>
         <p>
           <strong className="font-[480] text-ink-text">Signing in with Google.</strong>{" "}
