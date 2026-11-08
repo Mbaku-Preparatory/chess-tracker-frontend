@@ -11,9 +11,15 @@ const config: Config = {
           "60%": { transform: "translateX(0%)" },
           "100%": { transform: "translateX(100%)" },
         },
+        // Guess the player: a clue tile turning over as it is revealed.
+        "tile-flip": {
+          "0%": { transform: "rotateX(90deg)", opacity: "0.4" },
+          "100%": { transform: "rotateX(0deg)", opacity: "1" },
+        },
       },
       animation: {
         "global-loader": "global-loader 1.2s ease-in-out infinite",
+        "tile-flip": "tile-flip 380ms ease-out both",
       },
       colors: {
         dark: {

@@ -5,6 +5,9 @@ import Link from "next/link";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 
 import { SharePanel } from "@/components/public/share/SharePanel";
+
+import { GuessDemo, demoAvailable } from "./GuessDemo";
+import { GuessRow } from "./GuessRow";
 import { federationFor } from "@/lib/federations";
 import {
   ALIASES,
@@ -28,62 +31,6 @@ import {
 } from "@/lib/guessThePlayer";
 import { profilePath } from "@/lib/publicPlayer";
 import { SITE_URL } from "@/lib/site";
-
-const TILE: Record<Clue["mark"], string> = {
-  hit: "bg-[#2f9e44] text-white",
-  close: "bg-[#e8a400] text-white",
-  miss: "bg-[#c92a2a]/85 text-white",
-};
-const ARROW = { up: "↑", down: "↓" } as const;
-
-function Tile({ clue, children, hint }: { clue: Clue; children: React.ReactNode; hint: string }) {
-  return (
-    <div
-      className={`flex h-14 flex-col items-center justify-center rounded-lg text-center text-[15px] font-[600] tabular-nums leading-tight ${TILE[clue.mark]}`}
-      title={hint}
-    >
-      <span>
-        {children}
-        {clue.direction && <span aria-hidden> {ARROW[clue.direction]}</span>}
-      </span>
-      <span className="sr-only">{hint}</span>
-    </div>
-  );
-}
-
-function numberHint(label: string, clue: Clue, up: string, down: string) {
-  if (clue.mark === "hit") return `${label}: exactly right`;
-  const near = clue.mark === "close" ? "close. " : "";
-  return `${label}: ${near}${clue.direction === "up" ? up : down}`;
-}
-
-function GuessRow({ guess, answer }: { guess: PoolPlayer; answer: PoolPlayer }) {
-  const f = feedbackFor(guess, answer);
-  const fed = federationFor(guess.federation);
-  return (
-    <li className="flex flex-col gap-2 sm:grid sm:grid-cols-[minmax(0,1fr)_repeat(4,92px)] sm:items-center sm:gap-2">
-      <Link href={profilePath(guess)} className="truncate text-[16px] font-[480] hover:text-accent-soft" title={`${guess.name}'s profile`}>
-        {guess.name}
-        {ALIASES[guess.fideId] && <span className="ml-1.5 font-normal text-ink-muted">({ALIASES[guess.fideId]})</span>}
-      </Link>
-      <div className="grid grid-cols-4 gap-2 sm:contents">
-        <Tile clue={f.federation} hint={`Federation: ${f.federation.mark === "hit" ? "same" : f.federation.mark === "close" ? "same continent" : "different"}`}>
-          <span className="block text-[18px] leading-none">{fed.flag || ""}</span>
-          <span className="text-[13px]">{guess.federation}</span>
-        </Tile>
-        <Tile clue={f.title} hint={`Title: ${f.title.mark === "hit" ? "same" : "different"}`}>
-          {guess.title || "—"}
-        </Tile>
-        <Tile clue={f.rating} hint={numberHint("Rating", f.rating, "the mystery player is rated higher", "the mystery player is rated lower")}>
-          {guess.rating}
-        </Tile>
-        <Tile clue={f.born} hint={numberHint("Born", f.born, "the mystery player was born later", "the mystery player was born earlier")}>
-          {guess.born}
-        </Tile>
-      </div>
-    </li>
-  );
-}
 
 function PlayerPicker({ exclude, onPick }: { exclude: Set<string>; onPick: (p: PoolPlayer) => void }) {
   const listId = useId();
@@ -221,6 +168,7 @@ export function GuessThePlayer() {
   const [puzzle, setPuzzle] = useState<number | null>(null);
   const [guesses, setGuesses] = useState<string[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
+  const [demo, setDemo] = useState(false);
 
   useEffect(() => {
     const n = puzzleNumber();
@@ -266,7 +214,27 @@ export function GuessThePlayer() {
         <p className="max-w-[48ch] text-[17px] leading-[1.5] text-ink-muted">
           A mystery FIDE player every day. You have {MAX_GUESSES} guesses.
         </p>
+        {demoAvailable() && !demo && (
+          <button
+            type="button"
+            onClick={() => {
+              setDemo(true);
+              track("Guess the player demo", { puzzle });
+            }}
+            className="inline-flex items-center gap-2 rounded-pill border border-ink-line px-4 py-2 text-[15px] text-ink-text hover:bg-ink-raised"
+          >
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden>
+              <path d="M8 5.14v13.72a1 1 0 0 0 1.5.86l11-6.86a1 1 0 0 0 0-1.72l-11-6.86A1 1 0 0 0 8 5.14z" />
+            </svg>
+            Demo mode
+          </button>
+        )}
       </header>
+
+      {demo ? (
+        <GuessDemo onClose={() => setDemo(false)} />
+      ) : (
+        <>
 
       <details className="rounded-xl bg-ink-card p-5 text-[15px] leading-[1.6] text-ink-muted [&_summary]:cursor-pointer">
         <summary className="font-[480] text-ink-text">How to play</summary>
@@ -347,6 +315,8 @@ export function GuessThePlayer() {
             <li key={`empty-${i}`} aria-hidden className="h-14 rounded-lg border border-dashed border-ink-line/80" />
           ))}
       </ol>
+        </>
+      )}
     </div>
   );
 }
