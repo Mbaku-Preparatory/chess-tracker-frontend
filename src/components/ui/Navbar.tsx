@@ -30,8 +30,12 @@ export function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   // Billing appears once the paywall is on: until then there is nothing to bill.
+  // "Support this project" (tips) is the other way round: with a subscription
+  // to sell, asking for a tip as well would be asking twice. Hidden until the
+  // answer arrives, so it never flashes up for a paying user.
   const { subscription } = useSubscription();
   const showBilling = Boolean(subscription?.enforced);
+  const showSupport = subscription ? !subscription.enforced : false;
 
   const { token, refreshToken, email } = useAppSelector((s) => s.auth);
   // Your avatar: the one picked in settings, or the default for your email.
@@ -184,6 +188,7 @@ export function Navbar() {
                       purpose. Asking for money should be something you find,
                       not the thing that greets you. The mobile app puts it in
                       the same place, at the bottom of the account screen. */}
+                  {showSupport && (
                   <div className="border-t border-gray-100 dark:border-dark-border">
                     <Link
                       href="/support"
@@ -196,6 +201,7 @@ export function Navbar() {
                       Support this project
                     </Link>
                   </div>
+                  )}
 
                   {/* Logout */}
                   <div className="border-t border-gray-100 dark:border-dark-border">
@@ -304,13 +310,15 @@ export function Navbar() {
                       Billing
                     </Link>
                   )}
-                  <Link
-                    href="/support"
-                    onClick={() => setMenuOpen(false)}
-                    className="block rounded-lg px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-dark-elevated"
-                  >
-                    Support this project
-                  </Link>
+                  {showSupport && (
+                    <Link
+                      href="/support"
+                      onClick={() => setMenuOpen(false)}
+                      className="block rounded-lg px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-dark-elevated"
+                    >
+                      Support this project
+                    </Link>
+                  )}
                   <button
                     type="button"
                     onClick={() => {
