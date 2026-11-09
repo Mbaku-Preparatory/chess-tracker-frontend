@@ -18,17 +18,21 @@ export const PRICING_METADATA: Metadata = {
   twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION, images: [SHARE_IMAGE] },
 };
 
+// What the plan includes, as the card's checklist.
 function included(questions: number) {
   return [
-    {
-      title: "Scout any opponent",
-      body: "Their games from chess-results, Chess.com and Lichess in one place, brought up to date when you open them.",
-    },
-    { title: "Know their openings", body: "Which openings they play with each colour, and how they score with them." },
-    { title: "Prepare for the game", body: "A plan for each opponent, and your upcoming games in one list." },
-    { title: "Play their bot", body: "A bot built from any opponent's games that opens the way they do, at the strength you choose." },
-    { title: "Your books on a board", body: "Every move and diagram of your own PDF chess books on a board. Exercise books become puzzles." },
-    { title: "Ask Mbaku", body: `An AI assistant that answers questions about a player's games: ${questions} questions a month.` },
+    "Your opponents' games from chess-results, Chess.com and Lichess",
+    "Their games brought up to date when you open them",
+    "The openings they play with each colour, and how they score",
+    "A preparation plan for each opponent",
+    "Your upcoming games in one list",
+    "A bot of any opponent, opening the way they do",
+    "Play their bot at any strength, as often as you like",
+    "Your own PDF chess books, every move on a board",
+    "Exercise books turned into puzzles",
+    "An engine to analyse any position",
+    `Mbaku, the AI assistant: ${questions} questions a month`,
+    "Everything you add, kept for as long as you have an account",
   ];
 }
 
@@ -137,30 +141,13 @@ export async function PricingView({ country }: { country: string }) {
           Subscriptions aren&apos;t on sale just yet. Everything is free while we get ready.
         </p>
       ) : (
-        <section aria-labelledby="prices-heading" className="flex flex-col gap-5">
-          <div className="flex flex-col gap-1.5">
-            <h2 id="prices-heading" className="text-[24px] font-[480] leading-[1.2]">
-              {where ? `Prices for ${where}` : "Prices"}
-            </h2>
-            <p className="text-[15px] text-ink-muted">In {currencyName(region.currency)}.</p>
-          </div>
-          <PricingPlans plans={region.plans} trialDays={trialDays} />
-        </section>
+        <PricingPlans
+          plans={region.plans}
+          features={included(questions)}
+          region={where ? `Prices for ${where}, in ${currencyName(region.currency)}.` : `Prices in ${currencyName(region.currency)}.`}
+          trialDays={trialDays}
+        />
       )}
-
-      <section aria-labelledby="included-heading" className="flex flex-col gap-8">
-        <h2 id="included-heading" className="text-[28px] font-[480] leading-[1.2] tracking-[0.015em] sm:text-[32px]">
-          What you get
-        </h2>
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {included(questions).map((f) => (
-            <li key={f.title} className="flex flex-col gap-2 rounded-xl bg-ink-card p-8">
-              <h3 className="text-[19px] font-[480]">{f.title}</h3>
-              <p className="text-[16px] leading-[1.5] text-ink-muted">{f.body}</p>
-            </li>
-          ))}
-        </ul>
-      </section>
 
       <section aria-labelledby="free-heading" className="flex flex-col gap-6">
         <h2 id="free-heading" className="text-[28px] font-[480] leading-[1.2] tracking-[0.015em] sm:text-[32px]">
