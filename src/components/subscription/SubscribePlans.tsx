@@ -22,6 +22,7 @@ import { useRouter } from "next/navigation";
 
 import { useSubscription } from "@/components/subscription/SubscriptionProvider";
 import { usePaymentStatus } from "@/hooks/usePaymentStatus";
+import { POPULAR_LABEL, POPULAR_PERIOD, usePlanHighlight } from "@/hooks/usePlanHighlight";
 import { api } from "@/lib/api";
 import { userMessage } from "@/lib/apiError";
 import { annualSaving, formatDate, formatPrice, perMonthOfAnnual } from "@/lib/subscription";
@@ -55,17 +56,30 @@ function PlanCard({
   plans,
   onChoose,
   busy,
+  highlighted,
+  ...hover
 }: {
   plan: SubscriptionPlan;
   plans: SubscriptionPlan[];
   onChoose: (code: string) => void;
   busy: string | null;
+  highlighted: boolean;
+  onMouseEnter: () => void;
+  onFocus: () => void;
 }) {
   const annual = plan.period === "year";
   const pct = annual ? saving(plans, plan) : null;
   const perMonth = annual ? perMonthOfAnnual(plan.price, plan.currency) : null;
   return (
-    <div className={`card flex flex-col p-6 ${annual ? "border-brand-400 ring-1 ring-brand-400 dark:border-brand-600 dark:ring-brand-600" : ""}`}>
+    <div
+      {...hover}
+      className={`card relative flex flex-col p-6 transition-shadow ${highlighted ? "border-brand-400 ring-1 ring-brand-400 dark:border-brand-600 dark:ring-brand-600" : ""}`}
+    >
+      {plan.period === POPULAR_PERIOD && (
+        <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-brand-600 px-3 py-0.5 text-xs font-semibold text-white dark:bg-brand-500">
+          {POPULAR_LABEL}
+        </span>
+      )}
       <div className="flex items-center justify-between gap-2">
         <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">{annual ? "Annual" : "Monthly"}</h3>
         {pct !== null && (
@@ -93,7 +107,7 @@ function PlanCard({
         type="button"
         onClick={() => onChoose(plan.code)}
         disabled={busy !== null}
-        className={`${annual ? "btn-primary" : "btn-secondary"} mt-5 w-full disabled:opacity-60`}
+        className={`${highlighted ? "btn-primary" : "btn-secondary"} mt-5 w-full disabled:opacity-60`}
       >
         {busy === plan.code ? "Opening Paystack…" : `Pay ${formatPrice(plan.price, plan.currency)}`}
       </button>
@@ -110,6 +124,7 @@ export function SubscribePlans({ expired, returnedReference }: { expired: boolea
   const [notYet, setNotYet] = useState(false);
   const { payment, state } = usePaymentStatus(returnedReference);
   const goneHome = useRef(false);
+  const highlight = usePlanHighlight(sub?.plans.map((p) => p.period) ?? []);
 
   // The first answer, in case the provider's has not arrived (or is stale).
   useEffect(() => {
@@ -221,9 +236,17 @@ export function SubscribePlans({ expired, returnedReference }: { expired: boolea
           Subscriptions aren&apos;t on sale just yet. Check back soon, or reply to any of our emails.
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div {...highlight.gridProps} className="grid gap-4 pt-3 sm:grid-cols-2">
           {sub.plans.map((plan) => (
-            <PlanCard key={plan.code} plan={plan} plans={sub.plans} onChoose={choose} busy={busy} />
+            <PlanCard
+              key={plan.code}
+              plan={plan}
+              plans={sub.plans}
+              onChoose={choose}
+              busy={busy}
+              highlighted={highlight.isHighlighted(plan.period)}
+              {...highlight.cardProps(plan.period)}
+            />
           ))}
         </div>
       )}
