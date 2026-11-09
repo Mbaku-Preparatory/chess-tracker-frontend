@@ -59,7 +59,7 @@ const GUEST_URL = `${BACKEND_ORIGIN}/api/books/guest/`;
 
 /** The server's own words when it says no (not a PDF, too big, too many today). */
 async function failure(response: Response, fallback: string): Promise<Error> {
-  if (response.status === 429) return new Error("Too many books have been tried from this connection today. Create a free account to upload more.");
+  if (response.status === 429) return new Error("Too many books have been tried from this connection today. Start a free trial to upload more.");
   const body = await response.json().catch(() => null);
   return new Error(body?.detail ?? fallback);
 }

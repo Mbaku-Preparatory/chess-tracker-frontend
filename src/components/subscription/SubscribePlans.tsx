@@ -24,17 +24,14 @@ import { useSubscription } from "@/components/subscription/SubscriptionProvider"
 import { usePaymentStatus } from "@/hooks/usePaymentStatus";
 import { api } from "@/lib/api";
 import { userMessage } from "@/lib/apiError";
-import { formatDate, formatPrice } from "@/lib/subscription";
+import { annualSaving, formatDate, formatPrice, perMonthOfAnnual } from "@/lib/subscription";
 import type { MySubscription, SubscriptionPlan } from "@/types";
 
 const RECHECK_MS = 10_000;
 
 function saving(plans: SubscriptionPlan[], annual: SubscriptionPlan): number | null {
   const monthly = plans.find((p) => p.period === "month");
-  if (!monthly) return null;
-  const twelve = Number(monthly.price) * 12;
-  const pct = Math.round((1 - Number(annual.price) / twelve) * 100);
-  return pct > 0 ? pct : null;
+  return monthly ? annualSaving(monthly.price, annual.price) : null;
 }
 
 function StatusLine({ sub }: { sub: MySubscription }) {
@@ -66,11 +63,7 @@ function PlanCard({
 }) {
   const annual = plan.period === "year";
   const pct = annual ? saving(plans, plan) : null;
-  // Shillings are quoted whole; dollars to the cent.
-  const monthly = Number(plan.price) / 12;
-  const perMonth = annual
-    ? formatPrice(plan.currency === "KES" ? String(Math.round(monthly)) : monthly.toFixed(2), plan.currency)
-    : null;
+  const perMonth = annual ? perMonthOfAnnual(plan.price, plan.currency) : null;
   return (
     <div className={`card flex flex-col p-6 ${annual ? "border-brand-400 ring-1 ring-brand-400 dark:border-brand-600 dark:ring-brand-600" : ""}`}>
       <div className="flex items-center justify-between gap-2">

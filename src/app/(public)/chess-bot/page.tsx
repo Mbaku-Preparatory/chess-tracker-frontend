@@ -50,7 +50,7 @@ const FAQ = [
   },
   {
     q: "Is it free?",
-    a: "Your first game is free, with no account. A free account lets you keep playing, and build bots of the opponents you scout in the app, with their full opening tree and preparation tools.",
+    a: "Your first game is free, with no account. After that, an account starts with a free trial: keep playing, and build bots of the opponents you scout in the app, with their full opening tree and preparation tools. When the trial ends, a small subscription keeps it going.",
   },
   {
     q: "Can I use it to prepare for a real game?",

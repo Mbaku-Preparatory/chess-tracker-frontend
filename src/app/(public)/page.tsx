@@ -135,7 +135,6 @@ export default async function LandingPage() {
       url: SITE_URL,
       applicationCategory: "SportsApplication",
       operatingSystem: "Web",
-      offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
       featureList: [
         "FIDE player profiles with ratings, ranks, rating history and games",
         "World and national rankings",

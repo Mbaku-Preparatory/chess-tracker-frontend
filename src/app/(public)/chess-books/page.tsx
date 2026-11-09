@@ -50,7 +50,7 @@ const FAQ = [
   },
   {
     q: "Can I try it without a book?",
-    a: "Yes. The demo books below are read with the same reader, and need no account. To read your own books you need a free account.",
+    a: "Yes. The demo books below are read with the same reader, and need no account. To read your own books you need an account, which starts with a free trial.",
   },
   {
     q: "Is it legal to upload a book I bought?",
