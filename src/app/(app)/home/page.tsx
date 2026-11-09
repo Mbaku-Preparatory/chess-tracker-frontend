@@ -17,6 +17,7 @@ import {
   type PlayerOrdering,
 } from "@/redux/actions/players";
 import type { Player } from "@/types";
+import { GettingStarted } from "@/components/onboarding/GettingStarted";
 
 const PAGE_SIZE = 25;
 const PLAYER_VIEW_STORAGE_KEY = "players_view_mode";
@@ -171,7 +172,8 @@ export default function HomePage() {
         <h1 className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">Dashboard</h1>
       </div>
 
-      <ReadABook variant="dashboard" />
+      {/* The checklist includes the book step, so the book card waits until it's gone */}
+      <GettingStarted otherwise={<ReadABook variant="dashboard" />} />
 
       {/* Opponents — a plain heading. The list is the point of the page, so
           there is nothing to collapse it into. */}

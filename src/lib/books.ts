@@ -8,7 +8,7 @@
  * owner reads their own PDF and every move in it opens on the board).
  */
 
-import graphqlClient from "@/api/graphqlClient";
+import { gql } from "@/api/gql";
 import { graphqlPost } from "@/lib/publicGraphql";
 
 export type BookStatus = "pending" | "running" | "succeeded" | "failed";
@@ -60,12 +60,7 @@ export type BookExercise = {
 const BOOK_FIELDS =
   "publicId title status error kind exerciseCount verifiedCount progress pageCount pagesDone diagramCount moveCount notifyEmail sha256 createdAt pdfPageCount readInPart";
 
-async function query<T>(text: string, variables: Record<string, unknown> = {}): Promise<T> {
-  const response = await graphqlClient({ data: { query: text, variables } });
-  const errors = response.data?.errors;
-  if (errors?.length) throw new Error(errors[0].message);
-  return response.data.data;
-}
+const query = gql;
 
 export const isConverting = (b: Pick<Book, "status">) => b.status === "pending" || b.status === "running";
 

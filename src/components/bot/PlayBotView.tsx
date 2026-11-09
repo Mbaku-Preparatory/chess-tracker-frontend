@@ -15,6 +15,7 @@ import type { BotBookGame, PlayerDetail } from "@/types";
 import { BotGame } from "./BotGame";
 import { BotSetup, defaultBotElo, startingColor, type BotColor as Color } from "./BotSetup";
 import { TutorialLink } from "@/components/tutorials/TutorialLink";
+import { markOnboardingStep } from "@/lib/onboarding";
 
 /**
  * "Play <player> bot": pick a colour and a strength (their FIDE rating to
@@ -202,7 +203,10 @@ export function PlayBotView({ slug }: { slug: string }) {
         onColorChange={setColor}
         elo={elo}
         onEloChange={setElo}
-        onPlay={() => setPlaying(true)}
+        onPlay={() => {
+          markOnboardingStep("play_bot");
+          setPlaying(true);
+        }}
         emptyHint={
           <>
             <Link href={`/players/${slug}/import`} className="text-accent-soft underline">
