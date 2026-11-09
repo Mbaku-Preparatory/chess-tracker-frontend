@@ -1,3 +1,4 @@
+import { FREE_BOT_GAMES, FREE_PROFILE_VIEWS, PUBLIC_GAMES_SHOWN } from "@/lib/freeLimits";
 import { SITE_URL } from "@/lib/site";
 
 export const dynamic = "force-static";
@@ -20,6 +21,7 @@ export function GET() {
 - Rating history is FIDE's monthly list history for the player.
 - Games come from chess-results.com, for tournaments whose organisers uploaded the moves. A player's game count can be lower than the games FIDE rated.
 - Each profile carries schema.org ProfilePage and Person data, including the FIDE ID.
+- A profile shows the player's latest ${PUBLIC_GAMES_SHOWN} games. Every game is available with an account. A visitor without an account can open ${FREE_PROFILE_VIEWS} different profiles.
 
 ## Rankings
 
@@ -30,7 +32,7 @@ export function GET() {
 ## Create your own chess bot
 
 - [Create your own chess bot](${SITE_URL}/chess-bot): play a bot of any FIDE-rated player, built from their over-the-board games on chess-results.com. For up to ten moves it plays only moves the player chose in that position, weighted by how often and how recently; after that Stockfish plays at a strength from 1320 to 2900, starting at the player's FIDE rating. It runs in the browser.
-- Without an account: one free game. An account (free trial, then a subscription) adds unlimited games and bots of the opponents a user scouts.
+- Without an account: ${FREE_BOT_GAMES} free games. An account (free trial, then a subscription) adds unlimited games and bots of the opponents a user scouts.
 - Link to a player's bot directly: ${SITE_URL}/chess-bot?fide=<fide-id>. Each player profile links to it.
 - Players with no games with moves on chess-results have no bot.
 

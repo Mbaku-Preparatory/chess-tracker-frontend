@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 
 import { PublicBot } from "@/components/public/bot/PublicBot";
+import { FREE_BOT_GAMES } from "@/lib/freeLimits";
 import { SHARE_IMAGE, SITE_URL } from "@/lib/site";
 
 const TITLE = "Create your own chess bot from any player's games | Chess Preparatory";
 const DESCRIPTION =
-  "Search any FIDE-rated chess player and play a bot built from their tournament games: it opens the way they do, move for move, then plays at the strength you choose. Free, in your browser, no account needed for your first game.";
+  `Search any FIDE-rated chess player and play a bot built from their tournament games: it opens the way they do, move for move, then plays at the strength you choose. Free, in your browser, no account needed for your first ${FREE_BOT_GAMES} games.`;
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -50,7 +51,7 @@ const FAQ = [
   },
   {
     q: "Is it free?",
-    a: "Your first game is free, with no account. After that, an account starts with a free trial: keep playing, and build bots of the opponents you scout in the app, with their full opening tree and preparation tools. When the trial ends, a small subscription keeps it going.",
+    a: `Your first ${FREE_BOT_GAMES} games are free, with no account. After that, an account starts with a free trial: keep playing, and build bots of the opponents you scout in the app, with their full opening tree and preparation tools. When the trial ends, a small subscription keeps it going.`,
   },
   {
     q: "Can I use it to prepare for a real game?",
@@ -103,7 +104,7 @@ export default async function ChessBotPage({ searchParams }: { searchParams: Pro
           </h1>
           <p className="max-w-[58ch] text-[18px] leading-[1.5] text-ink-muted">
             Search any FIDE-rated player. We find their tournament games and build a bot that opens the way they do, move for move,
-            then plays at the strength you choose. Your first game is free, no account needed.
+            then plays at the strength you choose. Your first {FREE_BOT_GAMES} games are free, no account needed.
           </p>
         </div>
         <PublicBot initialFideId={fide} />

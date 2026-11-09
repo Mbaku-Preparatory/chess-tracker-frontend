@@ -3,13 +3,14 @@ import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 
 import { PerformancePanel } from "@/components/public/profile/PerformancePanel";
+import { ProfileMeter } from "@/components/public/profile/ProfileMeter";
 import { PublicGames } from "@/components/public/profile/PublicGames";
 import { PendingChart, PendingRows } from "@/components/public/profile/Pending";
 import { ProfileRefresher } from "@/components/public/profile/ProfileRefresher";
 import { RatingCard } from "@/components/public/profile/RatingCard";
 import { RatingHistoryChart } from "@/components/public/profile/RatingHistoryChart";
 import { federationFor } from "@/lib/federations";
-import { DEFAULT_PAGE_SIZE, fetchSize } from "@/lib/games";
+import { PUBLIC_GAMES_SHOWN } from "@/lib/freeLimits";
 import { preparePath } from "@/lib/prepare";
 import { fetchPublicPlayer, profilePath, titledName, type PublicPlayer } from "@/lib/publicPlayer";
 import { series } from "@/lib/ratingSeries";
@@ -36,10 +37,8 @@ const TITLE_NAMES: Record<string, string> = {
 async function load(params: Params) {
   const { slug, fideId } = await params;
   if (!/^\d{1,20}$/.test(fideId)) notFound();
-  // The first block of games, as the table fetches them: 50 at 10 a page, so
-  // pages 1-5 are in the HTML. Another page in the URL is fetched by the
-  // browser (PublicGames).
-  const player = await fetchPublicPlayer(fideId, 1, fetchSize(DEFAULT_PAGE_SIZE));
+  // The most recent games, all a profile shows without an account (lib/freeLimits.ts).
+  const player = await fetchPublicPlayer(fideId, 1, PUBLIC_GAMES_SHOWN);
   if (!player) notFound();
   return { slug, player };
 }
@@ -208,6 +207,8 @@ export default async function PublicPlayerPage({ params }: { params: Params }) {
         )}
       </header>
 
+      <ProfileMeter player={{ fideId: player.fideId, fullName: player.fullName, federation: player.federation }} />
+
       <ProfileRefresher
         fideId={player.fideId}
         historyFetchedAt={player.historyFetchedAt}
@@ -261,9 +262,9 @@ export default async function PublicPlayerPage({ params }: { params: Params }) {
         </div>
         {player.games.count > 0 ? (
           <PublicGames
-            fideId={player.fideId}
-            basePath={canonical}
-            seed={{ offset: 0, count: player.games.count, results: player.games.results, page: 1, pageSize: DEFAULT_PAGE_SIZE }}
+            player={{ fideId: player.fideId, fullName: player.fullName, federation: player.federation }}
+            games={player.games.results}
+            count={player.games.count}
           />
         ) : !player.gamesFetchedAt ? (
           <PendingRows label="Fetching games from chess-results.com…" />

@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { AuthLink } from "@/components/public/AuthLink";
 import { PlayerSearch } from "@/components/public/PlayerSearch";
+import { FREE_BOT_GAMES, FREE_PROFILE_VIEWS, PUBLIC_GAMES_SHOWN } from "@/lib/freeLimits";
 import { bookPath, fetchPublicBooks } from "@/lib/publicBook";
 import { profilePath } from "@/lib/publicPlayer";
 import { fetchRankings, type RankingEntry } from "@/lib/rankings";
@@ -62,11 +63,11 @@ const FAQ = [
   },
   {
     q: "What does an account add?",
-    a: "Scouting and preparation: import an opponent's games from chess-results, Chess.com and Lichess, see the openings they play and how they score with them, and plan your preparation. And your chess books: upload a PDF and read it with a board, or solve its exercises.",
+    a: `Scouting and preparation: import an opponent's games from chess-results, Chess.com and Lichess, see the openings they play and how they score with them, and plan your preparation, with every game a player has. And your chess books: upload a PDF and read it with a board, or solve its exercises. Without an account you can open ${FREE_PROFILE_VIEWS} player profiles and see each one's latest ${PUBLIC_GAMES_SHOWN} games.`,
   },
   {
     q: "Can I play a bot of a real chess player?",
-    a: "Yes. Search any FIDE-rated player and play a bot built from their tournament games: it opens the way they do, move for move, then plays at the strength you choose. The first game is free, without an account.",
+    a: `Yes. Search any FIDE-rated player and play a bot built from their tournament games: it opens the way they do, move for move, then plays at the strength you choose. The first ${FREE_BOT_GAMES} games are free, without an account.`,
   },
   {
     q: "Can I read a chess book here?",

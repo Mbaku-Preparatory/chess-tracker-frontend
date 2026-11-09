@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { PricingPlans } from "@/components/public/pricing/PricingPlans";
+import { FREE_BOT_GAMES, FREE_PROFILE_VIEWS, PUBLIC_GAMES_SHOWN } from "@/lib/freeLimits";
 import { countryName, currencyName, fetchPublicPricing } from "@/lib/pricing";
 import { SHARE_IMAGE, SITE_URL } from "@/lib/site";
 
@@ -37,9 +38,9 @@ function included(questions: number) {
 }
 
 const ALWAYS_FREE = [
-  { href: "/", label: "Every FIDE-rated player's profile, ratings and rating history" },
+  { href: "/", label: `${FREE_PROFILE_VIEWS} player profiles, with ratings, rating history and their latest ${PUBLIC_GAMES_SHOWN} games` },
   { href: "/rankings", label: "World and national rankings" },
-  { href: "/chess-bot", label: "Your first game against any player's bot" },
+  { href: "/chess-bot", label: `${FREE_BOT_GAMES} games against any player's bot` },
   { href: "/chess-books", label: "The demo books in the book reader" },
   { href: "/guess-the-player", label: "Guess the player and the chess personality test" },
 ];

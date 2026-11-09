@@ -143,11 +143,19 @@ function facedLine(book: Book, fen: string, ply: number, single: BotBookGame | n
   return ` In my games I faced ${list} here.`;
 }
 
+function freeGameLine(free: { number: number; of: number } | undefined, over: boolean): string {
+  if (!free) return over ? "That was your free game." : "This is your free game.";
+  const left = free.of - free.number;
+  if (!over) return `Free game ${free.number} of ${free.of}.`;
+  return left > 0 ? `That was free game ${free.number} of ${free.of}: ${left} left.` : "That was your last free game.";
+}
+
 export function BotGame({
   botName: name,
   botRating,
   gameHref = (publicId) => `/games/${publicId}`,
   guest,
+  freeGame,
   youName,
   botColor,
   games,
@@ -162,8 +170,10 @@ export function BotGame({
   botRating: number | null;
   /** Where "View game" goes: the scouting copy in the app, or the public page. */
   gameHref?: (publicId: string) => string;
-  /** The public page's one free game: no "New game", and a sign-up card. */
+  /** A visitor without an account, on the public page: no "New game", and a sign-up card. */
   guest?: boolean;
+  /** Which of the visitor's free games this is (lib/freeLimits.ts), for the card. */
+  freeGame?: { number: number; of: number };
   /** The account holder's name for their plate and the PGN. */
   youName: string;
   botColor: Color;
@@ -540,7 +550,7 @@ export function BotGame({
 
           {guest && (
             <section aria-label="Free game" className={`flex flex-col gap-3 rounded-xl p-4 ${result ? "bg-accent/15" : "bg-ink-card"}`}>
-              <p className="text-[15px] font-[520] text-ink-text">{result ? "That was your free game." : "This is your free game."}</p>
+              <p className="text-[15px] font-[520] text-ink-text">{freeGameLine(freeGame, Boolean(result))}</p>
               <p className="text-[14px] text-ink-muted">
                 Start a free trial to play {name} bot again, build a bot from any opponent you scout, and prepare against
                 their openings.
