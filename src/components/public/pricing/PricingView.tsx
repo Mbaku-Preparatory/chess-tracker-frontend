@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { PricingCta } from "@/components/public/pricing/PricingCta";
-import { countryName, currencyName, fetchPublicPricing, type PublicPlan } from "@/lib/pricing";
+import { PricingPlans } from "@/components/public/pricing/PricingPlans";
+import { countryName, currencyName, fetchPublicPricing } from "@/lib/pricing";
 import { SHARE_IMAGE, SITE_URL } from "@/lib/site";
-import { annualSaving, formatPrice, perMonthOfAnnual } from "@/lib/subscription";
 
 const TITLE = "Pricing | Chess Preparatory";
 const DESCRIPTION =
@@ -68,33 +67,6 @@ function faq(trialDays: number) {
       a: "Yes. Paying early adds the new month or year on after the time you already have, so nothing is lost.",
     },
   ];
-}
-
-function PlanCard({ plan, plans, trialDays }: { plan: PublicPlan; plans: PublicPlan[]; trialDays: number }) {
-  const annual = plan.period === "year";
-  const monthly = plans.find((p) => p.period === "month");
-  const pct = annual && monthly ? annualSaving(monthly.price, plan.price) : null;
-  return (
-    <div className={`flex flex-col gap-4 rounded-xl bg-ink-card p-8 ${annual ? "ring-1 ring-accent" : ""}`}>
-      <div className="flex items-center justify-between gap-3">
-        <h3 className="text-[21px] font-[480]">{annual ? "Yearly" : "Monthly"}</h3>
-        {pct !== null && (
-          <span className="rounded-pill bg-accent/15 px-3 py-1 text-[13px] font-[480] text-accent-soft">Save {pct}%</span>
-        )}
-      </div>
-      <p className="flex items-baseline gap-2">
-        <span className="text-[42px] font-[480] leading-none tabular-nums">{formatPrice(plan.price, plan.currency)}</span>
-        <span className="text-[16px] text-ink-muted">/ {annual ? "year" : "month"}</span>
-      </p>
-      <p className="min-h-[1.5em] text-[15px] text-ink-muted">
-        {annual ? `That's ${perMonthOfAnnual(plan.price, plan.currency)} a month.` : "Pay a month at a time."}
-      </p>
-      <div className="mt-auto flex flex-col gap-2 pt-2">
-        <PricingCta primary={annual} />
-        <p className="text-center text-[13px] text-ink-faint">{trialDays} days free first. No card needed.</p>
-      </div>
-    </div>
-  );
 }
 
 /**
@@ -172,11 +144,7 @@ export async function PricingView({ country }: { country: string }) {
             </h2>
             <p className="text-[15px] text-ink-muted">In {currencyName(region.currency)}.</p>
           </div>
-          <div className="grid gap-4 md:grid-cols-2">
-            {region.plans.map((plan) => (
-              <PlanCard key={`${plan.period}-${plan.days}`} plan={plan} plans={region.plans} trialDays={trialDays} />
-            ))}
-          </div>
+          <PricingPlans plans={region.plans} trialDays={trialDays} />
         </section>
       )}
 
