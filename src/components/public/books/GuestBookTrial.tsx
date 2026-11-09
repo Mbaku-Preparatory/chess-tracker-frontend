@@ -32,7 +32,7 @@ export function GuestBookTrial() {
   const [uploading, setUploading] = useState(false);
   const uploadRef = useRef<AbortController | null>(null);
 
-  // Signed in, here or in the tab "Create a free account" opened: the app's
+  // Signed in, here or in the tab "Start a free trial" opened: the app's
   // Books page is the real thing (and the book is claimed into it).
   const session = useSignedIn();
   useEffect(() => {
@@ -149,7 +149,7 @@ export function GuestBookTrial() {
     return (
       <Notice title={`“${trial.title}” was only kept for a day.`}>
         <AuthLink href="/signup" className="rounded-pill bg-accent px-6 py-3 text-[16px] font-[480] text-accent-on hover:bg-accent-soft">
-          Create a free account to upload books
+          Start a free trial to upload books
         </AuthLink>
       </Notice>
     );
@@ -182,7 +182,7 @@ export function GuestBookTrial() {
         <>
           That&apos;s as far as a free try reads: the first {n(book.pageCount)} of {n(book.pdfPageCount)} pages.{" "}
           <AuthLink href="/signup" className="text-accent-soft underline">
-            Create a free account
+            Start a free trial
           </AuthLink>{" "}
           and the book moves into it; read the whole of it from there.
         </>

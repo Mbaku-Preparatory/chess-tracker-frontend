@@ -44,10 +44,10 @@ export function TrialBar({ used }: { used: number }) {
         <span className="font-[520] tabular-nums">
           {minutes(left)} {minutes(left) === 1 ? "minute" : "minutes"} left
         </span>{" "}
-        <span className="text-ink-muted">of your free try. Create a free account to keep this book.</span>
+        <span className="text-ink-muted">of your free try. Start a free trial to keep this book.</span>
       </p>
       <AuthLink href="/signup" className="rounded-pill bg-accent px-4 py-1.5 text-[14px] font-[520] text-accent-on hover:bg-accent-soft">
-        Create a free account
+        Start a free trial
       </AuthLink>
     </div>
   );
@@ -59,12 +59,12 @@ export function TrialOver({ title }: { title: string }) {
     <section aria-label="Your free try" className="mx-auto flex max-w-2xl flex-col items-start gap-4 rounded-xl bg-ink-card p-6 sm:p-8">
       <h2 className="text-[24px] font-[480] leading-tight">Your ten minutes with “{title}” are up.</h2>
       <p className="max-w-[60ch] text-[16px] leading-[1.5] text-ink-muted">
-        Create a free account and this book moves into it, already read: nothing to upload again. From there you can read all of
+        Start a free trial and this book moves into your new account, already read: nothing to upload again. From there you can read all of
         it, add more books, and keep your place in each.
       </p>
       <div className="flex flex-wrap gap-3">
         <AuthLink href="/signup" className="rounded-pill bg-accent px-6 py-3 text-[16px] font-[480] text-accent-on hover:bg-accent-soft">
-          Create a free account
+          Start a free trial
         </AuthLink>
         <AuthLink href="/login" className="rounded-pill border border-ink-text/80 px-6 py-3 text-[16px] text-ink-text hover:bg-ink-raised">
           Log in

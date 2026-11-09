@@ -41,6 +41,25 @@ export function formatPrice(amount: string, currency: string): string {
   return currency === "USD" ? `$${formatted}` : `${currency} ${formatted}`;
 }
 
+/**
+ * How much cheaper a year is than twelve months, as a whole percentage, or
+ * null when it is not cheaper. For the "Save 31%" badge on /subscribe and
+ * /pricing alike.
+ */
+export function annualSaving(monthlyPrice: string, annualPrice: string): number | null {
+  const twelve = Number(monthlyPrice) * 12;
+  if (!(twelve > 0)) return null;
+  const pct = Math.round((1 - Number(annualPrice) / twelve) * 100);
+  return pct > 0 ? pct : null;
+}
+
+/** "That's KES 83 a month": an annual price spread over twelve months.
+ * Shillings are quoted whole; dollars to the cent. */
+export function perMonthOfAnnual(annualPrice: string, currency: string): string {
+  const monthly = Number(annualPrice) / 12;
+  return formatPrice(currency === "KES" ? String(Math.round(monthly)) : monthly.toFixed(2), currency);
+}
+
 /** "7 Nov 2026": for lists, where the year matters and the weekday doesn't. */
 export function formatShortDate(iso: string | null): string {
   if (!iso) return "";

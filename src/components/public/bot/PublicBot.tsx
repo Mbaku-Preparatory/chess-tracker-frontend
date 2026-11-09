@@ -183,7 +183,7 @@ export function PublicBot({ initialFideId }: { initialFideId?: string }) {
     if (initialFideId && /^\d{3,10}$/.test(initialFideId)) pick(initialFideId);
   }, [session, initialFideId, pick]);
 
-  // Signed in from the tab "Create a free account" opened: no limit now.
+  // Signed in from the tab "Start a free trial" opened: no limit now.
   useEffect(() => {
     if (session) setPhase((p) => (p.kind === "used" ? { kind: "search" } : p));
   }, [session]);
@@ -193,12 +193,12 @@ export function PublicBot({ initialFideId }: { initialFideId?: string }) {
       <section aria-label="Your free game" className="flex flex-col items-start gap-4 rounded-xl bg-ink-card p-6 sm:p-8">
         <h2 className="text-[24px] font-[480] leading-tight">You&apos;ve played your free game{phase.name ? ` against ${phase.name} bot` : ""}.</h2>
         <p className="max-w-[60ch] text-[16px] leading-[1.5] text-ink-muted">
-          Create a free account to keep playing: build a bot from any opponent you scout, at any strength, and prepare against the openings
+          Start a free trial to keep playing: build a bot from any opponent you scout, at any strength, and prepare against the openings
           they actually play.
         </p>
         <div className="flex flex-wrap gap-3">
           <AuthLink href="/signup" className="rounded-pill bg-accent px-6 py-3 text-[16px] font-[480] text-accent-on hover:bg-accent-soft">
-            Create a free account
+            Start a free trial
           </AuthLink>
           <AuthLink href="/login" className="rounded-pill border border-ink-text/80 px-6 py-3 text-[16px] text-ink-text hover:bg-ink-raised">
             Log in

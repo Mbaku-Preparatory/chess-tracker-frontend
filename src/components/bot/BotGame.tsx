@@ -542,11 +542,11 @@ export function BotGame({
             <section aria-label="Free game" className={`flex flex-col gap-3 rounded-xl p-4 ${result ? "bg-accent/15" : "bg-ink-card"}`}>
               <p className="text-[15px] font-[520] text-ink-text">{result ? "That was your free game." : "This is your free game."}</p>
               <p className="text-[14px] text-ink-muted">
-                Create a free account to play {name} bot again, build a bot from any opponent you scout, and prepare against
+                Start a free trial to play {name} bot again, build a bot from any opponent you scout, and prepare against
                 their openings.
               </p>
               <AuthLink href="/signup" className="self-start rounded-pill bg-accent px-5 py-2 text-[15px] font-[520] text-accent-on hover:bg-accent-soft">
-                Create a free account
+                Start a free trial
               </AuthLink>
             </section>
           )}

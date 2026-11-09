@@ -14,21 +14,24 @@ export function PublicHeader() {
           <Logo size={30} />
           <span className="hidden whitespace-nowrap text-[17px] font-[480] tracking-[0.01em] sm:inline">Chess Preparatory</span>
         </Link>
-        <div className="hidden items-center gap-2 xl:flex">
-          <Link href="/rankings" className="whitespace-nowrap rounded-pill px-3 py-2 text-[15px] text-ink-muted hover:bg-ink-raised hover:text-ink-text sm:px-4">
+        <div className="hidden items-center gap-1 xl:flex">
+          <Link href="/rankings" className="whitespace-nowrap rounded-pill px-3 py-2 text-[15px] text-ink-muted hover:bg-ink-raised hover:text-ink-text">
             Rankings
           </Link>
-          <Link href="/chess-bot" className="whitespace-nowrap rounded-pill px-3 py-2 text-[15px] text-ink-muted hover:bg-ink-raised hover:text-ink-text sm:px-4">
+          <Link href="/chess-bot" className="whitespace-nowrap rounded-pill px-3 py-2 text-[15px] text-ink-muted hover:bg-ink-raised hover:text-ink-text">
             Create your own bot
           </Link>
-          <Link href="/chess-books" className="whitespace-nowrap rounded-pill px-3 py-2 text-[15px] text-ink-muted hover:bg-ink-raised hover:text-ink-text sm:px-4">
+          <Link href="/chess-books" className="whitespace-nowrap rounded-pill px-3 py-2 text-[15px] text-ink-muted hover:bg-ink-raised hover:text-ink-text">
             Books
           </Link>
-          <Link href="/chess-personality" className="whitespace-nowrap rounded-pill px-3 py-2 text-[15px] text-ink-muted hover:bg-ink-raised hover:text-ink-text sm:px-4">
+          <Link href="/chess-personality" className="whitespace-nowrap rounded-pill px-3 py-2 text-[15px] text-ink-muted hover:bg-ink-raised hover:text-ink-text">
             Chess personality
           </Link>
-          <Link href="/guess-the-player" className="whitespace-nowrap rounded-pill px-3 py-2 text-[15px] text-ink-muted hover:bg-ink-raised hover:text-ink-text sm:px-4">
+          <Link href="/guess-the-player" className="whitespace-nowrap rounded-pill px-3 py-2 text-[15px] text-ink-muted hover:bg-ink-raised hover:text-ink-text">
             Guess the player
+          </Link>
+          <Link href="/pricing" className="whitespace-nowrap rounded-pill px-3 py-2 text-[15px] text-ink-muted hover:bg-ink-raised hover:text-ink-text">
+            Pricing
           </Link>
           <ThemeToggle className="text-ink-muted hover:bg-ink-raised hover:text-ink-text" />
           <AccountLinks />
