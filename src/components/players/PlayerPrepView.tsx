@@ -7,6 +7,7 @@ import { useSearchParams } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { fetchPlayerDetail } from "@/redux/actions/playerDetail";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { TutorialLink } from "@/components/tutorials/TutorialLink";
 import { CardSkeleton } from "@/components/ui/LoadingSkeleton";
 import { PrepSummaryPanel } from "@/components/players/PrepSummaryPanel";
 import { OpeningStudyPlan } from "@/components/players/OpeningStudyPlan";
@@ -101,6 +102,11 @@ export function PlayerPrepView({ slug }: { slug: string }) {
           </button>
         ))}
       </div>
+
+      {/* How the shown tab works, as a short video */}
+      {(shown === "tree" || shown === "ask") && (
+        <div className="mb-4"><TutorialLink id={shown === "tree" ? "opening-tree" : "mbaku"} /></div>
+      )}
 
       {/* Tab content */}
       {shown === "tree" && <PrepSummaryPanel slug={slug} />}

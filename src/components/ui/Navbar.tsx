@@ -20,6 +20,9 @@ const LINKS = [
   { href: "/home", label: "My Opponents" },
   // the user's own chess books: exercises, or a reader for scans
   { href: "/books", label: "Books" },
+  // short videos of each feature (lib/tutorials.ts); the page is public, so
+  // it opens in the public site's frame, whose "Open app" comes back
+  { href: "/tutorials", label: "Tutorials" },
 ];
 
 export function Navbar() {
