@@ -9,11 +9,10 @@ import { AuthLink } from "@/components/public/AuthLink";
 import { PlayerSearch } from "@/components/public/PlayerSearch";
 import { useSignedIn } from "@/hooks/useSignedIn";
 import { avatarSrc, defaultAvatar } from "@/lib/avatars";
+import { countFreeBotGame, FREE_BOT_GAMES, freeBotGames } from "@/lib/freeLimits";
 import { graphqlPost } from "@/lib/publicGraphql";
 import type { BotBookGame } from "@/types";
 
-/** The one free game, remembered on this device. Signed-in visitors have no limit. */
-const FREE_KEY = "cs_free_bot";
 /** How long to wait for a player's games to arrive from chess-results. */
 const POLL_EVERY_MS = 3000;
 const GIVE_UP_AFTER_MS = 4 * 60 * 1000;
@@ -28,7 +27,8 @@ type Phase =
   | { kind: "search"; message?: string }
   | { kind: "finding"; target: Target }
   | { kind: "setup"; target: Target; books: Record<Color, BotBookGame[]> }
-  | { kind: "playing"; target: Target; books: Record<Color, BotBookGame[]> }
+  // `freeGame`: which of the FREE_BOT_GAMES this is, for a visitor without an account.
+  | { kind: "playing"; target: Target; books: Record<Color, BotBookGame[]>; freeGame?: number }
   | { kind: "used"; name: string | null };
 
 const PLAYER = `query P($fideId: String!) {
@@ -77,21 +77,9 @@ const toBookGame = (g: BookRow): BotBookGame => ({
   event: g.event,
 });
 
-function readFree(): { fideId: string; name: string } | null {
-  try {
-    const raw = localStorage.getItem(FREE_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
-
-function writeFree(target: Target) {
-  try {
-    localStorage.setItem(FREE_KEY, JSON.stringify({ fideId: target.fideId, name: target.fullName, at: new Date().toISOString() }));
-  } catch {
-    // Private mode or blocked storage: the game still plays.
-  }
+function freeGamesNote(played: number): string {
+  const left = Math.max(0, FREE_BOT_GAMES - played);
+  return `Without an account you get ${FREE_BOT_GAMES} free games: ${left} left.`;
 }
 
 /**
@@ -178,8 +166,8 @@ export function PublicBot({ initialFideId }: { initialFideId?: string }) {
   useEffect(() => {
     if (session === null || looked.current) return;
     looked.current = true;
-    const used = readFree();
-    if (used && !session) return setPhase({ kind: "used", name: used.name });
+    const used = freeBotGames();
+    if (used.played >= FREE_BOT_GAMES && !session) return setPhase({ kind: "used", name: used.last });
     if (initialFideId && /^\d{3,10}$/.test(initialFideId)) pick(initialFideId);
   }, [session, initialFideId, pick]);
 
@@ -191,7 +179,7 @@ export function PublicBot({ initialFideId }: { initialFideId?: string }) {
   if (phase.kind === "used") {
     return (
       <section aria-label="Your free game" className="flex flex-col items-start gap-4 rounded-xl bg-ink-card p-6 sm:p-8">
-        <h2 className="text-[24px] font-[480] leading-tight">You&apos;ve played your free game{phase.name ? ` against ${phase.name} bot` : ""}.</h2>
+        <h2 className="text-[24px] font-[480] leading-tight">You&apos;ve played your {FREE_BOT_GAMES} free games.</h2>
         <p className="max-w-[60ch] text-[16px] leading-[1.5] text-ink-muted">
           Start a free trial to keep playing: build a bot from any opponent you scout, at any strength, and prepare against the openings
           they actually play.
@@ -218,13 +206,18 @@ export function PublicBot({ initialFideId }: { initialFideId?: string }) {
           botRating={target.rating}
           gameHref={(publicId) => `/game/${publicId}`}
           guest={!signedIn}
+          freeGame={signedIn || !phase.freeGame ? undefined : { number: phase.freeGame, of: FREE_BOT_GAMES }}
           youName="You"
           botColor={color}
           games={books[color]}
           elo={elo ?? defaultBotElo(target.rating)}
           botAvatarSrc={avatarSrc(defaultAvatar(target.fideId))}
           youAvatarSrc={avatarSrc(defaultAvatar("you"))}
-          onExit={() => (signedIn ? setPhase({ kind: "setup", target, books }) : setPhase({ kind: "used", name: target.fullName }))}
+          onExit={() =>
+            signedIn || freeBotGames().played < FREE_BOT_GAMES
+              ? setPhase({ kind: "setup", target, books })
+              : setPhase({ kind: "used", name: target.fullName })
+          }
         />
       </div>
     );
@@ -254,8 +247,8 @@ export function PublicBot({ initialFideId }: { initialFideId?: string }) {
         elo={elo}
         onEloChange={setElo}
         onPlay={() => {
-          if (!signedIn) writeFree(target);
-          setPhase({ kind: "playing", target, books });
+          const freeGame = signedIn ? undefined : countFreeBotGame(target.fullName);
+          setPhase({ kind: "playing", target, books, freeGame });
         }}
         header={
           <div className="flex flex-wrap items-center justify-between gap-4">
@@ -273,7 +266,7 @@ export function PublicBot({ initialFideId }: { initialFideId?: string }) {
             </button>
           </div>
         }
-        note={signedIn ? undefined : "Without an account you get one free game."}
+        note={signedIn ? undefined : freeGamesNote(freeBotGames().played)}
       />
     );
   }

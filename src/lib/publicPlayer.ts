@@ -6,7 +6,7 @@
  * week and tagged; the refresh tells Next to drop the tag when it finishes.
  */
 
-import { graphqlGet, graphqlPost } from "./publicGraphql";
+import { graphqlGet } from "./publicGraphql";
 
 export type RatingPoint = {
   month: string; // YYYY-MM-DD, the first of the list's month
@@ -123,18 +123,6 @@ export async function fetchPublicPlayer(fideId: string, page: number, pageSize: 
     next: { revalidate: PROFILE_REVALIDATE, tags: [playerTag(fideId)] },
   });
   return data.publicPlayer;
-}
-
-const GAMES_QUERY = `
-query PublicGames($fideId: String!, $page: Int!, $pageSize: Int!) {
-  publicPlayer(fideId: $fideId) { games(page: $page, pageSize: $pageSize) { count results { ${GAME_FIELDS} } } }
-}`;
-
-/** One page of a profile's games, from the browser: the games table fetches
- * the blocks after the one the server rendered. */
-export async function fetchPublicGames(fideId: string, page: number, pageSize: number): Promise<PublicPlayer["games"]> {
-  const data = await graphqlPost<{ publicPlayer: { games: PublicPlayer["games"] } | null }>(GAMES_QUERY, { fideId, page, pageSize });
-  return data.publicPlayer?.games ?? { count: 0, results: [] };
 }
 
 /** "CM Oluka Robert Mcligeyo", the way chess sites and FIDE write a titled name. */
