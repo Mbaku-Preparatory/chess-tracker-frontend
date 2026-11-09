@@ -14,6 +14,7 @@ import { ReadABook } from "@/components/books/ReadABook";
 import { BookConverting } from "@/components/books/BookConverting";
 import { NotifyMeCheckbox } from "@/components/ui/NotifyMeCheckbox";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { TutorialLink } from "@/components/tutorials/TutorialLink";
 import { api } from "@/lib/api";
 import { userMessage, wasAborted } from "@/lib/apiError";
 import { bookFile, forgetBookFile, keepBookFile, sha256Of } from "@/lib/bookFiles";
@@ -119,6 +120,7 @@ export default function BooksPage() {
         title="Books"
         subtitle="Upload a chess book as a PDF. A book of exercises becomes positions to solve, with the book's solutions and notes; any other book, scanned ones too, becomes a reader where every move opens on the board. Your books are private to you."
       />
+      <div className="-mt-5 mb-6"><TutorialLink id="books" /></div>
 
       <section className="mb-8 rounded-xl border border-dashed border-gray-300 p-6 dark:border-dark-border">
         <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">

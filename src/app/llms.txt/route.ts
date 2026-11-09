@@ -49,6 +49,7 @@ export function GET() {
 - [Rankings](${SITE_URL}/rankings): world and per-federation player rankings
 - [Create your own chess bot](${SITE_URL}/chess-bot): play a bot of any FIDE-rated player, from their games
 - [Chess books](${SITE_URL}/chess-books): the book reader and exercise solver, with demo books
+- [Tutorials](${SITE_URL}/tutorials): six short videos on preparing for an opponent with the app
 - [Pricing](${SITE_URL}/pricing): the free trial, and the monthly and yearly prices by region
 - [Sitemap](${SITE_URL}/sitemap.xml): every active player's profile
 - [Privacy policy](${SITE_URL}/privacy)

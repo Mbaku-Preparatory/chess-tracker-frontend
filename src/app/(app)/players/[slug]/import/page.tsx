@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { TutorialLink } from "@/components/tutorials/TutorialLink";
 import { useParams, useSearchParams } from "next/navigation";
 
 import { api } from "@/lib/api";
@@ -266,6 +267,7 @@ export default function PlayerImportPage() {
               Adding games for{" "}
               <span className="font-medium text-gray-700 dark:text-gray-300">{player.full_name}</span>
             </p>
+            <div className="mt-2"><TutorialLink id="online-games" /></div>
           </div>
         </div>
         <Link href={`/players/${playerRef}`} className="btn-secondary text-sm">

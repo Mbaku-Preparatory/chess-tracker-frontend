@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import Link from "next/link";
+import { TutorialLink } from "@/components/tutorials/TutorialLink";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
@@ -417,6 +418,7 @@ export default function NewPlayerPage() {
           Search FIDE by name or ID, or enter their Chess.com / Lichess username
           directly.
         </p>
+        <div className="mt-3"><TutorialLink id="add-opponent" /></div>
       </div>
 
       {/* ── FIDE search ──────────────────────────────────────────────────── */}

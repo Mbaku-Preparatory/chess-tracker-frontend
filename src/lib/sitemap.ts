@@ -28,6 +28,7 @@ export const STATIC_PAGES = [
   "/chess-personality",
   ...TYPES.map((t) => `/chess-personality/${t.slug}`),
   "/guess-the-player",
+  "/tutorials",
   "/pricing",
   "/privacy",
 ];

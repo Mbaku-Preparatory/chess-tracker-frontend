@@ -14,6 +14,7 @@ import type { BotBookGame, PlayerDetail } from "@/types";
 
 import { BotGame } from "./BotGame";
 import { BotSetup, defaultBotElo, startingColor, type BotColor as Color } from "./BotSetup";
+import { TutorialLink } from "@/components/tutorials/TutorialLink";
 
 /**
  * "Play <player> bot": pick a colour and a strength (their FIDE rating to
@@ -160,6 +161,12 @@ export function PlayBotView({ slug }: { slug: string }) {
           <p className="mt-1 text-[14px] text-ink-faint">
             The bot opens the way {name} does, move for move from their games, then plays at the strength you choose.
           </p>
+          <div className="mt-2">
+            <TutorialLink
+              id="bot"
+              className="inline-flex items-center gap-1.5 rounded-pill border border-accent/60 px-3 py-1 text-[14px] font-[520] text-accent-soft hover:bg-accent/15"
+            />
+          </div>
         </div>
       </header>
 
