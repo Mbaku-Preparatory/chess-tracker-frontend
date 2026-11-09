@@ -1,6 +1,7 @@
 /**
  * Guess the player: one mystery FIDE player a day, eight guesses, a coloured
- * hint per clue after each guess.
+ * hint per clue after each guess, and a game they won that opens up as the
+ * guesses go wrong.
  *
  * Everything is in the browser. The players are a file in the repo
  * (src/data/guessThePlayer.json, refreshed monthly by
@@ -8,6 +9,7 @@
  * date, and progress lives in localStorage. No visit asks the backend anything.
  */
 
+import games from "@/data/guessThePlayerGames.json";
 import pool from "@/data/guessThePlayer.json";
 
 export type PoolPlayer = {
@@ -118,6 +120,51 @@ export function feedbackFor(guess: PoolPlayer, answer: PoolPlayer): Feedback {
     born: numberClue(guess.born, answer.born, BORN_CLOSE),
     solved: guess.fideId === answer.fideId,
   };
+}
+
+// ── Their game ─────────────────────────────────────────────────────────────
+
+/**
+ * One game the mystery player won, shown as an extra clue: the moves, never
+ * the names, until the puzzle is over. Picked by scripts/guess-player-games.mjs
+ * (see there for where each game comes from and its licence).
+ */
+export type MysteryGame = {
+  /** The colour the mystery player had. */
+  side: "white" | "black";
+  white: string;
+  black: string;
+  result: "1-0" | "0-1";
+  event: string;
+  /** "YYYY.MM.DD", as in PGN. */
+  date: string;
+  /** SAN, space separated, from the normal starting position. */
+  moves: string;
+  /** Where the game is from, said under the board the whole time. */
+  credit: string;
+  /** The game at its source. Shown only once the puzzle is over: it names the players. */
+  url?: string;
+};
+
+const GAMES = games.games as Record<string, MysteryGame>;
+
+export function gameFor(fideId: string): MysteryGame | null {
+  return GAMES[fideId] ?? null;
+}
+
+/** Moves (each side's turn counts once, as on a scoresheet) that open up with each wrong guess. */
+export const MOVES_PER_GUESS = 10;
+/** After this many wrong guesses the whole game is open. */
+export const WHOLE_GAME_AFTER = 3;
+
+/**
+ * How many half-moves of `total` can be seen: the first ten moves to start,
+ * ten more with each wrong guess, all of it after three, or once the puzzle
+ * is over.
+ */
+export function visiblePlies(total: number, wrongGuesses: number, over: boolean): number {
+  if (over || wrongGuesses >= WHOLE_GAME_AFTER) return total;
+  return Math.min(total, (wrongGuesses + 1) * MOVES_PER_GUESS * 2);
 }
 
 // ── Search ─────────────────────────────────────────────────────────────────

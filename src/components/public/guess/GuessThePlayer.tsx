@@ -8,13 +8,16 @@ import { SharePanel } from "@/components/public/share/SharePanel";
 
 import { GuessDemo, demoAvailable } from "./GuessDemo";
 import { GuessRow } from "./GuessRow";
+import { MysteryGameBoard } from "./MysteryGameBoard";
 import { federationFor } from "@/lib/federations";
 import {
   ALIASES,
   answerFor,
   BORN_CLOSE,
   feedbackFor,
+  gameFor,
   loadGame,
+  MOVES_PER_GUESS,
   loadStats,
   MAX_GUESSES,
   msUntilNextPuzzle,
@@ -28,6 +31,7 @@ import {
   type Clue,
   type PoolPlayer,
   type Stats,
+  WHOLE_GAME_AFTER,
 } from "@/lib/guessThePlayer";
 import { profilePath } from "@/lib/publicPlayer";
 import { SITE_URL } from "@/lib/site";
@@ -205,6 +209,7 @@ export function GuessThePlayer() {
   const text = shareText(puzzle, feedback, won);
   const url = `${SITE_URL}/guess-the-player`;
   const fed = federationFor(answer.federation);
+  const game = gameFor(answer.fideId);
 
   return (
     <div className="mx-auto flex w-full max-w-[760px] flex-col gap-8">
@@ -255,9 +260,17 @@ export function GuessThePlayer() {
               <b className="text-ink-text">Born</b>: green if the same year, yellow within {BORN_CLOSE}. The arrow points to their year.
             </li>
           </ul>
+          {game && (
+            <p>
+              Above your guesses is a game the mystery player won, without the names. The first {MOVES_PER_GUESS} moves are open
+              from the start, {MOVES_PER_GUESS} more with each wrong guess, and the whole game after {WHOLE_GAME_AFTER}.
+            </p>
+          )}
           <p>A new player appears at midnight, wherever you are. Ratings are from FIDE&apos;s classical list.</p>
         </div>
       </details>
+
+      {game && <MysteryGameBoard key={puzzle} game={game} wrongGuesses={won ? guesses.length - 1 : guesses.length} over={over} />}
 
       {!over && (
         <div className="flex flex-col gap-2">
