@@ -10,9 +10,9 @@ import { dismissOnboarding, fetchOnboarding, STEP_INFO, type Onboarding } from "
  * "Getting started" on My Opponents: six first steps, each with a link to do
  * it and its tutorial video. Ticks come from the account's own data
  * (lib/onboarding.ts), so they are right on every device. Gone once all six
- * are done or the user hides it; `otherwise` shows in its place then.
+ * are done or the user hides it.
  */
-export function GettingStarted({ otherwise }: { otherwise?: React.ReactNode }) {
+export function GettingStarted() {
   const [data, setData] = useState<Onboarding | null>(null);
   const [failed, setFailed] = useState(false);
 
@@ -20,9 +20,7 @@ export function GettingStarted({ otherwise }: { otherwise?: React.ReactNode }) {
     fetchOnboarding().then(setData).catch(() => setFailed(true));
   }, []);
 
-  if (failed) return <>{otherwise}</>;
-  if (!data) return null;
-  if (!data.show) return <>{otherwise}</>;
+  if (failed || !data || !data.show) return null;
 
   const op = data.opponent?.publicId ?? null;
   const pct = Math.round((100 * data.doneCount) / data.steps.length);

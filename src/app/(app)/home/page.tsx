@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 
-import { ReadABook } from "@/components/books/ReadABook";
 import { PlayerCard } from "@/components/players/PlayerCard";
 import { CardSkeleton } from "@/components/ui/LoadingSkeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -164,23 +163,15 @@ export default function HomePage() {
 
   return (
     <div>
-      {/* Page header */}
-      <div className="mb-6">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-brand-600">
-          Scouting
-        </p>
-        <h1 className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">Dashboard</h1>
-      </div>
-
-      {/* The checklist includes the book step, so the book card waits until it's gone */}
-      <GettingStarted otherwise={<ReadABook variant="dashboard" />} />
+      <GettingStarted />
 
       {/* Opponents — a plain heading. The list is the point of the page, so
           there is nothing to collapse it into. */}
       <div className="mb-6">
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 flex-1 items-center gap-2 py-1">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">My Opponents</h2>
+            {/* The page's heading, now that there's no "Dashboard" above it */}
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">My Opponents</h1>
             {total > 0 && (
               <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500 dark:bg-dark-elevated dark:text-gray-400">
                 {total}

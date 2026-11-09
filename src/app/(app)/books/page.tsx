@@ -174,7 +174,7 @@ export default function BooksPage() {
         )}
       </section>
 
-      <ReadABook variant="books" />
+      <ReadABook />
 
       {books === null ? (
         <div className="h-24 animate-pulse rounded-xl bg-gray-100 dark:bg-dark-elevated" />
