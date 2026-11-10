@@ -9,9 +9,11 @@ import type { ImportJob, PlayerAccount } from "@/types";
 
 type Platform = "chesscom" | "lichess";
 
-// How many recent games an import can ask for. 1,000 is the server's ceiling
-// (MAX_IMPORT_LIMIT in the backend's chesscom.py and lichess.py).
-const GAME_COUNTS = [25, 50, 100, 200, 500, 1000];
+// How many recent games an import can ask for. "All" is the server's ceiling
+// (ONLINE_MAX_GAMES in the backend's import_entries.py); it fetches in pages
+// of 1,000.
+const ALL_GAMES = 10000;
+const GAME_COUNTS = [25, 50, 100, 200, 500, 1000, ALL_GAMES];
 
 /**
  * What differs between the two sites; everything else is the same panel.
@@ -176,7 +178,7 @@ export function OnlineImportSection({
                 className={`block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 ${site.selectFocus} focus:outline-none focus:ring-1 dark:border-dark-border dark:bg-dark-surface dark:text-gray-100`}
               >
                 {GAME_COUNTS.map((n) => (
-                  <option key={n} value={n}>{n.toLocaleString("en")}</option>
+                  <option key={n} value={n}>{n === ALL_GAMES ? "All" : n.toLocaleString("en")}</option>
                 ))}
               </select>
             </div>
@@ -184,7 +186,10 @@ export function OnlineImportSection({
 
           {limit > 200 && (
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              {limit.toLocaleString("en")} games take a minute or two to fetch. You can leave this page; the import keeps going.
+              {limit === ALL_GAMES
+                ? `Up to their newest ${ALL_GAMES.toLocaleString("en")} games. This can take ten minutes or so.`
+                : `${limit.toLocaleString("en")} games take a minute or two.`}{" "}
+              You can leave this page; the import keeps going.
             </p>
           )}
 

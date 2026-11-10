@@ -6,9 +6,10 @@ import { isTerminal } from "./useImportJob";
 /**
  * What a queued import looks like while it runs and once it settles.
  *
- * Shared by the Chess.com and Lichess panels, which each queue exactly one
- * entry, so "the job" and "the import" are the same thing here and the
- * per-entry results array has at most one row.
+ * Shared by the Chess.com and Lichess panels, which each queue one entry, so
+ * "the job" and "the import" are the same thing here. A big import adds a row
+ * per page of 1,000 games as it goes; results[0] is the first page, and
+ * games_imported is the total so far.
  */
 export function ImportJobProgress({
   job,
@@ -36,6 +37,7 @@ export function ImportJobProgress({
               {job.queue_ahead != null && job.queue_ahead > 0
                 ? `Waiting behind ${job.queue_ahead} other import${job.queue_ahead !== 1 ? "s" : ""}…`
                 : runningLabel}
+              {job.games_imported > 0 && ` ${job.games_imported.toLocaleString("en")} games imported so far.`}
             </span>
           </div>
           <button
