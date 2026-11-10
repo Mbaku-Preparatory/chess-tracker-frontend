@@ -14,6 +14,7 @@ import { avatarSrc, defaultAvatar } from "@/lib/avatars";
 import { BurgerButton } from "@/components/ui/BurgerButton";
 import { useSubscription } from "@/components/subscription/SubscriptionProvider";
 import { BILLING_PATH } from "@/lib/subscription";
+import { helpHref } from "@/lib/support";
 
 // The app's sections, in the bar on a desktop and in the burger menu below it.
 const LINKS = [
@@ -172,6 +173,19 @@ export function Navbar() {
                     </Link>
                   </div>
 
+                  <div className="border-t border-gray-100 dark:border-dark-border">
+                    <Link
+                      href={helpHref(pathname)}
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-dark-surface"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4" aria-hidden>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+                      </svg>
+                      Help
+                    </Link>
+                  </div>
+
                   {showBilling && (
                     <div className="border-t border-gray-100 dark:border-dark-border">
                       <Link
@@ -303,6 +317,13 @@ export function Navbar() {
                     className="block rounded-lg px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-dark-elevated"
                   >
                     Settings
+                  </Link>
+                  <Link
+                    href={helpHref(pathname)}
+                    onClick={() => setMenuOpen(false)}
+                    className="block rounded-lg px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-dark-elevated"
+                  >
+                    Help
                   </Link>
                   {showBilling && (
                     <Link

@@ -18,7 +18,8 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 
 import { useSubscription } from "@/components/subscription/SubscriptionProvider";
 import { usePaymentStatus } from "@/hooks/usePaymentStatus";
@@ -26,6 +27,7 @@ import { POPULAR_LABEL, POPULAR_PERIOD, usePlanHighlight } from "@/hooks/usePlan
 import { api } from "@/lib/api";
 import { userMessage } from "@/lib/apiError";
 import { annualSaving, formatDate, formatPrice, perMonthOfAnnual } from "@/lib/subscription";
+import { HELP_PATH, helpHref } from "@/lib/support";
 import type { MySubscription, SubscriptionPlan } from "@/types";
 
 const RECHECK_MS = 10_000;
@@ -117,6 +119,7 @@ function PlanCard({
 
 export function SubscribePlans({ expired, returnedReference }: { expired: boolean; returnedReference: string | null }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { subscription: sub, refresh } = useSubscription();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -233,7 +236,7 @@ export function SubscribePlans({ expired, returnedReference }: { expired: boolea
 
       {sub.plans.length === 0 ? (
         <div className="card p-6 text-sm text-gray-600 dark:text-gray-300">
-          Subscriptions aren&apos;t on sale just yet. Check back soon, or reply to any of our emails.
+          Subscriptions aren&apos;t on sale just yet. Check back soon, or <Link href={helpHref(pathname)} className="font-medium text-brand-600 hover:underline dark:text-brand-400">ask us</Link>.
         </div>
       ) : (
         <div {...highlight.gridProps} className="grid gap-4 pt-3 sm:grid-cols-2">
@@ -260,7 +263,10 @@ export function SubscribePlans({ expired, returnedReference }: { expired: boolea
           {sub.currency === "KES"
             ? "Pay with M-Pesa or a card. Payments are handled by Paystack."
             : "Pay by card. Payments are handled by Paystack."}{" "}
-          Nothing renews automatically: when your time runs out, you choose whether to pay again.
+          Nothing renews automatically: when your time runs out, you choose whether to pay again.{" "}
+          <Link href={`${HELP_PATH}#refunds`} className="font-medium text-brand-600 hover:underline dark:text-brand-400">Refunds</Link>
+          {" · "}
+          <Link href={helpHref(pathname)} className="font-medium text-brand-600 hover:underline dark:text-brand-400">A payment that hasn&apos;t arrived</Link>
         </p>
         {expired && (
           <div className="flex flex-wrap items-center gap-3">

@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+
+import { HELP_PATH, fetchSupportContact } from "@/lib/support";
 
 export const metadata: Metadata = {
   title: "Privacy Policy - Chess Preparatory",
@@ -7,7 +10,6 @@ export const metadata: Metadata = {
 };
 
 const LAST_UPDATED = "9 November 2026";
-const CONTACT_EMAIL = "bakutarb@gmail.com";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -20,7 +22,16 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-export default function PrivacyPolicyPage() {
+/** The support address (lib/support.ts), or the help page if the backend could not say. */
+function Contact({ email, subject }: { email: string | null; subject?: string }) {
+  const cls = "font-[480] text-accent-soft underline-offset-4 hover:underline";
+  if (!email) return <Link className={cls} href={HELP_PATH}>the help page</Link>;
+  const href = subject ? `mailto:${email}?subject=${encodeURIComponent(subject)}` : `mailto:${email}`;
+  return <a className={cls} href={href}>{email}</a>;
+}
+
+export default async function PrivacyPolicyPage() {
+  const email = (await fetchSupportContact())?.email ?? null;
   return (
     <div className="mx-auto max-w-3xl py-8">
       <h1 className="text-[32px] font-[480] leading-[1.15] tracking-[0.015em] text-ink-text sm:text-[42px]">Privacy Policy</h1>
@@ -307,12 +318,7 @@ export default function PrivacyPolicyPage() {
           To delete your entire account and all data associated with it, use{" "}
           <strong className="font-[480] text-ink-text">Delete account</strong> in Settings on the
           web app, which removes it immediately. Or email{" "}
-          <a
-            className="font-[480] text-accent-soft underline-offset-4 hover:underline"
-            href={`mailto:${CONTACT_EMAIL}?subject=Account%20deletion%20request`}
-          >
-            {CONTACT_EMAIL}
-          </a>{" "}
+          <Contact email={email} subject="Account deletion request" />{" "}
           from the address registered to your account. We will action the request and confirm within
           30 days.
         </p>
@@ -335,12 +341,7 @@ export default function PrivacyPolicyPage() {
       <Section title="Contact">
         <p>
           Questions about this policy or your data:{" "}
-          <a
-            className="font-[480] text-accent-soft underline-offset-4 hover:underline"
-            href={`mailto:${CONTACT_EMAIL}`}
-          >
-            {CONTACT_EMAIL}
-          </a>
+          <Contact email={email} />
           .
         </p>
       </Section>

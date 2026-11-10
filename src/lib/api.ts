@@ -326,6 +326,16 @@ export const api = {
     });
   },
 
+  /** "Report a problem" (support/views.py). The backend attaches the account,
+   * last payment and last import itself; `page` is where they came from. */
+  reportProblem(report: { category: import("@/lib/support").SupportCategory; message: string; page: string }): Promise<{ id: string; reply_hours: number }> {
+    return fetchJson(`${API_BASE}/support/requests/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(report),
+    });
+  },
+
   /** The signed-in account: names, email and the avatar they picked. */
   /** Where a new account came from (lib/attribution.ts). Sent once; see SendAttribution. */
   recordSignupSource(source: import("@/lib/attribution").Attribution): Promise<{ recorded: boolean }> {

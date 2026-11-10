@@ -2,9 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { PricingPlans } from "@/components/public/pricing/PricingPlans";
+import { QuestionList } from "@/components/public/QuestionList";
+import { billingQuestions } from "@/lib/billingQuestions";
 import { FREE_BOT_GAMES, FREE_PROFILE_VIEWS, PUBLIC_GAMES_SHOWN } from "@/lib/freeLimits";
-import { countryName, currencyName, fetchPublicPricing } from "@/lib/pricing";
+import { DEFAULT_ASSISTANT_QUESTIONS, DEFAULT_TRIAL_DAYS, countryName, currencyName, fetchPublicPricing } from "@/lib/pricing";
 import { SHARE_IMAGE, SITE_URL } from "@/lib/site";
+import { fetchSupportContact } from "@/lib/support";
 
 const TITLE = "Pricing | Chess Preparatory";
 const DESCRIPTION =
@@ -45,35 +48,6 @@ const ALWAYS_FREE = [
   { href: "/chess-personality", label: "The chess personality test" },
 ];
 
-function faq(trialDays: number) {
-  return [
-    {
-      q: "How does the free trial work?",
-      a: `Every new account gets ${trialDays} days of everything, free. There is no card to enter and nothing to cancel: when the trial ends, you choose whether to pay.`,
-    },
-    {
-      q: "Does it renew automatically?",
-      a: "No. You pay for a month or a year at a time, and nothing is charged again without you. We email you before your time runs out.",
-    },
-    {
-      q: "How do I pay?",
-      a: "In Kenya, by M-Pesa or card. Everywhere else, by debit or credit card. Payments are handled by Paystack, so your card details never reach us.",
-    },
-    {
-      q: "Why this price?",
-      a: "Prices are set by country, and this page shows the price for the country you are browsing from. The price you pay is confirmed when you subscribe, and after your first payment it follows the country of the card or M-Pesa account you paid with.",
-    },
-    {
-      q: "What happens when my time runs out?",
-      a: "Everything you added stays saved: your players, games, prep and books. Your account, settings and the public pages stay open. Pay again and it is all back the moment the payment goes through.",
-    },
-    {
-      q: "Can I pay before my time runs out?",
-      a: "Yes. Paying early adds the new month or year on after the time you already have, so nothing is lost.",
-    },
-  ];
-}
-
 /**
  * Prices for anyone, signed in or not: the plans for ONE country, the
  * visitor's (`country`, ISO alpha-2, "" when unknown). Server-rendered from the
@@ -82,14 +56,14 @@ function faq(trialDays: number) {
  * /subscribe, which shows a signed-in user their own price.
  */
 export async function PricingView({ country }: { country: string }) {
-  const pricing = await fetchPublicPricing(country);
+  const [pricing, contact] = await Promise.all([fetchPublicPricing(country), fetchSupportContact()]);
   // The defaults only matter when the backend could not answer, when the page
   // shows no prices anyway.
-  const trialDays = pricing?.trialDays ?? 14;
-  const questions = pricing?.assistantMonthlyQuestions ?? 20;
+  const trialDays = pricing?.trialDays ?? DEFAULT_TRIAL_DAYS;
+  const questions = pricing?.assistantMonthlyQuestions ?? DEFAULT_ASSISTANT_QUESTIONS;
   const region = pricing?.region ?? null;
   const where = countryName(country);
-  const FAQ = faq(trialDays);
+  const FAQ = billingQuestions(trialDays, contact?.refundDays ?? null);
 
   const jsonLd = [
     {
@@ -169,14 +143,7 @@ export async function PricingView({ country }: { country: string }) {
         <h2 id="pricing-faq-heading" className="text-[28px] font-[480] leading-[1.2] tracking-[0.015em] sm:text-[32px]">
           Questions
         </h2>
-        <dl className="grid gap-x-12 gap-y-10 md:grid-cols-2">
-          {FAQ.map(({ q, a }) => (
-            <div key={q} className="flex flex-col gap-2">
-              <dt className="text-[18px] font-[480]">{q}</dt>
-              <dd className="max-w-[60ch] text-[16px] leading-[1.55] text-ink-muted">{a}</dd>
-            </div>
-          ))}
-        </dl>
+        <QuestionList questions={FAQ} />
       </section>
     </div>
   );

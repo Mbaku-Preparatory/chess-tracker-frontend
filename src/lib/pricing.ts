@@ -12,6 +12,10 @@
 
 import { graphqlGet } from "./publicGraphql";
 
+// Shown only when the backend could not answer (and no prices show either).
+export const DEFAULT_TRIAL_DAYS = 14;
+export const DEFAULT_ASSISTANT_QUESTIONS = 20;
+
 // A price edited in the panel shows on the page within ten minutes.
 export const PRICING_REVALIDATE = 600;
 
