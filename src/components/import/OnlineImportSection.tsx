@@ -2,16 +2,42 @@
 
 import { useState } from "react";
 import { api } from "@/lib/api";
+import { NotifyMeCheckbox, useNotifyMe } from "@/components/ui/NotifyMeCheckbox";
 import { ConnectedAccountManager } from "./ConnectedAccountManager";
 import { ImportJobProgress } from "./ImportJobProgress";
 import { useImportJob } from "./useImportJob";
-import type { ImportJob, PlayerAccount } from "@/types";
+import type { ImportJob, OnlineImportRequest, PlayerAccount, TimeClass } from "@/types";
 
 type Platform = "chesscom" | "lichess";
 
-// How many recent games an import can ask for. 1,000 is the server's ceiling
-// (MAX_IMPORT_LIMIT in the backend's chesscom.py and lichess.py).
-const GAME_COUNTS = [25, 50, 100, 200, 500, 1000];
+// The most one import can fetch: the server's ceiling (ONLINE_MAX_GAMES in the
+// backend's import_entries.py). It fetches in pages of 1,000.
+const ALL_GAMES = 10000;
+
+/** "Games to fetch": a number of the newest games, or every game in a period. */
+const FETCH_OPTIONS: { label: string; limit: number; sinceDays?: number }[] = [
+  ...[25, 50, 100, 200, 500, 1000].map((n) => ({ label: n.toLocaleString("en"), limit: n })),
+  { label: "Last 3 months", limit: ALL_GAMES, sinceDays: 90 },
+  { label: "Last 12 months", limit: ALL_GAMES, sinceDays: 365 },
+  { label: "All", limit: ALL_GAMES },
+];
+type FetchOption = (typeof FETCH_OPTIONS)[number];
+
+const TIME_CLASSES: { id: TimeClass; label: string }[] = [
+  { id: "bullet", label: "Bullet" },
+  { id: "blitz", label: "Blitz" },
+  { id: "rapid", label: "Rapid" },
+  { id: "classical", label: "Classical" },
+  { id: "daily", label: "Daily" },
+];
+
+/** What the chosen option will do, for the line under the form. Null when quick. */
+function fetchNote(o: FetchOption): string | null {
+  if (o.limit <= 200) return null;
+  if (o.sinceDays) return `Every game from the ${o.label.toLowerCase()}, up to ${ALL_GAMES.toLocaleString("en")}. This can take a few minutes.`;
+  if (o.limit === ALL_GAMES) return `Up to their newest ${ALL_GAMES.toLocaleString("en")} games. This can take ten minutes or so.`;
+  return `${o.label} games take a minute or two.`;
+}
 
 /**
  * What differs between the two sites; everything else is the same panel.
@@ -25,7 +51,7 @@ const SITES: Record<
     placeholder: string;
     runningLabel: string;
     icon: string;
-    start: (slug: string, body: { username: string; limit: number }) => ReturnType<typeof api.importFromChessCom>;
+    start: (slug: string, body: OnlineImportRequest) => ReturnType<typeof api.importFromChessCom>;
     iconBox: string;
     chipOn: string;
     chipOff: string;
@@ -78,7 +104,23 @@ export function OnlineImportSection({
   const site = SITES[platform];
   const siteAccounts = accounts.filter((a) => a.platform === platform);
   const [username, setUsername] = useState(siteAccounts[0]?.username || "");
-  const [limit, setLimit] = useState(50);
+  const [choice, setChoice] = useState<FetchOption>(FETCH_OPTIONS[1]); // 50
+  const [timeClasses, setTimeClasses] = useState<TimeClass[]>(TIME_CLASSES.map((t) => t.id));
+  const [notifyEmail, setNotifyEmail] = useNotifyMe();
+  const note = fetchNote(choice);
+
+  function chooseFetch(label: string) {
+    const option = FETCH_OPTIONS.find((o) => o.label === label) ?? FETCH_OPTIONS[1];
+    setChoice(option);
+    // "All" and the periods can take minutes: offer the email (they can untick it).
+    if (option.limit === ALL_GAMES) setNotifyEmail(true);
+  }
+
+  function toggleTimeClass(id: TimeClass) {
+    const on = timeClasses.includes(id);
+    if (on && timeClasses.length === 1) return; // keep at least one
+    setTimeClasses(TIME_CLASSES.map((t) => t.id).filter((t) => (t === id ? !on : timeClasses.includes(t))));
+  }
 
   // The import runs in the worker service now, so this component holds a job
   // id and polls rather than awaiting a result. `matches` keeps this panel
@@ -99,7 +141,13 @@ export function OnlineImportSection({
     e.preventDefault();
     if (!canSubmit) return;
     await start(
-      () => site.start(slug, { username: username.trim(), limit }),
+      () => site.start(slug, {
+        username: username.trim(),
+        limit: choice.limit,
+        since_days: choice.sinceDays ?? null,
+        time_classes: timeClasses,
+        notify_email: notifyEmail,
+      }),
       "Import failed. Check the username and try again.",
     );
   }
@@ -125,18 +173,9 @@ export function OnlineImportSection({
           {siteAccounts.length > 1 && (
             <div className="flex flex-wrap gap-1.5">
               {siteAccounts.map((a) => (
-                <button
-                  key={a.id}
-                  type="button"
-                  onClick={() => { setUsername(a.username); reset(); }}
-                  className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
-                    username === a.username
-                      ? site.chipOn
-                      : `border-gray-200 bg-white text-gray-600 ${site.chipOff} dark:border-dark-border dark:bg-dark-surface dark:text-gray-300`
-                  }`}
-                >
+                <Chip key={a.id} on={username === a.username} site={site} onClick={() => { setUsername(a.username); reset(); }}>
                   {a.username}
-                </button>
+                </Chip>
               ))}
             </div>
           )}
@@ -162,7 +201,7 @@ export function OnlineImportSection({
               />
             </div>
 
-            <div className="w-full sm:w-32">
+            <div className="w-full sm:w-40">
               <label
                 htmlFor={`${platform}-limit`}
                 className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
@@ -171,22 +210,35 @@ export function OnlineImportSection({
               </label>
               <select
                 id={`${platform}-limit`}
-                value={limit}
-                onChange={(e) => setLimit(Number(e.target.value))}
+                value={choice.label}
+                onChange={(e) => chooseFetch(e.target.value)}
                 className={`block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 ${site.selectFocus} focus:outline-none focus:ring-1 dark:border-dark-border dark:bg-dark-surface dark:text-gray-100`}
               >
-                {GAME_COUNTS.map((n) => (
-                  <option key={n} value={n}>{n.toLocaleString("en")}</option>
+                {FETCH_OPTIONS.map((o) => (
+                  <option key={o.label} value={o.label}>{o.label}</option>
                 ))}
               </select>
             </div>
           </div>
 
-          {limit > 200 && (
+          <fieldset>
+            <legend className="mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">Time controls</legend>
+            <div className="flex flex-wrap gap-1.5">
+              {TIME_CLASSES.map((t) => (
+                <Chip key={t.id} on={timeClasses.includes(t.id)} site={site} onClick={() => toggleTimeClass(t.id)}>
+                  {t.label}
+                </Chip>
+              ))}
+            </div>
+          </fieldset>
+
+          {note && (
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              {limit.toLocaleString("en")} games take a minute or two to fetch. You can leave this page; the import keeps going.
+              {note} You can leave this page; the import keeps going.
             </p>
           )}
+
+          <NotifyMeCheckbox checked={notifyEmail} onChange={setNotifyEmail} />
 
           <div className="flex items-center gap-3">
             <button
@@ -228,5 +280,33 @@ export function OnlineImportSection({
         onUpdated={onUpdated}
       />
     </div>
+  );
+}
+
+/** A round on/off button in the site's colour: saved accounts, time controls. */
+function Chip({
+  on,
+  site,
+  onClick,
+  children,
+}: {
+  on: boolean;
+  site: { chipOn: string; chipOff: string };
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={on}
+      onClick={onClick}
+      className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
+        on
+          ? site.chipOn
+          : `border-gray-200 bg-white text-gray-600 ${site.chipOff} dark:border-dark-border dark:bg-dark-surface dark:text-gray-300`
+      }`}
+    >
+      {children}
+    </button>
   );
 }

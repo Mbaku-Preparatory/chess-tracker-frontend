@@ -1,5 +1,21 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { usePreferences } from "@/components/PreferencesProvider";
+
+/**
+ * The box's state for an import form. Starts as Settings says ("Email me when
+ * an import finishes"); ticking or unticking it changes only this import.
+ */
+export function useNotifyMe() {
+  const { preferences, loaded } = usePreferences();
+  const [checked, setChecked] = useState(preferences.import_emails);
+  useEffect(() => {
+    if (loaded) setChecked(preferences.import_emails);
+  }, [loaded, preferences.import_emails]);
+  return [checked, setChecked] as const;
+}
+
 /**
  * Offered next to the button, because the decision belongs with the click
  * that starts the import — not somewhere in account settings.
