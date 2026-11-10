@@ -42,7 +42,7 @@ const ALWAYS_FREE = [
   { href: "/rankings", label: "World and national rankings" },
   { href: "/chess-bot", label: `${FREE_BOT_GAMES} games against any player's bot` },
   { href: "/chess-books", label: "The demo books in the book reader" },
-  { href: "/guess-the-player", label: "Guess the player and the chess personality test" },
+  { href: "/chess-personality", label: "The chess personality test" },
 ];
 
 function faq(trialDays: number) {

@@ -35,7 +35,6 @@ export function PublicMenu() {
     { href: "/chess-bot", label: "Create your own bot" },
     { href: "/chess-books", label: "Books" },
     { href: "/chess-personality", label: "Chess personality" },
-    { href: "/guess-the-player", label: "Guess the player" },
     { href: "/tutorials", label: "Tutorials" },
     { href: "/pricing", label: "Pricing" },
   ];

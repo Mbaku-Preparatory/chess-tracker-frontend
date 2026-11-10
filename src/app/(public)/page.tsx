@@ -104,13 +104,6 @@ async function topPlayers(): Promise<RankingEntry[]> {
 
 const FUN = [
   {
-    href: "/guess-the-player",
-    eyebrow: "Daily puzzle",
-    title: "Guess the player",
-    body: "A mystery FIDE player every day, and eight guesses. Clues for federation, title, rating and age after each one.",
-    cta: "Play today's puzzle",
-  },
-  {
     href: "/chess-personality",
     eyebrow: "Chess personality test",
     title: "What kind of chess player are you?",
@@ -221,7 +214,7 @@ export default async function LandingPage() {
         <h2 id="fun-heading" className="text-[28px] font-[480] leading-[1.2] tracking-[0.015em] sm:text-[32px]">
           Just for fun
         </h2>
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4">
           {FUN.map((f) => (
             <article key={f.href} className="flex flex-col items-start gap-4 rounded-xl bg-ink-card p-8">
               <p className="text-[13px] uppercase tracking-[0.1em] text-accent-soft">{f.eyebrow}</p>

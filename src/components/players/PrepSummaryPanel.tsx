@@ -484,7 +484,7 @@ export function PrepSummaryPanel({ slug }: { slug: string }) {
         <div className="flex flex-wrap items-center gap-4">
           <div>
             <p className="text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500">Games analyzed</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{meta.total_games}</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{meta.total_games.toLocaleString("en")}</p>
           </div>
           {sourcesEntries.length > 0 && (
             <div className="flex flex-wrap gap-2">
@@ -494,7 +494,7 @@ export function PrepSummaryPanel({ slug }: { slug: string }) {
                   className="flex items-center gap-1.5 rounded-full border border-gray-200 px-2.5 py-1 text-xs text-gray-700 dark:border-dark-border dark:text-gray-300"
                 >
                   <span className={`h-2 w-2 rounded-full ${gameSource(src).dot}`} />
-                  {gameSource(src).short}: {n}
+                  {gameSource(src).short}: {(n ?? 0).toLocaleString("en")}
                 </span>
               ))}
             </div>

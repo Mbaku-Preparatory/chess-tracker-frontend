@@ -7,8 +7,7 @@ import { CheckIcon, FacebookIcon, InstagramIcon, LinkIcon, MoreIcon, ShareIcon, 
 /**
  * One "Share" button that opens a row of places to share: WhatsApp, Facebook,
  * Instagram (when there is a picture), X, Copy, and More (the phone's own
- * share sheet) where there is one. Used by the chess personality test and
- * Guess the player, so both share the same way.
+ * share sheet) where there is one. Used by the chess personality test.
  *
  * WhatsApp first: it is how chess is shared in India and Kenya, the two
  * biggest audiences. Facebook takes only the link (its own preview carries
