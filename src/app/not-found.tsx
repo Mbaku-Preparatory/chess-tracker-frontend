@@ -13,7 +13,6 @@ const PLACES = [
   { href: "/rankings", label: "Rankings" },
   { href: "/chess-bot", label: "Create your own bot" },
   { href: "/chess-books", label: "Chess books" },
-  { href: "/guess-the-player", label: "Guess the player" },
   { href: "/pricing", label: "Pricing" },
 ];
 

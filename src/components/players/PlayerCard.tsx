@@ -8,41 +8,12 @@ import { getPrepProductName, getPrimaryRating } from "@/lib/marketplace";
 import type { Player } from "@/types";
 import { userMessage } from "@/lib/apiError";
 
+import { GameSourceCounts } from "./GameSourceCounts";
+
+/** Games by source, or the bare total when the counts aren't loaded. */
 function GameSourcePills({ player }: { player: Player }) {
-  const sc = player.game_source_counts;
-  const otb = sc?.chess_results ?? 0;
-  const cc  = sc?.chess_com   ?? 0;
-  const li  = sc?.lichess     ?? 0;
-  const total = (sc ? Object.values(sc).reduce((a, b) => a + b, 0) : player.games_count) ?? 0;
-
-  if (!total) return null;
-
-  if (!otb && !cc && !li) {
-    return <span>{total} games</span>;
-  }
-
-  return (
-    <span className="inline-flex flex-wrap items-center gap-2">
-      {otb > 0 && (
-        <span className="inline-flex items-center gap-1">
-          <span className="h-2 w-2 rounded-full bg-amber-500" />
-          {otb} OTB
-        </span>
-      )}
-      {cc > 0 && (
-        <span className="inline-flex items-center gap-1">
-          <span className="h-2 w-2 rounded-full bg-[#7fa650]" />
-          {cc} Chess.com
-        </span>
-      )}
-      {li > 0 && (
-        <span className="inline-flex items-center gap-1">
-          <span className="h-2 w-2 rounded-full bg-[#b05000]" />
-          {li} Lichess
-        </span>
-      )}
-    </span>
-  );
+  if (player.game_source_counts) return <GameSourceCounts counts={player.game_source_counts} />;
+  return player.games_count ? <span>{player.games_count.toLocaleString("en")} games</span> : null;
 }
 
 interface PlayerCardProps {

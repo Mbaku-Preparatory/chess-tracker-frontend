@@ -27,9 +27,6 @@ export function PublicHeader() {
           <Link href="/chess-personality" className="whitespace-nowrap rounded-pill px-3 py-2 text-[15px] text-ink-muted hover:bg-ink-raised hover:text-ink-text">
             Chess personality
           </Link>
-          <Link href="/guess-the-player" className="whitespace-nowrap rounded-pill px-3 py-2 text-[15px] text-ink-muted hover:bg-ink-raised hover:text-ink-text">
-            Guess the player
-          </Link>
           <Link href="/pricing" className="whitespace-nowrap rounded-pill px-3 py-2 text-[15px] text-ink-muted hover:bg-ink-raised hover:text-ink-text">
             Pricing
           </Link>

@@ -14,6 +14,7 @@ import { CardSkeleton } from "@/components/ui/LoadingSkeleton";
 import { PerformanceSplitCard } from "@/components/players/PerformanceSplitCard";
 import { OpeningBreakdownCard } from "@/components/players/OpeningBreakdownCard";
 import { GamesTable } from "@/components/games/GamesTable";
+import { GameSourceCounts } from "@/components/players/GameSourceCounts";
 import { rowFromGame } from "@/lib/games";
 import { useActiveImports } from "@/components/import/ActiveImportsProvider";
 import { usePreferences } from "@/components/PreferencesProvider";
@@ -206,35 +207,7 @@ export default function PlayerDetailPage() {
               {player.fide_id && <span>FIDE #{player.fide_id}</span>}
               {player.birth_year && <span>Born {player.birth_year}</span>}
             </div>
-            {player.game_source_counts && (() => {
-              const sc = player.game_source_counts!;
-              const otb = sc.chess_results ?? 0;
-              const cc = sc.chess_com ?? 0;
-              const li = sc.lichess ?? 0;
-              if (!otb && !cc && !li) return null;
-              return (
-                <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-                  {otb > 0 && (
-                    <span className="inline-flex items-center gap-1">
-                      <span className="h-2 w-2 rounded-full bg-amber-500" />
-                      {otb} OTB
-                    </span>
-                  )}
-                  {cc > 0 && (
-                    <span className="inline-flex items-center gap-1">
-                      <span className="h-2 w-2 rounded-full bg-[#7fa650]" />
-                      {cc} Chess.com
-                    </span>
-                  )}
-                  {li > 0 && (
-                    <span className="inline-flex items-center gap-1">
-                      <span className="h-2 w-2 rounded-full bg-[#b05000]" />
-                      {li} Lichess
-                    </span>
-                  )}
-                </div>
-              );
-            })()}
+            <GameSourceCounts counts={player.game_source_counts} className="mt-2 text-xs text-gray-500 dark:text-gray-400" />
             <div className="mt-3">
               <FideSection slug={slug} fideId={player.fide_id} />
             </div>

@@ -229,8 +229,3 @@
   position: relative;
   z-index: 1;
 }
-
-/* Guess the player's tiles turn over as they appear; not for anyone who has asked for less motion. */
-@media (prefers-reduced-motion: reduce) {
-  .animate-tile-flip { animation: none; }
-}

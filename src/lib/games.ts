@@ -12,8 +12,8 @@ import { profilePath, type PlayerRef, type PublicGame } from "./publicPlayer";
 
 export const GAME_SOURCES: Record<GameSource, { label: string; short: string; dot: string }> = {
   chess_results: { label: "Chess-Results (OTB)", short: "OTB", dot: "bg-amber-500" },
-  chess_com: { label: "Chess.com", short: "Chess.com", dot: "bg-emerald-500" },
-  lichess: { label: "Lichess", short: "Lichess", dot: "bg-violet-500" },
+  chess_com: { label: "Chess.com", short: "Chess.com", dot: "bg-[#7fa650]" },
+  lichess: { label: "Lichess", short: "Lichess", dot: "bg-[#b05000]" },
   pgn_import: { label: "PGN import", short: "PGN", dot: "bg-blue-400" },
   manual: { label: "Manual", short: "Manual", dot: "bg-gray-400" },
 };
