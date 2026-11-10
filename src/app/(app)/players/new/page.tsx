@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import Link from "next/link";
 import { TutorialLink } from "@/components/tutorials/TutorialLink";
+import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
@@ -405,12 +406,7 @@ export default function NewPlayerPage() {
 
   return (
     <div className="mx-auto max-w-lg">
-      {/* Breadcrumb */}
-      <nav className="mb-6 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-        <Link href="/home" className="hover:text-gray-900">My Opponents</Link>
-        <span>/</span>
-        <span className="text-gray-900">Add Opponent</span>
-      </nav>
+      <Breadcrumb items={[{ label: "My Opponents", href: "/home" }, { label: "Add Opponent" }]} />
 
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Add opponent</h1>

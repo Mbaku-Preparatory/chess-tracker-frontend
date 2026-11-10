@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { TutorialLink } from "@/components/tutorials/TutorialLink";
+import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { useParams, useSearchParams } from "next/navigation";
 
 import { api } from "@/lib/api";
@@ -246,14 +247,7 @@ export default function PlayerImportPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      {/* Breadcrumb */}
-      <nav className="mb-6 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-        <Link href={`/players/${slug}`} className="hover:text-gray-900 dark:hover:text-gray-100">
-          {player.full_name}
-        </Link>
-        <span>/</span>
-        <span className="text-gray-900 dark:text-gray-100">Import Games</span>
-      </nav>
+      <Breadcrumb items={[{ label: player.full_name, href: `/players/${slug}` }, { label: "Import Games" }]} />
 
       {/* Player badge */}
       <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
