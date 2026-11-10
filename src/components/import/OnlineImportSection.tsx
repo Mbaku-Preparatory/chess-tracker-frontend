@@ -9,6 +9,10 @@ import type { ImportJob, PlayerAccount } from "@/types";
 
 type Platform = "chesscom" | "lichess";
 
+// How many recent games an import can ask for. 1,000 is the server's ceiling
+// (MAX_IMPORT_LIMIT in the backend's chesscom.py and lichess.py).
+const GAME_COUNTS = [25, 50, 100, 200, 500, 1000];
+
 /**
  * What differs between the two sites; everything else is the same panel.
  * Tailwind only builds classes it finds written out whole, so each site's
@@ -171,13 +175,18 @@ export function OnlineImportSection({
                 onChange={(e) => setLimit(Number(e.target.value))}
                 className={`block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 ${site.selectFocus} focus:outline-none focus:ring-1 dark:border-dark-border dark:bg-dark-surface dark:text-gray-100`}
               >
-                <option value={25}>25</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
-                <option value={200}>200</option>
+                {GAME_COUNTS.map((n) => (
+                  <option key={n} value={n}>{n.toLocaleString("en")}</option>
+                ))}
               </select>
             </div>
           </div>
+
+          {limit > 200 && (
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {limit.toLocaleString("en")} games take a minute or two to fetch. You can leave this page; the import keeps going.
+            </p>
+          )}
 
           <div className="flex items-center gap-3">
             <button
