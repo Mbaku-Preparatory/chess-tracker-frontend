@@ -4,6 +4,7 @@ import { useState } from "react";
 import { api } from "@/lib/api";
 import { NotifyMeCheckbox, useNotifyMe } from "@/components/ui/NotifyMeCheckbox";
 import { ConnectedAccountManager } from "./ConnectedAccountManager";
+import { ImportElsewhereNote } from "./ImportElsewhereNote";
 import { ImportJobProgress } from "./ImportJobProgress";
 import { useImportJob } from "./useImportJob";
 import type { ImportJob, OnlineImportRequest, PlayerAccount, TimeClass } from "@/types";
@@ -122,13 +123,12 @@ export function OnlineImportSection({
     setTimeClasses(TIME_CLASSES.map((t) => t.id).filter((t) => (t === id ? !on : timeClasses.includes(t))));
   }
 
-  // The import runs in the worker service now, so this component holds a job
-  // id and polls rather than awaiting a result. `matches` keeps this panel
-  // showing this site's work only — a player can have a chess-results import
-  // running at the same time.
-  const { job, starting, error, start, cancel, reset, isRunning } = useImportJob({
+  // The import runs in the worker service, so this component holds a job id
+  // and polls rather than awaiting a result. `source` keeps this panel showing
+  // this site's work only; `elsewhere` is another import for this player.
+  const { job, starting, error, start, cancel, reset, isRunning, elsewhere } = useImportJob({
     slug,
-    matches: (j) => j.results?.[0]?.name?.startsWith(site.name) ?? false,
+    source: platform,
     onSettled: async (settled) => {
       if (settled.status === "succeeded") onSuccess?.(settled);
       await onUpdated?.();
@@ -240,6 +240,8 @@ export function OnlineImportSection({
 
           <NotifyMeCheckbox checked={notifyEmail} onChange={setNotifyEmail} />
 
+          {elsewhere && !isRunning && <ImportElsewhereNote job={elsewhere} />}
+
           <div className="flex items-center gap-3">
             <button
               type="submit"
@@ -256,7 +258,7 @@ export function OnlineImportSection({
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
               )}
-              {starting ? "Queueing…" : isRunning ? "Import running…" : `Import from ${site.name}`}
+              {starting ? "Queueing…" : isRunning ? "Import running…" : elsewhere ? "Add to queue" : `Import from ${site.name}`}
             </button>
           </div>
         </form>

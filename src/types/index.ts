@@ -406,9 +406,13 @@ export interface ImportJobTournamentResult {
  * Mirrors _serialize_import_job in players/views.py. Note there is no `error`
  * field: the backend deliberately withholds it because it holds exception text.
  */
+/** Which import a job is (ImportJob.source in the backend). One panel each on the import page. */
+export type ImportSource = "chesscom" | "lichess" | "chess_results";
+
 export interface ImportJob {
   id: string;
   status: ImportJobStatus;
+  source: ImportSource;
   total: number;
   completed: number;
   games_imported: number;
@@ -426,6 +430,7 @@ export interface ImportJob {
 export interface ActiveImportJob extends ImportJob {
   player_name: string;
   player_slug: string;
+  player_public_id: string;
 }
 
 // ── Payments ─────────────────────────────────────────────────────────────────
