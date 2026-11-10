@@ -29,7 +29,7 @@ function messageForStatus(status: number, detail?: string): string {
     if (status === 502 || status === 503 || status === 504) {
       return "This service is temporarily unavailable. Please try again in a few minutes.";
     }
-    return "Something went wrong on our end. Please try again, or contact support if it keeps happening.";
+    return "Something went wrong on our end. Please try again, or tell us on the Help page if it keeps happening.";
   }
 
   switch (status) {

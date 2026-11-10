@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { api } from "@/lib/api";
 import type { ImportJob } from "@/types";
 import { userMessage } from "@/lib/apiError";
+import { helpHref } from "@/lib/support";
 import { searchPublicPlayers, type PlayerSearchResult } from "@/lib/publicGraphql";
 import { NotifyMeCheckbox, useNotifyMe } from "@/components/ui/NotifyMeCheckbox";
 import { ImportElsewhereNote } from "./ImportElsewhereNote";
@@ -282,6 +284,7 @@ function ImportProgress({
   onReset: () => void;
   onCancel: () => void;
 }) {
+  const pathname = usePathname();
   const finished = isTerminal(job);
   const errorCount = job.results.filter((r) => r.status === "error").length;
   // Pending *and* nothing done yet. A long import returns to pending between
@@ -343,7 +346,8 @@ function ImportProgress({
           {stalled && (
             <p className="text-xs text-amber-600 dark:text-amber-400">
               Your games are still queued and nothing has been lost. If this
-              doesn&apos;t move shortly, please contact support.
+              doesn&apos;t move shortly,{" "}
+              <Link href={helpHref(pathname)} className="underline">tell us</Link>.
             </p>
           )}
 
