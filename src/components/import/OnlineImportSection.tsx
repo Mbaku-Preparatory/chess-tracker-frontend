@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { api } from "@/lib/api";
+import { NotifyMeCheckbox, useNotifyMe } from "@/components/ui/NotifyMeCheckbox";
 import { ConnectedAccountManager } from "./ConnectedAccountManager";
 import { ImportJobProgress } from "./ImportJobProgress";
 import { useImportJob } from "./useImportJob";
@@ -27,7 +28,7 @@ const SITES: Record<
     placeholder: string;
     runningLabel: string;
     icon: string;
-    start: (slug: string, body: { username: string; limit: number }) => ReturnType<typeof api.importFromChessCom>;
+    start: (slug: string, body: { username: string; limit: number; notify_email: boolean }) => ReturnType<typeof api.importFromChessCom>;
     iconBox: string;
     chipOn: string;
     chipOff: string;
@@ -81,6 +82,13 @@ export function OnlineImportSection({
   const siteAccounts = accounts.filter((a) => a.platform === platform);
   const [username, setUsername] = useState(siteAccounts[0]?.username || "");
   const [limit, setLimit] = useState(50);
+  const [notifyEmail, setNotifyEmail] = useNotifyMe();
+
+  function chooseLimit(n: number) {
+    setLimit(n);
+    // "All" can take ten minutes: offer the email by default (they can untick it).
+    if (n === ALL_GAMES) setNotifyEmail(true);
+  }
 
   // The import runs in the worker service now, so this component holds a job
   // id and polls rather than awaiting a result. `matches` keeps this panel
@@ -101,7 +109,7 @@ export function OnlineImportSection({
     e.preventDefault();
     if (!canSubmit) return;
     await start(
-      () => site.start(slug, { username: username.trim(), limit }),
+      () => site.start(slug, { username: username.trim(), limit, notify_email: notifyEmail }),
       "Import failed. Check the username and try again.",
     );
   }
@@ -174,7 +182,7 @@ export function OnlineImportSection({
               <select
                 id={`${platform}-limit`}
                 value={limit}
-                onChange={(e) => setLimit(Number(e.target.value))}
+                onChange={(e) => chooseLimit(Number(e.target.value))}
                 className={`block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 ${site.selectFocus} focus:outline-none focus:ring-1 dark:border-dark-border dark:bg-dark-surface dark:text-gray-100`}
               >
                 {GAME_COUNTS.map((n) => (
@@ -192,6 +200,8 @@ export function OnlineImportSection({
               You can leave this page; the import keeps going.
             </p>
           )}
+
+          <NotifyMeCheckbox checked={notifyEmail} onChange={setNotifyEmail} />
 
           <div className="flex items-center gap-3">
             <button

@@ -51,6 +51,7 @@ export function ImportJobProgress({
         </div>
         <p className="text-xs text-gray-500 dark:text-gray-400">
           This runs on the server — you can close this page and come back to it.
+          {job.notify_email ? " We'll email you when it's done." : ""}
         </p>
       </div>
     );
