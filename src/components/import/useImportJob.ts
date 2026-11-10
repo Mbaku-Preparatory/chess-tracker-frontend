@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
-import type { ImportJob } from "@/types";
+import type { ActiveImportJob, ImportJob, ImportSource } from "@/types";
 import { userMessage } from "@/lib/apiError";
 import { useActiveImports } from "./ActiveImportsProvider";
 
@@ -14,14 +14,14 @@ export function isTerminal(job: ImportJob): boolean {
 
 interface UseImportJobOptions {
   slug: string;
+  /**
+   * Which panel this is. It reconnects only to a job of its own source: a
+   * player can have a chess-results import running while the Chess.com panel
+   * sits idle, and each panel shows its own work rather than each other's.
+   */
+  source: ImportSource;
   /** Called once, when a job reaches a terminal state. */
   onSettled?: (job: ImportJob) => void | Promise<void>;
-  /**
-   * Only reconnect to a job this component started. A player can have a
-   * chess-results import running while the Chess.com panel sits idle, and each
-   * panel should show its own work rather than each other's.
-   */
-  matches?: (job: ImportJob) => boolean;
 }
 
 /**
@@ -34,19 +34,17 @@ interface UseImportJobOptions {
  * which is why this reconnects on mount rather than only tracking jobs it
  * started itself.
  */
-export function useImportJob({ slug, onSettled, matches }: UseImportJobOptions) {
+export function useImportJob({ slug, source, onSettled }: UseImportJobOptions) {
   const [job, setJob] = useState<ImportJob | null>(null);
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { refresh: refreshActiveImports } = useActiveImports();
+  const { jobs: activeJobs, refresh: refreshActiveImports } = useActiveImports();
 
   // Held in refs so the polling effect does not restart every time the parent
   // re-renders and hands down a new function identity.
   const onSettledRef = useRef(onSettled);
   onSettledRef.current = onSettled;
-  const matchesRef = useRef(matches);
-  matchesRef.current = matches;
   const refreshRef = useRef(refreshActiveImports);
   refreshRef.current = refreshActiveImports;
 
@@ -60,10 +58,9 @@ export function useImportJob({ slug, onSettled, matches }: UseImportJobOptions) 
       try {
         const { results } = await api.recentImportJobs(slug);
         if (cancelled) return;
-        const live = results.find(
-          (j) => !isTerminal(j) && (matchesRef.current?.(j) ?? true),
-        );
-        if (live) setJob(live);
+        const live = results.find((j) => !isTerminal(j) && j.source === source);
+        // Never replace a job started while this lookup was in flight.
+        if (live) setJob((current) => current ?? live);
       } catch {
         // Nothing to reconnect to is the normal case; a failed lookup here
         // must not stop someone starting a fresh import.
@@ -73,7 +70,7 @@ export function useImportJob({ slug, onSettled, matches }: UseImportJobOptions) 
     return () => {
       cancelled = true;
     };
-  }, [slug]);
+  }, [slug, source]);
 
   // ── Poll while it runs ────────────────────────────────────────────────────
   useEffect(() => {
@@ -143,5 +140,12 @@ export function useImportJob({ slug, onSettled, matches }: UseImportJobOptions) 
     setError(null);
   }, []);
 
-  return { job, starting, error, start, cancel, reset, isRunning: Boolean(activeJobId) };
+  // Another panel's import for this player, queued or running: the app-shell
+  // poller already has it. Starting this one then means waiting behind it,
+  // which the panel says, or the wait looks like nothing happening.
+  const elsewhere: ActiveImportJob | undefined = activeJobs.find(
+    (j) => (j.player_slug === slug || j.player_public_id === slug) && j.source !== source,
+  );
+
+  return { job, starting, error, start, cancel, reset, isRunning: Boolean(activeJobId), elsewhere };
 }

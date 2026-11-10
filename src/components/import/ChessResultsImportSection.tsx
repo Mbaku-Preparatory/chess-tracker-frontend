@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import type { ImportJob } from "@/types";
 import { userMessage } from "@/lib/apiError";
 import { searchPublicPlayers, type PlayerSearchResult } from "@/lib/publicGraphql";
-import { useActiveImports } from "./ActiveImportsProvider";
 import { NotifyMeCheckbox, useNotifyMe } from "@/components/ui/NotifyMeCheckbox";
+import { ImportElsewhereNote } from "./ImportElsewhereNote";
+import { isTerminal, useImportJob } from "./useImportJob";
 
 interface ChessResultsImportSectionProps {
   slug: string;
@@ -15,12 +16,6 @@ interface ChessResultsImportSectionProps {
   fideId?: string | null;
   // Called once when an import finishes successfully.
   onSuccess?: () => void;
-}
-
-const POLL_INTERVAL_MS = 2000;
-
-function isTerminal(job: ImportJob): boolean {
-  return job.status === "succeeded" || job.status === "failed" || job.status === "cancelled";
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
@@ -41,102 +36,26 @@ export function ChessResultsImportSection({
   // The profile already knows who this is — don't offer to import someone else.
   const knownFideId = fideId?.trim() || "";
 
-  const [job, setJob] = useState<ImportJob | null>(null);
-  const [starting, setStarting] = useState(false);
   const [fideInput, setFideInput] = useState("");
   const [nameInput, setNameInput] = useState("");
   const [candidates, setCandidates] = useState<PlayerSearchResult[] | null>(null);
   const [searching, setSearching] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [jobError, setJobError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null); // the name search's
   const [notifyEmail, setNotifyEmail] = useNotifyMe();
 
-  // The app-shell pill polls on its own timer; nudging it means starting or
-  // cancelling an import shows up there immediately rather than up to 3s late.
-  const { refresh: refreshActiveImports } = useActiveImports();
+  // Reconnecting after a reload, polling, starting and cancelling: the same
+  // hook as the Chess.com and Lichess panels.
+  const { job, starting, error: jobError, start, cancel, reset, elsewhere } = useImportJob({
+    slug,
+    source: "chess_results",
+    onSettled: (settled) => {
+      if (settled.status === "succeeded") onSuccess?.();
+    },
+  });
 
-  // onSuccess is called once when a job completes; keeping it in a ref means
-  // the polling effect doesn't restart every time the parent re-renders.
-  const onSuccessRef = useRef(onSuccess);
-  onSuccessRef.current = onSuccess;
-
-  const refreshRef = useRef(refreshActiveImports);
-  refreshRef.current = refreshActiveImports;
-
-  const activeJobId = job && !isTerminal(job) ? job.id : null;
-
-  // ── Reconnect to an import already in progress ──────────────────────────────
-  //
-  // A coach can close the tab mid-import, come back, and still see it running.
-  // Nothing in component state survives that, so on mount we ask whether this
-  // player has a live job.
-  useEffect(() => {
-    let cancelled = false;
-
-    (async () => {
-      try {
-        const { results } = await api.recentImportJobs(slug);
-        const live = results.find((j) => !isTerminal(j));
-        if (live && !cancelled) setJob((current) => current ?? live);
-      } catch {
-        // Not being able to check is not worth interrupting anyone over —
-        // they can still start a new import.
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [slug]);
-
-  // ── Poll a running job ──────────────────────────────────────────────────────
-
-  useEffect(() => {
-    if (!activeJobId) return;
-
-    let cancelled = false;
-    let timer: ReturnType<typeof setTimeout>;
-
-    const tick = async () => {
-      try {
-        const next = await api.getImportJob(activeJobId);
-        if (cancelled) return;
-        setJob(next);
-        if (isTerminal(next)) {
-          if (next.status === "succeeded") onSuccessRef.current?.();
-          refreshRef.current();
-          return; // stop polling
-        }
-      } catch (err) {
-        if (cancelled) return;
-        // A failed poll is usually a blip. Keep polling rather than declaring
-        // the import dead — the job itself is unaffected by our connection.
-        console.error("[import] poll failed", err);
-      }
-      timer = setTimeout(tick, POLL_INTERVAL_MS);
-    };
-
-    timer = setTimeout(tick, POLL_INTERVAL_MS);
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
-    };
-  }, [activeJobId]);
-
-  // ── Actions ─────────────────────────────────────────────────────────────────
-
-  async function startImport(id: string) {
+  function startImport(id: string) {
     setError(null);
-    setJobError(null);
-    setStarting(true);
-    try {
-      setJob(await api.createCareerImportJob(slug, id, notifyEmail));
-      refreshActiveImports();
-    } catch (err) {
-      setError(userMessage(err, "Could not start the import."));
-    } finally {
-      setStarting(false);
-    }
+    start(() => api.createCareerImportJob(slug, id, notifyEmail), "Could not start the import.");
   }
 
   async function handleNameSearch(e: React.FormEvent) {
@@ -152,15 +71,6 @@ export function ChessResultsImportSection({
       setError(userMessage(err, "Search failed. Try again."));
     } finally {
       setSearching(false);
-    }
-  }
-
-  async function handleCancelImport(jobId: string) {
-    try {
-      setJob(await api.cancelImportJob(jobId));
-      refreshActiveImports();
-    } catch (err) {
-      setJobError(userMessage(err, "Could not cancel the import."));
     }
   }
 
@@ -195,8 +105,8 @@ export function ChessResultsImportSection({
           playerRef={playerRef}
           job={job}
           error={jobError}
-          onReset={() => { setJob(null); setJobError(null); }}
-          onCancel={() => handleCancelImport(job.id)}
+          onReset={reset}
+          onCancel={cancel}
         />
       ) : (
         <div className="space-y-3">
@@ -270,7 +180,9 @@ export function ChessResultsImportSection({
 
           <NotifyMeCheckbox checked={notifyEmail} onChange={setNotifyEmail} />
 
-          {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
+          {elsewhere && <ImportElsewhereNote job={elsewhere} />}
+
+          {(error || jobError) && <p className="text-xs text-red-600 dark:text-red-400">{error || jobError}</p>}
 
           <button
             type="button"
@@ -278,7 +190,7 @@ export function ChessResultsImportSection({
             disabled={starting || !(knownFideId || fideInput.trim())}
             className={buttonClass}
           >
-            {starting ? "Starting…" : "Import all games"}
+            {starting ? "Starting…" : elsewhere ? "Add to queue" : "Import all games"}
           </button>
         </div>
       )}
