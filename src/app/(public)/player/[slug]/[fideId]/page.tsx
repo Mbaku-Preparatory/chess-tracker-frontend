@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 
+import { AdSlot } from "@/components/public/AdSlot";
 import { PerformancePanel } from "@/components/public/profile/PerformancePanel";
 import { ProfileMeter } from "@/components/public/profile/ProfileMeter";
 import { PublicGames } from "@/components/public/profile/PublicGames";
@@ -254,6 +255,10 @@ export default async function PublicPlayerPage({ params }: { params: Params }) {
           {!player.gamesFetchedAt && <PendingRows label="Waiting for games from chess-results.com…" rows={3} />}
         </section>
       </div>
+
+      {/* Below the charts, far from "Prepare against": an ad must not compete
+          with the offer this page exists to make. */}
+      <AdSlot />
 
       <section id="games" className="flex scroll-mt-24 flex-col gap-4 rounded-xl bg-ink-card p-6 sm:p-8" aria-labelledby="games-heading">
         <div className="flex items-baseline justify-between gap-3">

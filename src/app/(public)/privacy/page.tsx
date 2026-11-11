@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     "How Chess Preparatory collects, uses, stores, and deletes your data across the web app and the Android app.",
 };
 
-const LAST_UPDATED = "9 November 2026";
+const LAST_UPDATED = "11 November 2026";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -22,12 +22,14 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
+/** How this page's links look. */
+const LINK = "font-[480] text-accent-soft underline-offset-4 hover:underline";
+
 /** The support address (lib/support.ts), or the help page if the backend could not say. */
 function Contact({ email, subject }: { email: string | null; subject?: string }) {
-  const cls = "font-[480] text-accent-soft underline-offset-4 hover:underline";
-  if (!email) return <Link className={cls} href={HELP_PATH}>the help page</Link>;
+  if (!email) return <Link className={LINK} href={HELP_PATH}>the help page</Link>;
   const href = subject ? `mailto:${email}?subject=${encodeURIComponent(subject)}` : `mailto:${email}`;
-  return <a className={cls} href={href}>{email}</a>;
+  return <a className={LINK} href={href}>{email}</a>;
 }
 
 export default async function PrivacyPolicyPage() {
@@ -129,10 +131,11 @@ export default async function PrivacyPolicyPage() {
 
       <Section title="What we do not collect">
         <p>
-          The app contains no advertising or tracking SDKs, and shows no ads. We do not collect your
-          location, contacts, calendar, call logs, or the contents of your device storage. We do not
-          sell your data, we do not share it with anyone for advertising, and we do not use it to
-          build advertising profiles.
+          The Android app contains no advertising or tracking SDKs and shows no ads, and the website
+          shows none once you are signed in. We do not collect your location, contacts, calendar,
+          call logs, or the contents of your device storage. We do not sell your data, we do not
+          share your account data with anyone for advertising, and we do not use it to build
+          advertising profiles. Ads on the public website are described below.
         </p>
         <p>
           <strong className="font-[480] text-ink-text">Website visits.</strong>{" "}
@@ -152,6 +155,35 @@ export default async function PrivacyPolicyPage() {
           If you set a profile picture in the Android app, the app asks for permission to read the
           image you select. That image is stored only in local storage on your own device and is
           never uploaded to our servers. Uninstalling the app removes it.
+        </p>
+      </Section>
+
+      <Section title="Advertising on the public website">
+        <p>
+          Some public pages of the website, such as player profiles and rankings, show ads from
+          Google AdSense to visitors who are not signed in. Signed-in members, the Android app, and
+          the rest of the website show no ads.
+        </p>
+        <p>
+          Google and its partners use cookies to serve these ads, including ads based on your
+          previous visits to this and other websites. Google&apos;s{" "}
+          <a className={LINK} href="https://policies.google.com/technologies/partner-sites">
+            explanation of how it uses information from sites that show its ads
+          </a>{" "}
+          says what it collects. You can turn off personalised ads in{" "}
+          <a className={LINK} href="https://adssettings.google.com">
+            Google&apos;s Ads Settings
+          </a>
+          , or opt out of other vendors&apos; advertising cookies at{" "}
+          <a className={LINK} href="https://www.aboutads.info/choices">
+            aboutads.info
+          </a>
+          . Visitors in the European Economic Area, the United Kingdom and Switzerland are asked
+          for consent before any advertising cookies are set.
+        </p>
+        <p>
+          Google receives only what your browser sends it when it loads an ad. We never give Google
+          or any advertiser your account, your email address, or the players you prepare against.
         </p>
       </Section>
 
@@ -290,6 +322,11 @@ export default async function PrivacyPolicyPage() {
             <strong className="font-[480] text-ink-text">Google</strong>{" "}
             &mdash; only if you sign in with Google: it confirms who you are and gives us your name
             and email address.
+          </li>
+          <li>
+            <strong className="font-[480] text-ink-text">Google AdSense</strong>{" "}
+            &mdash; the ads on public pages for visitors who are not signed in, as described above.
+            It receives no account data from us.
           </li>
           <li>
             <strong className="font-[480] text-ink-text">Lichess</strong>{" "}
