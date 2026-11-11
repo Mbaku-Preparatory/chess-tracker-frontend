@@ -2,6 +2,7 @@ import { ActiveImportsIndicator } from "@/components/import/ActiveImportsIndicat
 import { ActiveImportsProvider } from "@/components/import/ActiveImportsProvider";
 import { AuthGate } from "@/components/AuthGate";
 import { ClaimGuestBook } from "@/components/books/ClaimGuestBook";
+import { NoAdsInApp } from "@/components/NoAdsInApp";
 import { PreferencesProvider } from "@/components/PreferencesProvider";
 import { ResumePrepare } from "@/components/ResumePrepare";
 import { SendAttribution } from "@/components/SendAttribution";
@@ -17,26 +18,30 @@ import { Navbar } from "@/components/ui/Navbar";
  */
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <AuthGate>
-      {/*
-        Inside AuthGate: the poller needs a signed-in user, and there
-        is nothing to report on the login screen.
-      */}
-      <SubscriptionProvider>
-        <ActiveImportsProvider>
-          <PreferencesProvider>
-            <Navbar />
-            <SubscriptionBanner />
-            <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-              {children}
-            </main>
-            <ActiveImportsIndicator />
-            <ClaimGuestBook />
-            <ResumePrepare />
-            <SendAttribution />
-          </PreferencesProvider>
-        </ActiveImportsProvider>
-      </SubscriptionProvider>
-    </AuthGate>
+    <>
+      {/* Outside AuthGate: log in and sign up are ad-free too. */}
+      <NoAdsInApp />
+      <AuthGate>
+        {/*
+          Inside AuthGate: the poller needs a signed-in user, and there
+          is nothing to report on the login screen.
+        */}
+        <SubscriptionProvider>
+          <ActiveImportsProvider>
+            <PreferencesProvider>
+              <Navbar />
+              <SubscriptionBanner />
+              <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+                {children}
+              </main>
+              <ActiveImportsIndicator />
+              <ClaimGuestBook />
+              <ResumePrepare />
+              <SendAttribution />
+            </PreferencesProvider>
+          </ActiveImportsProvider>
+        </SubscriptionProvider>
+      </AuthGate>
+    </>
   );
 }

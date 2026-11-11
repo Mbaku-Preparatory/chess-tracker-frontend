@@ -161,8 +161,10 @@ export default async function PrivacyPolicyPage() {
       <Section title="Advertising on the public website">
         <p>
           Some public pages of the website, such as player profiles and rankings, show ads from
-          Google AdSense to visitors who are not signed in. Signed-in members, the Android app, and
-          the rest of the website show no ads.
+          Google AdSense to visitors who are not signed in. Once you are signed in you see no ads
+          anywhere: not in the app, not on those public pages, and not in the Android app. The pages
+          for your account (signing up, logging in, settings and billing) never show ads, and
+          Google&apos;s ad code is not loaded on any of them.
         </p>
         <p>
           Google and its partners use cookies to serve these ads, including ads based on your

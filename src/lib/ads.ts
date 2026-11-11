@@ -11,6 +11,9 @@
 /** The AdSense publisher ID. Public by design: it is in every ad's HTML. */
 export const ADSENSE_CLIENT = "ca-pub-5427608436888723";
 
+/** Google's ad script. AdSlot loads it; NoAdsInApp checks for it. */
+export const ADSENSE_SCRIPT_SRC = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`;
+
 /**
  * The display ad unit, made in AdSense → Ads → By ad unit (a responsive
  * "Display ad"); every placement reuses it. Null until AdSense has approved
