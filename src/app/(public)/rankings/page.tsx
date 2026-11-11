@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { AdSlot } from "@/components/public/AdSlot";
 import { FederationFilter } from "@/components/public/rankings/FederationFilter";
 import { RankingsTable } from "@/components/public/rankings/RankingsTable";
 import { federationFor } from "@/lib/federations";
@@ -158,6 +159,9 @@ export default async function RankingsPage({ searchParams }: { searchParams: Sea
           </p>
         )}
       </section>
+
+      {/* After the list, so it never pushes the table down. */}
+      <AdSlot />
     </article>
   );
 }
