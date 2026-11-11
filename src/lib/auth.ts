@@ -5,6 +5,15 @@ const EMAIL_KEY = "cs_email";
 // session loads, so its data URL (often megabytes) doesn't sit in storage.
 const PROFILE_PIC_KEY = "cs_profile_pic";
 
+/**
+ * Marks <html data-signed-in> before the first paint when this browser has a
+ * session. React runs too late for that, and the server cannot see
+ * localStorage; CSS uses the mark to hide the space reserved for an ad
+ * (components/public/AdSlot.tsx), so a signed-in user never sees it appear and
+ * vanish. The same pattern as THEME_SCRIPT (lib/theme.ts).
+ */
+export const SIGNED_IN_SCRIPT = `(function(){try{if(localStorage.getItem(${JSON.stringify(TOKEN_KEY)}))document.documentElement.setAttribute("data-signed-in","");}catch(e){}})();`;
+
 export const authStorage = {
   getToken(): string | null {
     if (typeof window === "undefined") return null;

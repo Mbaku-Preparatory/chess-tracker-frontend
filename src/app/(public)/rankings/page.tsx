@@ -145,6 +145,9 @@ export default async function RankingsPage({ searchParams }: { searchParams: Sea
         </div>
       </div>
 
+      {/* Above the table: below it, few scroll a hundred rows to see it. */}
+      <AdSlot />
+
       <section className="rounded-xl bg-ink-card p-4 sm:p-8" aria-label="Ranked players">
         {results.length > 0 ? (
           <RankingsTable view={view} count={count} results={results} />
@@ -159,9 +162,6 @@ export default async function RankingsPage({ searchParams }: { searchParams: Sea
           </p>
         )}
       </section>
-
-      {/* After the list, so it never pushes the table down. */}
-      <AdSlot />
     </article>
   );
 }
