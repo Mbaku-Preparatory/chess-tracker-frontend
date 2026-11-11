@@ -7,9 +7,9 @@
  * playable: any legal move from the position starts the reader's own line,
  * kept beside the book's, and ← steps back into the book.
  *
- * On a desktop the board is on the left, as tall as the screen allows, with a
- * narrow column beside it for the line and the engine, and the book on the
- * right; the reader takes the window's width for that, not the page's column.
+ * On a desktop the book is on the left, the board right of it as tall as the
+ * screen allows, and a narrow column on the far right for the line and the
+ * engine; the reader takes the window's width for that, not the page's column.
  * On a phone or tablet the book has the whole screen, and the board slides up
  * from the bottom when a move is tapped; swiping it down, ✕, or the phone's
  * back button puts it away.
@@ -308,8 +308,18 @@ function Panel({
 }) {
   const onOwn = own !== null && at >= 0;
   const fen = current === null ? EMPTY_FEN : onOwn ? own[at].fen : nodes[current][FEN];
-  const [prefs, setPrefs] = useAnalysisPrefs();
-  const engine = useEngine(fen, { enabled: prefs.engine && current !== null, depth: DEPTHS[prefs.depth].depth, capMs: DEPTHS[prefs.depth].capMs });
+  // The reader opens with the engine off every time, whatever the analysis
+  // board was last left on (the two share their saved settings): reading,
+  // you want the book's moves, not the answer. The depth is remembered.
+  const [saved, setSaved] = useAnalysisPrefs();
+  const [engineOn, setEngineOn] = useState(false);
+  const prefs = { ...saved, engine: engineOn };
+  const setPrefs = (change: Partial<typeof saved>) => {
+    const { engine: on, ...rest } = change;
+    if (on !== undefined) setEngineOn(on);
+    if (Object.keys(rest).length) setSaved(rest);
+  };
+  const engine = useEngine(fen, { enabled: engineOn && current !== null, depth: DEPTHS[prefs.depth].depth, capMs: DEPTHS[prefs.depth].capMs });
   const line = useMemo(() => (current === null ? [] : lineThrough(nodes, current)), [nodes, current]);
   const moved = current === null ? null : onOwn ? own[at] : lastMove(nodes, current);
   const toMove = fen.split(" ")[1] === "w" ? "White" : "Black";
@@ -349,7 +359,7 @@ function Panel({
       } lg:contents`}
     >
       {/* From lg this box is gone (display: contents): the board and the
-          column after it are columns of the reader's grid, left of the book. */}
+          column after it are columns of the reader's grid, right of the book. */}
       {/* the handle: where a swipe down starts, on a phone */}
       <div aria-hidden="true" className="mx-auto h-1.5 w-10 shrink-0 rounded-full bg-ink-line lg:hidden" />
       {/* As tall as the reader, from lg; never so wide that the book is squeezed
@@ -358,12 +368,12 @@ function Panel({
         onTouchStart={keep}
         onTouchMove={keep}
         onTouchEnd={keep}
-        className="mx-auto w-full max-w-[min(100%,40dvh)] lg:order-1 lg:m-0 lg:aspect-square lg:h-[min(100%,34vw)] lg:w-auto xl:h-[min(100%,40vw)] lg:max-w-none lg:self-start"
+        className="mx-auto w-full max-w-[min(100%,40dvh)] lg:order-2 lg:m-0 lg:aspect-square lg:h-[min(100%,34vw)] lg:w-auto xl:h-[min(100%,40vw)] lg:max-w-none lg:self-start"
       >
         <Board fen={fen} orientation="white" highlights={highlights} onMove={current !== null ? play : undefined} rounded="6px" />
       </div>
       {/* The narrow column beside the board, from lg; part of the sheet below that. */}
-      <div className="contents lg:order-2 lg:flex lg:h-full lg:min-h-0 lg:flex-col lg:gap-3 lg:overflow-y-auto lg:rounded-xl lg:bg-ink-card lg:p-3 lg:shown-scrollbar">
+      <div className="contents lg:order-3 lg:flex lg:h-full lg:min-h-0 lg:flex-col lg:gap-3 lg:overflow-y-auto lg:rounded-xl lg:bg-ink-card lg:p-3 lg:shown-scrollbar">
         <div className="flex items-center justify-between gap-3">
           <p className="min-w-0 truncate text-[14px] text-ink-muted" aria-live="polite">
             {current === null
@@ -585,6 +595,24 @@ export function BookReader({
     return m;
   }, [index]);
 
+  // On a big screen the book scrolls in its own pane: scroll that, never the
+  // window. scrollIntoView moves every scrollable ancestor, the window too,
+  // which pushed the title off the top whenever the reader reopened at the
+  // page left off, and nudged it on every step through a line.
+  const scrollBookTo = useCallback(
+    (el: Element, block: "start" | "center", behavior: ScrollBehavior = "auto") => {
+      const box = pane.current;
+      if (!wide || !box) {
+        el.scrollIntoView({ block, behavior });
+        return;
+      }
+      const r = el.getBoundingClientRect();
+      const offset = r.top - box.getBoundingClientRect().top + box.scrollTop;
+      box.scrollTo({ top: block === "start" ? offset : offset - (box.clientHeight - r.height) / 2, behavior });
+    },
+    [wide],
+  );
+
   // Bring a move's highlight into view: centred beside the desktop panel,
   // in the top third on a phone, where the sheet doesn't cover it.
   const reveal = useCallback(
@@ -593,7 +621,7 @@ export function BookReader({
       const el = pageNo === undefined ? null : pageEls.current.get(pageNo)?.querySelector(`[data-node="${n}"]`);
       if (!el) return;
       if (wide) {
-        if (always) el.scrollIntoView({ block: "center", behavior: "smooth" });
+        if (always) scrollBookTo(el, "center", "smooth");
         return;
       }
       const top = el.getBoundingClientRect().top;
@@ -601,7 +629,7 @@ export function BookReader({
         window.scrollTo({ top: window.scrollY + top - window.innerHeight * 0.22, behavior: "smooth" });
       }
     },
-    [placeOf, wide],
+    [placeOf, wide, scrollBookTo],
   );
 
   // The board on a phone is a history entry, so the phone's back button puts
@@ -739,7 +767,10 @@ export function BookReader({
     }
     if (saved > 1) {
       setPage(saved);
-      requestAnimationFrame(() => pageEls.current.get(saved - 1)?.scrollIntoView({ block: "start" }));
+      requestAnimationFrame(() => {
+        const el = pageEls.current.get(saved - 1);
+        if (el) scrollBookTo(el, "start");
+      });
     }
     restored.current = true;
   }, [doc, id]);
@@ -794,7 +825,8 @@ export function BookReader({
 
   const jump = (value: string) => {
     const n = Number(value);
-    if (n >= 1 && n <= totalPages) pageEls.current.get(n - 1)?.scrollIntoView({ block: "start" });
+    const el = n >= 1 && n <= totalPages ? pageEls.current.get(n - 1) : undefined;
+    if (el) scrollBookTo(el, "start");
   };
 
   if (book?.status === "failed") return <p className="py-16 text-center text-sm text-red-600">{book.error || "This book could not be read."}</p>;
@@ -846,9 +878,9 @@ export function BookReader({
         </p>
       )}
 
-      {/* From lg: the board, the column beside it (both from Panel), then the book. */}
-      <div className="grid gap-6 lg:min-h-0 lg:flex-1 lg:grid-cols-[auto_220px_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)] lg:gap-4 xl:grid-cols-[auto_260px_minmax(0,1fr)]">
-        <div ref={pane} data-book-pane className="lg:order-3 lg:h-full lg:overflow-y-scroll lg:rounded-xl lg:pr-2 lg:shown-scrollbar">
+      {/* From lg: the book, then the board and the column beside it (both from Panel). */}
+      <div className="grid gap-6 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1fr)_auto_220px] lg:grid-rows-[minmax(0,1fr)] lg:gap-4 xl:grid-cols-[minmax(0,1fr)_auto_260px]">
+        <div ref={pane} data-book-pane className="lg:order-1 lg:h-full lg:overflow-y-scroll lg:rounded-xl lg:pr-2 lg:shown-scrollbar">
           <main className="mx-auto flex w-full max-w-[780px] flex-col gap-7 lg:py-1">
             {Array.from({ length: totalPages }, (_, i) => (
               <PdfPage
