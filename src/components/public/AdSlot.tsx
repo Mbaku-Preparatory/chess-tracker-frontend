@@ -4,7 +4,7 @@ import Script from "next/script";
 import { useEffect, useRef } from "react";
 
 import { useSignedIn } from "@/hooks/useSignedIn";
-import { ADSENSE_CLIENT, AD_SLOT } from "@/lib/ads";
+import { ADSENSE_CLIENT, ADSENSE_SCRIPT_SRC, AD_SLOT } from "@/lib/ads";
 
 declare global {
   interface Window {
@@ -22,7 +22,9 @@ declare global {
  * (layout shift is measured only for content in view).
  *
  * The AdSense script loads here rather than in a layout, so a page without a
- * slot (the landing page, pricing, the fun pages) never downloads it.
+ * slot (the landing page, pricing, the fun pages) never downloads it. Once
+ * loaded it stays for the life of the tab; NoAdsInApp clears it when the
+ * visitor moves on into the signed-in app.
  */
 export function AdSlot() {
   const signedIn = useSignedIn();
@@ -54,7 +56,7 @@ export function AdSlot() {
       {/* next/script loads one copy however many slots a page has (same id). */}
       <Script
         id="adsbygoogle"
-        src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
+        src={ADSENSE_SCRIPT_SRC}
         strategy="afterInteractive"
         crossOrigin="anonymous"
       />
