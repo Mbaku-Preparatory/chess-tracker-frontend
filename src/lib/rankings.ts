@@ -42,7 +42,7 @@ export type RankedPlayer = {
   womenTitle: string;
 };
 
-export type RankingEntry = { rank: number; rating: number; birthYear: number | null; player: RankedPlayer };
+export type RankingEntry = { rank: number; rating: number; player: RankedPlayer };
 
 export type Rankings = { count: number; results: RankingEntry[] };
 
@@ -81,7 +81,7 @@ const RANKINGS_QUERY = `
 query Rankings($tc: RankingTimeControl!, $list: RankingCategory!, $fed: String!, $page: Int!) {
   publicRankings(timeControl: $tc, category: $list, federation: $fed, page: $page, pageSize: ${RANKINGS_PAGE_SIZE}) {
     count
-    results { rank rating birthYear player { fideId fullName slug federation title womenTitle } }
+    results { rank rating player { fideId fullName slug federation title womenTitle } }
   }
 }`;
 

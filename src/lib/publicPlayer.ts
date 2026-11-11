@@ -50,7 +50,6 @@ export type PublicPlayer = {
   sex: string;
   title: string;
   womenTitle: string;
-  birthYear: number | null;
   isActive: boolean;
   standardRating: number | null;
   rapidRating: number | null;
@@ -82,7 +81,7 @@ const GAME_FIELDS = `
 export const PROFILE_QUERY = `
 query PublicProfile($fideId: String!, $page: Int!, $pageSize: Int!) {
   publicPlayer(fideId: $fideId) {
-    fideId fullName slug federation sex title womenTitle birthYear isActive
+    fideId fullName slug federation sex title womenTitle isActive
     standardRating rapidRating blitzRating standardGames rapidGames blitzGames
     worldRankStandard worldRankRapid worldRankBlitz
     nationalRankStandard nationalRankRapid nationalRankBlitz
