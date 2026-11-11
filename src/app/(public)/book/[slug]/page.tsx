@@ -62,6 +62,10 @@ export default async function PublicBookPage({ params }: { params: Params }) {
   return (
     <div className="flex flex-col gap-6">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
+      <BookReader source={{ kind: "public", slug: book.publicSlug, title: book.title, sha256: book.sha256 }} backHref="/chess-books" />
+      {/* Under the reader, not above it: the reader opens with only the
+          book's title over it. Kept on the page for search engines and for
+          anyone who scrolls on. */}
       <section className="flex flex-col gap-3">
         <nav className="text-[14px] text-ink-faint">
           <Link href="/chess-books" className="hover:text-ink-muted">Chess books</Link>
@@ -84,7 +88,6 @@ export default async function PublicBookPage({ params }: { params: Params }) {
           )}
         </p>
       </section>
-      <BookReader source={{ kind: "public", slug: book.publicSlug, title: book.title, sha256: book.sha256 }} backHref="/chess-books" />
     </div>
   );
 }

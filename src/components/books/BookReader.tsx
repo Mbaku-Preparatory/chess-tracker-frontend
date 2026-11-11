@@ -7,9 +7,12 @@
  * playable: any legal move from the position starts the reader's own line,
  * kept beside the book's, and ← steps back into the book.
  *
- * On a desktop the board sits beside the book. On a phone or tablet the book
- * has the whole screen, and the board slides up from the bottom when a move
- * is tapped; swiping it down, ✕, or the phone's back button puts it away.
+ * On a desktop the board is on the left, as tall as the screen allows, with a
+ * narrow column beside it for the line and the engine, and the book on the
+ * right; the reader takes the window's width for that, not the page's column.
+ * On a phone or tablet the book has the whole screen, and the board slides up
+ * from the bottom when a move is tapped; swiping it down, ✕, or the phone's
+ * back button puts it away.
  *
  * The owner's PDF comes from this device (lib/bookFiles.ts), never from the
  * server, which kept only the index (lib/books.ts, ReaderIndex). A demo book
@@ -64,6 +67,8 @@ const LAST_PAGE_KEY = (id: string) => `book-reader-page:${id}`;
 /** The reader's least height on a big screen, and the space left under it. */
 const MIN_FRAME = 520;
 const FRAME_GAP = 32; // the app's own padding under its pages
+/** On a big screen the reader spans the window, less this on each side. */
+const WIDE_MARGIN = 24;
 const EMPTY_FEN = "8/8/8/8/8/8/8/8 w - - 0 1";
 
 /** A move played on the board rather than read from the book. */
@@ -341,88 +346,100 @@ function Panel({
       style={drag ? { transform: `translateY(${drag}px)`, transition: "none" } : undefined}
       className={`fixed inset-x-0 bottom-0 z-30 flex max-h-[85dvh] flex-col gap-2 overflow-y-auto rounded-t-2xl bg-ink-card px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-6px_24px_rgba(0,0,0,0.18)] transition-transform duration-200 motion-reduce:transition-none ${
         open ? "translate-y-0" : "pointer-events-none translate-y-full"
-      } lg:pointer-events-auto lg:static lg:z-auto lg:h-full lg:max-h-none lg:translate-y-0 lg:gap-3 lg:overflow-y-scroll lg:rounded-xl lg:p-4 lg:shadow-none lg:shown-scrollbar`}
+      } lg:contents`}
     >
+      {/* From lg this box is gone (display: contents): the board and the
+          column after it are columns of the reader's grid, left of the book. */}
       {/* the handle: where a swipe down starts, on a phone */}
       <div aria-hidden="true" className="mx-auto h-1.5 w-10 shrink-0 rounded-full bg-ink-line lg:hidden" />
-      <div onTouchStart={keep} onTouchMove={keep} onTouchEnd={keep} className="mx-auto w-full max-w-[min(100%,40dvh)] lg:max-w-none">
+      {/* As tall as the reader, from lg; never so wide that the book is squeezed
+          (a 1024px screen keeps about 380px for the page, a 1920px one 830px). */}
+      <div
+        onTouchStart={keep}
+        onTouchMove={keep}
+        onTouchEnd={keep}
+        className="mx-auto w-full max-w-[min(100%,40dvh)] lg:order-1 lg:m-0 lg:aspect-square lg:h-[min(100%,34vw)] lg:w-auto xl:h-[min(100%,40vw)] lg:max-w-none lg:self-start"
+      >
         <Board fen={fen} orientation="white" highlights={highlights} onMove={current !== null ? play : undefined} rounded="6px" />
       </div>
-      <div className="flex items-center justify-between gap-3">
-        <p className="min-w-0 truncate text-[14px] text-ink-muted" aria-live="polite">
-          {current === null
-            ? "Tap a move or a diagram in the book"
-            : onOwn
-              ? `${numberOf(at === 0 ? nodes[current][FEN] : own[at - 1].fen)}${own[at].san} · ${toMove} to move · your line`
-              : nodes[current][SAN]
-                ? `${moveLabel(nodes, current)} · ${toMove} to move`
-                : `${toMove} to move`}
+      {/* The narrow column beside the board, from lg; part of the sheet below that. */}
+      <div className="contents lg:order-2 lg:flex lg:h-full lg:min-h-0 lg:flex-col lg:gap-3 lg:overflow-y-auto lg:rounded-xl lg:bg-ink-card lg:p-3 lg:shown-scrollbar">
+        <div className="flex items-center justify-between gap-3">
+          <p className="min-w-0 truncate text-[14px] text-ink-muted" aria-live="polite">
+            {current === null
+              ? "Tap a move or a diagram in the book"
+              : onOwn
+                ? `${numberOf(at === 0 ? nodes[current][FEN] : own[at - 1].fen)}${own[at].san} · ${toMove} to move · your line`
+                : nodes[current][SAN]
+                  ? `${moveLabel(nodes, current)} · ${toMove} to move`
+                  : `${toMove} to move`}
+          </p>
+          <div className="flex shrink-0 gap-2">
+            <button type="button" aria-label="Previous move" disabled={back === null} onClick={() => back?.()} className={button}>
+              ←
+            </button>
+            <button type="button" aria-label="Next move" disabled={forward === null} onClick={() => forward?.()} className={button}>
+              →
+            </button>
+            <button type="button" aria-label="Close the board" onClick={onClose} className={`${button} lg:hidden`}>
+              ✕
+            </button>
+          </div>
+        </div>
+        {(line.length > 1 || own) && current !== null && (
+          <div ref={listRef} className="max-h-24 overflow-y-auto border-t border-ink-line pt-2 text-[14px] leading-7 lg:max-h-64">
+            {line.map((x, i) => {
+              if (!nodes[x][SAN]) return null;
+              const parent = nodes[nodes[x][PARENT] as number][FEN].split(" ");
+              const numbered = parent[1] === "w" || i === 1 || !nodes[line[i - 1]][SAN];
+              const on = x === current && !onOwn;
+              return (
+                <span key={x}>
+                  {numbered && <span className="ml-1 text-ink-faint">{parent[5]}{parent[1] === "w" ? "." : "..."}</span>}
+                  <button
+                    type="button"
+                    data-on={on ? "" : undefined}
+                    onClick={() => go(x)}
+                    className={`rounded px-1 ${on ? "bg-accent text-accent-on" : "text-ink-text hover:bg-accent/15"}`}
+                  >
+                    {nodes[x][SAN]}
+                  </button>{" "}
+                </span>
+              );
+            })}
+            {/* The reader's own line, under the book's, the way a variation sits under a game. */}
+            {own && (
+              <div className="my-1 ml-1 border-l-2 border-accent/60 pl-2 text-[13px] leading-6">
+                <span className="mr-1 text-ink-faint">Your line</span>
+                {own.map((m, k) => {
+                  const before = k === 0 ? nodes[current][FEN] : own[k - 1].fen;
+                  const numbered = k === 0 || before.split(" ")[1] === "w";
+                  return (
+                    <span key={k}>
+                      {numbered && <span className="ml-1 text-ink-faint">{numberOf(before)}</span>}
+                      <button
+                        type="button"
+                        data-on={at === k ? "" : undefined}
+                        onClick={() => selectOwn(k)}
+                        className={`rounded px-1 ${at === k ? "bg-accent text-accent-on" : "text-accent-soft hover:bg-accent/15"}`}
+                      >
+                        {m.san}
+                      </button>{" "}
+                    </span>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+        <div className="hidden lg:block">
+          <EnginePanel prefs={prefs} setPrefs={setPrefs} engine={engine} fen={fen} />
+        </div>
+        <p className="hidden text-[13px] text-ink-faint lg:block">
+          Shaded moves are the game; underlined ones are variations in the text. The arrow keys step through the line. Play a move on the
+          board to try a line of your own; ← brings you back to the book.
         </p>
-        <div className="flex shrink-0 gap-2">
-          <button type="button" aria-label="Previous move" disabled={back === null} onClick={() => back?.()} className={button}>
-            ←
-          </button>
-          <button type="button" aria-label="Next move" disabled={forward === null} onClick={() => forward?.()} className={button}>
-            →
-          </button>
-          <button type="button" aria-label="Close the board" onClick={onClose} className={`${button} lg:hidden`}>
-            ✕
-          </button>
-        </div>
       </div>
-      {(line.length > 1 || own) && current !== null && (
-        <div ref={listRef} className="max-h-24 overflow-y-auto border-t border-ink-line pt-2 text-[14px] leading-7 lg:max-h-48">
-          {line.map((x, i) => {
-            if (!nodes[x][SAN]) return null;
-            const parent = nodes[nodes[x][PARENT] as number][FEN].split(" ");
-            const numbered = parent[1] === "w" || i === 1 || !nodes[line[i - 1]][SAN];
-            const on = x === current && !onOwn;
-            return (
-              <span key={x}>
-                {numbered && <span className="ml-1 text-ink-faint">{parent[5]}{parent[1] === "w" ? "." : "..."}</span>}
-                <button
-                  type="button"
-                  data-on={on ? "" : undefined}
-                  onClick={() => go(x)}
-                  className={`rounded px-1 ${on ? "bg-accent text-accent-on" : "text-ink-text hover:bg-accent/15"}`}
-                >
-                  {nodes[x][SAN]}
-                </button>{" "}
-              </span>
-            );
-          })}
-          {/* The reader's own line, under the book's, the way a variation sits under a game. */}
-          {own && (
-            <div className="my-1 ml-1 border-l-2 border-accent/60 pl-2 text-[13px] leading-6">
-              <span className="mr-1 text-ink-faint">Your line</span>
-              {own.map((m, k) => {
-                const before = k === 0 ? nodes[current][FEN] : own[k - 1].fen;
-                const numbered = k === 0 || before.split(" ")[1] === "w";
-                return (
-                  <span key={k}>
-                    {numbered && <span className="ml-1 text-ink-faint">{numberOf(before)}</span>}
-                    <button
-                      type="button"
-                      data-on={at === k ? "" : undefined}
-                      onClick={() => selectOwn(k)}
-                      className={`rounded px-1 ${at === k ? "bg-accent text-accent-on" : "text-accent-soft hover:bg-accent/15"}`}
-                    >
-                      {m.san}
-                    </button>{" "}
-                  </span>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
-      <div className="hidden lg:block">
-        <EnginePanel prefs={prefs} setPrefs={setPrefs} engine={engine} fen={fen} />
-      </div>
-      <p className="hidden text-[13px] text-ink-faint lg:block">
-        Shaded moves are the game; underlined ones are variations in the text. The arrow keys step through the line. Play a move on the
-        board to try a line of your own; ← brings you back to the book.
-      </p>
     </aside>
   );
 }
@@ -737,20 +754,28 @@ export function BookReader({
   }, [page, doc, id]);
 
   // From lg the reader fills the screen from wherever it starts (under the
-  // app's bar, or under a public page's introduction), so the window has
-  // nothing left to scroll and the two columns are the only scroll bars.
-  // Never below MIN_FRAME: with a long introduction above, the window
-  // scrolls a little rather than the board getting squeezed.
+  // app's bar, or under the trial's clock), so the window has nothing left
+  // to scroll and the columns are the only scroll bars. Never below
+  // MIN_FRAME: with something tall above, the window scrolls a little rather
+  // than the board getting squeezed.
+  // And it spans the window, less WIDE_MARGIN a side, rather than the page's
+  // column (about 1,200px): a board as tall as the screen, the column beside
+  // it and a readable page don't fit in that. Measured, not 100vw, which
+  // counts the scroll bar and would scroll the page sideways.
   useEffect(() => {
     const el = frame.current;
     if (!el) return;
     if (!wide) {
-      el.style.removeProperty("height");
+      for (const prop of ["height", "width", "margin-left"]) el.style.removeProperty(prop);
       return;
     }
     const fit = () => {
       const top = el.getBoundingClientRect().top + window.scrollY;
       el.style.height = `${Math.max(MIN_FRAME, window.innerHeight - top - FRAME_GAP)}px`;
+      el.style.marginLeft = "0px";
+      const left = el.getBoundingClientRect().left;
+      el.style.width = `${document.documentElement.clientWidth - 2 * WIDE_MARGIN}px`;
+      el.style.marginLeft = `${WIDE_MARGIN - left}px`;
     };
     fit();
     window.addEventListener("resize", fit);
@@ -792,7 +817,7 @@ export function BookReader({
     // From lg the book and the board each scroll in their own column, with a
     // scroll bar that stays in sight (not everyone thinks to scroll a pane);
     // the effect above sizes this to the screen.
-    <div ref={frame} className={`mx-auto flex w-full max-w-[1240px] flex-col gap-4 lg:pb-0 ${sheet ? "pb-[75dvh]" : "pb-8"}`}>
+    <div ref={frame} className={`mx-auto flex w-full max-w-[1240px] flex-col gap-4 lg:max-w-none lg:pb-0 ${sheet ? "pb-[75dvh]" : "pb-8"}`}>
       {above}
       <header className="flex flex-wrap items-center gap-3">
         <Link href={backHref} className="hidden rounded-pill border-2 border-accent px-3.5 py-1 text-[14px] font-[520] text-ink-text hover:bg-accent/10 sm:inline">
@@ -821,8 +846,9 @@ export function BookReader({
         </p>
       )}
 
-      <div className="grid gap-6 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1fr)_380px]">
-        <div ref={pane} data-book-pane className="lg:h-full lg:overflow-y-scroll lg:rounded-xl lg:pr-2 lg:shown-scrollbar">
+      {/* From lg: the board, the column beside it (both from Panel), then the book. */}
+      <div className="grid gap-6 lg:min-h-0 lg:flex-1 lg:grid-cols-[auto_220px_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)] lg:gap-4 xl:grid-cols-[auto_260px_minmax(0,1fr)]">
+        <div ref={pane} data-book-pane className="lg:order-3 lg:h-full lg:overflow-y-scroll lg:rounded-xl lg:pr-2 lg:shown-scrollbar">
           <main className="mx-auto flex w-full max-w-[780px] flex-col gap-7 lg:py-1">
             {Array.from({ length: totalPages }, (_, i) => (
               <PdfPage
