@@ -595,6 +595,24 @@ export function BookReader({
     return m;
   }, [index]);
 
+  // On a big screen the book scrolls in its own pane: scroll that, never the
+  // window. scrollIntoView moves every scrollable ancestor, the window too,
+  // which pushed the title off the top whenever the reader reopened at the
+  // page left off, and nudged it on every step through a line.
+  const scrollBookTo = useCallback(
+    (el: Element, block: "start" | "center", behavior: ScrollBehavior = "auto") => {
+      const box = pane.current;
+      if (!wide || !box) {
+        el.scrollIntoView({ block, behavior });
+        return;
+      }
+      const r = el.getBoundingClientRect();
+      const offset = r.top - box.getBoundingClientRect().top + box.scrollTop;
+      box.scrollTo({ top: block === "start" ? offset : offset - (box.clientHeight - r.height) / 2, behavior });
+    },
+    [wide],
+  );
+
   // Bring a move's highlight into view: centred beside the desktop panel,
   // in the top third on a phone, where the sheet doesn't cover it.
   const reveal = useCallback(
@@ -603,7 +621,7 @@ export function BookReader({
       const el = pageNo === undefined ? null : pageEls.current.get(pageNo)?.querySelector(`[data-node="${n}"]`);
       if (!el) return;
       if (wide) {
-        if (always) el.scrollIntoView({ block: "center", behavior: "smooth" });
+        if (always) scrollBookTo(el, "center", "smooth");
         return;
       }
       const top = el.getBoundingClientRect().top;
@@ -611,7 +629,7 @@ export function BookReader({
         window.scrollTo({ top: window.scrollY + top - window.innerHeight * 0.22, behavior: "smooth" });
       }
     },
-    [placeOf, wide],
+    [placeOf, wide, scrollBookTo],
   );
 
   // The board on a phone is a history entry, so the phone's back button puts
@@ -749,7 +767,10 @@ export function BookReader({
     }
     if (saved > 1) {
       setPage(saved);
-      requestAnimationFrame(() => pageEls.current.get(saved - 1)?.scrollIntoView({ block: "start" }));
+      requestAnimationFrame(() => {
+        const el = pageEls.current.get(saved - 1);
+        if (el) scrollBookTo(el, "start");
+      });
     }
     restored.current = true;
   }, [doc, id]);
@@ -804,7 +825,8 @@ export function BookReader({
 
   const jump = (value: string) => {
     const n = Number(value);
-    if (n >= 1 && n <= totalPages) pageEls.current.get(n - 1)?.scrollIntoView({ block: "start" });
+    const el = n >= 1 && n <= totalPages ? pageEls.current.get(n - 1) : undefined;
+    if (el) scrollBookTo(el, "start");
   };
 
   if (book?.status === "failed") return <p className="py-16 text-center text-sm text-red-600">{book.error || "This book could not be read."}</p>;
