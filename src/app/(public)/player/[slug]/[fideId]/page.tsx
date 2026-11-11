@@ -52,7 +52,6 @@ function summary(player: PublicPlayer, country: string): string {
     // No "u": "a United States-registered", "a Ugandan" — it sounds like "you".
     `${player.fullName} is ${/^[aeio]/i.test(described) ? "an" : "a"} ${described}`,
     title ? `holding the ${title} title` : null,
-    player.birthYear ? `born in ${player.birthYear}` : null,
   ]
     .filter(Boolean)
     .join(", ");
@@ -127,7 +126,6 @@ export default async function PublicPlayerPage({ params }: { params: Params }) {
         "@type": "Person",
         name: player.fullName,
         ...(titleName && { honorificPrefix: player.title || player.womenTitle, award: titleName }),
-        ...(player.birthYear && { birthDate: String(player.birthYear) }),
         nationality: { "@type": "Country", name: fed.name },
         identifier: { "@type": "PropertyValue", propertyID: "FIDE ID", value: player.fideId },
         sameAs: [`https://ratings.fide.com/profile/${player.fideId}`],
@@ -169,7 +167,6 @@ export default async function PublicPlayerPage({ params }: { params: Params }) {
         </h1>
         <p className="flex flex-wrap gap-x-4 gap-y-1 text-[15px] text-ink-muted">
           <span>{fed.name}</span>
-          {player.birthYear && <span>Born {player.birthYear}</span>}
           <a
             href={`https://ratings.fide.com/profile/${player.fideId}`}
             className="tabular-nums hover:text-ink-text"

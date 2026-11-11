@@ -26,7 +26,6 @@ function Name({ entry }: { entry: RankingEntry }) {
 export function RankingsTable({ view, count, results }: { view: RankingsView; count: number; results: RankingEntry[] }) {
   const pages = Math.max(1, Math.ceil(count / RANKINGS_PAGE_SIZE));
   const first = (view.page - 1) * RANKINGS_PAGE_SIZE + 1;
-  const showBorn = view.list === "juniors" || view.list === "girls";
 
   return (
     <div className="flex flex-col gap-4">
@@ -39,7 +38,6 @@ export function RankingsTable({ view, count, results }: { view: RankingsView; co
               <Name entry={e} />
               <span className="text-[12px] text-ink-faint">
                 {federationFor(e.player.federation).name}
-                {showBorn && e.birthYear ? ` · born ${e.birthYear}` : ""}
               </span>
             </div>
             <span className="tabular-nums text-ink-text">{e.rating}</span>
@@ -54,7 +52,6 @@ export function RankingsTable({ view, count, results }: { view: RankingsView; co
               <th scope="col" className="w-16 py-3 pr-3 font-[520]">Rank</th>
               <th scope="col" className="px-3 py-3 font-[520]">Player</th>
               <th scope="col" className="px-3 py-3 font-[520]">Federation</th>
-              {showBorn && <th scope="col" className="px-3 py-3 font-[520]">Born</th>}
               <th scope="col" className="py-3 pl-3 text-right font-[520]">Rating</th>
             </tr>
           </thead>
@@ -66,7 +63,6 @@ export function RankingsTable({ view, count, results }: { view: RankingsView; co
                   <Name entry={e} />
                 </td>
                 <td className="px-3 py-3">{federationFor(e.player.federation).name}</td>
-                {showBorn && <td className="px-3 py-3 tabular-nums">{e.birthYear ?? "—"}</td>}
                 <td className="py-3 pl-3 text-right tabular-nums text-ink-text">{e.rating}</td>
               </tr>
             ))}
