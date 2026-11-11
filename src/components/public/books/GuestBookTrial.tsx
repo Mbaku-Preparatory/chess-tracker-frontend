@@ -7,14 +7,14 @@ import { BookConverting } from "@/components/books/BookConverting";
 import { BookExercises } from "@/components/books/BookExercises";
 import { BookReader } from "@/components/books/BookReader";
 import { AuthLink } from "@/components/public/AuthLink";
+import { useRepeatWhile } from "@/hooks/useRepeatWhile";
 import { useSignedIn } from "@/hooks/useSignedIn";
 import { keepBookFile } from "@/lib/bookFiles";
-import { getBook, isConverting, type BookDetail } from "@/lib/books";
+import { BOOK_POLL_MS, canOpen, getBook, isConverting, type BookDetail } from "@/lib/books";
 import { forgetGuestBook, readGuestBook, TRIAL_MS, uploadGuestBook, writeGuestBook, type GuestBook } from "@/lib/guestBook";
 
 import { TrialBar, TrialOver, useTrialClock } from "./trial";
 
-const POLL_MS = 3000;
 const n = (x: number) => x.toLocaleString("en");
 
 /**
@@ -55,11 +55,7 @@ export function GuestBookTrial() {
 
   // While it is being read, ask again every few seconds.
   const converting = book ? isConverting(book) : false;
-  useEffect(() => {
-    if (!trial || !converting) return;
-    const timer = window.setInterval(() => void load(trial), POLL_MS);
-    return () => window.clearInterval(timer);
-  }, [trial, converting, load]);
+  useRepeatWhile(Boolean(trial) && converting, () => trial && void load(trial), BOOK_POLL_MS);
 
   // A book that could not be read doesn't use up the try: forget it.
   const failed = book?.status === "failed";
@@ -67,7 +63,8 @@ export function GuestBookTrial() {
     if (failed) forgetGuestBook();
   }, [failed]);
 
-  const ready = book?.status === "succeeded";
+  // The ten minutes start once there is something to read.
+  const ready = book ? canOpen(book) : false;
   const used = useTrialClock(trial ?? null, ready);
 
   async function upload(file: File) {
@@ -157,7 +154,7 @@ export function GuestBookTrial() {
 
   if (book === undefined) return <div className="h-40 animate-pulse rounded-xl bg-ink-card" />;
 
-  if (converting) {
+  if (converting && !ready) {
     return (
       <section aria-label="Reading your book" aria-live="polite" className="flex flex-col gap-3 rounded-xl bg-ink-card p-6 sm:p-8">
         <h2 className="text-[21px] font-[480]">Reading “{book.title}”</h2>
@@ -172,10 +169,10 @@ export function GuestBookTrial() {
   if (usedMs >= TRIAL_MS) return <TrialOver title={book.title} />;
 
   const bar = <TrialBar used={usedMs} />;
-  if (book.kind === "exercises") return <BookExercises book={book} hrefFor={(num) => `/chess-books/try/${num}`} above={bar} />;
+  if (book.kind === "exercises") return <BookExercises book={book} who="guest" hrefFor={(num) => `/chess-books/try/${num}`} above={bar} />;
   return (
     <BookReader
-      source={{ kind: "guest", publicId: book.publicId, key: trial.key, title: book.title, sha256: book.sha256 }}
+      source={{ kind: "guest", key: trial.key, book }}
       backHref="/chess-books"
       above={bar}
       partNote={
