@@ -16,6 +16,13 @@
  * (lib/publicBook.ts) is the one exception: the server serves both, and the
  * PDF is kept on the device after the first visit. pdf.js draws the pages,
  * only those near the screen, and lets go of the rest.
+ *
+ * A book opens while the server is still reading it: the index then covers
+ * only the first pages, and the rest of the book shows as plain pages until
+ * it catches up. The page around it keeps the book fresh (it polls), and the
+ * index is fetched again whenever it covers more. Positions keep their
+ * numbers from one index to the next (backend books/services/processing.py),
+ * so the move on the board stays put.
  */
 
 import { Chess } from "chess.js";
@@ -27,20 +34,22 @@ import { EnginePanel } from "@/components/analysis/EnginePanel";
 import { useEngine } from "@/hooks/useEngine";
 import { DEPTHS, useAnalysisPrefs } from "@/lib/analysisPrefs";
 import Board from "@/components/analysis/Board";
+import { useBookOpened } from "@/hooks/useBookOpened";
 import { api } from "@/lib/api";
 import { userMessage } from "@/lib/apiError";
 import { bookFile, keepBookFile, sha256Of } from "@/lib/bookFiles";
-import type { Book, ReaderIndex } from "@/lib/books";
+import { isConverting, type Book, type ReaderIndex } from "@/lib/books";
 import { guestBookReader } from "@/lib/guestBook";
 import { bookIndexUrl, bookPdfUrl } from "@/lib/publicBook";
 
 /** Where a book's index and PDF come from: the owner's account and device,
- * or the public routes of a demo book. */
+ * or the public routes of a demo book. `book` is kept fresh by the page
+ * while the server is still reading it. */
 export type BookSource =
   | { kind: "own"; book: Book }
   | { kind: "public"; slug: string; title: string; sha256: string }
   // Tried without an account: read with its key (lib/guestBook.ts).
-  | { kind: "guest"; publicId: string; key: string; title: string; sha256: string };
+  | { kind: "guest"; key: string; book: Book };
 
 async function publicFetch<T>(url: string, read: (r: Response) => Promise<T>): Promise<T> {
   const response = await fetch(url);
@@ -147,13 +156,17 @@ function PdfPage({
   doc,
   number,
   page,
+  guess,
   current,
   onPick,
   register,
 }: {
   doc: PDFDocumentProxy;
   number: number;
-  page: ReaderIndex["pages"][number];
+  /** Null: a page the server hasn't read yet. It is drawn without highlights,
+   * sized like `guess` (the last page read) until pdf.js gives its own size. */
+  page: ReaderIndex["pages"][number] | null;
+  guess: { w: number; h: number };
   current: number | null;
   onPick: (node: number) => void;
   register: (number: number, el: HTMLElement | null) => void;
@@ -161,6 +174,9 @@ function PdfPage({
   const box = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const [near, setNear] = useState(false);
+  // An unread page's own size, from pdf.js once it is drawn.
+  const [ownSize, setOwnSize] = useState<{ w: number; h: number } | null>(null);
+  const unread = page === null;
 
   // Draw only pages near the screen; a drawn page is a few megabytes.
   useEffect(() => {
@@ -179,6 +195,10 @@ function PdfPage({
     (async () => {
       const pdfPage = await doc.getPage(number + 1);
       if (cancelled || !box.current) return;
+      if (unread) {
+        const v = pdfPage.getViewport({ scale: 1 });
+        setOwnSize({ w: v.width, h: v.height });
+      }
       const cssWidth = box.current.clientWidth;
       const scale = (cssWidth / pdfPage.getViewport({ scale: 1 }).width) * Math.min(window.devicePixelRatio || 1, 2);
       const viewport = pdfPage.getViewport({ scale });
@@ -194,8 +214,9 @@ function PdfPage({
       el.width = 0;
       el.height = 0;
     };
-  }, [near, doc, number]);
+  }, [near, doc, number, unread]);
 
+  const size = page ?? ownSize ?? guess;
   return (
     <div
       ref={(el) => {
@@ -204,10 +225,15 @@ function PdfPage({
       }}
       data-page={number + 1}
       className="relative w-full bg-white shadow-sm"
-      style={{ aspectRatio: `${page.w} / ${page.h}` }}
+      style={{ aspectRatio: `${size.w} / ${size.h}` }}
     >
       <canvas ref={canvas} className="absolute inset-0 h-full w-full" aria-label={`Page ${number + 1}`} />
-      {page.hot.map(([x0, y0, x1, y1, node, kind], i) => {
+      {unread && (
+        <span className="absolute left-2 top-2 rounded-pill bg-ink-card/90 px-2.5 py-1 text-[12px] text-ink-muted shadow-sm">
+          Moves on this page light up once it&apos;s read
+        </span>
+      )}
+      {page?.hot.map(([x0, y0, x1, y1, node, kind], i) => {
         const on = node === current;
         const pad = kind === 0 ? 0 : 1.5;
         return (
@@ -230,10 +256,10 @@ function PdfPage({
                     : "border-b-2 border-accent bg-accent/10 hover:bg-accent/30"
             }`}
             style={{
-              left: `${((x0 - pad) / page.w) * 100}%`,
-              top: `${((y0 - pad) / page.h) * 100}%`,
-              width: `${((x1 - x0 + 2 * pad) / page.w) * 100}%`,
-              height: `${((y1 - y0 + 2 * pad) / page.h) * 100}%`,
+              left: `${((x0 - pad) / size.w) * 100}%`,
+              top: `${((y0 - pad) / size.h) * 100}%`,
+              width: `${((x1 - x0 + 2 * pad) / size.w) * 100}%`,
+              height: `${((y1 - y0 + 2 * pad) / size.h) * 100}%`,
             }}
           />
         );
@@ -429,11 +455,13 @@ export function BookReader({
   /** Above the reader: the trial's time left. */
   above?: React.ReactNode;
 }) {
-  const title = source.kind === "own" ? source.book.title : source.title;
-  const sha256 = source.kind === "own" ? source.book.sha256 : source.sha256;
+  // The account's or the guest's book, as the page last heard; null for a demo book.
+  const book = source.kind === "public" ? null : source.book;
+  const title = source.kind === "public" ? source.title : source.book.title;
+  const sha256 = source.kind === "public" ? source.sha256 : source.book.sha256;
   // Primitives, so a parent re-rendering with a fresh `source` object does
   // not fetch the book again.
-  const publicId = source.kind === "own" ? source.book.publicId : source.kind === "guest" ? source.publicId : null;
+  const publicId = book?.publicId ?? null;
   const guestKey = source.kind === "guest" ? source.key : null;
   const slug = source.kind === "public" ? source.slug : null;
   const id = publicId ?? `public:${slug}`;
@@ -518,6 +546,20 @@ export function BookReader({
       void task?.destroy();
     };
   }, [file]);
+
+  // Still being read: when the server's index covers more pages than this
+  // one, fetch it again. Retried on the page's next poll if it fails.
+  const loadedPages = index?.pages.length ?? 0;
+  const refreshing = useRef(false);
+  useEffect(() => {
+    if (!book || publicId === null || index === null || book.indexedPages <= loadedPages || refreshing.current) return;
+    refreshing.current = true;
+    (guestKey !== null ? guestBookReader(publicId, guestKey) : api.getBookReader(publicId))
+      .then(setIndex, () => undefined)
+      .finally(() => (refreshing.current = false));
+  }, [book, publicId, guestKey, index, loadedPages]);
+
+  useBookOpened(Boolean(index && doc), "reader", source.kind === "own" ? "account" : source.kind === "guest" ? "guest" : "demo");
 
   // where each node's highlight is, to bring it into view
   const placeOf = useMemo(() => {
@@ -720,11 +762,17 @@ export function BookReader({
     else pageEls.current.delete(n);
   }, []);
 
+  // Every page there will be, read yet or not: the whole book, or as far as
+  // it is read (a guest's first 50 pages); a demo book, its index.
+  const totalPages = doc && index ? Math.min(doc.numPages, Math.max(loadedPages, book?.pageCount ?? 0)) : 0;
+  const reading = book !== null && isConverting(book) && loadedPages < totalPages;
+
   const jump = (value: string) => {
     const n = Number(value);
-    if (n >= 1 && index && n <= index.pages.length) pageEls.current.get(n - 1)?.scrollIntoView({ block: "start" });
+    if (n >= 1 && n <= totalPages) pageEls.current.get(n - 1)?.scrollIntoView({ block: "start" });
   };
 
+  if (book?.status === "failed") return <p className="py-16 text-center text-sm text-red-600">{book.error || "This book could not be read."}</p>;
   if (error) return <p className="py-16 text-center text-sm text-red-600">{error}</p>;
   // Not on this device (another browser, or its storage cleared): ask for it.
   if (file === null && source.kind !== "public") return <OpenYourCopy book={{ title, sha256 }} onFile={setFile} />;
@@ -756,24 +804,39 @@ export function BookReader({
           <input
             type="number"
             min={1}
-            max={index.pages.length}
+            max={totalPages}
             key={page}
             defaultValue={page}
             onKeyDown={(e) => e.key === "Enter" && jump((e.target as HTMLInputElement).value)}
             onBlur={(e) => jump(e.target.value)}
             className="w-16 rounded-md border border-ink-line bg-ink-canvas px-2 py-1 text-ink-text"
           />
-          <span className="tabular-nums">of {index.pages.length}</span>
+          <span className="tabular-nums">of {totalPages}</span>
         </label>
       </header>
+      {reading && book && (
+        <p aria-live="polite" className="rounded-lg bg-ink-card px-4 py-2 text-[13px] leading-relaxed text-ink-muted">
+          Pages 1–{loadedPages} are ready: tap a move or a diagram. We&apos;re still reading the rest (page{" "}
+          {Math.min(book.pagesDone + 1, book.pageCount)} of {book.pageCount}), and its moves light up as we go.
+        </p>
+      )}
 
       <div className="grid gap-6 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div ref={pane} data-book-pane className="lg:h-full lg:overflow-y-scroll lg:rounded-xl lg:pr-2 lg:shown-scrollbar">
           <main className="mx-auto flex w-full max-w-[780px] flex-col gap-7 lg:py-1">
-            {index.pages.map((p, i) => (
-              <PdfPage key={i} doc={doc} number={i} page={p} current={current} onPick={pick} register={register} />
+            {Array.from({ length: totalPages }, (_, i) => (
+              <PdfPage
+                key={i}
+                doc={doc}
+                number={i}
+                page={index.pages[i] ?? null}
+                guess={index.pages[Math.min(i, loadedPages - 1)]}
+                current={current}
+                onPick={pick}
+                register={register}
+              />
             ))}
-            {index.pages.length < doc.numPages && partNote && (
+            {totalPages < doc.numPages && partNote && (
               <aside className="rounded-xl bg-ink-card p-6 text-[15px] leading-relaxed text-ink-muted">{partNote}</aside>
             )}
           </main>

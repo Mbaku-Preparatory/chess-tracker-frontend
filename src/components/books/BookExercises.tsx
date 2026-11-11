@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import { PageHeader } from "@/components/ui/PageHeader";
+import { useBookOpened, type BookReaderKind } from "@/hooks/useBookOpened";
 import type { BookDetail } from "@/lib/books";
 
 /**
@@ -12,17 +13,21 @@ import type { BookDetail } from "@/lib/books";
  */
 export function BookExercises({
   book,
+  who,
   hrefFor,
   actions,
   above,
 }: {
   book: BookDetail;
+  /** Whose book it is, for the "Book opened" count. */
+  who: BookReaderKind;
   hrefFor: (number: number) => string;
   /** Beside "Start solving": the app's PGN download. */
   actions?: React.ReactNode;
   /** Above the header: the trial's time left. */
   above?: React.ReactNode;
 }) {
+  useBookOpened(true, "exercises", who);
   const stopped = book.exercises.filter((e) => !e.verified);
   const first = book.exercises[0]?.number;
 

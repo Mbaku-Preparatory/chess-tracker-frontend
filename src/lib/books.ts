@@ -26,6 +26,10 @@ export type Book = {
   progress: number | null;
   pageCount: number;
   pagesDone: number;
+  /** Pages of a reader book that can be read so far: it opens after the
+   * first few, while the worker reads on (books/services/processing.py), and
+   * the reader fetches the index again as this grows. pageCount once done. */
+  indexedPages: number;
   diagramCount: number;
   moveCount: number;
   notifyEmail: boolean;
@@ -58,11 +62,20 @@ export type BookExercise = {
 };
 
 const BOOK_FIELDS =
-  "publicId title status error kind exerciseCount verifiedCount progress pageCount pagesDone diagramCount moveCount notifyEmail sha256 createdAt pdfPageCount readInPart";
+  "publicId title status error kind exerciseCount verifiedCount progress pageCount pagesDone indexedPages diagramCount moveCount notifyEmail sha256 createdAt pdfPageCount readInPart";
 
 const query = gql;
 
 export const isConverting = (b: Pick<Book, "status">) => b.status === "pending" || b.status === "running";
+
+/** Whether a book can be opened: once it is done, or a reader book as soon
+ * as its first pages are (the rest light up while it is being read). An
+ * exercise book is converted in one go, so it waits for the end. */
+export const canOpen = (b: Pick<Book, "status" | "kind" | "indexedPages">) =>
+  b.status === "succeeded" || (b.kind === "reader" && isConverting(b) && b.indexedPages > 0);
+
+/** How often a page asks again about a book being converted. */
+export const BOOK_POLL_MS = 3000;
 
 export async function myBooks(): Promise<Book[]> {
   return (await query<{ myBooks: Book[] }>(`{ myBooks { ${BOOK_FIELDS} } }`)).myBooks;

@@ -18,9 +18,8 @@ import { TutorialLink } from "@/components/tutorials/TutorialLink";
 import { api } from "@/lib/api";
 import { userMessage, wasAborted } from "@/lib/apiError";
 import { bookFile, forgetBookFile, keepBookFile, sha256Of } from "@/lib/bookFiles";
-import { deleteBook, isConverting, myBooks, type Book } from "@/lib/books";
-
-const POLL_MS = 3000;
+import { useRepeatWhile } from "@/hooks/useRepeatWhile";
+import { BOOK_POLL_MS, canOpen, deleteBook, isConverting, myBooks, type Book } from "@/lib/books";
 
 const n = (x: number) => x.toLocaleString("en");
 
@@ -57,12 +56,7 @@ export default function BooksPage() {
   }, [load]);
 
   // While a book converts, ask again every few seconds.
-  const converting = books?.some(isConverting) ?? false;
-  useEffect(() => {
-    if (!converting) return;
-    const timer = window.setInterval(() => void load(), POLL_MS);
-    return () => window.clearInterval(timer);
-  }, [converting, load]);
+  useRepeatWhile(books?.some(isConverting) ?? false, () => void load(), BOOK_POLL_MS);
 
   async function upload(file: File) {
     const controller = new AbortController();
@@ -188,7 +182,7 @@ export default function BooksPage() {
               className="flex flex-col gap-3 rounded-xl border border-gray-200 p-4 dark:border-dark-border sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="min-w-0 flex-1">
-                {book.status === "succeeded" ? (
+                {canOpen(book) ? (
                   <Link href={`/books/${book.publicId}`} className="font-semibold text-gray-900 hover:text-brand-600 dark:text-gray-100">
                     {book.title}
                   </Link>
@@ -207,6 +201,12 @@ export default function BooksPage() {
                 )}
               </div>
               <div className="flex shrink-0 gap-2">
+                {/* A reader book opens after its first pages; the rest light up as they are read. */}
+                {isConverting(book) && canOpen(book) && (
+                  <Link href={`/books/${book.publicId}`} className="rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-700">
+                    Start reading
+                  </Link>
+                )}
                 {book.status === "succeeded" && (
                   <>
                     <Link href={`/books/${book.publicId}`} className="rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-700">
