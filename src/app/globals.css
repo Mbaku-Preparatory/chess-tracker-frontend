@@ -219,6 +219,14 @@
   }
 }
 
+/* The space reserved for an ad (components/public/AdSlot.tsx) is in the
+   server's HTML, so the ad fills it without moving the page. A signed-in
+   browser never shows ads: SIGNED_IN_SCRIPT (lib/auth.ts) marks <html> before
+   the first paint and this hides the space before anyone sees it. */
+html[data-signed-in] [data-ad-space] {
+  display: none;
+}
+
 /* react-chessboard draws its rank/file labels as absolutely positioned spans
    inside each square, while a piece at rest is an ordinary in-flow div. CSS
    paints positioned elements above in-flow ones whatever the DOM order, so the

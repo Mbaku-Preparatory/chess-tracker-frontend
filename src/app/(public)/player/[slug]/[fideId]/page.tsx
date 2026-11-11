@@ -227,6 +227,11 @@ export default async function PublicPlayerPage({ params }: { params: Params }) {
       </section>
       <p className="-mt-6 text-right text-[12px] text-ink-faint">Ranks among active players on FIDE&apos;s latest list</p>
 
+      {/* Under the ratings, where most visitors look. Founder's call
+          (2026-11-11): visitors without an account can have ads high up;
+          account holders never see one. */}
+      <AdSlot />
+
       <div className="grid gap-6 lg:grid-cols-[3fr_2fr]">
         <section className="flex flex-col gap-4 rounded-xl bg-ink-card p-6 sm:p-8" aria-labelledby="history-heading">
           <div>
@@ -255,10 +260,6 @@ export default async function PublicPlayerPage({ params }: { params: Params }) {
           {!player.gamesFetchedAt && <PendingRows label="Waiting for games from chess-results.com…" rows={3} />}
         </section>
       </div>
-
-      {/* Below the charts, far from "Prepare against": an ad must not compete
-          with the offer this page exists to make. */}
-      <AdSlot />
 
       <section id="games" className="flex scroll-mt-24 flex-col gap-4 rounded-xl bg-ink-card p-6 sm:p-8" aria-labelledby="games-heading">
         <div className="flex items-baseline justify-between gap-3">
