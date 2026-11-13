@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     "How Chess Preparatory collects, uses, stores, and deletes your data across the web app and the Android app.",
 };
 
-const LAST_UPDATED = "11 November 2026";
+const LAST_UPDATED = "14 November 2026";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -365,8 +365,11 @@ export default async function PrivacyPolicyPage() {
 
       <Section title="Children">
         <p>
-          The app is not directed at children under 13, and we do not knowingly collect data from
-          them. If you believe a child has created an account, contact us and we will remove it.
+          Chess players of every age use Chess Preparatory, juniors included: they prepare for
+          their games too. We do not ask for your age, and a junior&apos;s account holds the same
+          data as anyone else&apos;s, as described above. If you are a parent or guardian and want
+          your child&apos;s account, or anything we hold about them, removed, contact us and we will
+          remove it.
         </p>
       </Section>
 
