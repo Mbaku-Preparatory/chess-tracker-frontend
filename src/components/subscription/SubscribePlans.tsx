@@ -27,7 +27,7 @@ import { POPULAR_LABEL, POPULAR_PERIOD, usePlanHighlight } from "@/hooks/usePlan
 import { api } from "@/lib/api";
 import { userMessage } from "@/lib/apiError";
 import { annualSaving, formatDate, formatPrice, perMonthOfAnnual } from "@/lib/subscription";
-import { HELP_PATH, helpHref } from "@/lib/support";
+import { helpHref } from "@/lib/support";
 import type { MySubscription, SubscriptionPlan } from "@/types";
 
 const RECHECK_MS = 10_000;
@@ -264,7 +264,7 @@ export function SubscribePlans({ expired, returnedReference }: { expired: boolea
             ? "Pay with M-Pesa or a card. Payments are handled by Paystack."
             : "Pay by card. Payments are handled by Paystack."}{" "}
           Nothing renews automatically: when your time runs out, you choose whether to pay again.{" "}
-          <Link href={`${HELP_PATH}#refunds`} className="font-medium text-brand-600 hover:underline dark:text-brand-400">Refunds</Link>
+          <Link href="/pricing#refunds" className="font-medium text-brand-600 hover:underline dark:text-brand-400">Refunds</Link>
           {" · "}
           <Link href={helpHref(pathname)} className="font-medium text-brand-600 hover:underline dark:text-brand-400">A payment that hasn&apos;t arrived</Link>
         </p>

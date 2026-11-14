@@ -37,10 +37,11 @@ export function whatsappLink(number: string): string {
 /**
  * The help page, remembering the page someone was on: the report form sends
  * it with the report. (A link click inside the app does not change
- * document.referrer, so it travels in the URL.)
+ * document.referrer, so it travels in the URL.) No #anchor: the form is the
+ * whole page, and jumping to it hid the page's title under the sticky navbar.
  */
 export function helpHref(from?: string): string {
-  return from ? `${HELP_PATH}?from=${encodeURIComponent(from)}#report` : HELP_PATH;
+  return from ? `${HELP_PATH}?from=${encodeURIComponent(from)}` : HELP_PATH;
 }
 
 /** What a report is probably about, from the page it came from. */

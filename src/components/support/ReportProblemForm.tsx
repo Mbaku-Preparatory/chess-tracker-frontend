@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { api } from "@/lib/api";
 import { userMessage } from "@/lib/apiError";
@@ -13,6 +13,9 @@ const CATEGORIES: { value: SupportCategory; label: string }[] = [
 ];
 
 const MAX = 4000;
+
+// How long "Sent" stays up before the form is just the form again.
+const SENT_SHOWN_MS = 6000;
 
 // The Settings page's field style, so the form reads as part of the app.
 const FIELD =
@@ -50,12 +53,23 @@ export function ReportProblemForm({ replyHours }: { replyHours: number | null })
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // The reply time the backend promised, once it has the message.
+  // The reply time the backend promised, shown for a few seconds after a send.
   const [sent, setSent] = useState<number | null>(null);
+  // Read after mount: the server render has no URL to read, and a topic
+  // worked out during render stayed on the server's "Something else".
+  const [from, setFrom] = useState("");
+
+  useEffect(() => setFrom(cameFrom()), []);
+
+  useEffect(() => {
+    if (sent === null) return;
+    const t = setTimeout(() => setSent(null), SENT_SHOWN_MS);
+    return () => clearTimeout(t);
+  }, [sent]);
 
   // Said only when the backend said it: a promise is not guessed at.
   const within = replyHours ? ` within ${replyHours} hours` : "";
-  const chosen = category ?? categoryFor(cameFrom());
+  const chosen = category ?? categoryFor(from);
 
   function clear() {
     setCategory(null);
@@ -68,7 +82,9 @@ export function ReportProblemForm({ replyHours }: { replyHours: number | null })
     setSending(true);
     setError(null);
     try {
-      const { reply_hours } = await api.reportProblem({ category: chosen, message: message.trim(), page: cameFrom() });
+      const { reply_hours } = await api.reportProblem({ category: chosen, message: message.trim(), page: from });
+      // The form stays, emptied, so a second message needs no reload.
+      clear();
       setSent(reply_hours);
     } catch (err) {
       setError(userMessage(err, "Couldn't send your message. Please try again."));
@@ -78,61 +94,64 @@ export function ReportProblemForm({ replyHours }: { replyHours: number | null })
   }
 
   return (
-    <div id="report" className="flex scroll-mt-24 flex-col gap-5 border-b border-gray-200 pb-6 dark:border-dark-border">
+    <div className="flex flex-col gap-5">
       <div>
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Send us a message</h2>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Use this form to tell us about a payment, an import, or anything else. A person replies{within}.
         </p>
-      </div>
-
-      {sent !== null ? (
-        <p role="status" className="rounded-lg bg-brand-50 p-4 text-sm text-brand-800 dark:bg-brand-900/20 dark:text-brand-200">
-          Sent. We&apos;ll reply by email within {sent} hours, and a copy of your message is in your inbox.
-        </p>
-      ) : (
-        <form onSubmit={send} className="flex max-w-[580px] flex-col gap-4">
-          {error && (
-            <p role="alert" className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
-              {error}
+        {/* Always in the page, so a screen reader announces the text when it
+            appears; inside the heading block so, empty, it adds no gap. */}
+        <div role="status" aria-live="polite">
+          {sent !== null && (
+            <p className="mt-4 rounded-lg border border-brand-200 bg-brand-50 p-4 text-sm text-brand-800 dark:border-brand-800 dark:bg-brand-900/20 dark:text-brand-200">
+              Sent. We&apos;ll reply by email within {sent} hours, and a copy of your message is in your inbox.
             </p>
           )}
-          <Row label="Topic" htmlFor="report-topic">
-            <select
-              id="report-topic"
-              value={chosen}
-              onChange={(e) => setCategory(e.target.value as SupportCategory)}
-              className={FIELD}
-            >
-              {CATEGORIES.map((c) => (
-                <option key={c.value} value={c.value}>{c.label}</option>
-              ))}
-            </select>
-          </Row>
-          <Row label="Message" htmlFor="report-message">
-            <textarea
-              id="report-message"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              required
-              maxLength={MAX}
-              rows={6}
-              placeholder={chosen === "payment" ? "What happened, and the reference on your payment receipt if you have it." : "Message ..."}
-              className={FIELD}
-            />
-          </Row>
-          <div className="mt-2 flex flex-col items-center gap-3">
-            <button type="submit" disabled={sending || !message.trim()} className="btn-primary w-full shadow-md disabled:opacity-60 sm:w-4/5">
-              {sending ? "Sending…" : "Send Message"}
+        </div>
+      </div>
+
+      <form onSubmit={send} className="flex max-w-[580px] flex-col gap-4">
+        {error && (
+          <p role="alert" className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
+            {error}
+          </p>
+        )}
+        <Row label="Topic" htmlFor="report-topic">
+          <select
+            id="report-topic"
+            value={chosen}
+            onChange={(e) => setCategory(e.target.value as SupportCategory)}
+            className={FIELD}
+          >
+            {CATEGORIES.map((c) => (
+              <option key={c.value} value={c.value}>{c.label}</option>
+            ))}
+          </select>
+        </Row>
+        <Row label="Message" htmlFor="report-message">
+          <textarea
+            id="report-message"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            required
+            maxLength={MAX}
+            rows={6}
+            placeholder={chosen === "payment" ? "What happened, and the reference on your payment receipt if you have it." : "Message ..."}
+            className={FIELD}
+          />
+        </Row>
+        <div className="mt-2 flex flex-col items-center gap-3">
+          <button type="submit" disabled={sending || !message.trim()} className="btn-primary w-full shadow-md disabled:opacity-60 sm:w-4/5">
+            {sending ? "Sending…" : "Send Message"}
+          </button>
+          {message && (
+            <button type="button" onClick={clear} className="btn-secondary w-full shadow-md sm:w-4/5">
+              Cancel
             </button>
-            {message && (
-              <button type="button" onClick={clear} className="btn-secondary w-full shadow-md sm:w-4/5">
-                Cancel
-              </button>
-            )}
-          </div>
-        </form>
-      )}
+          )}
+        </div>
+      </form>
     </div>
   );
 }
