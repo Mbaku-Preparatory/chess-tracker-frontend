@@ -16,7 +16,6 @@ import { BotGame } from "./BotGame";
 import { BotSetup, defaultBotElo, startingColor, type BotColor as Color } from "./BotSetup";
 import { TutorialLink } from "@/components/tutorials/TutorialLink";
 import { BACK_BUTTON, BackLabel } from "@/components/ui/BackLink";
-import { markOnboardingStep } from "@/lib/onboarding";
 
 /**
  * "Play <player> bot": pick a colour and a strength (their FIDE rating to
@@ -201,10 +200,7 @@ export function PlayBotView({ slug }: { slug: string }) {
         onColorChange={setColor}
         elo={elo}
         onEloChange={setElo}
-        onPlay={() => {
-          markOnboardingStep("play_bot");
-          setPlaying(true);
-        }}
+        onPlay={() => setPlaying(true)}
         emptyHint={
           <>
             <Link href={`/players/${slug}/import`} className="text-accent-soft underline">

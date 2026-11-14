@@ -21,8 +21,8 @@ const LINKS = [
   { href: "/home", label: "My Opponents" },
   // the user's own chess books: exercises, or a reader for scans
   { href: "/books", label: "Books" },
-  // No Tutorials tab (founder, 2026-11-14). /learn still works by URL, and
-  // each screen keeps its own "Watch how" link (components/tutorials).
+  // No Tutorials tab (founder, 2026-11-14): each screen keeps its own
+  // "Watch how" link (components/tutorials), and visitors have /tutorials.
 ];
 
 export function Navbar() {

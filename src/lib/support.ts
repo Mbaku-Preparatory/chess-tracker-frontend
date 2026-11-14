@@ -1,6 +1,6 @@
 /**
- * How a user reaches a person. The address, the WhatsApp number, the reply
- * time and the refund days all come from the backend (support/contact.py), so
+ * How a user reaches a person. The address, the reply time and the refund
+ * days all come from the backend (support/contact.py), so
  * changing any of them is a Railway variable, never a copy edited here.
  */
 
@@ -10,15 +10,13 @@ export const HELP_PATH = "/help";
 
 export type SupportContact = {
   email: string;
-  /** Digits, international format; "" when there is no WhatsApp number. */
-  whatsapp: string;
   replyHours: number;
   refundDays: number;
 };
 
 export type SupportCategory = "payment" | "import" | "other";
 
-const QUERY = "{ supportContact { email whatsapp replyHours refundDays } }";
+const QUERY = "{ supportContact { email replyHours refundDays } }";
 
 /** Null when the backend could not answer; the next revalidation tries again. */
 export async function fetchSupportContact(): Promise<SupportContact | null> {
@@ -28,10 +26,6 @@ export async function fetchSupportContact(): Promise<SupportContact | null> {
   } catch {
     return null;
   }
-}
-
-export function whatsappLink(number: string): string {
-  return `https://wa.me/${number}?text=${encodeURIComponent("Hi, I need help with Chess Preparatory.")}`;
 }
 
 /**
