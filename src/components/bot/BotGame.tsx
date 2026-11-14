@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Avatar } from "@/components/avatar/Avatar";
 import { AuthLink } from "@/components/public/AuthLink";
+import { BACK_BUTTON, BackLabel } from "@/components/ui/BackLink";
 import { useBotEngine } from "@/hooks/useBotEngine";
 import { BOOK_MOVES, BOOK_PLIES, bookMoves, buildBook, gamesOnLine, pickBookMove, type Book, type BookMove } from "@/lib/bot/book";
 import { buildPgn, pgnFilename } from "@/lib/chess/pgn";
@@ -455,12 +456,9 @@ export function BotGame({
         <button
           type="button"
           onClick={() => window.history.back()}
-          className="hidden shrink-0 items-center gap-1.5 rounded-pill border-2 border-accent px-3.5 py-1.5 text-[14px] font-[520] text-accent-soft hover:bg-accent hover:text-accent-on sm:inline-flex"
+          className={`hidden sm:inline-flex ${BACK_BUTTON}`}
         >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-          Back
+          <BackLabel />
         </button>
         <div className="min-w-0 sm:pt-0.5">
           {/* The public page has its own h1 above this. */}
