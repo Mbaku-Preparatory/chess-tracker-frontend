@@ -105,7 +105,7 @@ export function ReportProblemForm({ replyHours }: { replyHours: number | null })
         <div role="status" aria-live="polite">
           {sent !== null && (
             <p className="mt-4 rounded-lg border border-brand-200 bg-brand-50 p-4 text-sm text-brand-800 dark:border-brand-800 dark:bg-brand-900/20 dark:text-brand-200">
-              Sent. We&apos;ll reply to your email address within {sent} hours, and we&apos;ve emailed you a copy of your message.
+              Sent. We&apos;ll reply to your email address within {sent} hours.
             </p>
           )}
         </div>
