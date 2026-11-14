@@ -8,7 +8,6 @@ import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { fetchPlayerDetail } from "@/redux/actions/playerDetail";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { TutorialLink } from "@/components/tutorials/TutorialLink";
-import { markOnboardingStep } from "@/lib/onboarding";
 import { CardSkeleton } from "@/components/ui/LoadingSkeleton";
 import { PrepSummaryPanel } from "@/components/players/PrepSummaryPanel";
 import { OpeningStudyPlan } from "@/components/players/OpeningStudyPlan";
@@ -35,11 +34,6 @@ export function PlayerPrepView({ slug }: { slug: string }) {
   const { preferences } = usePreferences();
   const mbaku = preferences.mbaku_enabled;
   const shown: PrepTab = tab === "ask" && !mbaku ? "tree" : tab;
-
-  // The "Getting started" step: seeing an opening tree once is enough.
-  useEffect(() => {
-    if (shown === "tree" && player) markOnboardingStep("open_tree");
-  }, [shown, player]);
 
   if (playerLoading) {
     return (
