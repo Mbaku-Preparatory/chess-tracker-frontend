@@ -7,23 +7,18 @@ import { billingQuestions } from "@/lib/billingQuestions";
 import { DEFAULT_ASSISTANT_QUESTIONS, DEFAULT_TRIAL_DAYS, fetchPublicPricing } from "@/lib/pricing";
 import { fetchSupportContact, whatsappLink } from "@/lib/support";
 
-const TITLE = "Help | Chess Preparatory";
-const DESCRIPTION =
-  "Answers about payments, refunds, imports and your account, and how to reach us: WhatsApp, email, or Report a problem from your account.";
-
+// Signed-in only (founder, 2026-11-14), so not for search engines either.
 export const metadata: Metadata = {
-  title: TITLE,
-  description: DESCRIPTION,
-  alternates: { canonical: "/help" },
-  openGraph: { title: TITLE, description: DESCRIPTION, url: "/help", type: "website", siteName: "Chess Preparatory" },
+  title: "Help | Chess Preparatory",
+  robots: { index: false, follow: false },
 };
 
-const LINK = "text-ink-text underline decoration-ink-line underline-offset-4 hover:text-accent-soft";
+const LINK = "font-medium text-brand-600 hover:underline dark:text-brand-400";
 
 function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (
-    <section id={id} aria-labelledby={`${id}-heading`} className="flex scroll-mt-24 flex-col gap-8">
-      <h2 id={`${id}-heading`} className="text-[28px] font-[480] leading-[1.2] tracking-[0.015em] sm:text-[32px]">
+    <section id={id} aria-labelledby={`${id}-heading`} className="card scroll-mt-24 p-6">
+      <h2 id={`${id}-heading`} className="mb-5 text-lg font-semibold text-gray-900 dark:text-gray-100">
         {title}
       </h2>
       {children}
@@ -77,10 +72,11 @@ function accountQuestions(assistantQuestions: number): Question[] {
 }
 
 /**
- * Help: a message form first (laid out like Bomahut's), then the email and
- * WhatsApp, then answers to what people ask most. Public, so it works signed out, for
- * someone whose access has run out, and as the support page Google Play asks
- * for. The contact details come from the backend (lib/support.ts).
+ * Help, inside the signed-in app: the message form first (laid out like
+ * Bomahut's), then the email and WhatsApp, then answers to what people ask
+ * most. Reachable after access has run out (lib/subscription.ts,
+ * isOpenWithoutAccess). The contact details come from the backend
+ * (lib/support.ts).
  */
 export default async function HelpPage() {
   const [contact, pricing] = await Promise.all([fetchSupportContact(), fetchPublicPricing("")]);
@@ -90,9 +86,10 @@ export default async function HelpPage() {
       q: "I paid, but my access hasn't started",
       a: (
         <>
-          M-Pesa can take a minute or two. Open <Link href="/subscribe" className={LINK}>Subscribe</Link> and press
-          “I&apos;ve already paid” to check again. If it still hasn&apos;t arrived after ten minutes, send us a message
-          above with your M-Pesa confirmation code: you won&apos;t be charged twice, and nothing is lost.
+          A payment can take a minute or two to arrive. Open <Link href="/subscribe" className={LINK}>Subscribe</Link>{" "}
+          and press “I&apos;ve already paid” to check again. If it still hasn&apos;t arrived after ten minutes, send us
+          a message above with the reference on your payment receipt: you won&apos;t be charged twice, and nothing is
+          lost.
         </>
       ),
     },
@@ -100,36 +97,27 @@ export default async function HelpPage() {
   ];
 
   return (
-    <div className="flex flex-col gap-[72px] py-10 sm:gap-24 sm:py-16">
-      <section className="flex flex-col gap-10">
-        <div className="flex flex-col items-start gap-4">
-          <p className="text-[13px] uppercase tracking-[0.1em] text-accent-soft">Help</p>
-          <h1 className="max-w-[18ch] text-balance text-[42px] font-[480] leading-[1.08] tracking-[0.01em] sm:text-[60px]">
-            How can we help?
-          </h1>
-        </div>
+    <div className="mx-auto flex max-w-4xl flex-col gap-6">
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Help</h1>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Send us a message, or find your answer below.</p>
+      </div>
+
+      <section className="card p-6">
         <ReportProblemForm replyHours={contact?.replyHours ?? null} />
         {contact && (
-          <div className="flex flex-col gap-4">
-            <p className="max-w-[60ch] text-[16px] leading-[1.55] text-ink-muted">
-              Or reach us directly. For a payment, your M-Pesa confirmation code or the email you paid with lets us
-              find it straight away.
+          <div className="mt-6 flex flex-col gap-3">
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              Or reach us directly. For a payment, the reference on your receipt or the email you paid with lets us find
+              it straight away.
             </p>
             <div className="flex flex-wrap gap-3">
               {contact.whatsapp && (
-                <a
-                  href={whatsappLink(contact.whatsapp)}
-                  target="_blank"
-                  rel="noopener"
-                  className="rounded-pill bg-accent px-6 py-3 text-[16px] font-[480] text-accent-on hover:bg-accent-soft"
-                >
+                <a href={whatsappLink(contact.whatsapp)} target="_blank" rel="noopener" className="btn-primary">
                   WhatsApp us
                 </a>
               )}
-              <a
-                href={`mailto:${contact.email}?subject=${encodeURIComponent("Chess Preparatory help")}`}
-                className="rounded-pill border border-ink-text/80 px-6 py-3 text-[16px] text-ink-text hover:bg-ink-raised"
-              >
+              <a href={`mailto:${contact.email}?subject=${encodeURIComponent("Chess Preparatory help")}`} className="btn-secondary">
                 {contact.email}
               </a>
             </div>

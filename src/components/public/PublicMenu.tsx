@@ -37,7 +37,6 @@ export function PublicMenu() {
     { href: "/chess-personality", label: "Chess personality" },
     { href: "/tutorials", label: "Tutorials" },
     { href: "/pricing", label: "Pricing" },
-    { href: "/help", label: "Help" },
   ];
 
   return (

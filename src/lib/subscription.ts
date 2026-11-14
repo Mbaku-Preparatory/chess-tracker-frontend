@@ -6,6 +6,8 @@
  * endpoint answers 402 once access has run out. Both end up here.
  */
 
+import { HELP_PATH } from "./support";
+
 export const SUBSCRIPTION_EXPIRED_PATH = "/subscription-expired";
 export const SUBSCRIBE_PATH = "/subscribe";
 export const BILLING_PATH = "/billing";
@@ -16,7 +18,7 @@ export const BILLING_PATH = "/billing";
  * sends them to SUBSCRIPTION_EXPIRED_PATH.
  */
 export function isOpenWithoutAccess(pathname: string): boolean {
-  return [SUBSCRIPTION_EXPIRED_PATH, SUBSCRIBE_PATH, BILLING_PATH, "/settings", "/support"].includes(pathname);
+  return [SUBSCRIPTION_EXPIRED_PATH, SUBSCRIBE_PATH, BILLING_PATH, "/settings", "/support", HELP_PATH].includes(pathname);
 }
 
 let redirecting = false;

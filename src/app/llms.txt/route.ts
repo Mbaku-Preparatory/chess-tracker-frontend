@@ -52,7 +52,6 @@ export function GET() {
 - [Tutorials](${SITE_URL}/tutorials): six short videos on preparing for an opponent with the app
 - [Pricing](${SITE_URL}/pricing): the free trial, and the monthly and yearly prices by region
 - [Sitemap](${SITE_URL}/sitemap.xml): every active player's profile
-- [Help](${SITE_URL}/help): answers about payments, refunds, imports and accounts, and how to reach us
 - [Privacy policy](${SITE_URL}/privacy)
 `;
   return new Response(text, { headers: { "Content-Type": "text/plain; charset=utf-8" } });
