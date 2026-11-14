@@ -3,10 +3,9 @@
 import { Chess } from "chess.js";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { hasInAppHistory } from "@/components/NavigationMemory";
+import { BackLink } from "@/components/ui/BackLink";
 import { EvalBar } from "@/components/ui/EvalBar";
 import { DEPTHS, useAnalysisPrefs } from "@/lib/analysisPrefs";
 import { api } from "@/lib/api";
@@ -59,30 +58,6 @@ export interface AnalysisViewProps {
 }
 
 const clean = (san: string) => san.replace(/[+#!?]/g, "");
-
-function BackButton({ href }: { href: string }) {
-  const router = useRouter();
-  return (
-    <Link
-      href={href}
-      // Opened from inside the site: back is exactly the browser's back, so
-      // the list comes back where it was. Landed on directly: go where the
-      // button says, rather than off the site.
-      onClick={(e) => {
-        if (hasInAppHistory()) {
-          e.preventDefault();
-          router.back();
-        }
-      }}
-      className="hidden shrink-0 items-center gap-1.5 rounded-pill border-2 border-accent px-3.5 py-1.5 text-[14px] font-[520] text-accent-soft hover:bg-accent hover:text-accent-on sm:inline-flex"
-    >
-      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-      </svg>
-      Back
-    </Link>
-  );
-}
 
 function Plate({ side, color }: { side: AnalysisSide; color: "white" | "black" }) {
   return (
@@ -332,7 +307,7 @@ export function AnalysisView(props: AnalysisViewProps) {
 
       {/* A phone has its own back, so there is no Back button there. */}
       <header className="flex flex-col items-start gap-3 sm:flex-row">
-        <BackButton href={back.href} />
+        <BackLink href={back.href} hideOnPhone />
         <div className="min-w-0 sm:pt-0.5">
           <h1 className="text-balance text-[18px] font-[520] leading-tight text-ink-text sm:text-[22px]">{title}</h1>
           <p className="mt-1 flex flex-wrap gap-x-3 text-[13px] text-ink-faint">
