@@ -21,9 +21,8 @@ const LINKS = [
   { href: "/home", label: "My Opponents" },
   // the user's own chess books: exercises, or a reader for scans
   { href: "/books", label: "Books" },
-  // short videos of each feature (lib/tutorials.ts), inside the app; the
-  // public /tutorials has the same videos for visitors
-  { href: "/learn", label: "Tutorials" },
+  // No Tutorials tab (founder, 2026-11-14). /learn still works by URL, and
+  // each screen keeps its own "Watch how" link (components/tutorials).
 ];
 
 export function Navbar() {

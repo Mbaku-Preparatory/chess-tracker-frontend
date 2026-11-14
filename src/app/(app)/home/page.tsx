@@ -16,7 +16,6 @@ import {
   type PlayerOrdering,
 } from "@/redux/actions/players";
 import type { Player } from "@/types";
-import { GettingStarted } from "@/components/onboarding/GettingStarted";
 
 const PAGE_SIZE = 25;
 const PLAYER_VIEW_STORAGE_KEY = "players_view_mode";
@@ -163,8 +162,6 @@ export default function HomePage() {
 
   return (
     <div>
-      <GettingStarted />
-
       {/* Opponents — a plain heading. The list is the point of the page, so
           there is nothing to collapse it into. */}
       <div className="mb-6">
