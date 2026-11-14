@@ -34,7 +34,7 @@ function Section({ id, title, children }: { id: string; title: string; children:
 const IMPORTS: Question[] = [
   {
     q: "My import is stuck",
-    a: "Imports run one at a time for everyone, so yours may be waiting behind another; the import page says when it is queued. A large one (All games) can take ten minutes or more, and you can close the page: tick “Email me when it's done” and we'll tell you. If it hasn't moved in half an hour, report it below.",
+    a: "Imports run one at a time for everyone, so yours may be waiting behind another; the import page says when it is queued. A large one (All games) can take ten minutes or more, and you can close the page: tick “Email me when it's done” and we'll tell you. If it hasn't moved in half an hour, send us a message above.",
   },
   {
     q: "An import found 0 games",
@@ -77,14 +77,13 @@ function accountQuestions(assistantQuestions: number): Question[] {
 }
 
 /**
- * Help: answers first, then a person. Public, so it works signed out, for
+ * Help: a message form first (laid out like Bomahut's), then the email and
+ * WhatsApp, then answers to what people ask most. Public, so it works signed out, for
  * someone whose access has run out, and as the support page Google Play asks
  * for. The contact details come from the backend (lib/support.ts).
  */
 export default async function HelpPage() {
   const [contact, pricing] = await Promise.all([fetchSupportContact(), fetchPublicPricing("")]);
-  // Said only when the backend said it: a promise is not guessed at.
-  const within = contact ? ` within ${contact.replyHours} hours` : "";
 
   const payments: Question[] = [
     {
@@ -92,8 +91,8 @@ export default async function HelpPage() {
       a: (
         <>
           M-Pesa can take a minute or two. Open <Link href="/subscribe" className={LINK}>Subscribe</Link> and press
-          “I&apos;ve already paid” to check again. If it still hasn&apos;t arrived after ten minutes, report it below
-          with your M-Pesa confirmation code: you won&apos;t be charged twice, and nothing is lost.
+          “I&apos;ve already paid” to check again. If it still hasn&apos;t arrived after ten minutes, send us a message
+          above with your M-Pesa confirmation code: you won&apos;t be charged twice, and nothing is lost.
         </>
       ),
     },
@@ -102,15 +101,40 @@ export default async function HelpPage() {
 
   return (
     <div className="flex flex-col gap-[72px] py-10 sm:gap-24 sm:py-16">
-      <section className="flex flex-col items-start gap-6">
-        <p className="text-[13px] uppercase tracking-[0.1em] text-accent-soft">Help</p>
-        <h1 className="max-w-[18ch] text-balance text-[42px] font-[480] leading-[1.08] tracking-[0.01em] sm:text-[60px]">
-          How can we help?
-        </h1>
-        <p className="max-w-[58ch] text-[18px] leading-[1.5] text-ink-muted">
-          Answers to what people ask most. Still stuck?{" "}
-          <a href="#contact" className={LINK}>Write to us</a>: a person replies{within}.
-        </p>
+      <section className="flex flex-col gap-10">
+        <div className="flex flex-col items-start gap-4">
+          <p className="text-[13px] uppercase tracking-[0.1em] text-accent-soft">Help</p>
+          <h1 className="max-w-[18ch] text-balance text-[42px] font-[480] leading-[1.08] tracking-[0.01em] sm:text-[60px]">
+            How can we help?
+          </h1>
+        </div>
+        <ReportProblemForm replyHours={contact?.replyHours ?? null} />
+        {contact && (
+          <div className="flex flex-col gap-4">
+            <p className="max-w-[60ch] text-[16px] leading-[1.55] text-ink-muted">
+              Or reach us directly. For a payment, your M-Pesa confirmation code or the email you paid with lets us
+              find it straight away.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              {contact.whatsapp && (
+                <a
+                  href={whatsappLink(contact.whatsapp)}
+                  target="_blank"
+                  rel="noopener"
+                  className="rounded-pill bg-accent px-6 py-3 text-[16px] font-[480] text-accent-on hover:bg-accent-soft"
+                >
+                  WhatsApp us
+                </a>
+              )}
+              <a
+                href={`mailto:${contact.email}?subject=${encodeURIComponent("Chess Preparatory help")}`}
+                className="rounded-pill border border-ink-text/80 px-6 py-3 text-[16px] text-ink-text hover:bg-ink-raised"
+              >
+                {contact.email}
+              </a>
+            </div>
+          </div>
+        )}
       </section>
 
       <Section id="payments" title="Payments and your plan">
@@ -123,37 +147,6 @@ export default async function HelpPage() {
 
       <Section id="account" title="Your account">
         <QuestionList questions={accountQuestions(pricing?.assistantMonthlyQuestions ?? DEFAULT_ASSISTANT_QUESTIONS)} />
-      </Section>
-
-      <Section id="contact" title="Still need help?">
-        <p className="max-w-[60ch] text-[16px] leading-[1.55] text-ink-muted">
-          A person replies{within}. For a payment, your M-Pesa confirmation code or the email you paid with lets us
-          find it straight away.
-        </p>
-        {contact && (
-          <div className="flex flex-wrap gap-3">
-            {contact.whatsapp && (
-              <a
-                href={whatsappLink(contact.whatsapp)}
-                target="_blank"
-                rel="noopener"
-                className="rounded-pill bg-accent px-6 py-3 text-[16px] font-[480] text-accent-on hover:bg-accent-soft"
-              >
-                WhatsApp us
-              </a>
-            )}
-            <a
-              href={`mailto:${contact.email}?subject=${encodeURIComponent("Chess Preparatory help")}`}
-              className="rounded-pill border border-ink-text/80 px-6 py-3 text-[16px] text-ink-text hover:bg-ink-raised"
-            >
-              {contact.email}
-            </a>
-          </div>
-        )}
-        <div id="report" className="flex scroll-mt-24 flex-col gap-4">
-          <h3 className="text-[21px] font-[480]">Report a problem</h3>
-          <ReportProblemForm />
-        </div>
       </Section>
     </div>
   );
