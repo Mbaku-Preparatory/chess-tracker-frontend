@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { revalidatePlayer } from "@/app/(public)/player/actions";
+import { useT } from "@/hooks/useT";
+import { msg } from "@/lib/i18n";
 import { graphqlPost } from "@/lib/publicGraphql";
 
 const POLL_EVERY_MS = 3000;
@@ -23,8 +25,8 @@ type PartState = "fetching" | "done" | "ready";
 type Phase = "working" | "slow" | "stopped" | "hidden";
 
 const PARTS: { key: Part; label: string; source: string }[] = [
-  { key: "history", label: "Rating history", source: "FIDE" },
-  { key: "games", label: "Games", source: "chess-results.com" },
+  { key: "history", label: msg("Rating history"), source: "FIDE" },
+  { key: "games", label: msg("Games"), source: "chess-results.com" },
 ];
 
 /** A failed request is a miss, not an error: the poll asks again. */
@@ -54,6 +56,7 @@ export function ProfileRefresher({
   queued: boolean;
 }) {
   const router = useRouter();
+  const t = useT();
   // Missing is always stale too, so the panel shows exactly when a part is
   // missing, and the first render needs no clock (it must match the server's).
   const missing = historyFetchedAt == null || gamesFetchedAt == null;
@@ -143,16 +146,16 @@ export function ProfileRefresher({
 
   const heading =
     phase === "stopped"
-      ? "This player's data could not be fetched right now"
+      ? t("This player's data could not be fetched right now")
       : phase === "slow"
-        ? "Still fetching: this is taking longer than usual"
-        : "Fetching this player's data";
+        ? t("Still fetching: this is taking longer than usual")
+        : t("Fetching this player's data");
   const note =
     phase === "stopped"
-      ? "Ratings and ranks above are current. Rating history and games will be fetched the next time this page is opened."
+      ? t("Ratings and ranks above are current. Rating history and games will be fetched the next time this page is opened.")
       : phase === "slow"
-        ? "You can keep reading; the page fills in by itself when they arrive."
-        : "This page fills in by itself as each part arrives.";
+        ? t("You can keep reading; the page fills in by itself when they arrive.")
+        : t("This page fills in by itself as each part arrives.");
 
   return (
     <section role="status" aria-live="polite" className="flex flex-col gap-3 rounded-xl bg-ink-card px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
@@ -172,8 +175,8 @@ export function ProfileRefresher({
                 <span className="h-2 w-2 animate-pulse rounded-full bg-accent motion-reduce:animate-none" aria-hidden="true" />
               )}
               <span>
-                {label} <span className="text-ink-faint">from {source}</span>
-                <span className="sr-only">{parts[key] === "done" ? ": done" : ": fetching"}</span>
+                {t(label)} <span className="text-ink-faint">{t("from {source}", { source })}</span>
+                <span className="sr-only">{parts[key] === "done" ? t(": done") : t(": fetching")}</span>
               </span>
             </li>
           ))}

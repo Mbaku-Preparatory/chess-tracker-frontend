@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { GamesTable } from "@/components/games/GamesTable";
+import { T } from "@/components/T";
 import { PUBLIC_GAMES_SHOWN } from "@/lib/freeLimits";
 import { rowFromPublicGame } from "@/lib/games";
 import { preparePath } from "@/lib/prepare";
@@ -28,13 +29,15 @@ export function PublicGames({
       {more > 0 && (
         <div className="flex flex-col items-start gap-3 rounded-lg bg-ink-raised p-5 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-[15px] text-ink-muted">
-            {more.toLocaleString("en")} more {more === 1 ? "game" : "games"}, with their openings, in your account.
+            <T n={more} vars={{ n: more.toLocaleString("en") }} one="{n} more game, with its opening, in your account.">
+              {"{n} more games, with their openings, in your account."}
+            </T>
           </p>
           <Link
             href={preparePath(player)}
             className="whitespace-nowrap rounded-pill bg-accent px-5 py-2.5 text-[15px] font-[480] text-accent-on hover:bg-accent-soft"
           >
-            See all {count.toLocaleString("en")} games
+            <T vars={{ n: count.toLocaleString("en") }}>{"See all {n} games"}</T>
           </Link>
         </div>
       )}

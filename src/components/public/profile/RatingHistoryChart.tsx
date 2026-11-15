@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { useLocale, useT } from "@/hooks/useT";
 import type { RatingPoint } from "@/lib/publicPlayer";
 import {
   TIME_CONTROLS,
@@ -77,6 +78,9 @@ export function RatingHistoryChart({ history }: { history: RatingPoint[] }) {
   const [range, setRange] = useState<(typeof RANGES)[number]["key"]>("All");
   const [hover, setHover] = useState<number | null>(null);
   const [frame, W] = useWidth<HTMLDivElement>();
+  const t = useT();
+  const locale = useLocale();
+  const month = (d: Date) => formatMonth(d, locale);
   const H = W < 480 ? 200 : 240;
 
   const points = useMemo(() => {
@@ -86,7 +90,7 @@ export function RatingHistoryChart({ history }: { history: RatingPoint[] }) {
   }, [history, tc, range]);
 
   if (!available.length) {
-    return <p className="py-16 text-center text-[14px] text-ink-faint">No rating history yet.</p>;
+    return <p className="py-16 text-center text-[14px] text-ink-faint">{t("No rating history yet.")}</p>;
   }
 
   const innerW = W - M.left - M.right;
@@ -119,22 +123,22 @@ export function RatingHistoryChart({ history }: { history: RatingPoint[] }) {
     <div ref={frame} className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Segmented
-          label="Time control"
+          label={t("Time control")}
           value={tc}
           onChange={(v) => {
             setTc(v);
             setHover(null);
           }}
-          options={TIME_CONTROLS.map((t) => ({ ...t, disabled: !available.some((a) => a.key === t.key) }))}
+          options={TIME_CONTROLS.map((c) => ({ key: c.key, label: t(c.label), disabled: !available.some((a) => a.key === c.key) }))}
         />
         <Segmented
-          label="Range"
+          label={t("Range")}
           value={range}
           onChange={(v) => {
             setRange(v);
             setHover(null);
           }}
-          options={RANGES.map((r) => ({ key: r.key, label: r.key }))}
+          options={RANGES.map((r) => ({ key: r.key, label: r.key === "All" ? t("All") : r.key }))}
         />
       </div>
 
@@ -143,7 +147,7 @@ export function RatingHistoryChart({ history }: { history: RatingPoint[] }) {
           {(hovered ?? latest)?.rating ?? "—"}
         </p>
         <p className="text-[13px] text-ink-faint">
-          {hovered ? formatMonth(hovered.month) : latest ? `Latest list, ${formatMonth(latest.month)}` : ""}
+          {hovered ? month(hovered.month) : latest ? t("Latest list, {month}", { month: month(latest.month) }) : ""}
         </p>
       </div>
 
@@ -154,7 +158,13 @@ export function RatingHistoryChart({ history }: { history: RatingPoint[] }) {
           viewBox={`0 0 ${W} ${H}`}
           className="max-w-full touch-none select-none"
           role="img"
-          aria-label={`${TIME_CONTROLS.find((t) => t.key === tc)!.label} rating from ${formatMonth(points[0].month)} to ${formatMonth(latest.month)}: ${points[0].rating} to ${latest.rating}`}
+          aria-label={t("{tc} rating from {from} to {to}: {start} to {end}", {
+            tc: t(TIME_CONTROLS.find((c) => c.key === tc)!.label),
+            from: month(points[0].month),
+            to: month(latest.month),
+            start: points[0].rating,
+            end: latest.rating,
+          })}
         >
           <defs>
             <linearGradient id="rating-fill" x1="0" x2="0" y1="0" y2="1">

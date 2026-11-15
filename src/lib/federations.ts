@@ -13,10 +13,13 @@ interface Federation {
   code: string;
   name: string;
   flag: string;
+  /** For the name in other languages; absent where ISO's country is not the
+   * federation's (England is not "United Kingdom") or there is none. */
+  iso2?: string;
 }
 
 function fed(code: string, name: string, iso2: string, flagOverride?: string): Federation {
-  return { code, name, flag: flagOverride ?? toFlag(iso2) };
+  return { code, name, flag: flagOverride ?? toFlag(iso2), ...(iso2 && !flagOverride && { iso2 }) };
 }
 
 // Federations FIDE lists players under today. Checked against the codes in
@@ -284,4 +287,22 @@ const BY_CODE = new Map(FEDERATIONS.map((f) => [f.code, f]));
  */
 export function federationFor(code: string): Federation {
   return BY_CODE.get(code) ?? { code, name: code, flag: "" };
+}
+
+const regionNames = new Map<string, Intl.DisplayNames>();
+
+/**
+ * The federation's name in a language: the browser's own country names
+ * (Intl), so nothing to translate by hand. English, and federations with no
+ * ISO country (England, the Soviet Union, FIDE itself), keep our English name.
+ */
+export function federationName(f: Federation, locale: string): string {
+  if (locale === "en" || !f.iso2) return f.name;
+  try {
+    let names = regionNames.get(locale);
+    if (!names) regionNames.set(locale, (names = new Intl.DisplayNames([locale], { type: "region" })));
+    return names.of(f.iso2) ?? f.name;
+  } catch {
+    return f.name;
+  }
 }

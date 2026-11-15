@@ -3,7 +3,7 @@
  * coming, and what it is waiting on. "No rating history" would read as a fact
  * about the player when it is only a fact about our copy.
  */
-export function PendingChart({ label }: { label: string }) {
+export function PendingChart({ label }: { label: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-4" aria-busy="true">
       <div className="h-7 w-48 animate-pulse rounded-pill bg-ink-raised motion-reduce:animate-none" />
@@ -15,7 +15,7 @@ export function PendingChart({ label }: { label: string }) {
   );
 }
 
-export function PendingRows({ label, rows = 5 }: { label: string; rows?: number }) {
+export function PendingRows({ label, rows = 5 }: { label: React.ReactNode; rows?: number }) {
   return (
     <div className="flex flex-col gap-3" aria-busy="true">
       <p className="text-[14px] text-ink-faint">{label}</p>

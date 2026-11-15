@@ -4,6 +4,7 @@
  * agree.
  */
 
+import { dateLocale } from "@/lib/i18n";
 import type { Game, GameSource } from "@/types";
 
 import { gameRef } from "./gameRef";
@@ -25,9 +26,9 @@ export function gameSource(source: string): { label: string; short: string; dot:
 
 /** "5 Mar 2025" (or "5 March 2025"). A game date has no time of day, so it is
  * read as UTC: in local time it would show the day before west of Greenwich. */
-export function formatGameDate(date: string | null | undefined, month: "short" | "long" = "short"): string | null {
+export function formatGameDate(date: string | null | undefined, month: "short" | "long" = "short", locale = "en"): string | null {
   if (!date) return null;
-  return new Date(`${date.slice(0, 10)}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month, year: "numeric", timeZone: "UTC" });
+  return new Date(`${date.slice(0, 10)}T00:00:00Z`).toLocaleDateString(dateLocale(locale), { day: "numeric", month, year: "numeric", timeZone: "UTC" });
 }
 
 /** The games table's "per page" choices. */
