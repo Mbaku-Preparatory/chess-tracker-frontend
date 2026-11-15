@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { AuthLink } from "@/components/public/AuthLink";
 import { PlayerSearch } from "@/components/public/PlayerSearch";
+import { PromoVideo } from "@/components/public/PromoVideo";
 import { TrialNote } from "@/components/TrialNote";
 import { FREE_BOT_GAMES, FREE_PROFILE_VIEWS, PUBLIC_GAMES_SHOWN } from "@/lib/freeLimits";
 import { bookPath, fetchPublicBooks } from "@/lib/publicBook";
@@ -160,25 +161,30 @@ export default async function LandingPage() {
     <div className="flex flex-col gap-[72px] sm:gap-28">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
 
-      <section className="flex flex-col items-start gap-8 pt-10 sm:pt-20">
-        <p className="text-[13px] uppercase tracking-[0.1em] text-accent-soft">Player profiles</p>
-        <h1 className="max-w-[16ch] text-balance text-[42px] font-[480] leading-[1.08] tracking-[0.01em] sm:text-[65px]">
-          {/* A non-breaking hyphen: a phone otherwise splits "FIDE-" from "rated". */}
-          Every FIDE{"\u2011"}rated player, in one place.
-        </h1>
-        <p className="max-w-[56ch] text-[18px] leading-[1.5] text-ink-muted">
-          Official ratings and ranks, monthly rating history, and games with results and openings, for
-          every player rated by FIDE. And a reader that opens any chess book on a board.
-        </p>
-        <PlayerSearch />
-        <p className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[14px] text-ink-faint">
-          <span>For example</span>
-          {EXAMPLES.map((e) => (
-            <Link key={e.href} href={e.href} className="text-ink-muted underline decoration-ink-line underline-offset-4 hover:text-ink-text">
-              {e.name}
-            </Link>
-          ))}
-        </p>
+      {/* Video and search side by side (1:1) on a wide screen; on a phone the
+          video comes first. The text stays first in the HTML for readers and crawlers. */}
+      <section className="grid grid-cols-1 items-center gap-10 pt-6 sm:pt-16 md:grid-cols-2 md:gap-12">
+        <div className="flex flex-col items-start gap-8">
+          <p className="text-[13px] uppercase tracking-[0.1em] text-accent-soft">Player profiles</p>
+          <h1 className="max-w-[16ch] text-balance text-[42px] font-[480] leading-[1.08] tracking-[0.01em] sm:text-[65px]">
+            {/* A non-breaking hyphen: a phone otherwise splits "FIDE-" from "rated". */}
+            Every FIDE{"\u2011"}rated player, in one place.
+          </h1>
+          <p className="max-w-[56ch] text-[18px] leading-[1.5] text-ink-muted">
+            Official ratings and ranks, monthly rating history, and games with results and openings, for
+            every player rated by FIDE. And a reader that opens any chess book on a board.
+          </p>
+          <PlayerSearch />
+          <p className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[14px] text-ink-faint">
+            <span>For example</span>
+            {EXAMPLES.map((e) => (
+              <Link key={e.href} href={e.href} className="text-ink-muted underline decoration-ink-line underline-offset-4 hover:text-ink-text">
+                {e.name}
+              </Link>
+            ))}
+          </p>
+        </div>
+        <PromoVideo className="order-first mx-auto md:order-none" />
       </section>
 
       {top.length > 0 && (
