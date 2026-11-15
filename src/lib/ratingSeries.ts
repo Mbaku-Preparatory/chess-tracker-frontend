@@ -4,14 +4,16 @@
  * the browser, and both must agree.
  */
 
+import { dateLocale, msg } from "@/lib/i18n";
+
 import type { RatingPoint } from "./publicPlayer";
 
 export type TimeControl = "standard" | "rapid" | "blitz";
 
 export const TIME_CONTROLS: { key: TimeControl; label: string }[] = [
-  { key: "standard", label: "Classical" },
-  { key: "rapid", label: "Rapid" },
-  { key: "blitz", label: "Blitz" },
+  { key: "standard", label: msg("Classical") },
+  { key: "rapid", label: msg("Rapid") },
+  { key: "blitz", label: msg("Blitz") },
 ];
 
 export type SeriesPoint = { month: Date; rating: number; games: number };
@@ -106,6 +108,6 @@ export function paths(points: SeriesPoint[], s: Scale, height: number): { line: 
   return { line, area: `${line}L${last},${height}L${first},${height}Z` };
 }
 
-export function formatMonth(date: Date): string {
-  return date.toLocaleDateString("en-GB", { month: "short", year: "numeric", timeZone: "UTC" });
+export function formatMonth(date: Date, locale = "en"): string {
+  return date.toLocaleDateString(dateLocale(locale), { month: "short", year: "numeric", timeZone: "UTC" });
 }

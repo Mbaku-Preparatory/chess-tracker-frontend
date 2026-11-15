@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+import { useLocale, useT } from "@/hooks/useT";
+import { msg } from "@/lib/i18n";
 import { formatGameDate, type GameRow, type GameSide } from "@/lib/games";
 
 /**
@@ -18,6 +20,7 @@ const RESULT_LABEL: Record<GameRow["result"], string> = {
 };
 
 const MARKER = { win: "bg-result-win", draw: "bg-result-draw", loss: "bg-result-loss" };
+const OUTCOME_LABEL = { win: msg("win"), draw: msg("draw"), loss: msg("loss") };
 
 /** A click anywhere on a row opens the game, except on a link or a button,
  * which do what they say. */
@@ -49,8 +52,9 @@ function Side({ side }: { side: GameSide }) {
 /** The result, with the player's outcome as a coloured dot; the game's link
  * when it has moves, so a keyboard or screen reader can open it too. */
 function Result({ row, phone }: { row: GameRow; phone?: boolean }) {
+  const t = useT();
   const dot = row.outcome && (
-    <span className={`h-2 w-2 rounded-full ${MARKER[row.outcome]}`} aria-hidden={row.href ? true : undefined} aria-label={row.href ? undefined : row.outcome} />
+    <span className={`h-2 w-2 rounded-full ${MARKER[row.outcome]}`} aria-hidden={row.href ? true : undefined} aria-label={row.href ? undefined : row.outcome && t(OUTCOME_LABEL[row.outcome])} />
   );
   if (!row.href) {
     return (
@@ -63,12 +67,12 @@ function Result({ row, phone }: { row: GameRow; phone?: boolean }) {
   return (
     <Link
       href={row.href}
-      aria-label={`View ${row.white.name} against ${row.black.name}, ${RESULT_LABEL[row.result]}`}
+      aria-label={t("View {white} against {black}, {result}", { white: row.white.name, black: row.black.name, result: RESULT_LABEL[row.result] })}
       className={`inline-flex items-center gap-2 rounded-pill px-2 py-0.5 tabular-nums text-ink-text hover:bg-ink-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${phone ? "" : "-mx-2"}`}
     >
       {dot}
       {RESULT_LABEL[row.result]}
-      {phone && <span className="text-accent-soft">View</span>}
+      {phone && <span className="text-accent-soft">{t("View")}</span>}
     </Link>
   );
 }
@@ -82,7 +86,11 @@ export function GamesTable({
   rowAction?: (row: GameRow) => React.ReactNode;
 }) {
   const router = useRouter();
-  const date = (row: GameRow) => formatGameDate(row.date) ?? "—";
+  const t = useT();
+  const locale = useLocale();
+  const date = (row: GameRow) => formatGameDate(row.date, "short", locale) ?? "—";
+  const detail = (row: GameRow, withEvent: boolean) =>
+    [withEvent && row.event, row.round && t("Round {round}", { round: row.round }), row.opening].filter(Boolean).join(" · ");
 
   return (
     <>
@@ -103,14 +111,14 @@ export function GamesTable({
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="h-2.5 w-2.5 shrink-0 rounded-full border border-ink-faint bg-white" aria-label="White" />
+              <span className="h-2.5 w-2.5 shrink-0 rounded-full border border-ink-faint bg-white" aria-label={t("White")} />
               <Side side={row.white} />
             </div>
             <div className="flex items-center gap-2">
-              <span className="h-2.5 w-2.5 shrink-0 rounded-full border border-ink-faint bg-neutral-900" aria-label="Black" />
+              <span className="h-2.5 w-2.5 shrink-0 rounded-full border border-ink-faint bg-neutral-900" aria-label={t("Black")} />
               <Side side={row.black} />
             </div>
-            <p className="text-[12px] text-ink-faint">{[row.event, row.round && `Round ${row.round}`, row.opening].filter(Boolean).join(" · ")}</p>
+            <p className="text-[12px] text-ink-faint">{detail(row, true)}</p>
           </li>
         ))}
       </ul>
@@ -119,12 +127,12 @@ export function GamesTable({
         <table className="w-full text-left text-[14px]">
           <thead>
             <tr className="border-b border-ink-line text-[12px] uppercase tracking-[0.06em] text-ink-faint">
-              <th scope="col" className="py-3 pr-3 font-[520]">Date</th>
-              <th scope="col" className="px-3 py-3 font-[520]">White</th>
-              <th scope="col" className="px-3 py-3 font-[520]">Result</th>
-              <th scope="col" className="px-3 py-3 font-[520]">Black</th>
-              <th scope="col" className="py-3 pl-3 font-[520]">Event</th>
-              {rowAction && <th scope="col" className="w-px py-3 pl-3"><span className="sr-only">Actions</span></th>}
+              <th scope="col" className="py-3 pr-3 font-[520]">{t("Date")}</th>
+              <th scope="col" className="px-3 py-3 font-[520]">{t("White")}</th>
+              <th scope="col" className="px-3 py-3 font-[520]">{t("Result")}</th>
+              <th scope="col" className="px-3 py-3 font-[520]">{t("Black")}</th>
+              <th scope="col" className="py-3 pl-3 font-[520]">{t("Event")}</th>
+              {rowAction && <th scope="col" className="w-px py-3 pl-3"><span className="sr-only">{t("Actions")}</span></th>}
             </tr>
           </thead>
           <tbody className="text-ink-muted">
@@ -147,7 +155,7 @@ export function GamesTable({
                 <td className="py-3 pl-3">
                   <span className="line-clamp-1">{row.event}</span>
                   {(row.opening || row.round) && (
-                    <span className="block text-[12px] text-ink-faint">{[row.round && `Round ${row.round}`, row.opening].filter(Boolean).join(" · ")}</span>
+                    <span className="block text-[12px] text-ink-faint">{detail(row, false)}</span>
                   )}
                 </td>
                 {rowAction && <td className="whitespace-nowrap py-2 pl-3 text-right">{rowAction(row)}</td>}

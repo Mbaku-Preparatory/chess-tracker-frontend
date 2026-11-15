@@ -32,6 +32,10 @@ export type Forms = Partial<Record<Intl.LDMLPluralRule, string>>;
 export type Messages = Record<string, string | Forms>;
 export type Vars = Record<string, string | number>;
 
+/** The locale for dates: British English for "en" (day before month, as the
+ * site always showed them), the language itself otherwise. */
+export const dateLocale = (locale: string) => (locale === "en" ? "en-GB" : locale);
+
 /** "{n} games" with { n: 3 } is "3 games". A name with no value stays as it is. */
 export const fill = (text: string, vars?: Vars) =>
   vars ? text.replace(/\{(\w+)\}/g, (m, k: string) => (k in vars ? String(vars[k]) : m)) : text;

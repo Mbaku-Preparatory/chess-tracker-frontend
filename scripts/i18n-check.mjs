@@ -33,10 +33,13 @@ for (const file of files(join(ROOT, "src"))) {
   // Comments out, so the examples in them are not taken for text the site shows.
   const src = readFileSync(file, "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
   const where = file.slice(ROOT.length);
-  for (const m of src.matchAll(/<T(?:\s+vars=\{[^}]*\}+)?>([\s\S]*?)<\/T>/g)) {
-    const body = m[1].trim();
-    if (new RegExp(`^\\{${STR}\\}$`).test(body)) add(JSON.parse(body.slice(1, -1)), where);
-    else if (!body.startsWith("{")) add(jsxText(body), where); // {variable}: its value is marked with msg()
+  // <T attr="…" attr={…}>text</T>: one= makes it a count, keyed by the text (the "other" form).
+  const ATTR = String.raw`\s+\w+=(?:"[^"]*"|\{(?:[^{}]|\{[^{}]*\})*\})`;
+  for (const m of src.matchAll(new RegExp(String.raw`<T((?:${ATTR})*)\s*>([\s\S]*?)<\/T>`, "g"))) {
+    const plural = /\sone=/.test(m[1]);
+    const body = m[2].trim();
+    if (new RegExp(`^\\{${STR}\\}$`).test(body)) add(JSON.parse(body.slice(1, -1)), where, plural);
+    else if (!body.startsWith("{")) add(jsxText(body), where, plural); // {variable}: its value is marked with msg()
   }
   for (const m of src.matchAll(new RegExp(String.raw`\b(?:t|msg)\(\s*(${STR})`, "g"))) add(JSON.parse(m[1]), where);
   for (const m of src.matchAll(new RegExp(String.raw`\bt\.plural\([^,]+,\s*(${STR}),\s*(${STR})`, "g"))) add(JSON.parse(m[2]), where, true);

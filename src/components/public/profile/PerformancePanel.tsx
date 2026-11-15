@@ -1,3 +1,5 @@
+import { T } from "@/components/T";
+import { msg } from "@/lib/i18n";
 import type { ResultCounts } from "@/lib/publicPlayer";
 
 function pct(part: number, whole: number): number {
@@ -25,7 +27,7 @@ function Rate({ label, value, tone }: { label: string; value: number; tone: stri
   return (
     <div className="flex flex-col gap-1">
       <span className={`text-[24px] font-[480] tabular-nums leading-none ${tone}`}>{fmt(value)}</span>
-      <span className="text-[12px] text-ink-faint">{label}</span>
+      <span className="text-[12px] text-ink-faint"><T>{label}</T></span>
     </div>
   );
 }
@@ -39,13 +41,13 @@ function ColourCard({ colour, counts }: { colour: "White" | "Black"; counts: Res
           className={`h-3 w-3 rounded-full border border-ink-faint ${colour === "White" ? "bg-white" : "bg-neutral-900"}`}
           aria-hidden="true"
         />
-        As {colour.toLowerCase()}
+        {colour === "White" ? <T>As white</T> : <T>As black</T>}
       </div>
       <p className="text-[28px] font-[480] tabular-nums leading-none">{counts.games ? fmt(score) : "—"}</p>
-      <p className="text-[12px] text-ink-faint">score</p>
+      <p className="text-[12px] text-ink-faint"><T>score</T></p>
       <ResultBar counts={counts} />
       <p className="text-[12px] tabular-nums text-ink-faint">
-        {counts.games} games ·{" "}
+        <T n={counts.games} one="{n} game">{"{n} games"}</T> ·{" "}
         <span className="whitespace-nowrap">+{counts.wins} ={counts.draws} −{counts.losses}</span>
       </p>
     </div>
@@ -60,24 +62,24 @@ export function PerformancePanel({
   return (
     <div className="flex flex-col gap-5">
       <div className="grid grid-cols-3 gap-4">
-        <Rate label="Win rate" value={pct(stats.wins, stats.games)} tone="text-accent-soft" />
-        <Rate label="Draw rate" value={pct(stats.draws, stats.games)} tone="text-ink-text" />
-        <Rate label="Loss rate" value={pct(stats.losses, stats.games)} tone="text-result-loss" />
+        <Rate label={msg("Win rate")} value={pct(stats.wins, stats.games)} tone="text-accent-soft" />
+        <Rate label={msg("Draw rate")} value={pct(stats.draws, stats.games)} tone="text-ink-text" />
+        <Rate label={msg("Loss rate")} value={pct(stats.losses, stats.games)} tone="text-result-loss" />
       </div>
       <ResultBar counts={stats} />
       <dl className="flex flex-wrap gap-x-8 gap-y-3 text-[13px]">
         <div>
-          <dt className="text-ink-faint">Games</dt>
+          <dt className="text-ink-faint"><T>Games</T></dt>
           <dd className="text-[18px] font-[480] tabular-nums">{stats.games.toLocaleString("en")}</dd>
         </div>
         <div>
-          <dt className="text-ink-faint">Record</dt>
+          <dt className="text-ink-faint"><T>Record</T></dt>
           <dd className="whitespace-nowrap text-[18px] font-[480] tabular-nums">
             +{stats.wins} ={stats.draws} −{stats.losses}
           </dd>
         </div>
         <div>
-          <dt className="text-ink-faint">Avg. opponent</dt>
+          <dt className="text-ink-faint"><T>Avg. opponent</T></dt>
           <dd className="text-[18px] font-[480] tabular-nums">{stats.averageOpponentElo ?? "—"}</dd>
         </div>
       </dl>

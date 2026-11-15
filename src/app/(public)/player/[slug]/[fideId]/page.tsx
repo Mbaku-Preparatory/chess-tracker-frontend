@@ -2,17 +2,22 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 
+import { Country } from "@/components/Country";
 import { AdSlot } from "@/components/public/AdSlot";
 import { PerformancePanel } from "@/components/public/profile/PerformancePanel";
 import { ProfileMeter } from "@/components/public/profile/ProfileMeter";
 import { PublicGames } from "@/components/public/profile/PublicGames";
 import { PendingChart, PendingRows } from "@/components/public/profile/Pending";
 import { ProfileRefresher } from "@/components/public/profile/ProfileRefresher";
+import { ProfileSummary } from "@/components/public/profile/ProfileSummary";
 import { RatingCard } from "@/components/public/profile/RatingCard";
 import { RatingHistoryChart } from "@/components/public/profile/RatingHistoryChart";
+import { T } from "@/components/T";
 import { federationFor } from "@/lib/federations";
 import { PUBLIC_GAMES_SHOWN } from "@/lib/freeLimits";
+import { msg } from "@/lib/i18n";
 import { preparePath } from "@/lib/prepare";
+import { summary, titleName, type SummaryPlayer } from "@/lib/profileSummary";
 import { fetchPublicPlayer, profilePath, titledName, type PublicPlayer } from "@/lib/publicPlayer";
 import { series } from "@/lib/ratingSeries";
 import { SHARE_IMAGE, SITE_URL } from "@/lib/site";
@@ -29,12 +34,6 @@ export function generateStaticParams() {
   return [];
 }
 
-const TITLE_NAMES: Record<string, string> = {
-  GM: "Grandmaster", IM: "International Master", FM: "FIDE Master", CM: "Candidate Master",
-  WGM: "Woman Grandmaster", WIM: "Woman International Master", WFM: "Woman FIDE Master",
-  WCM: "Woman Candidate Master",
-};
-
 async function load(params: Params) {
   const { slug, fideId } = await params;
   if (!/^\d{1,20}$/.test(fideId)) notFound();
@@ -44,49 +43,11 @@ async function load(params: Params) {
   return { slug, player };
 }
 
-/** The facts an answer engine is asked about, as one plain paragraph. */
-function summary(player: PublicPlayer, country: string): string {
-  const title = TITLE_NAMES[player.title] ?? TITLE_NAMES[player.womenTitle];
-  const described = `${country === player.federation ? "" : `${demonym(country)} `}chess player`;
-  const who = [
-    // No "u": "a United States-registered", "a Ugandan" — it sounds like "you".
-    `${player.fullName} is ${/^[aeio]/i.test(described) ? "an" : "a"} ${described}`,
-    title ? `holding the ${title} title` : null,
-  ]
-    .filter(Boolean)
-    .join(", ");
-  const ratings = [
-    player.standardRating && rankedRating("classical", player.standardRating, player.worldRankStandard, player.nationalRankStandard, country),
-    player.rapidRating && `rapid ${player.rapidRating}`,
-    player.blitzRating && `blitz ${player.blitzRating}`,
-  ].filter(Boolean);
-  const parts = [`${who}.`];
-  if (ratings.length) parts.push(`On FIDE's latest rating list their ratings are ${ratings.join(", ")}.`);
-  if (player.stats.games) {
-    parts.push(
-      `Across ${player.stats.games} recorded games they have won ${player.stats.wins}, drawn ${player.stats.draws} and lost ${player.stats.losses}.`,
-    );
-  }
-  if (!player.isActive) parts.push("FIDE currently lists them as inactive.");
-  return parts.join(" ");
-}
-
-function rankedRating(label: string, rating: number, world: number | null, national: number | null, country: string) {
-  const ranks = [world && `world #${world.toLocaleString("en")}`, national && `#${national.toLocaleString("en")} in ${country}`]
-    .filter(Boolean)
-    .join(", ");
-  return ranks ? `${label} ${rating} (${ranks})` : `${label} ${rating}`;
-}
-
-// "a Kenyan chess player" reads better than "a Kenya chess player", but a
-// wrong demonym is worse than none; only the ones we are sure of.
-const DEMONYMS: Record<string, string> = {
-  Kenya: "Kenyan", Uganda: "Ugandan", Tanzania: "Tanzanian", Nigeria: "Nigerian", "South Africa": "South African",
-  Norway: "Norwegian", India: "Indian", "United States of America": "American", England: "English",
-  Germany: "German", France: "French", Russia: "Russian", China: "Chinese", Egypt: "Egyptian",
-};
-function demonym(country: string): string {
-  return DEMONYMS[country] ?? `${country}-registered`;
+/** Only what the summary reads, so the page does not send the whole player to the browser twice. */
+function summaryOf(p: PublicPlayer): SummaryPlayer {
+  const { fullName, federation, title, womenTitle, isActive, standardRating, rapidRating, blitzRating, worldRankStandard, nationalRankStandard } = p;
+  const { games, wins, draws, losses } = p.stats;
+  return { fullName, federation, title, womenTitle, isActive, standardRating, rapidRating, blitzRating, worldRankStandard, nationalRankStandard, stats: { games, wins, draws, losses } };
 }
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
@@ -115,7 +76,7 @@ export default async function PublicPlayerPage({ params }: { params: Params }) {
 
   const fed = federationFor(player.federation);
   const history = player.ratingHistory;
-  const titleName = TITLE_NAMES[player.title] ?? TITLE_NAMES[player.womenTitle];
+  const award = titleName(player);
 
   const jsonLd = [
     {
@@ -125,7 +86,7 @@ export default async function PublicPlayerPage({ params }: { params: Params }) {
       mainEntity: {
         "@type": "Person",
         name: player.fullName,
-        ...(titleName && { honorificPrefix: player.title || player.womenTitle, award: titleName }),
+        ...(award && { honorificPrefix: player.title || player.womenTitle, award }),
         nationality: { "@type": "Country", name: fed.name },
         identifier: { "@type": "PropertyValue", propertyID: "FIDE ID", value: player.fideId },
         sameAs: [`https://ratings.fide.com/profile/${player.fideId}`],
@@ -149,9 +110,9 @@ export default async function PublicPlayerPage({ params }: { params: Params }) {
 
       <nav aria-label="Breadcrumb" className="text-[13px] text-ink-faint">
         <ol className="flex flex-wrap items-center gap-2">
-          <li><Link href="/" className="hover:text-ink-muted">Players</Link></li>
+          <li><Link href="/" className="hover:text-ink-muted"><T>Players</T></Link></li>
           <li aria-hidden="true">›</li>
-          <li>{fed.name}</li>
+          <li><Country code={player.federation} /></li>
           <li aria-hidden="true">›</li>
           <li className="text-ink-muted" aria-current="page">{player.fullName}</li>
         </ol>
@@ -166,18 +127,18 @@ export default async function PublicPlayerPage({ params }: { params: Params }) {
           <span>{player.fullName}</span>
         </h1>
         <p className="flex flex-wrap gap-x-4 gap-y-1 text-[15px] text-ink-muted">
-          <span>{fed.name}</span>
+          <span><Country code={player.federation} /></span>
           <a
             href={`https://ratings.fide.com/profile/${player.fideId}`}
             className="tabular-nums hover:text-ink-text"
             rel="nofollow noopener"
             target="_blank"
           >
-            FIDE ID {player.fideId}
+            <T vars={{ id: player.fideId }}>{"FIDE ID {id}"}</T>
           </a>
-          {!player.isActive && <span className="text-ink-faint">Inactive on FIDE&apos;s list</span>}
+          {!player.isActive && <span className="text-ink-faint"><T>{"Inactive on FIDE's list"}</T></span>}
         </p>
-        <p className="max-w-[68ch] text-[16px] leading-[1.6] text-ink-muted">{summary(player, fed.name)}</p>
+        <ProfileSummary player={summaryOf(player)} className="max-w-[68ch] text-[16px] leading-[1.6] text-ink-muted" />
         {/* Unless we know there is nothing to build it from. */}
         {(player.stats.games > 0 || !player.gamesFetchedAt) && (
           <div className="space-y-2">
@@ -188,18 +149,19 @@ export default async function PublicPlayerPage({ params }: { params: Params }) {
                 href={preparePath({ fideId: player.fideId, fullName: player.fullName, federation: player.federation })}
                 className="rounded-pill bg-accent px-5 py-2.5 text-[15px] font-[480] text-accent-on hover:bg-accent-soft"
               >
-                Prepare against {player.fullName}
+                <T vars={{ name: player.fullName }}>{"Prepare against {name}"}</T>
               </Link>
               <Link
                 href={`/chess-bot?fide=${player.fideId}`}
                 className="rounded-pill border border-ink-text/80 px-5 py-2.5 text-[15px] text-ink-text hover:bg-ink-raised"
               >
-                Play {player.fullName} bot
+                <T vars={{ name: player.fullName }}>{"Play {name} bot"}</T>
               </Link>
             </p>
             <p className="max-w-[68ch] text-[14px] text-ink-faint">
-              Prepare: their openings with each colour, results and full games, kept in your account.
-              The bot opens the way {player.fullName} does, from their games.
+              <T vars={{ name: player.fullName }}>
+                {"Prepare: their openings with each colour, results and full games, kept in your account. The bot opens the way {name} does, from their games."}
+              </T>
             </p>
           </div>
         )}
@@ -215,14 +177,14 @@ export default async function PublicPlayerPage({ params }: { params: Params }) {
       />
 
       <section aria-label="Ratings" className="grid gap-4 md:grid-cols-3">
-        <RatingCard label="Classical" rating={player.standardRating} worldRank={player.worldRankStandard}
-          nationalRank={player.nationalRankStandard} country={fed.name} points={series(history, "standard")} />
-        <RatingCard label="Rapid" rating={player.rapidRating} worldRank={player.worldRankRapid}
-          nationalRank={player.nationalRankRapid} country={fed.name} points={series(history, "rapid")} />
-        <RatingCard label="Blitz" rating={player.blitzRating} worldRank={player.worldRankBlitz}
-          nationalRank={player.nationalRankBlitz} country={fed.name} points={series(history, "blitz")} />
+        <RatingCard label={msg("Classical")} rating={player.standardRating} worldRank={player.worldRankStandard}
+          nationalRank={player.nationalRankStandard} federation={player.federation} points={series(history, "standard")} />
+        <RatingCard label={msg("Rapid")} rating={player.rapidRating} worldRank={player.worldRankRapid}
+          nationalRank={player.nationalRankRapid} federation={player.federation} points={series(history, "rapid")} />
+        <RatingCard label={msg("Blitz")} rating={player.blitzRating} worldRank={player.worldRankBlitz}
+          nationalRank={player.nationalRankBlitz} federation={player.federation} points={series(history, "blitz")} />
       </section>
-      <p className="-mt-6 text-right text-[12px] text-ink-faint">Ranks among active players on FIDE&apos;s latest list</p>
+      <p className="-mt-6 text-right text-[12px] text-ink-faint"><T>{"Ranks among active players on FIDE's latest list"}</T></p>
 
       {/* Under the ratings, where most visitors look. Founder's call
           (2026-11-11): visitors without an account can have ads high up;
@@ -232,36 +194,42 @@ export default async function PublicPlayerPage({ params }: { params: Params }) {
       <div className="grid gap-6 lg:grid-cols-[3fr_2fr]">
         <section className="flex flex-col gap-4 rounded-xl bg-ink-card p-6 sm:p-8" aria-labelledby="history-heading">
           <div>
-            <h2 id="history-heading" className="text-[21px] font-[480]">Rating history</h2>
-            <p className="text-[13px] text-ink-faint">Official monthly FIDE ratings</p>
+            <h2 id="history-heading" className="text-[21px] font-[480]"><T>Rating history</T></h2>
+            <p className="text-[13px] text-ink-faint"><T>Official monthly FIDE ratings</T></p>
           </div>
           {player.historyFetchedAt ? (
             <RatingHistoryChart history={history} />
           ) : (
-            <PendingChart label="Fetching rating history from FIDE…" />
+            <PendingChart label={<T>Fetching rating history from FIDE…</T>} />
           )}
         </section>
 
         <section className="flex flex-col gap-4 rounded-xl bg-ink-card p-6 sm:p-8" aria-labelledby="performance-heading">
           <div>
-            <h2 id="performance-heading" className="text-[21px] font-[480]">Overall performance</h2>
+            <h2 id="performance-heading" className="text-[21px] font-[480]"><T>Overall performance</T></h2>
             <p className="text-[13px] text-ink-faint">
-              {player.stats.games
-                ? `Across ${player.stats.games.toLocaleString("en")} games with recorded moves`
-                : player.gamesFetchedAt
-                  ? "No games with recorded moves on chess-results.com"
-                  : "Calculated from this player's games once they arrive"}
+              {player.stats.games ? (
+                <T n={player.stats.games} vars={{ n: player.stats.games.toLocaleString("en") }} one="Across {n} game with recorded moves">
+                  {"Across {n} games with recorded moves"}
+                </T>
+              ) : player.gamesFetchedAt ? (
+                <T>No games with recorded moves on chess-results.com</T>
+              ) : (
+                <T>{"Calculated from this player's games once they arrive"}</T>
+              )}
             </p>
           </div>
           {player.stats.games > 0 && <PerformancePanel stats={player.stats} />}
-          {!player.gamesFetchedAt && <PendingRows label="Waiting for games from chess-results.com…" rows={3} />}
+          {!player.gamesFetchedAt && <PendingRows label={<T>Waiting for games from chess-results.com…</T>} rows={3} />}
         </section>
       </div>
 
       <section id="games" className="flex scroll-mt-24 flex-col gap-4 rounded-xl bg-ink-card p-6 sm:p-8" aria-labelledby="games-heading">
         <div className="flex items-baseline justify-between gap-3">
-          <h2 id="games-heading" className="text-[21px] font-[480]">Games</h2>
-          <span className="text-[13px] tabular-nums text-ink-faint">{player.games.count.toLocaleString("en")} total</span>
+          <h2 id="games-heading" className="text-[21px] font-[480]"><T>Games</T></h2>
+          <span className="text-[13px] tabular-nums text-ink-faint">
+            <T vars={{ n: player.games.count.toLocaleString("en") }}>{"{n} total"}</T>
+          </span>
         </div>
         {player.games.count > 0 ? (
           <PublicGames
@@ -270,9 +238,9 @@ export default async function PublicPlayerPage({ params }: { params: Params }) {
             count={player.games.count}
           />
         ) : !player.gamesFetchedAt ? (
-          <PendingRows label="Fetching games from chess-results.com…" />
+          <PendingRows label={<T>Fetching games from chess-results.com…</T>} />
         ) : (
-          <p className="py-8 text-center text-[14px] text-ink-faint">No games with recorded moves on chess-results.com.</p>
+          <p className="py-8 text-center text-[14px] text-ink-faint"><T>No games with recorded moves on chess-results.com.</T></p>
         )}
       </section>
     </article>
