@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { BookReader } from "@/components/books/BookReader";
+import { T } from "@/components/T";
 import { ABOUT, bookPath, fetchPublicBook } from "@/lib/publicBook";
 import { SHARE_IMAGE, SITE_URL } from "@/lib/site";
 
@@ -68,20 +69,30 @@ export default async function PublicBookPage({ params }: { params: Params }) {
           anyone who scrolls on. */}
       <section className="flex flex-col gap-3">
         <nav className="text-[14px] text-ink-faint">
-          <Link href="/chess-books" className="hover:text-ink-muted">Chess books</Link>
+          <Link href="/chess-books" className="hover:text-ink-muted"><T>{"Chess books"}</T></Link>
           <span className="mx-2">/</span>
           <span>{book.title}</span>
         </nav>
         <p className="max-w-[70ch] text-[15px] leading-[1.5] text-ink-muted">
-          {about ? `${about.author}, ${about.year}. ${about.blurb} ` : ""}
-          This copy is read by Chess Preparatory: every one of its {n(book.moveCount)} moves and {n(book.diagramCount)} diagrams opens on the board
-          beside the page. Tap a move to see the position, use ← and → to step through the line, or play your own moves and switch the engine on.
-          {about && about.year < 1930 ? " The book is in the public domain." : ""}
+          {about && (
+            <>
+              {about.author}, {about.year}. <T>{about.blurb}</T>{" "}
+            </>
+          )}
+          <T vars={{ moves: n(book.moveCount), diagrams: n(book.diagramCount) }}>
+            {"This copy is read by Chess Preparatory: every one of its {moves} moves and {diagrams} diagrams opens on the board beside the page. Tap a move to see the position, use ← and → to step through the line, or play your own moves and switch the engine on."}
+          </T>
+          {about && about.year < 1930 && (
+            <>
+              {" "}
+              <T>The book is in the public domain.</T>
+            </>
+          )}
           {about?.edition && (
             <>
               {" "}
               <a href={about.edition.href} rel="noopener" className="underline decoration-ink-line underline-offset-4 hover:text-ink-text">
-                {about.edition.text}
+                <T>{about.edition.text}</T>
               </a>
               .
             </>

@@ -1,4 +1,5 @@
 import { AXES, sliderPosition, type Scores } from "@/lib/chessPersonality";
+import { T } from "@/components/T";
 
 /** The four sliders, each marker where the answers put it. The end it leans to is in full colour. */
 export function Sliders({ scores, colour }: { scores: Scores; colour: string }) {
@@ -10,8 +11,8 @@ export function Sliders({ scores, colour }: { scores: Scores; colour: string }) 
         return (
           <li key={axis.key}>
             <div className="mb-2 flex justify-between text-[13px] uppercase tracking-[0.08em]">
-              <span className={right ? "text-ink-faint" : "font-[600] text-ink-text"}>{axis.left}</span>
-              <span className={right ? "font-[600] text-ink-text" : "text-ink-faint"}>{axis.right}</span>
+              <span className={right ? "text-ink-faint" : "font-[600] text-ink-text"}><T>{axis.left}</T></span>
+              <span className={right ? "font-[600] text-ink-text" : "text-ink-faint"}><T>{axis.right}</T></span>
             </div>
             <div
               className="relative h-2.5 rounded-pill bg-ink-raised"

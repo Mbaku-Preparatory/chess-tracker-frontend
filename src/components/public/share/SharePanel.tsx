@@ -2,6 +2,8 @@
 
 import { useEffect, useId, useState } from "react";
 
+import { useT } from "@/hooks/useT";
+
 import { CheckIcon, FacebookIcon, InstagramIcon, LinkIcon, MoreIcon, ShareIcon, WhatsAppIcon, XIcon } from "./shareIcons";
 
 /**
@@ -22,11 +24,11 @@ import { CheckIcon, FacebookIcon, InstagramIcon, LinkIcon, MoreIcon, ShareIcon, 
 export type ShareVia = "whatsapp" | "facebook" | "instagram" | "x" | "copy" | "device";
 
 export function SharePanel({
-  label = "Share",
+  label,
   text,
   url,
   copyText = url,
-  copyLabel = "Copy link",
+  copyLabel,
   picture,
   onShared,
 }: {
@@ -39,6 +41,7 @@ export function SharePanel({
   picture?: { src: string; filename: string };
   onShared?: (via: ShareVia) => void;
 }) {
+  const t = useT();
   const panelId = useId();
   const [open, setOpen] = useState(false);
   const [canShare, setCanShare] = useState(false);
@@ -75,9 +78,9 @@ export function SharePanel({
   };
 
   const onCopy = async () => {
-    if (!(await copy(copyText))) return setStatus("Couldn't copy. Copy the address from your browser instead.");
+    if (!(await copy(copyText))) return setStatus(t("Couldn't copy. Copy the address from your browser instead."));
     setCopied(true);
-    setStatus(copyText === url ? "Link copied." : "Copied: paste it anywhere.");
+    setStatus(copyText === url ? t("Link copied.") : t("Copied: paste it anywhere."));
     sent("copy");
     window.setTimeout(() => setCopied(false), 2000);
   };
@@ -98,8 +101,8 @@ export function SharePanel({
     if (file) window.setTimeout(() => URL.revokeObjectURL(href), 10_000);
     setStatus(
       copiedLink
-        ? "Picture downloaded and link copied: post the picture on Instagram and paste the link."
-        : "Picture downloaded: post it on Instagram.",
+        ? t("Picture downloaded and link copied: post the picture on Instagram and paste the link.")
+        : t("Picture downloaded: post it on Instagram."),
     );
     sent("instagram");
   };
@@ -119,7 +122,7 @@ export function SharePanel({
         className="inline-flex items-center gap-2.5 rounded-pill bg-accent px-6 py-3 text-[16px] font-[480] text-accent-on hover:bg-accent-soft"
       >
         <ShareIcon />
-        {label}
+        {label ?? t("Share")}
       </button>
 
       {open && (
@@ -153,7 +156,7 @@ export function SharePanel({
           </a>
           <button type="button" className={option} onClick={onCopy}>
             <span className={`${circle} text-ink-text`}>{copied ? <CheckIcon /> : <LinkIcon />}</span>
-            {copied ? "Copied" : copyLabel}
+            {copied ? t("Copied") : (copyLabel ?? t("Copy link"))}
           </button>
           {canShare && (
             <button type="button" className={option} onClick={() => navigator.share({ text, url }).then(() => sent("device"), () => {})}>

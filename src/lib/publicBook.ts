@@ -4,6 +4,7 @@
  * makes one). The PDF and the index come from the backend's public routes
  * rather than the reader's device.
  */
+import { msg } from "@/lib/i18n";
 
 import { graphqlGet } from "./publicGraphql";
 import { BACKEND_ORIGIN } from "./site";
@@ -25,11 +26,12 @@ export const ABOUT: Record<string, { author: string; year: number; blurb: string
   "chess-fundamentals": {
     author: "José Raúl Capablanca",
     year: 1921,
-    blurb:
+    blurb: msg(
       "The World Champion's own course for improving players: endings first, then the middlegame and the opening, with the principles behind each shown in his games.",
+    ),
     // The 1921 text is public domain; this algebraic typesetting of it is
     // released CC0 by its maker.
-    edition: { text: "Algebraic edition typeset by lordlinks, CC0", href: "https://github.com/lordlinks/Chess_Fundamentals" },
+    edition: { text: msg("Algebraic edition typeset by lordlinks, CC0"), href: "https://github.com/lordlinks/Chess_Fundamentals" },
   },
 };
 

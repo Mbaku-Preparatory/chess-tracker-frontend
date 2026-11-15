@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 
 import { api } from "@/lib/api";
 import { userMessage } from "@/lib/apiError";
+import { useT } from "@/hooks/useT";
+import { msg } from "@/lib/i18n";
 import { Logo } from "@/components/ui/Logo";
 import { SocialSignIn } from "@/components/SocialSignIn";
 import { peekPendingPrepare } from "@/lib/prepare";
@@ -14,6 +16,7 @@ import { peekPendingPrepare } from "@/lib/prepare";
  * hands it `trialNote`, rendered on the server with the trial's length. */
 export function SignupForm({ trialNote }: { trialNote: React.ReactNode }) {
   const router = useRouter();
+  const t = useT();
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -31,7 +34,7 @@ export function SignupForm({ trialNote }: { trialNote: React.ReactNode }) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
+      setError(msg("Password must be at least 6 characters."));
       return;
     }
     setLoading(true);
@@ -47,7 +50,7 @@ export function SignupForm({ trialNote }: { trialNote: React.ReactNode }) {
       );
       router.replace(`/verify-email?email=${encodeURIComponent(normalizedEmail)}`);
     } catch (err) {
-      setError(userMessage(err, "Signup failed."));
+      setError(userMessage(err, msg("Signup failed.")));
     } finally {
       setLoading(false);
     }
@@ -59,11 +62,11 @@ export function SignupForm({ trialNote }: { trialNote: React.ReactNode }) {
         {/* Logo */}
         <div className="mb-8 text-center">
           <Logo size={48} variant="tile" className="mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Create your account</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t("Create your account")}</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             {preparing
-              ? `Then ${preparing}'s openings and games open straight away.`
-              : "Scout your opponents and prepare for your next game."}
+              ? t("Then {name}'s openings and games open straight away.", { name: preparing })
+              : t("Scout your opponents and prepare for your next game.")}
           </p>
           {trialNote}
         </div>
@@ -71,7 +74,7 @@ export function SignupForm({ trialNote }: { trialNote: React.ReactNode }) {
         <form onSubmit={handleSubmit} className="card space-y-4 p-6">
           {error && (
             <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              {error}
+              {t(error)}
             </div>
           )}
 
@@ -80,7 +83,7 @@ export function SignupForm({ trialNote }: { trialNote: React.ReactNode }) {
           <div className="flex gap-3">
             <div className="flex-1">
               <label htmlFor="firstName" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                First name
+                {t("First name")}
               </label>
               <input
                 id="firstName"
@@ -95,7 +98,7 @@ export function SignupForm({ trialNote }: { trialNote: React.ReactNode }) {
             </div>
             <div className="flex-1">
               <label htmlFor="lastName" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Last name
+                {t("Last name")}
               </label>
               <input
                 id="lastName"
@@ -112,8 +115,8 @@ export function SignupForm({ trialNote }: { trialNote: React.ReactNode }) {
 
           <div>
             <label htmlFor="username" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Username
-              <span className="ml-1 text-xs font-normal text-gray-400">(min 3 chars)</span>
+              {t("Username")}
+              <span className="ml-1 text-xs font-normal text-gray-400">{t("(min 3 chars)")}</span>
             </label>
             <input
               id="username"
@@ -130,7 +133,7 @@ export function SignupForm({ trialNote }: { trialNote: React.ReactNode }) {
 
           <div>
             <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Email
+              {t("Email")}
             </label>
             <input
               id="email"
@@ -146,8 +149,8 @@ export function SignupForm({ trialNote }: { trialNote: React.ReactNode }) {
 
           <div>
             <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Password
-              <span className="ml-1 text-xs font-normal text-gray-400">(min 6 chars)</span>
+              {t("Password")}
+              <span className="ml-1 text-xs font-normal text-gray-400">{t("(min 6 chars)")}</span>
             </label>
             <div className="relative">
               <input
@@ -165,7 +168,7 @@ export function SignupForm({ trialNote }: { trialNote: React.ReactNode }) {
                 onClick={() => setShowPassword((v) => !v)}
                 className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                 tabIndex={-1}
-                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-label={showPassword ? t("Hide password") : t("Show password")}
               >
                 {showPassword ? (
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4">
@@ -186,14 +189,14 @@ export function SignupForm({ trialNote }: { trialNote: React.ReactNode }) {
             disabled={loading}
             className="btn-primary w-full justify-center disabled:opacity-60"
           >
-            {loading ? "Creating account…" : "Create account"}
+            {loading ? t("Creating account…") : t("Create account")}
           </button>
         </form>
 
         <p className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
-          Already have an account?{" "}
+          {t("Already have an account?")}{" "}
           <Link href="/login" className="font-medium text-brand-600 hover:text-brand-700">
-            Sign in
+            {t("Sign in")}
           </Link>
         </p>
       </div>

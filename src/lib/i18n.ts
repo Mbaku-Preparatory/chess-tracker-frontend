@@ -59,4 +59,4 @@ export const LOCALE_SCRIPT = `(function(){try{var c=${JSON.stringify(LOCALES.map
  * then <T>{part.title}</T> where it is shown. It returns its argument; it is
  * how `pnpm i18n:check` finds text that is not written inline.
  */
-export const msg = <S extends string>(english: S): S => english;
+export const msg = (english: string): string => english;

@@ -8,7 +8,9 @@ import { api } from "@/lib/api";
 import { Logo } from "@/components/ui/Logo";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { clearAuth } from "@/redux/actions/auth";
+import { LanguagePicker } from "@/components/LanguagePicker";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useT } from "@/hooks/useT";
 import { usePreferences } from "@/components/PreferencesProvider";
 import { avatarSrc, defaultAvatar } from "@/lib/avatars";
 import { BurgerButton } from "@/components/ui/BurgerButton";
@@ -27,6 +29,7 @@ const LINKS = [
 
 export function Navbar() {
   const pathname = usePathname();
+  const t = useT();
   const router = useRouter();
   const dispatch = useAppDispatch();
   const profileRef = useRef<HTMLDivElement>(null);
@@ -65,8 +68,8 @@ export function Navbar() {
   }, [menuOpen]);
 
   // The sign-in pages have nothing to navigate to, but still need the way
-  // home and the theme switch: someone arriving from the dark landing page
-  // should be able to keep it dark.
+  // home, the theme switch and the language: someone arriving from the dark
+  // (or Spanish) landing page should be able to keep it that way.
   if (pathname === "/login" || pathname === "/signup") {
     return (
       <nav className="no-print mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -74,7 +77,10 @@ export function Navbar() {
           <Logo size={32} />
           <span className="hidden text-lg font-bold text-gray-900 dark:text-gray-100 sm:inline">Chess Preparatory</span>
         </Link>
-        <ThemeToggle className="text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100" />
+        <div className="flex items-center gap-1">
+          <LanguagePicker className="text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100" />
+          <ThemeToggle className="text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100" />
+        </div>
       </nav>
     );
   }
@@ -130,6 +136,11 @@ export function Navbar() {
             ))}
           </div>
 
+          {/* Signed out (forgot password, verify email): the language too. The
+              signed-in app gets it once the app itself is translated. */}
+          {!token && (
+            <LanguagePicker className="ml-1 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100" />
+          )}
           <ThemeToggle className="ml-1 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100" />
 
           {/* Auth state */}
@@ -296,6 +307,14 @@ export function Navbar() {
               ))}
             </ul>
 
+            {!token && (
+              <div className="mx-auto max-w-7xl border-t border-gray-100 px-4 py-3 dark:border-dark-border sm:px-6">
+                <div className="flex items-center justify-between gap-3 px-4 py-1">
+                  <span className="text-sm text-gray-600 dark:text-gray-300">{t("Language")}</span>
+                  <LanguagePicker className="text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100" />
+                </div>
+              </div>
+            )}
             <div className="mx-auto max-w-7xl border-t border-gray-100 px-4 py-3 dark:border-dark-border sm:px-6">
               <div className="flex items-center justify-between gap-3 px-4 py-1">
                 <span className="text-sm text-gray-600 dark:text-gray-300">Theme</span>

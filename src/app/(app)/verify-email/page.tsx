@@ -8,11 +8,14 @@ import { api } from "@/lib/api";
 import { useAppDispatch } from "@/redux/hooks";
 import { setAuth } from "@/redux/actions/auth";
 import { userMessage } from "@/lib/apiError";
+import { useT } from "@/hooks/useT";
+import { msg } from "@/lib/i18n";
 import { Logo } from "@/components/ui/Logo";
 
 function VerifyEmailForm() {
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const t = useT();
   const searchParams = useSearchParams();
   const email = searchParams.get("email") ?? "";
 
@@ -30,7 +33,7 @@ function VerifyEmailForm() {
       dispatch(setAuth({ token: data.access, refreshToken: data.refresh, email: data.email }));
       router.replace("/home");
     } catch (err) {
-      setError(userMessage(err, "Verification failed."));
+      setError(userMessage(err, msg("Verification failed.")));
     } finally {
       setLoading(false);
     }
@@ -43,7 +46,7 @@ function VerifyEmailForm() {
       await api.resendVerification(email);
       setResent(true);
     } catch (err) {
-      setError(userMessage(err, "Couldn't resend the code."));
+      setError(userMessage(err, msg("Couldn't resend the code.")));
     }
   }
 
@@ -52,29 +55,29 @@ function VerifyEmailForm() {
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <Logo size={48} variant="tile" className="mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Verify your email</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t("Verify your email")}</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             {email
-              ? `Enter the code we sent to ${email}.`
-              : "Enter the code we sent to your email."}
+              ? t("Enter the code we sent to {email}.", { email })
+              : t("Enter the code we sent to your email.")}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="card space-y-4 p-6">
           {error && (
             <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              {error}
+              {t(error)}
             </div>
           )}
           {resent && !error && (
             <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-              A new code is on its way.
+              {t("A new code is on its way.")}
             </div>
           )}
 
           <div>
             <label htmlFor="code" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Verification code
+              {t("Verification code")}
             </label>
             <input
               id="code"
@@ -95,23 +98,23 @@ function VerifyEmailForm() {
             disabled={loading || code.trim().length !== 6}
             className="btn-primary w-full justify-center disabled:opacity-60"
           >
-            {loading ? "Verifying…" : "Verify"}
+            {loading ? t("Verifying…") : t("Verify")}
           </button>
         </form>
 
         <p className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
-          Didn&apos;t get a code?{" "}
+          {t("Didn't get a code?")}{" "}
           <button
             type="button"
             onClick={handleResend}
             className="font-medium text-brand-600 hover:text-brand-700"
           >
-            Resend
+            {t("Resend")}
           </button>
         </p>
         <p className="mt-2 text-center text-sm text-gray-500 dark:text-gray-400">
           <Link href="/login" className="font-medium text-brand-600 hover:text-brand-700">
-            Back to sign in
+            {t("Back to sign in")}
           </Link>
         </p>
       </div>

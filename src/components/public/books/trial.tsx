@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { AuthLink } from "@/components/public/AuthLink";
 import { readGuestBook, TRIAL_MS, writeGuestBook, type GuestBook } from "@/lib/guestBook";
+import { useT } from "@/hooks/useT";
 
 /**
  * The guest trial's clock: reading time counts while the book is on screen
@@ -37,17 +38,18 @@ const minutes = (ms: number) => Math.max(1, Math.ceil(ms / 60_000));
 
 /** Above the book while the trial runs: the time left, and the way to keep it. */
 export function TrialBar({ used }: { used: number }) {
+  const t = useT();
   const left = TRIAL_MS - used;
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-accent/10 px-4 py-3 text-[14px]">
       <p className="text-ink-text">
         <span className="font-[520] tabular-nums">
-          {minutes(left)} {minutes(left) === 1 ? "minute" : "minutes"} left
+          {t.plural(minutes(left), "{n} minute left", "{n} minutes left")}
         </span>{" "}
-        <span className="text-ink-muted">of your free try. Start a free trial to keep this book.</span>
+        <span className="text-ink-muted">{t("of your free try. Start a free trial to keep this book.")}</span>
       </p>
       <AuthLink href="/signup" className="rounded-pill bg-accent px-4 py-1.5 text-[14px] font-[520] text-accent-on hover:bg-accent-soft">
-        Start a free trial
+        {t("Start a free trial")}
       </AuthLink>
     </div>
   );
@@ -55,19 +57,19 @@ export function TrialBar({ used }: { used: number }) {
 
 /** When the ten minutes are up: the book isn't gone, it's waiting in an account. */
 export function TrialOver({ title }: { title: string }) {
+  const t = useT();
   return (
-    <section aria-label="Your free try" className="mx-auto flex max-w-2xl flex-col items-start gap-4 rounded-xl bg-ink-card p-6 sm:p-8">
-      <h2 className="text-[24px] font-[480] leading-tight">Your ten minutes with “{title}” are up.</h2>
+    <section aria-label={t("Your free try")} className="mx-auto flex max-w-2xl flex-col items-start gap-4 rounded-xl bg-ink-card p-6 sm:p-8">
+      <h2 className="text-[24px] font-[480] leading-tight">{t("Your ten minutes with “{title}” are up.", { title })}</h2>
       <p className="max-w-[60ch] text-[16px] leading-[1.5] text-ink-muted">
-        Start a free trial and this book moves into your new account, already read: nothing to upload again. From there you can read all of
-        it, add more books, and keep your place in each.
+        {t("Start a free trial and this book moves into your new account, already read: nothing to upload again. From there you can read all of it, add more books, and keep your place in each.")}
       </p>
       <div className="flex flex-wrap gap-3">
         <AuthLink href="/signup" className="rounded-pill bg-accent px-6 py-3 text-[16px] font-[480] text-accent-on hover:bg-accent-soft">
-          Start a free trial
+          {t("Start a free trial")}
         </AuthLink>
         <AuthLink href="/login" className="rounded-pill border border-ink-text/80 px-6 py-3 text-[16px] text-ink-text hover:bg-ink-raised">
-          Log in
+          {t("Log in")}
         </AuthLink>
       </div>
     </section>

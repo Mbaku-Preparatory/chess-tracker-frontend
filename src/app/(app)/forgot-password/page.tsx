@@ -7,6 +7,8 @@ import { useState } from "react";
 import { Logo } from "@/components/ui/Logo";
 import { api } from "@/lib/api";
 import { userMessage } from "@/lib/apiError";
+import { useT } from "@/hooks/useT";
+import { msg } from "@/lib/i18n";
 
 const input =
   "block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-dark-border dark:bg-dark-elevated dark:text-gray-100 dark:placeholder-gray-500";
@@ -19,6 +21,7 @@ const label = "mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300
  */
 export default function ForgotPasswordPage() {
   const router = useRouter();
+  const t = useT();
   const [step, setStep] = useState<"email" | "code">("email");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -37,7 +40,7 @@ export default function ForgotPasswordPage() {
       if (step === "code") setResent(true);
       setStep("code");
     } catch (err) {
-      setError(userMessage(err, "Couldn't send a code. Try again."));
+      setError(userMessage(err, msg("Couldn't send a code. Try again.")));
     } finally {
       setBusy(false);
     }
@@ -46,13 +49,13 @@ export default function ForgotPasswordPage() {
   async function reset(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (password !== confirm) return setError("The passwords don't match.");
+    if (password !== confirm) return setError(msg("The passwords don't match."));
     setBusy(true);
     try {
       await api.resetPassword(email.trim().toLowerCase(), code.trim(), password);
       router.replace("/login?reset=1");
     } catch (err) {
-      setError(userMessage(err, "Couldn't reset your password."));
+      setError(userMessage(err, msg("Couldn't reset your password.")));
       setBusy(false);
     }
   }
@@ -62,28 +65,28 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <Logo size={48} variant="tile" className="mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Reset your password</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t("Reset your password")}</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            {step === "email" ? "We'll email you a code." : `If ${email.trim()} has an account, a code is on its way.`}
+            {step === "email" ? t("We'll email you a code.") : t("If {email} has an account, a code is on its way.", { email: email.trim() })}
           </p>
         </div>
 
         {step === "email" ? (
           <form onSubmit={sendCode} className="card space-y-4 p-6">
-            {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+            {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{t(error)}</p>}
             <div>
-              <label htmlFor="email" className={label}>Email</label>
+              <label htmlFor="email" className={label}>{t("Email")}</label>
               <input id="email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} className={input} placeholder="you@example.com" />
             </div>
             <button type="submit" disabled={busy} className="btn-primary w-full justify-center disabled:opacity-60">
-              {busy ? "Sending…" : "Send code"}
+              {busy ? t("Sending…") : t("Send code")}
             </button>
           </form>
         ) : (
           <form onSubmit={reset} className="card space-y-4 p-6">
-            {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+            {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{t(error)}</p>}
             <div>
-              <label htmlFor="code" className={label}>Code from the email</label>
+              <label htmlFor="code" className={label}>{t("Code from the email")}</label>
               <input
                 id="code"
                 inputMode="numeric"
@@ -97,29 +100,29 @@ export default function ForgotPasswordPage() {
               />
             </div>
             <div>
-              <label htmlFor="new-password" className={label}>New password</label>
+              <label htmlFor="new-password" className={label}>{t("New password")}</label>
               <input id="new-password" type="password" autoComplete="new-password" required value={password} onChange={(e) => setPassword(e.target.value)} className={input} />
             </div>
             <div>
-              <label htmlFor="confirm-password" className={label}>New password again</label>
+              <label htmlFor="confirm-password" className={label}>{t("New password again")}</label>
               <input id="confirm-password" type="password" autoComplete="new-password" required value={confirm} onChange={(e) => setConfirm(e.target.value)} className={input} />
             </div>
             <button type="submit" disabled={busy || code.length !== 6} className="btn-primary w-full justify-center disabled:opacity-60">
-              {busy ? "Saving…" : "Set new password"}
+              {busy ? t("Saving…") : t("Set new password")}
             </button>
             <p className="text-center text-sm text-gray-500 dark:text-gray-400">
-              {resent ? "Sent again. " : "No email? "}
+              {resent ? t("Sent again.") : t("No email?")}{" "}
               <button type="button" onClick={() => sendCode()} disabled={busy} className="font-medium text-brand-600 hover:text-brand-700 disabled:opacity-60">
-                Send another code
+                {t("Send another code")}
               </button>
             </p>
           </form>
         )}
 
         <p className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
-          Remembered it?{" "}
+          {t("Remembered it?")}{" "}
           <Link href="/login" className="font-medium text-brand-600 hover:text-brand-700">
-            Sign in
+            {t("Sign in")}
           </Link>
         </p>
       </div>

@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 
 import { ELO_MIN } from "@/hooks/useBotEngine";
+import { useT } from "@/hooks/useT";
 import type { BotBookGame } from "@/types";
 
 export type BotColor = "white" | "black";
@@ -22,7 +23,6 @@ export const startingColor = (books: Record<BotColor, BotBookGame[]>): BotColor 
   books.black.length > books.white.length ? "black" : "white";
 
 const other = (c: BotColor): BotColor => (c === "white" ? "black" : "white");
-const cap = (c: BotColor) => c[0].toUpperCase() + c.slice(1);
 
 /**
  * The setup card for "Play <player> bot", in the app and on the public page:
@@ -60,16 +60,19 @@ export function BotSetup({
   /** Beside the Play button. */
   note?: ReactNode;
 }) {
+  const t = useT();
+  // One sentence per colour: other languages decline "White" and "Black" by their place in it.
+  const white = color === "white";
   const defaultElo = defaultBotElo(rating);
   const strength = elo ?? defaultElo;
   const games = books[color];
 
   return (
-    <section aria-label="Game" className="flex flex-col gap-4 rounded-xl bg-ink-card p-4 sm:p-6">
+    <section aria-label={t("Game")} className="flex flex-col gap-4 rounded-xl bg-ink-card p-4 sm:p-6">
       {header}
       <div className="flex flex-wrap items-center gap-3">
-        <span className="text-[15px] font-[520] text-ink-text">You play</span>
-        <div role="radiogroup" aria-label="Your colour" className="flex w-fit gap-1 rounded-lg bg-ink-raised p-1">
+        <span className="text-[15px] font-[520] text-ink-text">{t("You play")}</span>
+        <div role="radiogroup" aria-label={t("Your colour")} className="flex w-fit gap-1 rounded-lg bg-ink-raised p-1">
           {(["white", "black"] as BotColor[]).map((c) => {
             // The bot plays the other colour, so its book is that side's games.
             const active = color === other(c);
@@ -88,28 +91,33 @@ export function BotSetup({
                   aria-hidden
                   className={`h-3 w-3 rounded-full border ${c === "white" ? "border-neutral-300 bg-white" : "border-neutral-600 bg-neutral-900"}`}
                 />
-                {cap(c)}
+                {c === "white" ? t("White") : t("Black")}
               </button>
             );
           })}
         </div>
         {games.length > 0 && (
           <span className="text-[13px] text-ink-faint">
-            {games.length} of their games as {cap(color)}
+            {white
+              ? t("{n} of their games as White", { n: games.length })
+              : t("{n} of their games as Black", { n: games.length })}
           </span>
         )}
       </div>
 
       {games.length === 0 ? (
         <p className="rounded-lg bg-ink-raised/60 p-4 text-[14px] text-ink-muted">
-          None of {name}&apos;s games as {cap(color)} have moves we can read.{emptyHint && <> {emptyHint}</>}
+          {white
+            ? t("None of {name}'s games as White have moves we can read.", { name })
+            : t("None of {name}'s games as Black have moves we can read.", { name })}
+          {emptyHint && <> {emptyHint}</>}
         </p>
       ) : (
         <>
           <div className="flex flex-col gap-3">
             <div className="flex items-baseline justify-between gap-3">
               <label htmlFor="bot-elo" className="text-[15px] font-[520] text-ink-text">
-                Bot strength
+                {t("Bot strength")}
               </label>
               <span className="text-[22px] font-[520] tabular-nums text-ink-text">{strength}</span>
             </div>
@@ -124,17 +132,23 @@ export function BotSetup({
               className="w-full accent-[rgb(var(--accent))]"
             />
             <p className="flex flex-wrap items-center gap-x-2 text-[13px] text-ink-faint">
-              <span>{rating ? `${name}'s FIDE rating: ${rating}` : `${name} has no FIDE rating, so the bot starts at ${UNRATED_ELO}`}</span>
+              <span>
+                {rating
+                  ? t("{name}'s FIDE rating: {rating}", { name, rating })
+                  : t("{name} has no FIDE rating, so the bot starts at {elo}", { name, elo: UNRATED_ELO })}
+              </span>
               {strength !== defaultElo && (
                 <button type="button" onClick={() => onEloChange(null)} className="text-accent-soft underline">
-                  Reset
+                  {t("Reset")}
                 </button>
               )}
             </p>
-            {rating !== null && rating < ELO_MIN && <p className="text-[13px] text-ink-faint">The engine plays no weaker than {ELO_MIN}.</p>}
+            {rating !== null && rating < ELO_MIN && <p className="text-[13px] text-ink-faint">{t("The engine plays no weaker than {elo}.", { elo: ELO_MIN })}</p>}
             {games.length < FEW_GAMES && (
               <p className="text-[13px] text-amber-700 dark:text-amber-400">
-                Only {games.length} {games.length === 1 ? "game" : "games"} as {cap(color)}, so the bot will leave {name}&apos;s moves early.
+                {white
+                  ? t.plural(games.length, "Only {n} game as White, so the bot will leave {name}'s moves early.", "Only {n} games as White, so the bot will leave {name}'s moves early.", { name })
+                  : t.plural(games.length, "Only {n} game as Black, so the bot will leave {name}'s moves early.", "Only {n} games as Black, so the bot will leave {name}'s moves early.", { name })}
               </p>
             )}
           </div>
@@ -144,7 +158,7 @@ export function BotSetup({
               onClick={onPlay}
               className="rounded-pill bg-accent px-6 py-2.5 text-[15px] font-[520] text-accent-on hover:bg-accent-soft"
             >
-              Play as {cap(other(color))}
+              {white ? t("Play as Black") : t("Play as White")}
             </button>
             {note && <span className="text-[13px] text-ink-faint">{note}</span>}
           </div>
