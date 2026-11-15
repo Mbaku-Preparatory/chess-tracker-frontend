@@ -12,6 +12,8 @@ import { OnlineImportSection } from "@/components/import/OnlineImportSection";
 import { ImportResultPanel } from "@/components/import/ImportResultPanel";
 import type { PlayerDetail, PGNImportResult } from "@/types";
 import { userMessage } from "@/lib/apiError";
+import { useT } from "@/hooks/useT";
+import { msg } from "@/lib/i18n";
 
 type Color = "auto" | "white" | "black";
 type ImportSource = "chesscom" | "lichess" | "chess_results" | "pgn";
@@ -46,7 +48,7 @@ const SOURCE_TABS: {
 }[] = [
   {
     id: "chess_results",
-    label: "OTB / Chess-Results",
+    label: msg("OTB / Chess-Results"),
     shortLabel: "OTB",
     color: "#1a3a6b",
     activeClass: "border-[#1a3a6b] bg-[#1a3a6b] text-white",
@@ -82,7 +84,7 @@ const SOURCE_TABS: {
   },
   {
     id: "pgn",
-    label: "PGN file",
+    label: msg("PGN file"),
     shortLabel: "PGN",
     color: "#6b7280",
     activeClass: "border-gray-700 bg-gray-700 text-white",
@@ -97,6 +99,7 @@ const SOURCE_TABS: {
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function PlayerImportPage() {
+  const t = useT();
   const { slug } = useParams<{ slug: string }>();
   const searchParams = useSearchParams();
 
@@ -231,7 +234,7 @@ export default function PlayerImportPage() {
       <div className="py-16 text-center">
         <p className="text-gray-500 dark:text-gray-400">{playerError ?? "Player not found."}</p>
         <Link href="/home" className="btn-primary mt-4 inline-flex">
-          Back to players
+          {t("Back to players")}
         </Link>
       </div>
     );
@@ -256,22 +259,22 @@ export default function PlayerImportPage() {
             {initials}
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Import Games</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t("Import Games")}</h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Adding games for{" "}
+              {t("Adding games for")}{" "}
               <span className="font-medium text-gray-700 dark:text-gray-300">{player.full_name}</span>
             </p>
             <div className="mt-2"><TutorialLink id="online-games" /></div>
           </div>
         </div>
         <Link href={`/players/${playerRef}`} className="btn-secondary text-sm">
-          View Profile
+          {t("View Profile")}
         </Link>
       </div>
 
       {/* Source selector */}
       <div className="mb-6">
-        <p className="mb-3 text-sm font-medium text-gray-600 dark:text-gray-300">Import source</p>
+        <p className="mb-3 text-sm font-medium text-gray-600 dark:text-gray-300">{t("Import source")}</p>
         <div className="flex flex-wrap gap-2">
           {SOURCE_TABS.map((tab) => {
             const isActive = activeSource === tab.id;
@@ -289,7 +292,7 @@ export default function PlayerImportPage() {
                 <span className={isActive ? "text-white" : ""}>
                   {tab.icon}
                 </span>
-                {tab.label}
+                {t(tab.label)}
               </button>
             );
           })}
@@ -333,8 +336,8 @@ export default function PlayerImportPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 dark:text-gray-100">Import from PGN file</h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Paste or upload a .pgn file directly</p>
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100">{t("Import from PGN file")}</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{t("Paste or upload a .pgn file directly")}</p>
               </div>
             </div>
 
@@ -391,7 +394,7 @@ export default function PlayerImportPage() {
                     htmlFor="name-override"
                     className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
-                    Name in PGN headers
+                    {t("Name in PGN headers")}
                     <span className="ml-1 text-red-500">*</span>
                   </label>
                   <input
@@ -402,8 +405,7 @@ export default function PlayerImportPage() {
                     className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-dark-border dark:bg-dark-surface dark:text-gray-100 dark:placeholder-gray-500"
                   />
                   <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
-                    How the player&rsquo;s name appears in the White/Black PGN headers. Partial
-                    match is fine.
+                    {t("How the player’s name appears in the White/Black PGN headers. Partial match is fine.")}
                   </p>
                 </div>
               )}
@@ -412,7 +414,7 @@ export default function PlayerImportPage() {
               <div>
                 <div className="mb-1.5 flex items-center justify-between">
                   <label htmlFor="pgn-input" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    PGN
+                    {t("PGN")}
                     <span className="ml-1 text-red-500">*</span>
                   </label>
                   <button
@@ -428,7 +430,7 @@ export default function PlayerImportPage() {
                         d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
                       />
                     </svg>
-                    Upload .pgn
+                    {t("Upload .pgn")}
                   </button>
                   <input
                     ref={fileInputRef}
@@ -448,7 +450,7 @@ export default function PlayerImportPage() {
                   {dragging && (
                     <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-lg border-2 border-dashed border-brand-400 bg-brand-50/80 dark:bg-brand-950/80">
                       <p className="text-sm font-medium text-brand-700 dark:text-brand-300">
-                        Drop your .pgn file here
+                        {t("Drop your .pgn file here")}
                       </p>
                     </div>
                   )}
@@ -491,7 +493,7 @@ export default function PlayerImportPage() {
                       onClick={handleClear}
                       className="text-xs text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
                     >
-                      Clear
+                      {t("Clear")}
                     </button>
                   )}
                 </div>
@@ -520,7 +522,7 @@ export default function PlayerImportPage() {
                   {loading ? "Importing…" : "Import Games"}
                 </button>
                 <Link href={`/players/${slug}`} className="btn-secondary">
-                  Cancel
+                  {t("Cancel")}
                 </Link>
               </div>
             </form>

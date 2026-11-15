@@ -1,3 +1,5 @@
+import { T } from "@/components/T";
+
 interface PerformanceSplitCardProps {
   label: string;
   games: number;
@@ -35,10 +37,10 @@ export function PerformanceSplitCard({
       </div>
       <div className="flex items-baseline gap-2">
         <span className={`text-3xl font-bold ${scoreColor}`}>{score}%</span>
-        <span className="text-sm text-gray-400 dark:text-gray-500">score</span>
+        <span className="text-sm text-gray-400 dark:text-gray-500"><T>score</T></span>
       </div>
       <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-        {games} game{games !== 1 ? "s" : ""}
+        <T n={games} one="{n} game">{"{n} games"}</T>
       </p>
       <div className="mt-3 h-2 overflow-hidden rounded-full bg-gray-100 dark:bg-dark-elevated">
         <div

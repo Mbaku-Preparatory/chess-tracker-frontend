@@ -17,12 +17,13 @@ import { BurgerButton } from "@/components/ui/BurgerButton";
 import { useSubscription } from "@/components/subscription/SubscriptionProvider";
 import { BILLING_PATH } from "@/lib/subscription";
 import { helpHref } from "@/lib/support";
+import { msg } from "@/lib/i18n";
 
 // The app's sections, in the bar on a desktop and in the burger menu below it.
 const LINKS = [
-  { href: "/home", label: "My Opponents" },
+  { href: "/home", label: msg("My Opponents") },
   // the user's own chess books: exercises, or a reader for scans
-  { href: "/books", label: "Books" },
+  { href: "/books", label: msg("Books") },
   // No Tutorials tab (founder, 2026-11-14): each screen keeps its own
   // "Watch how" link (components/tutorials), and visitors have /tutorials.
 ];
@@ -131,16 +132,12 @@ export function Navbar() {
                     : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100"
                 }`}
               >
-                {label}
+                {t(label)}
               </Link>
             ))}
           </div>
 
-          {/* Signed out (forgot password, verify email): the language too. The
-              signed-in app gets it once the app itself is translated. */}
-          {!token && (
-            <LanguagePicker className="ml-1 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100" />
-          )}
+          <LanguagePicker className="ml-1 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100" />
           <ThemeToggle className="ml-1 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100" />
 
           {/* Auth state */}
@@ -150,7 +147,7 @@ export function Navbar() {
               <button
                 onClick={() => setDropdownOpen((o) => !o)}
                 className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full ring-2 ring-brand-600/20 transition-all hover:ring-brand-600/50 focus:outline-none"
-                title="Profile"
+                title={t("Profile")}
               >
                 <img src={face} alt="" className="h-full w-full object-cover" />
               </button>
@@ -159,7 +156,7 @@ export function Navbar() {
               {dropdownOpen && (
                 <div className="absolute right-0 top-12 z-50 w-56 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg dark:border-dark-border dark:bg-dark-elevated">
                   <div className="flex flex-col items-center px-4 pt-5 pb-4">
-                    <Link href="/settings" onClick={() => setDropdownOpen(false)} title="Change your avatar in Settings" className="rounded-full">
+                    <Link href="/settings" onClick={() => setDropdownOpen(false)} title={t("Change your avatar in Settings")} className="rounded-full">
                       <img src={face} alt="" className="h-16 w-16 rounded-full" />
                     </Link>
                     {email && (
@@ -179,7 +176,7 @@ export function Navbar() {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28z" />
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
-                      Settings
+                      {t("Settings")}
                     </Link>
                   </div>
 
@@ -192,7 +189,7 @@ export function Navbar() {
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4" aria-hidden>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
                       </svg>
-                      Help
+                      {t("Help")}
                     </Link>
                   </div>
 
@@ -206,7 +203,7 @@ export function Navbar() {
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4" aria-hidden>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
                         </svg>
-                        Billing
+                        {t("Billing")}
                       </Link>
                     </div>
                   )}
@@ -225,7 +222,7 @@ export function Navbar() {
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                       </svg>
-                      Support this project
+                      {t("Support this project")}
                     </Link>
                   </div>
                   )}
@@ -239,7 +236,7 @@ export function Navbar() {
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
                       </svg>
-                      Logout
+                      {t("Logout")}
                     </button>
                   </div>
                 </div>
@@ -251,13 +248,13 @@ export function Navbar() {
                 href="/login"
                 className="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100"
               >
-                Login
+                {t("Login")}
               </Link>
               <Link
                 href="/signup"
                 className="btn-primary text-sm"
               >
-                Sign up
+                {t("Sign up")}
               </Link>
             </div>
           )}
@@ -279,7 +276,7 @@ export function Navbar() {
               for fixed children, which would squeeze this into the bar. */}
           <button
             type="button"
-            aria-label="Close the menu"
+            aria-label={t("Close the menu")}
             tabIndex={-1}
             onClick={() => setMenuOpen(false)}
             className="absolute inset-x-0 top-16 z-40 h-[calc(100dvh-4rem)] cursor-default bg-black/30 lg:hidden"
@@ -301,23 +298,21 @@ export function Navbar() {
                         : "text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-dark-elevated"
                     }`}
                   >
-                    {label}
+                    {t(label)}
                   </Link>
                 </li>
               ))}
             </ul>
 
-            {!token && (
-              <div className="mx-auto max-w-7xl border-t border-gray-100 px-4 py-3 dark:border-dark-border sm:px-6">
-                <div className="flex items-center justify-between gap-3 px-4 py-1">
-                  <span className="text-sm text-gray-600 dark:text-gray-300">{t("Language")}</span>
-                  <LanguagePicker className="text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100" />
-                </div>
-              </div>
-            )}
             <div className="mx-auto max-w-7xl border-t border-gray-100 px-4 py-3 dark:border-dark-border sm:px-6">
               <div className="flex items-center justify-between gap-3 px-4 py-1">
-                <span className="text-sm text-gray-600 dark:text-gray-300">Theme</span>
+                <span className="text-sm text-gray-600 dark:text-gray-300">{t("Language")}</span>
+                <LanguagePicker className="text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100" />
+              </div>
+            </div>
+            <div className="mx-auto max-w-7xl border-t border-gray-100 px-4 py-3 dark:border-dark-border sm:px-6">
+              <div className="flex items-center justify-between gap-3 px-4 py-1">
+                <span className="text-sm text-gray-600 dark:text-gray-300">{t("Theme")}</span>
                 <ThemeToggle className="text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-elevated dark:hover:text-gray-100" />
               </div>
             </div>
@@ -334,14 +329,14 @@ export function Navbar() {
                     onClick={() => setMenuOpen(false)}
                     className="block rounded-lg px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-dark-elevated"
                   >
-                    Settings
+                    {t("Settings")}
                   </Link>
                   <Link
                     href={helpHref(pathname)}
                     onClick={() => setMenuOpen(false)}
                     className="block rounded-lg px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-dark-elevated"
                   >
-                    Help
+                    {t("Help")}
                   </Link>
                   {showBilling && (
                     <Link
@@ -349,7 +344,7 @@ export function Navbar() {
                       onClick={() => setMenuOpen(false)}
                       className="block rounded-lg px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-dark-elevated"
                     >
-                      Billing
+                      {t("Billing")}
                     </Link>
                   )}
                   {showSupport && (
@@ -358,7 +353,7 @@ export function Navbar() {
                       onClick={() => setMenuOpen(false)}
                       className="block rounded-lg px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-dark-elevated"
                     >
-                      Support this project
+                      {t("Support this project")}
                     </Link>
                   )}
                   <button
@@ -369,16 +364,16 @@ export function Navbar() {
                     }}
                     className="block w-full rounded-lg px-4 py-3 text-left text-base font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
                   >
-                    Logout
+                    {t("Logout")}
                   </button>
                 </>
               ) : (
                 <div className="flex gap-2 px-4 py-2">
                   <Link href="/login" className="flex-1 rounded-lg border border-gray-200 px-4 py-2.5 text-center text-sm font-medium text-gray-700 dark:border-dark-border dark:text-gray-200">
-                    Login
+                    {t("Login")}
                   </Link>
                   <Link href="/signup" className="btn-primary flex-1 text-center text-sm">
-                    Sign up
+                    {t("Sign up")}
                   </Link>
                 </div>
               )}

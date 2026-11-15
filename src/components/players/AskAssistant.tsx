@@ -4,6 +4,8 @@ import { useState } from "react";
 import { api } from "@/lib/api";
 import type { AppError } from "@/lib/apiError";
 import { Markdown } from "@/components/ui/Markdown";
+import { useT } from "@/hooks/useT";
+import { msg } from "@/lib/i18n";
 
 /**
  * Ask Mbaku about one opponent, answered from the games we hold on them.
@@ -22,12 +24,13 @@ import { Markdown } from "@/components/ui/Markdown";
 // Provisional — the backend carries the same name in ASSISTANT_NAME.
 const ASSISTANT_NAME = "Mbaku AI";
 
+// Shown, and asked, in the reader's language: Mbaku answers in the language it is asked in.
 const SUGGESTED = [
-  "Which openings does this player play most?",
-  "Where do they score worst?",
-  "What's their record against stronger opponents?",
-  "How should I prepare against them?",
-  "What's their rating trend over the last three years?",
+  msg("Which openings does this player play most?"),
+  msg("Where do they score worst?"),
+  msg("What's their record against stronger opponents?"),
+  msg("How should I prepare against them?"),
+  msg("What's their rating trend over the last three years?"),
 ];
 
 // Matches QUESTION_MAX_LENGTH in players/services/assistant.py. The backend
@@ -45,7 +48,8 @@ interface AskAssistantProps {
 }
 
 export function AskAssistant({ slug, playerName }: AskAssistantProps) {
-  const suggested = SUGGESTED;
+  const t = useT();
+  const suggested = SUGGESTED.map((q) => t(q));
   const [question, setQuestion] = useState("");
   const [turns, setTurns] = useState<Turn[]>([]);
   const [conversationId, setConversationId] = useState<number | null>(null);
@@ -84,7 +88,7 @@ export function AskAssistant({ slug, playerName }: AskAssistantProps) {
         return;
       }
       setError(
-        err instanceof Error ? err.message : "Something went wrong. Try again."
+        err instanceof Error ? err.message : t("Something went wrong. Try again.")
       );
     } finally {
       setLoading(false);
@@ -109,8 +113,8 @@ export function AskAssistant({ slug, playerName }: AskAssistantProps) {
           </p>
           <h3 className="text-lg font-bold text-white">
             {playerName
-              ? `${ASSISTANT_NAME} on ${playerName}`
-              : `Ask ${ASSISTANT_NAME} about this player`}
+              ? t("{assistant} on {name}", { assistant: ASSISTANT_NAME, name: playerName })
+              : t("Ask {assistant} about this player", { assistant: ASSISTANT_NAME })}
           </h3>
         </div>
         {turns.length > 0 && (
@@ -119,7 +123,7 @@ export function AskAssistant({ slug, playerName }: AskAssistantProps) {
             onClick={reset}
             className="rounded-lg px-3 py-1.5 text-xs font-medium text-brand-100 transition-colors hover:bg-white/10"
           >
-            New chat
+            {t("New chat")}
           </button>
         )}
       </div>
@@ -151,13 +155,13 @@ export function AskAssistant({ slug, playerName }: AskAssistantProps) {
         {loading && (
           <div className="flex items-center gap-2 rounded-xl bg-gray-50 p-4 text-sm text-gray-500 dark:bg-dark-elevated dark:text-gray-400">
             <span className="h-2 w-2 animate-pulse rounded-full bg-brand-500" />
-            Reading {playerName ? `${playerName}'s` : "their"} games…
+            {playerName ? t("Reading {name}'s games…", { name: playerName }) : t("Reading their games…")}
           </div>
         )}
 
         {error && (
           <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-300">
-            {error}
+            {t(error)}
           </div>
         )}
 
@@ -181,8 +185,8 @@ export function AskAssistant({ slug, playerName }: AskAssistantProps) {
             rows={2}
             placeholder={
               turns.length
-                ? "Ask a follow-up…"
-                : `Ask ${ASSISTANT_NAME} — e.g. which opening do they score worst with?`
+                ? t("Ask a follow-up…")
+                : t("Ask {assistant} — e.g. which opening do they score worst with?", { assistant: ASSISTANT_NAME })
             }
             disabled={loading}
             className="block w-full resize-none rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 disabled:opacity-60 dark:border-dark-border dark:bg-dark-elevated dark:text-gray-100 dark:placeholder-gray-500"
@@ -193,7 +197,7 @@ export function AskAssistant({ slug, playerName }: AskAssistantProps) {
               {allowance && (
                 <>
                   {" · "}
-                  {allowance.left} of {allowance.limit} questions left this month
+                  {t("{left} of {limit} questions left this month", { left: allowance.left, limit: allowance.limit })}
                 </>
               )}
             </span>
@@ -202,7 +206,7 @@ export function AskAssistant({ slug, playerName }: AskAssistantProps) {
               disabled={loading || !question.trim()}
               className="btn-primary text-sm disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {loading ? "Thinking…" : "Ask"}
+              {loading ? t("Thinking…") : t("Ask")}
             </button>
           </div>
         </form>
@@ -224,7 +228,7 @@ export function AskAssistant({ slug, playerName }: AskAssistantProps) {
         )}
 
         <p className="text-xs text-gray-400 dark:text-gray-500">
-          Answered only from the games imported for this player.
+          {t("Answered only from the games imported for this player.")}
         </p>
       </div>
     </div>

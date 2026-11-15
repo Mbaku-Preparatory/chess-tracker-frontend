@@ -12,10 +12,12 @@ import { OpeningTreeView } from "@/components/players/OpeningTreeView";
 import { AllGamesView } from "@/components/players/AllGamesView";
 import { CardSkeleton } from "@/components/ui/LoadingSkeleton";
 import { useRefetchWhenImportFinishes } from "@/components/import/useRefetchWhenImportFinishes";
+import { useT } from "@/hooks/useT";
 
 type Tab = "games" | "openings";
 
 export function PlayerGamesView({ slug }: { slug: string }) {
+  const t = useT();
   const dispatch = useAppDispatch();
   const { player, error } = useAppSelector((s) => s.playerDetail);
   // The tab is in the URL (?tab=openings), with the filters, so a refresh
@@ -55,23 +57,23 @@ export function PlayerGamesView({ slug }: { slug: string }) {
   }
 
   const tabs: { value: Tab; label: string }[] = [
-    { value: "games", label: "All Games" },
-    { value: "openings", label: "By Opening" },
+    { value: "games", label: t("All Games") },
+    { value: "openings", label: t("By Opening") },
   ];
 
   return (
     <div>
       <PageHeader
-        title={player ? `${player.full_name} — Games` : "Games"}
+        title={player ? t("{name} — Games", { name: player.full_name }) : t("Games")}
         subtitle={
           activeTab === "games"
-            ? "Browse all games with filters"
-            : "Drill into any opening to see individual games"
+            ? t("Browse all games with filters")
+            : t("Drill into any opening to see individual games")
         }
         actions={
           player && (
             <Link href={`/players/${slug}`} className="btn-secondary text-sm max-sm:hidden">
-              Back to profile
+              {t("Back to profile")}
             </Link>
           )
         }

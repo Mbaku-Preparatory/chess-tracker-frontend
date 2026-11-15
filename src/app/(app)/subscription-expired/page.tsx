@@ -12,21 +12,22 @@ import { useSearchParams } from "next/navigation";
 
 import { SubscribePlans } from "@/components/subscription/SubscribePlans";
 import { useSubscription } from "@/components/subscription/SubscriptionProvider";
+import { useT } from "@/hooks/useT";
 
 function Expired() {
   const searchParams = useSearchParams();
   const reference = searchParams.get("reference") ?? searchParams.get("trxref");
   const { subscription } = useSubscription();
+  const t = useT();
   const hadTrialOnly = subscription?.state === "none" && !subscription?.negotiated_until;
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
       <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-        {hadTrialOnly ? "Your access has ended" : "Your subscription has ended"}
+        {hadTrialOnly ? t("Your access has ended") : t("Your subscription has ended")}
       </h1>
       <p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-300">
-        Everything you added is still saved: your players, games, prep and books. Subscribe and it&apos;s all back
-        the moment the payment goes through.
+        {t("Everything you added is still saved: your players, games, prep and books. Subscribe and it's all back the moment the payment goes through.")}
       </p>
       <div className="mt-6">
         <SubscribePlans expired returnedReference={reference} />

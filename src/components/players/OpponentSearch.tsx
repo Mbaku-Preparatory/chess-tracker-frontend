@@ -13,6 +13,8 @@ import {
   useFideSearch,
 } from "./useFideSearch";
 import type { Player, PlayerLookupResult } from "@/types";
+import { useT } from "@/hooks/useT";
+import { msg } from "@/lib/i18n";
 
 /**
  * The home page search: one box, two sources, answered in a dropdown.
@@ -105,6 +107,7 @@ export function OpponentSearch({
   onPlayerCreated?: () => void;
   className?: string;
 }) {
+  const t = useT();
   const router = useRouter();
   const { refresh: refreshActiveImports } = useActiveImports();
   const [open, setOpen] = useState(false);
@@ -144,7 +147,7 @@ export function OpponentSearch({
         setOpen(false);
         router.push(href);
       } catch (err) {
-        setAddError(userMessage(err, "Could not add this player."));
+        setAddError(userMessage(err, msg("Could not add this player.")));
       } finally {
         setAddingId(null);
       }
@@ -184,7 +187,7 @@ export function OpponentSearch({
           onKeyDown={(e) => {
             if (e.key === "Escape") setOpen(false);
           }}
-          placeholder="Search your opponents, or FIDE by name or ID…"
+          placeholder={t("Search your opponents, or FIDE by name or ID…")}
           role="combobox"
           aria-expanded={showDropdown}
           aria-controls="opponent-search-results"
@@ -198,7 +201,7 @@ export function OpponentSearch({
           role="listbox"
           className="absolute left-0 right-0 top-full z-40 mt-2 max-h-[70vh] overflow-y-auto rounded-xl border border-gray-200 bg-white py-1 shadow-lg dark:border-dark-border dark:bg-dark-surface"
         >
-          <SectionLabel>Your opponents</SectionLabel>
+          <SectionLabel>{t("Your opponents")}</SectionLabel>
           {localShown.length > 0 ? (
             localShown.map((p) => (
               <Row
@@ -212,9 +215,9 @@ export function OpponentSearch({
                     p.standard_rating ? `${p.standard_rating}` : null,
                   ]
                     .filter(Boolean)
-                    .join(" · ") || "No rating on file"
+                    .join(" · ") || t("No rating on file")
                 }
-                action="Open"
+                action={t("Open")}
                 onClick={() => {
                   setOpen(false);
                   router.push(`/players/${p.slug}`);
@@ -223,7 +226,7 @@ export function OpponentSearch({
             ))
           ) : (
             <p className="px-3 pb-2 text-sm text-gray-500 dark:text-gray-400">
-              {localLoading ? "Searching…" : "None of yours match."}
+              {localLoading ? t("Searching…") : t("None of yours match.")}
             </p>
           )}
 
@@ -231,25 +234,25 @@ export function OpponentSearch({
               your own list — these are people you do not have yet. */}
           <div className="mt-1 border-t border-gray-100 dark:border-dark-border">
             <div className="flex items-baseline gap-2">
-              <SectionLabel strong>FIDE</SectionLabel>
+              <SectionLabel strong>{t("FIDE")}</SectionLabel>
               {searching && (
-                <span className="pt-3 text-xs text-gray-400 dark:text-gray-500">searching…</span>
+                <span className="pt-3 text-xs text-gray-400 dark:text-gray-500">{t("searching…")}</span>
               )}
             </div>
 
             {!fideSearchable && (
               <p className="px-3 pb-2 text-sm text-gray-500 dark:text-gray-400">
-                Keep typing to search FIDE by name, or enter a FIDE ID.
+                {t("Keep typing to search FIDE by name, or enter a FIDE ID.")}
               </p>
             )}
 
             {fideSearchable && fideError && (
-              <p className="px-3 pb-2 text-sm text-red-600 dark:text-red-400">{fideError}</p>
+              <p className="px-3 pb-2 text-sm text-red-600 dark:text-red-400">{t(fideError)}</p>
             )}
 
             {fideSearchable && !searching && !fideError && fideResults?.length === 0 && (
               <p className="px-3 pb-2 text-sm text-gray-500 dark:text-gray-400">
-                No FIDE player matches “{trimmed}”.
+                {t("No FIDE player matches “{query}”.", { query: trimmed })}
               </p>
             )}
 
@@ -280,10 +283,10 @@ export function OpponentSearch({
                   }
                   action={
                     addingId === fideId
-                      ? "Adding…"
+                      ? t("Adding…")
                       : ownedFideIds.has(fideId)
-                        ? "Open"
-                        : "+ Add"
+                        ? t("Open")
+                        : t("+ Add")
                   }
                   disabled={!!addingId}
                   onClick={() => add(r)}
@@ -292,7 +295,7 @@ export function OpponentSearch({
             })}
 
             {addError && (
-              <p className="px-3 pb-2 pt-1 text-sm text-red-600 dark:text-red-400">{addError}</p>
+              <p className="px-3 pb-2 pt-1 text-sm text-red-600 dark:text-red-400">{t(addError)}</p>
             )}
           </div>
         </div>

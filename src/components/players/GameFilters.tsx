@@ -2,6 +2,8 @@
 
 import { GAME_SOURCES } from "@/lib/games";
 import type { ColorChoice, GameResult, GameSource } from "@/types";
+import { useT } from "@/hooks/useT";
+import { msg } from "@/lib/i18n";
 
 /**
  * The filter bar over a player's games: colour, result, source, year, and
@@ -53,20 +55,20 @@ export function ratingParams(band: string): { min_rating?: string; max_rating?: 
 }
 
 const RESULT_OPTIONS: { value: GameResult | ""; label: string }[] = [
-  { value: "", label: "All results" },
-  { value: "win", label: "Wins" },
-  { value: "draw", label: "Draws" },
-  { value: "loss", label: "Losses" },
+  { value: "", label: msg("All results") },
+  { value: "win", label: msg("Wins") },
+  { value: "draw", label: msg("Draws") },
+  { value: "loss", label: msg("Losses") },
 ];
 
 const SOURCE_OPTIONS: { value: GameSource | ""; label: string }[] = [
-  { value: "", label: "All sources" },
+  { value: "", label: msg("All sources") },
   ...(Object.keys(GAME_SOURCES) as GameSource[]).map((s) => ({ value: s, label: GAME_SOURCES[s].label })),
 ];
 
 const CURRENT_YEAR = new Date().getFullYear();
 const YEAR_OPTIONS = [
-  { value: "", label: "All years" },
+  { value: "", label: msg("All years") },
   ...Array.from({ length: CURRENT_YEAR - 2009 }, (_, i) => {
     const y = String(CURRENT_YEAR - i);
     return { value: y, label: y };
@@ -74,8 +76,8 @@ const YEAR_OPTIONS = [
 ];
 
 const RATING_OPTIONS = [
-  { value: "", label: "All ratings" },
-  { value: "-1599", label: "Under 1600" },
+  { value: "", label: msg("All ratings") },
+  { value: "-1599", label: msg("Under 1600") },
   { value: "1600-1799", label: "1600–1799" },
   { value: "1800-1999", label: "1800–1999" },
   { value: "2000-2199", label: "2000–2199" },
@@ -110,6 +112,7 @@ export function GameFilters({
   /** "12 games", at the end of the bar; left out while loading. */
   count?: string;
 }) {
+  const t = useT();
   const set = <K extends keyof GameFilterValues>(key: K, v: GameFilterValues[K]) => onChange({ ...value, [key]: v });
 
   return (
@@ -117,7 +120,7 @@ export function GameFilters({
       <div className="flex items-center gap-1.5">
         {(["", "white", "black"] as const).map((c) => (
           <button key={c} type="button" onClick={() => set("color", c)} className={pillCls(value.color === c)}>
-            {c === "" ? "All colors" : c === "white" ? "As White" : "As Black"}
+            {c === "" ? t("All colors") : c === "white" ? t("As White") : t("As Black")}
           </button>
         ))}
       </div>
@@ -127,34 +130,34 @@ export function GameFilters({
       <div className="flex items-center gap-1.5">
         {RESULT_OPTIONS.map((r) => (
           <button key={r.value} type="button" onClick={() => set("result", r.value)} className={pillCls(value.result === r.value)}>
-            {r.label}
+            {t(r.label)}
           </button>
         ))}
       </div>
 
       <Divider />
 
-      <select value={value.source} onChange={(e) => set("source", e.target.value as GameSource | "")} className={selectCls} aria-label="Source">
+      <select value={value.source} onChange={(e) => set("source", e.target.value as GameSource | "")} className={selectCls} aria-label={t("Source")}>
         {SOURCE_OPTIONS.map((o) => (
           <option key={o.value} value={o.value}>
-            {o.label}
+            {t(o.label)}
           </option>
         ))}
       </select>
 
-      <select value={value.year} onChange={(e) => set("year", e.target.value)} className={selectCls} aria-label="Year">
+      <select value={value.year} onChange={(e) => set("year", e.target.value)} className={selectCls} aria-label={t("Year")}>
         {YEAR_OPTIONS.map((o) => (
           <option key={o.value} value={o.value}>
-            {o.label}
+            {t(o.label)}
           </option>
         ))}
       </select>
 
       {showRating && (
-        <select value={value.rating} onChange={(e) => set("rating", e.target.value)} className={selectCls} aria-label="Opponent rating" title="Opponent rating">
+        <select value={value.rating} onChange={(e) => set("rating", e.target.value)} className={selectCls} aria-label={t("Opponent rating")} title={t("Opponent rating")}>
           {RATING_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>
-              {o.label}
+              {t(o.label)}
             </option>
           ))}
         </select>
@@ -165,7 +168,7 @@ export function GameFilters({
         value={value.search}
         onChange={(e) => set("search", e.target.value)}
         placeholder={searchPlaceholder}
-        aria-label="Search"
+        aria-label={t("Search")}
         className={`${selectCls} min-w-[200px]`}
       />
 

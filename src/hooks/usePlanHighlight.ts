@@ -2,10 +2,12 @@
 
 import { useState, type FocusEvent } from "react";
 
+import { msg } from "@/lib/i18n";
+
 /** The plan that carries the "Most popular" badge and is highlighted until
  * the visitor points at another. Shared by /subscribe and /pricing. */
 export const POPULAR_PERIOD = "year";
-export const POPULAR_LABEL = "Most popular";
+export const POPULAR_LABEL = msg("Most popular");
 
 /**
  * Which plan card is highlighted: the popular one, unless the pointer (or the

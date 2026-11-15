@@ -16,6 +16,9 @@ import { BotGame } from "./BotGame";
 import { BotSetup, defaultBotElo, startingColor, type BotColor as Color } from "./BotSetup";
 import { TutorialLink } from "@/components/tutorials/TutorialLink";
 import { BACK_BUTTON, BackLabel } from "@/components/ui/BackLink";
+import { useT } from "@/hooks/useT";
+import { T } from "@/components/T";
+import { msg } from "@/lib/i18n";
 
 /**
  * "Play <player> bot": pick a colour and a strength (their FIDE rating to
@@ -23,9 +26,10 @@ import { BACK_BUTTON, BackLabel } from "@/components/ui/BackLink";
  * See lib/bot/book.ts for how it chooses.
  */
 export function PlayBotView({ slug }: { slug: string }) {
+  const t = useT();
   const [player, setPlayer] = useState<PlayerDetail | null>(null);
   // The plate's name, from the account: there is no player row for you.
-  const [youName, setYouName] = useState("You");
+  const [youName, setYouName] = useState(() => t("You"));
   const [books, setBooks] = useState<Record<Color, BotBookGame[]> | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,13 +57,13 @@ export function PlayBotView({ slug }: { slug: string }) {
         // Start on the colour they have more games in.
         setColor(startingColor({ white: white.games, black: black.games }));
       })
-      .catch((err) => !cancelled && setError(userMessage(err, "Couldn't load this player's games.")));
+      .catch((err) => !cancelled && setError(t(userMessage(err, msg("Couldn't load this player's games.")))));
     api
       .getMe()
       .then((m) => {
         if (cancelled) return;
         setMyAvatar(m.avatar);
-        setYouName(`${m.first_name} ${m.last_name}`.trim() || m.username || "You");
+        setYouName(`${m.first_name} ${m.last_name}`.trim() || m.username || t("You"));
       })
       .catch(() => {});
     return () => {
@@ -90,7 +94,7 @@ export function PlayBotView({ slug }: { slug: string }) {
     set(avatar);
     (who === "bot" ? api.setBotAvatar(slug, avatar) : api.setMyAvatar(avatar)).catch((err) => {
       set(before);
-      setAvatarError(userMessage(err, "Couldn't save that avatar. Try again."));
+      setAvatarError(t(userMessage(err, msg("Couldn't save that avatar. Try again."))));
     });
   }
 
@@ -101,26 +105,28 @@ export function PlayBotView({ slug }: { slug: string }) {
     <>
       {picking === "bot" && (
         <AvatarPicker
-          title={`Avatar for ${name} bot`}
+          title={t("Avatar for {name} bot", { name })}
           current={botAvatar}
           defaultSrc={botDefaultSrc}
-          defaultLabel="Default"
+          defaultLabel={t("Default")}
           onPick={(n) => pickAvatar("bot", n)}
           onClose={() => setPicking(null)}
         />
       )}
       {picking === "me" && (
         <AvatarPicker
-          title="Your avatar"
+          title={t("Your avatar")}
           current={myAvatar}
           defaultSrc={myDefaultSrc}
-          defaultLabel="Default"
+          defaultLabel={t("Default")}
           onPick={(n) => pickAvatar("me", n)}
           onClose={() => setPicking(null)}
         />
       )}
     </>
   );
+
+  const importLink = <Link href={`/players/${slug}/import`} className="text-accent-soft underline">{t("Import games")}</Link>;
 
   if (playing) {
     return (
@@ -155,9 +161,9 @@ export function PlayBotView({ slug }: { slug: string }) {
           <BackLabel />
         </Link>
         <div className="min-w-0 sm:pt-0.5">
-          <h1 className="text-balance text-[22px] font-[520] leading-tight text-ink-text">Play {name} bot</h1>
+          <h1 className="text-balance text-[22px] font-[520] leading-tight text-ink-text">{t("Play {name} bot", { name })}</h1>
           <p className="mt-1 text-[14px] text-ink-faint">
-            The bot opens the way {name} does, move for move from their games, then plays at the strength you choose.
+            {t("The bot opens the way {name} does, move for move from their games, then plays at the strength you choose.", { name })}
           </p>
           <div className="mt-2">
             <TutorialLink
@@ -168,20 +174,20 @@ export function PlayBotView({ slug }: { slug: string }) {
         </div>
       </header>
 
-      <section aria-label="Avatars" className="flex flex-col gap-2 rounded-xl bg-ink-card p-4">
+      <section aria-label={t("Avatars")} className="flex flex-col gap-2 rounded-xl bg-ink-card p-4">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
           {[
-            { who: "bot" as const, src: botSrc, label: `${name} bot` },
+            { who: "bot" as const, src: botSrc, label: t("{name} bot", { name }) },
             { who: "me" as const, src: mySrc, label: youName },
           ].map((a) => (
             <div key={a.who} className="flex min-w-0 items-center gap-3">
-              <button type="button" onClick={() => setPicking(a.who)} className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label={`Change the avatar for ${a.label}`}>
+              <button type="button" onClick={() => setPicking(a.who)} className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label={t("Change the avatar for {name}", { name: a.label })}>
                 <Avatar src={a.src} size={52} />
               </button>
               <div className="min-w-0">
                 <p className="truncate text-[15px] font-[520] text-ink-text">{a.label}</p>
                 <button type="button" onClick={() => setPicking(a.who)} className="text-[13px] text-accent-soft underline">
-                  Change avatar
+                  {t("Change avatar")}
                 </button>
               </div>
             </div>
@@ -202,12 +208,7 @@ export function PlayBotView({ slug }: { slug: string }) {
         onEloChange={setElo}
         onPlay={() => setPlaying(true)}
         emptyHint={
-          <>
-            <Link href={`/players/${slug}/import`} className="text-accent-soft underline">
-              Import games
-            </Link>{" "}
-            to build this side of the bot.
-          </>
+          <T vars={{ link: importLink }}>{"{link} to build this side of the bot."}</T>
         }
       />
     </div>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { hasInAppHistory } from "@/components/NavigationMemory";
+import { useT } from "@/hooks/useT";
 
 /**
  * Every "‹ Back" button looks like this: the accent outline that fills on
@@ -16,12 +17,13 @@ export const BACK_BUTTON =
 
 /** The arrow and the word, for a Back that is a <button> or a plain <Link>. */
 export function BackLabel() {
+  const t = useT();
   return (
     <>
       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden>
         <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
       </svg>
-      Back
+      {t("Back")}
     </>
   );
 }

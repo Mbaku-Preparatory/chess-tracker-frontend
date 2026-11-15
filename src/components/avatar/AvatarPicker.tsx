@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 
 import { AVATARS, avatarSrc } from "@/lib/avatars";
+import { useT } from "@/hooks/useT";
 
 /** Fills its tile and stays round as the grid narrows on a phone. */
 // eslint-disable-next-line @next/next/no-img-element
@@ -28,6 +29,7 @@ export function AvatarPicker({
   onPick: (avatar: number | null) => void;
   onClose: () => void;
 }) {
+  const t = useT();
   const ref = useRef<HTMLDialogElement>(null);
   // No close() on cleanup: closing fires onClose, and unmounting removes the
   // dialog anyway. (React's dev double-mount closed it the moment it opened.)
@@ -54,7 +56,7 @@ export function AvatarPicker({
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-[17px] font-[520]">{title}</h2>
           <button type="button" onClick={onClose} className="rounded-pill px-3 py-1 text-[14px] text-ink-muted hover:bg-ink-raised hover:text-ink-text">
-            Close
+            {t("Close")}
           </button>
         </div>
         <ul className="grid grid-cols-5 gap-1.5">
@@ -66,7 +68,7 @@ export function AvatarPicker({
           </li>
           {AVATARS.map((n) => (
             <li key={n}>
-              <button type="button" aria-pressed={current === n} aria-label={`Avatar ${n}`} onClick={() => onPick(n)} className={tile(current === n)}>
+              <button type="button" aria-pressed={current === n} aria-label={t("Avatar {n}", { n })} onClick={() => onPick(n)} className={tile(current === n)}>
                 <Face src={avatarSrc(n)} />
               </button>
             </li>

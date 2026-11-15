@@ -8,6 +8,7 @@ import { DEFAULT_PAGE_SIZE, pageSizeOf, rowFromGame } from "@/lib/games";
 import { intParam, replaceQuery } from "@/lib/urlState";
 import { DeleteGameButton } from "./DeleteGameButton";
 import { GameFilters, filterParams, filtersFromParams, hasFilters, ratingParams, type GameFilterValues } from "./GameFilters";
+import { useT } from "@/hooks/useT";
 
 interface AllGamesViewProps {
   slug: string;
@@ -16,6 +17,7 @@ interface AllGamesViewProps {
 }
 
 export function AllGamesView({ slug, playerName }: AllGamesViewProps) {
+  const t = useT();
   // Filters, page and size live in the URL too, so a refresh keeps them.
   const params = useSearchParams();
   const [filters, setFilters] = useState<GameFilterValues>(() => filtersFromParams(params));
@@ -49,8 +51,8 @@ export function AllGamesView({ slug, playerName }: AllGamesViewProps) {
           replaceQuery(filterParams(f));
         }}
         showRating
-        searchPlaceholder="Search opponent, event, opening…"
-        count={total === null ? undefined : `${total} game${total !== 1 ? "s" : ""}`}
+        searchPlaceholder={t("Search opponent, event, opening…")}
+        count={total === null ? undefined : t.plural(total, "{n} game", "{n} games")}
       />
 
       <div className="rounded-xl bg-ink-card p-4 sm:p-6">
@@ -62,7 +64,7 @@ export function AllGamesView({ slug, playerName }: AllGamesViewProps) {
           start={start}
           onPageChange={(page, size) => replaceQuery({ page: page > 1 ? page : null, size: size !== DEFAULT_PAGE_SIZE ? size : null })}
           onCount={setTotal}
-          empty={hasFilters(filters) ? "No games match the current filters." : "No games found."}
+          empty={hasFilters(filters) ? t("No games match the current filters.") : t("No games found.")}
         />
       </div>
     </div>
