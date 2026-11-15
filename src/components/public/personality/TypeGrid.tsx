@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { T } from "@/components/T";
 import { TYPES } from "@/lib/chessPersonality";
 
 import { Emblem } from "./Emblem";
@@ -19,7 +20,7 @@ export function TypeGrid({ current }: { current?: string }) {
           >
             <Emblem type={t} size={64} />
             <span className="text-[16px] font-[480] leading-tight">{t.name}</span>
-            <span className="hidden text-[13px] leading-[1.4] text-ink-muted sm:block">{t.tagline}</span>
+            <span className="hidden text-[13px] leading-[1.4] text-ink-muted sm:block"><T>{t.tagline}</T></span>
           </Link>
         </li>
       ))}

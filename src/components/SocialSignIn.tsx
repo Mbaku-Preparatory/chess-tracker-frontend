@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { GoogleSignIn } from "@/components/GoogleSignIn";
+import { useT } from "@/hooks/useT";
 import { ProviderLogo } from "@/components/ui/ProviderLogo";
 import { enabledProviders, providerName, startLinkedSignIn, type Provider } from "@/lib/linkedAuth";
 
@@ -12,6 +13,7 @@ import { enabledProviders, providerName, startLinkedSignIn, type Provider } from
  * email form. One component, so the two pages never offer different choices.
  */
 export function SocialSignIn({ context, onError }: { context: "signin" | "signup"; onError: (message: string | null) => void }) {
+  const t = useT();
   return (
     <div className="space-y-3">
       <GoogleSignIn context={context} onError={onError} />
@@ -20,7 +22,7 @@ export function SocialSignIn({ context, onError }: { context: "signin" | "signup
       ))}
       <div className="flex items-center gap-3 pt-1 text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500">
         <span className="h-px flex-1 bg-gray-200 dark:bg-dark-border" />
-        or with email
+        {t("or with email")}
         <span className="h-px flex-1 bg-gray-200 dark:bg-dark-border" />
       </div>
     </div>
@@ -32,6 +34,7 @@ export function SocialSignIn({ context, onError }: { context: "signin" | "signup
  * logo beside the words. Buttons that match read as one set of choices. */
 function LinkedButton({ provider, context }: { provider: Provider; context: "signin" | "signup" }) {
   const [leaving, setLeaving] = useState(false);
+  const t = useT();
   const name = providerName(provider);
   return (
     <button
@@ -44,7 +47,7 @@ function LinkedButton({ provider, context }: { provider: Provider; context: "sig
       className="mx-auto flex h-10 w-full max-w-[400px] items-center justify-center gap-2.5 rounded-full border border-[#dadce0] bg-white px-3 text-sm font-medium tracking-[0.25px] text-[#3c4043] hover:bg-[#f8faff] disabled:opacity-60 dark:border-[#202124] dark:bg-[#202124] dark:text-[#e8eaed] dark:hover:bg-[#2b2c2f]"
     >
       <ProviderLogo provider={provider} size={20} className="shrink-0" />
-      <span>{leaving ? `Opening ${name}…` : context === "signup" ? `Sign up with ${name}` : `Continue with ${name}`}</span>
+      <span>{leaving ? t("Opening {name}…", { name }) : context === "signup" ? t("Sign up with {name}", { name }) : t("Continue with {name}", { name })}</span>
     </button>
   );
 }

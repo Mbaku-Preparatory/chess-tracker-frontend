@@ -41,8 +41,9 @@ for (const file of files(join(ROOT, "src"))) {
     if (new RegExp(`^\\{${STR}\\}$`).test(body)) add(JSON.parse(body.slice(1, -1)), where, plural);
     else if (!body.startsWith("{")) add(jsxText(body), where, plural); // {variable}: its value is marked with msg()
   }
-  for (const m of src.matchAll(new RegExp(String.raw`\b(?:t|msg)\(\s*(${STR})`, "g"))) add(JSON.parse(m[1]), where);
-  for (const m of src.matchAll(new RegExp(String.raw`\bt\.plural\([^,]+,\s*(${STR}),\s*(${STR})`, "g"))) add(JSON.parse(m[2]), where, true);
+  // t(), or tr() where a component already has a "t" (a tutorial, a type).
+  for (const m of src.matchAll(new RegExp(String.raw`\b(?:t|tr|msg)\(\s*(${STR})`, "g"))) add(JSON.parse(m[1]), where);
+  for (const m of src.matchAll(new RegExp(String.raw`\btr?\.plural\([^,]+,\s*(${STR}),\s*(${STR})`, "g"))) add(JSON.parse(m[2]), where, true);
 }
 
 const locales = readdirSync(join(ROOT, "public/locales")).filter((f) => f.endsWith(".json"));

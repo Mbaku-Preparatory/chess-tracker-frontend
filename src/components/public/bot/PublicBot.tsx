@@ -8,6 +8,7 @@ import { BotSetup, defaultBotElo, startingColor, type BotColor as Color } from "
 import { AuthLink } from "@/components/public/AuthLink";
 import { PlayerSearch } from "@/components/public/PlayerSearch";
 import { useSignedIn } from "@/hooks/useSignedIn";
+import { useT, type Translate } from "@/hooks/useT";
 import { avatarSrc, defaultAvatar } from "@/lib/avatars";
 import { countFreeBotGame, FREE_BOT_GAMES, freeBotGames } from "@/lib/freeLimits";
 import { graphqlPost } from "@/lib/publicGraphql";
@@ -77,9 +78,9 @@ const toBookGame = (g: BookRow): BotBookGame => ({
   event: g.event,
 });
 
-function freeGamesNote(played: number): string {
+function freeGamesNote(played: number, t: Translate): string {
   const left = Math.max(0, FREE_BOT_GAMES - played);
-  return `Without an account you get ${FREE_BOT_GAMES} free games: ${left} left.`;
+  return t("Without an account you get {free} free games: {left} left.", { free: FREE_BOT_GAMES, left });
 }
 
 /**
@@ -96,7 +97,8 @@ export function PublicBot({ initialFideId }: { initialFideId?: string }) {
   const signedIn = session === true;
   const [color, setColor] = useState<Color>("white");
   const [elo, setElo] = useState<number | null>(null);
-  const [findingNote, setFindingNote] = useState("Looking up their games…");
+  const t = useT();
+  const [findingNote, setFindingNote] = useState(() => t("Looking up their games…"));
   const ticket = useRef(0);
   // The page's heading sits above: bring the board up when the game starts.
   const gameRef = useRef<HTMLDivElement>(null);
@@ -107,10 +109,10 @@ export function PublicBot({ initialFideId }: { initialFideId?: string }) {
   const pick = useCallback(async (fideId: string) => {
     const mine = ++ticket.current;
     const stale = () => mine !== ticket.current;
-    setFindingNote("Looking up their games…");
+    setFindingNote(t("Looking up their games…"));
     try {
       let player = (await graphqlPost<{ publicPlayer: PublicPlayer | null }>(PLAYER, { fideId })).publicPlayer;
-      if (!player) return setPhase({ kind: "search", message: "FIDE doesn't rate that player. Try another name." });
+      if (!player) return setPhase({ kind: "search", message: t("FIDE doesn't rate that player. Try another name.") });
       const target: Target = {
         fideId: player.fideId,
         fullName: player.fullName,
@@ -121,11 +123,11 @@ export function PublicBot({ initialFideId }: { initialFideId?: string }) {
 
       // Never fetched: ask chess-results now, and wait for the worker.
       if (!player.gamesFetchedAt) {
-        setFindingNote(`Finding ${target.fullName}'s games on chess-results.com. This can take a minute.`);
+        setFindingNote(t("Finding {name}'s games on chess-results.com. This can take a minute.", { name: target.fullName }));
         if (!player.refreshStatus) {
           const { requestProfileRefresh } = await graphqlPost<{ requestProfileRefresh: { outcome: string } }>(REFRESH, { fideId });
           if (requestProfileRefresh.outcome === "busy" || requestProfileRefresh.outcome === "refused") {
-            if (!stale()) setPhase({ kind: "search", message: "We can't fetch new games right now. Try again in a few minutes, or pick another player." });
+            if (!stale()) setPhase({ kind: "search", message: t("We can't fetch new games right now. Try again in a few minutes, or pick another player.") });
             return;
           }
         }
@@ -149,7 +151,7 @@ export function PublicBot({ initialFideId }: { initialFideId?: string }) {
       if (!books.white.length && !books.black.length) {
         return setPhase({
           kind: "search",
-          message: `chess-results has no games with moves for ${target.fullName}, so there is nothing to build a bot from. Try another player.`,
+          message: t("chess-results has no games with moves for {name}, so there is nothing to build a bot from. Try another player.", { name: target.fullName }),
         });
       }
       // The bot plays the colour they have more games in; you take the other.
@@ -157,9 +159,9 @@ export function PublicBot({ initialFideId }: { initialFideId?: string }) {
       setElo(null);
       setPhase({ kind: "setup", target, books });
     } catch (err) {
-      if (!stale()) setPhase({ kind: "search", message: err instanceof Error ? err.message : "Something went wrong." });
+      if (!stale()) setPhase({ kind: "search", message: err instanceof Error ? err.message : t("Something went wrong.") });
     }
-  }, []);
+  }, [t]);
 
   // Look once, on the client: the session and the free game live in localStorage.
   const looked = useRef(false);
@@ -178,18 +180,17 @@ export function PublicBot({ initialFideId }: { initialFideId?: string }) {
 
   if (phase.kind === "used") {
     return (
-      <section aria-label="Your free game" className="flex flex-col items-start gap-4 rounded-xl bg-ink-card p-6 sm:p-8">
-        <h2 className="text-[24px] font-[480] leading-tight">You&apos;ve played your {FREE_BOT_GAMES} free games.</h2>
+      <section aria-label={t("Your free game")} className="flex flex-col items-start gap-4 rounded-xl bg-ink-card p-6 sm:p-8">
+        <h2 className="text-[24px] font-[480] leading-tight">{t("You've played your {n} free games.", { n: FREE_BOT_GAMES })}</h2>
         <p className="max-w-[60ch] text-[16px] leading-[1.5] text-ink-muted">
-          Start a free trial to keep playing: build a bot from any opponent you scout, at any strength, and prepare against the openings
-          they actually play.
+          {t("Start a free trial to keep playing: build a bot from any opponent you scout, at any strength, and prepare against the openings they actually play.")}
         </p>
         <div className="flex flex-wrap gap-3">
           <AuthLink href="/signup" className="rounded-pill bg-accent px-6 py-3 text-[16px] font-[480] text-accent-on hover:bg-accent-soft">
-            Start a free trial
+            {t("Start a free trial")}
           </AuthLink>
           <AuthLink href="/login" className="rounded-pill border border-ink-text/80 px-6 py-3 text-[16px] text-ink-text hover:bg-ink-raised">
-            Log in
+            {t("Log in")}
           </AuthLink>
         </div>
       </section>
@@ -207,7 +208,7 @@ export function PublicBot({ initialFideId }: { initialFideId?: string }) {
           gameHref={(publicId) => `/game/${publicId}`}
           guest={!signedIn}
           freeGame={signedIn || !phase.freeGame ? undefined : { number: phase.freeGame, of: FREE_BOT_GAMES }}
-          youName="You"
+          youName={t("You")}
           botColor={color}
           games={books[color]}
           elo={elo ?? defaultBotElo(target.rating)}
@@ -225,7 +226,7 @@ export function PublicBot({ initialFideId }: { initialFideId?: string }) {
 
   if (phase.kind === "finding") {
     return (
-      <section aria-label="Finding games" aria-live="polite" className="flex items-center gap-4 rounded-xl bg-ink-card p-6">
+      <section aria-label={t("Finding games")} aria-live="polite" className="flex items-center gap-4 rounded-xl bg-ink-card p-6">
         <span aria-hidden className="h-6 w-6 shrink-0 animate-spin rounded-full border-2 border-accent border-t-transparent" />
         <div>
           <p className="text-[16px] font-[480]">{phase.target.fullName}</p>
@@ -255,28 +256,28 @@ export function PublicBot({ initialFideId }: { initialFideId?: string }) {
             <div className="flex min-w-0 items-center gap-3">
               <Avatar src={avatarSrc(defaultAvatar(target.fideId))} size={56} />
               <div className="min-w-0">
-                <h2 className="truncate text-[22px] font-[480] leading-tight">{target.fullName} bot</h2>
+                <h2 className="truncate text-[22px] font-[480] leading-tight">{t("{name} bot", { name: target.fullName })}</h2>
                 <p className="text-[14px] text-ink-muted">
-                  Built from {books.white.length + books.black.length} of their games on chess-results.com
+                  {t("Built from {n} of their games on chess-results.com", { n: books.white.length + books.black.length })}
                 </p>
               </div>
             </div>
             <button type="button" onClick={() => setPhase({ kind: "search" })} className="text-[14px] text-accent-soft underline">
-              Choose another player
+              {t("Choose another player")}
             </button>
           </div>
         }
-        note={signedIn ? undefined : freeGamesNote(freeBotGames().played)}
+        note={signedIn ? undefined : freeGamesNote(freeBotGames().played, t)}
       />
     );
   }
 
   return (
-    <section aria-label="Choose a player" className="flex flex-col gap-3">
+    <section aria-label={t("Choose a player")} className="flex flex-col gap-3">
       <PlayerSearch
         onPick={(p) => pick(p.fideId)}
-        placeholder="Player name or FIDE ID"
-        buttonLabel="Build bot"
+        placeholder={t("Player name or FIDE ID")}
+        buttonLabel={t("Build bot")}
       />
       {phase.message && <p className="max-w-[60ch] text-[14px] text-result-loss">{phase.message}</p>}
     </section>

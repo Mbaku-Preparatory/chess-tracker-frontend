@@ -13,6 +13,7 @@ import {
   typicalScores,
   type Scores,
 } from "@/lib/chessPersonality";
+import { useT } from "@/hooks/useT";
 
 import { ShareResult } from "./ShareResult";
 import { Sliders } from "./Sliders";
@@ -45,17 +46,19 @@ function useView(slug: string): View | null {
 
 export function ResultEyebrow({ slug }: { slug: string }) {
   const view = useView(slug);
-  const text = view?.whose === "mine" ? "You are" : view?.whose === "friend" ? "Your friend is" : "Chess personality";
+  const t = useT();
+  const text = view?.whose === "mine" ? t("You are") : view?.whose === "friend" ? t("Your friend is") : t("Chess personality");
   return <p className="text-[13px] uppercase tracking-[0.12em] text-accent-soft">{text}</p>;
 }
 
 export function ResultSliders({ slug }: { slug: string }) {
   const type = BY_SLUG.get(slug)!;
   const view = useView(slug);
+  const t = useT();
   return (
     <div className="flex flex-col gap-4">
       <h2 className="text-[13px] uppercase tracking-[0.1em] text-ink-muted">
-        {view?.whose === "mine" ? "Your answers" : view?.whose === "friend" ? "Their answers" : "How they play"}
+        {view?.whose === "mine" ? t("Your answers") : view?.whose === "friend" ? t("Their answers") : t("How they play")}
       </h2>
       <Sliders scores={view?.scores ?? typicalScores(type)} colour={type.colour} />
     </div>
@@ -66,6 +69,7 @@ export function ResultActions({ slug }: { slug: string }) {
   const type = BY_SLUG.get(slug)!;
   const view = useView(slug);
   const mine = view?.whose === "mine";
+  const t = useT();
   const path = view && view.whose !== "none" ? resultPath(type, view.scores) : resultPath(type);
   return (
     <div className="flex flex-col gap-5">
@@ -74,7 +78,7 @@ export function ResultActions({ slug }: { slug: string }) {
         href="/chess-personality/quiz"
         className="self-start text-[15px] text-ink-muted underline decoration-ink-line underline-offset-4 hover:text-ink-text"
       >
-        {mine ? "Take the test again" : view?.whose === "friend" ? "Find out yours: take the test" : "Take the test"}
+        {mine ? t("Take the test again") : view?.whose === "friend" ? t("Find out yours: take the test") : t("Take the test")}
       </Link>
     </div>
   );

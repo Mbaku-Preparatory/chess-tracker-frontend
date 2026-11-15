@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { QUESTIONS, resultPath, saveMyResult, scoreAnswers, typeFor } from "@/lib/chessPersonality";
+import { useT } from "@/hooks/useT";
 
 /**
  * One question at a time, two answers each. Answering moves straight on;
@@ -13,6 +14,7 @@ import { QUESTIONS, resultPath, saveMyResult, scoreAnswers, typeFor } from "@/li
  * sent anywhere, and the result is the link the last answer opens.
  */
 export function Quiz() {
+  const t = useT();
   const router = useRouter();
   const [picks, setPicks] = useState<number[]>([]);
   const done = picks.length === QUESTIONS.length;
@@ -49,19 +51,19 @@ export function Quiz() {
   const progress = (picks.length / QUESTIONS.length) * 100;
 
   return (
-    <section aria-label="Chess personality test" className="mx-auto flex w-full max-w-[680px] flex-col gap-8 pt-4 sm:pt-10">
+    <section aria-label={t("Chess personality test")} className="mx-auto flex w-full max-w-[680px] flex-col gap-8 pt-4 sm:pt-10">
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between text-[14px] text-ink-muted">
           <span>
-            Question {done ? QUESTIONS.length : index + 1} of {QUESTIONS.length}
+            {t("Question {n} of {total}", { n: done ? QUESTIONS.length : index + 1, total: QUESTIONS.length })}
           </span>
           {picks.length > 0 && !done ? (
             <button type="button" onClick={() => setPicks((p) => p.slice(0, -1))} className="underline decoration-ink-line underline-offset-4 hover:text-ink-text">
-              Back
+              {t("Back")}
             </button>
           ) : (
             <Link href="/chess-personality" className="underline decoration-ink-line underline-offset-4 hover:text-ink-text">
-              Leave
+              {t("Leave")}
             </Link>
           )}
         </div>
@@ -72,11 +74,11 @@ export function Quiz() {
 
       {done ? (
         <p role="status" className="py-16 text-center text-[18px] text-ink-muted">
-          Working out your chess personality…
+          {t("Working out your chess personality…")}
         </p>
       ) : (
         <div key={index} className="flex flex-col gap-6">
-          <h1 className="text-balance text-[28px] font-[480] leading-[1.2] tracking-[0.01em] sm:text-[36px]">{question.text}</h1>
+          <h1 className="text-balance text-[28px] font-[480] leading-[1.2] tracking-[0.01em] sm:text-[36px]">{t(question.text)}</h1>
           <div className="flex flex-col gap-3">
             {question.answers.map((answer, i) => (
               <button
@@ -88,7 +90,7 @@ export function Quiz() {
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink-raised text-[14px] text-ink-muted group-hover:bg-accent group-hover:text-accent-on">
                   {i + 1}
                 </span>
-                {answer.text}
+                {t(answer.text)}
               </button>
             ))}
           </div>

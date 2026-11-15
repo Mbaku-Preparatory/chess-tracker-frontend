@@ -7,6 +7,8 @@
  * the console, so debugging from a screenshot or a session is still possible.
  */
 
+import { msg } from "@/lib/i18n";
+
 export interface AppError extends Error {
   /** HTTP status, when the failure came from a response. */
   status?: number;
@@ -16,7 +18,33 @@ export interface AppError extends Error {
   technical?: string;
 }
 
-const GENERIC = "Something went wrong. Please try again.";
+/**
+ * What the backend says when sign-in or sign-up is refused, word for word
+ * (users/views.py, services.py, validators.py), so a page that shows the
+ * error with t() shows it in the reader's language. If the backend rewords
+ * one, that message is simply shown in English.
+ */
+export const BACKEND_AUTH_MESSAGES = [
+  msg("Invalid email or password."),
+  msg("Please verify your email before logging in."),
+  msg("This account has been suspended. Contact support."),
+  msg("Email/username and password are required."),
+  msg("Google sign-in is not available right now. Try again, or use your email and password."),
+  msg("An account with this email already exists."),
+  msg("That username is already taken."),
+  msg("That username or email is already registered."),
+  msg("A username can only contain an @ if it is your own email address."),
+  msg("Invalid email or code."),
+  msg("This email is already verified. Please log in."),
+  msg("That code is incorrect or has expired."),
+  msg("Something went wrong signing you in. Please try again."),
+  msg("Email is required."),
+  msg("Enter a valid email address."),
+  msg("Username is required."),
+  msg("Password is required."),
+];
+
+const GENERIC = msg("Something went wrong. Please try again.");
 
 /**
  * Backend `detail` strings are written for users in the places that matter
@@ -27,22 +55,22 @@ const GENERIC = "Something went wrong. Please try again.";
 function messageForStatus(status: number, detail?: string): string {
   if (status >= 500) {
     if (status === 502 || status === 503 || status === 504) {
-      return "This service is temporarily unavailable. Please try again in a few minutes.";
+      return msg("This service is temporarily unavailable. Please try again in a few minutes.");
     }
-    return "Something went wrong on our end. Please try again, or tell us on the Help page if it keeps happening.";
+    return msg("Something went wrong on our end. Please try again, or tell us on the Help page if it keeps happening.");
   }
 
   switch (status) {
     case 401:
-      return "Your session has expired. Please sign in again.";
+      return msg("Your session has expired. Please sign in again.");
     case 403:
-      return "You do not have permission to do that.";
+      return msg("You do not have permission to do that.");
     case 404:
-      return "We couldn't find what you were looking for.";
+      return msg("We couldn't find what you were looking for.");
     case 408:
-      return "That took too long. Please try again.";
+      return msg("That took too long. Please try again.");
     case 429:
-      return "Too many requests. Please wait a moment and try again.";
+      return msg("Too many requests. Please wait a moment and try again.");
     default:
       // 400/409/422 and friends: the backend's detail is the useful part.
       return detail?.trim() || GENERIC;
@@ -77,7 +105,7 @@ export function wasAborted(err: unknown): boolean {
 
 export function buildNetworkError(cause: unknown): AppError {
   const err = new Error(
-    "Can't reach the server. Check your connection and try again."
+    msg("Can't reach the server. Check your connection and try again.")
   ) as AppError;
   err.technical = cause instanceof Error ? cause.message : String(cause);
 
@@ -121,5 +149,5 @@ export function loginRefusal(err: unknown): { message: string; unverifiedEmail?:
   if ((status === 401 || status === 403) && typeof detail === "string") {
     return { message: detail };
   }
-  return { message: userMessage(err, "Login failed.") };
+  return { message: userMessage(err, msg("Login failed.")) };
 }

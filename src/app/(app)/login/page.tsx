@@ -8,12 +8,15 @@ import { api } from "@/lib/api";
 import { useAppDispatch } from "@/redux/hooks";
 import { setAuth } from "@/redux/actions/auth";
 import { loginRefusal } from "@/lib/apiError";
+import { useT } from "@/hooks/useT";
+import { msg } from "@/lib/i18n";
 import { Logo } from "@/components/ui/Logo";
 import { SocialSignIn } from "@/components/SocialSignIn";
 
 export default function LoginPage() {
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const t = useT();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -32,8 +35,8 @@ export default function LoginPage() {
     } catch {
       // Blocked storage: no note.
     }
-    if (q.get("reset") === "1") setArrived("Password changed. Sign in with your new password.");
-    else if (deleted) setArrived("Your account has been deleted.");
+    if (q.get("reset") === "1") setArrived(msg("Password changed. Sign in with your new password."));
+    else if (deleted) setArrived(msg("Your account has been deleted."));
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -62,19 +65,19 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="mb-8 text-center">
           <Logo size={48} variant="tile" className="mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Welcome back</h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Sign in to your account</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t("Welcome back")}</h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{t("Sign in to your account")}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="card space-y-4 p-6">
           {arrived && !error && (
             <p role="status" className="rounded-lg bg-brand-50 px-4 py-3 text-sm text-brand-700 dark:bg-brand-900/30 dark:text-brand-300">
-              {arrived}
+              {t(arrived)}
             </p>
           )}
           {error && (
             <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              {error}
+              {t(error)}
             </div>
           )}
 
@@ -82,7 +85,7 @@ export default function LoginPage() {
 
           <div>
             <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Email or username
+              {t("Email or username")}
             </label>
             <input
               id="email"
@@ -92,17 +95,17 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-dark-border dark:bg-dark-elevated dark:text-gray-100 dark:placeholder-gray-500"
-              placeholder="you@example.com or username"
+              placeholder={t("you@example.com or username")}
             />
           </div>
 
           <div>
             <div className="mb-1.5 flex items-baseline justify-between">
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Password
+                {t("Password")}
               </label>
               <Link href="/forgot-password" className="text-sm font-medium text-brand-600 hover:text-brand-700">
-                Forgot password?
+                {t("Forgot password?")}
               </Link>
             </div>
             <div className="relative">
@@ -121,7 +124,7 @@ export default function LoginPage() {
                 onClick={() => setShowPassword((v) => !v)}
                 className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                 tabIndex={-1}
-                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-label={showPassword ? t("Hide password") : t("Show password")}
               >
                 {showPassword ? (
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4">
@@ -142,14 +145,14 @@ export default function LoginPage() {
             disabled={loading}
             className="btn-primary w-full justify-center disabled:opacity-60"
           >
-            {loading ? "Signing in…" : "Sign in"}
+            {loading ? t("Signing in…") : t("Sign in")}
           </button>
         </form>
 
         <p className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
-          No account?{" "}
+          {t("No account?")}{" "}
           <Link href="/signup" className="font-medium text-brand-600 hover:text-brand-700">
-            Create one
+            {t("Create one")}
           </Link>
         </p>
       </div>

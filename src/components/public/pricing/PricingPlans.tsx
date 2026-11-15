@@ -3,7 +3,8 @@
 import { useState } from "react";
 
 import { PricingCta } from "@/components/public/pricing/PricingCta";
-import { trialTerms, type PublicPlan } from "@/lib/pricing";
+import { useLocale, useT } from "@/hooks/useT";
+import { TRIAL_TERMS, countryName, currencyName, type PublicPlan } from "@/lib/pricing";
 import { annualSaving, formatPrice, perMonthOfAnnual } from "@/lib/subscription";
 
 function Check() {
@@ -23,19 +24,30 @@ function Check() {
  * between paying monthly (the default) and yearly. A client component only for
  * the switch; the prices and the list arrive in the server's HTML.
  *
- * `region` says whose prices these are ("Prices for Kenya, in Kenyan shillings").
+ * Above the price, whose prices these are ("Prices for Kenya, in Kenyan
+ * shillings"). `features` are English templates, {questions} filled in here.
  */
 export function PricingPlans({
   plans,
   features,
-  region,
+  questions,
+  country,
+  currency,
   trialDays,
 }: {
   plans: PublicPlan[];
   features: string[];
-  region: string;
+  questions: number;
+  /** ISO alpha-2, "" when unknown. */
+  country: string;
+  currency: string;
   trialDays: number;
 }) {
+  const t = useT();
+  const locale = useLocale();
+  const where = countryName(country, locale);
+  const money = currencyName(currency, locale);
+  const region = where ? t("Prices for {country}, in {currency}.", { country: where, currency: money }) : t("Prices in {currency}.", { currency: money });
   const monthly = plans.find((p) => p.period === "month") ?? null;
   const yearly = plans.find((p) => p.period === "year") ?? null;
   const [payYearly, setPayYearly] = useState(!monthly);
@@ -50,14 +62,14 @@ export function PricingPlans({
         <div className="flex flex-col gap-2">
           <h2 className="text-[24px] font-[480] leading-[1.2]">Chess Preparatory</h2>
           <p className="max-w-[46ch] text-[16px] leading-[1.5] text-ink-muted">
-            Everything for scouting and preparing against your opponents, in one subscription.
+            {t("Everything for scouting and preparing against your opponents, in one subscription.")}
           </p>
         </div>
         <ul className="grid gap-x-8 gap-y-3 sm:grid-cols-2">
           {features.map((f) => (
             <li key={f} className="flex gap-3 text-[15px] leading-[1.45]">
               <Check />
-              <span>{f}</span>
+              <span>{t(f, { questions })}</span>
             </li>
           ))}
         </ul>
@@ -69,10 +81,10 @@ export function PricingPlans({
 
         <p className="flex items-baseline gap-2">
           <span className="text-[48px] font-[480] leading-none tabular-nums">{formatPrice(plan.price, plan.currency)}</span>
-          <span className="text-[16px] text-ink-muted">/ {annual ? "year" : "month"}</span>
+          <span className="text-[16px] text-ink-muted">/ {annual ? t("year") : t("month")}</span>
         </p>
         <p className="min-h-[1.5em] text-[15px] text-ink-muted">
-          {annual ? `That's ${perMonthOfAnnual(plan.price, plan.currency)} a month.` : "Pay a month at a time."}
+          {annual ? t("That's {price} a month.", { price: perMonthOfAnnual(plan.price, plan.currency) }) : t("Pay a month at a time.")}
         </p>
 
         {monthly && yearly && (
@@ -92,10 +104,10 @@ export function PricingPlans({
               />
             </button>
             <label htmlFor="pay-yearly" className="cursor-pointer text-[15px] text-ink-text">
-              Pay yearly
+              {t("Pay yearly")}
             </label>
             {pct !== null && (
-              <span className="rounded-pill bg-accent/15 px-3 py-1 text-[13px] font-[480] text-accent-soft">Save {pct}%</span>
+              <span className="rounded-pill bg-accent/15 px-3 py-1 text-[13px] font-[480] text-accent-soft">{t("Save {pct}%", { pct })}</span>
             )}
           </div>
         )}
@@ -103,7 +115,7 @@ export function PricingPlans({
         <div className="flex flex-col gap-2 pt-1">
           <PricingCta primary />
           <p className="text-center text-[13px] text-ink-faint">
-            {trialTerms(trialDays)}
+            {t(TRIAL_TERMS, { days: trialDays })}
           </p>
         </div>
       </div>

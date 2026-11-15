@@ -8,8 +8,10 @@ import { Avatar } from "@/components/avatar/Avatar";
 import { AuthLink } from "@/components/public/AuthLink";
 import { BACK_BUTTON, BackLabel } from "@/components/ui/BackLink";
 import { useBotEngine } from "@/hooks/useBotEngine";
+import { useT, type Translate } from "@/hooks/useT";
 import { BOOK_MOVES, BOOK_PLIES, bookMoves, buildBook, gamesOnLine, pickBookMove, type Book, type BookMove } from "@/lib/bot/book";
 import { buildPgn, pgnFilename } from "@/lib/chess/pgn";
+import { msg } from "@/lib/i18n";
 import type { BotBookGame } from "@/types";
 
 import { BotSpeech, type Speech, type SpeechChoice } from "./BotSpeech";
@@ -96,59 +98,72 @@ function Plate({
   );
 }
 
-function resultOf(chess: Chess, resigned: boolean, botColor: Color, name: string): { text: string; tag: string } | null {
+function resultOf(chess: Chess, resigned: boolean, botColor: Color, name: string, t: Translate): { text: string; tag: string } | null {
   const botWhite = botColor === "white";
-  if (resigned) return { text: "You resigned.", tag: botWhite ? "1-0" : "0-1" };
+  if (resigned) return { text: t("You resigned."), tag: botWhite ? "1-0" : "0-1" };
   if (chess.isCheckmate()) {
     const whiteWon = chess.turn() === "b";
     const botWon = whiteWon === botWhite;
-    return { text: botWon ? `Checkmate. ${name} bot wins.` : "Checkmate. You win.", tag: whiteWon ? "1-0" : "0-1" };
+    return { text: botWon ? t("Checkmate. {name} bot wins.", { name }) : t("Checkmate. You win."), tag: whiteWon ? "1-0" : "0-1" };
   }
-  if (chess.isStalemate()) return { text: "Stalemate. A draw.", tag: "1/2-1/2" };
-  if (chess.isThreefoldRepetition()) return { text: "Draw by repetition.", tag: "1/2-1/2" };
-  if (chess.isInsufficientMaterial()) return { text: "Draw: neither side can mate.", tag: "1/2-1/2" };
-  if (chess.isDraw()) return { text: "Draw by the fifty-move rule.", tag: "1/2-1/2" };
+  if (chess.isStalemate()) return { text: t("Stalemate. A draw."), tag: "1/2-1/2" };
+  if (chess.isThreefoldRepetition()) return { text: t("Draw by repetition."), tag: "1/2-1/2" };
+  if (chess.isInsufficientMaterial()) return { text: t("Draw: neither side can mate."), tag: "1/2-1/2" };
+  if (chess.isDraw()) return { text: t("Draw by the fifty-move rule."), tag: "1/2-1/2" };
   return null;
 }
 
-const RESULT_VERB = { win: "won", loss: "lost", draw: "drew" } as const;
+// Whole sentences, not a verb to drop into one: other languages agree the verb differently.
+const RESULT_SENTENCE: Record<string, string> = { win: msg("I won that one."), loss: msg("I lost that one."), draw: msg("I drew that one.") };
+const resultSentence = (g: BotBookGame, t: Translate) => t(RESULT_SENTENCE[g.result] ?? msg("I played that one."));
 
 /** "Kamau, Peter (1850) at the Nairobi Open, 2024" */
-function gameLabel(g: BotBookGame): string {
+function gameLabel(g: BotBookGame, t: Translate): string {
   const y = g.date?.slice(0, 4);
   // "Kenya Open 2025" already says when.
   const year = y && !g.event.includes(y) ? `, ${y}` : "";
-  return `${g.opponent || "an unnamed opponent"}${g.opponent_rating ? ` (${g.opponent_rating})` : ""}${g.event ? ` at the ${g.event.replace(/^the /i, "")}` : ""}${year}`;
+  const who = `${g.opponent || t("an unnamed opponent")}${g.opponent_rating ? ` (${g.opponent_rating})` : ""}`;
+  return `${g.event ? t("{who} at the {event}", { who, event: g.event.replace(/^the /i, "") }) : who}${year}`;
 }
 
 /** "I've played Nf6 here in 9 of my 14 games." */
-function bookLine(book: Book, fen: string, san: string): string {
+function bookLine(book: Book, fen: string, san: string, t: Translate): string {
   const moves = bookMoves(book, fen);
   const total = moves.reduce((sum, m) => sum + m.count, 0);
   const count = moves.find((m) => m.san === san)?.count ?? 0;
-  return total === 1 ? `${san}. I played it here in my one game.` : `${san}. I've played it here in ${count} of my ${total} games.`;
+  return total === 1
+    ? t("{san}. I played it here in my one game.", { san })
+    : t("{san}. I've played it here in {count} of my {total} games.", { san, count, total });
 }
 
-/** " In my games I faced 4… Nf6 (9 games) and 4… d6 (3) here." */
-function facedLine(book: Book, fen: string, ply: number, single: BotBookGame | null): string {
+/** "In my games I faced 4… Nf6 (9 games) and 4… d6 (3) here.", or "". */
+function facedLine(book: Book, fen: string, ply: number, single: BotBookGame | null, t: Translate): string {
   const moves = bookMoves(book, fen);
   if (!moves.length) return "";
-  if (single && moves.length === 1) return ` In my game against ${single.opponent || "them"}, I faced ${moveLabel(ply, moves[0].san)} here.`;
-  const shown = moves.slice(0, 3).map((m, i) => `${moveLabel(ply, m.san)} (${m.count}${i === 0 ? (m.count === 1 ? " game" : " games") : ""})`);
+  if (single && moves.length === 1) {
+    const move = moveLabel(ply, moves[0].san);
+    return single.opponent
+      ? t("In my game against {opponent}, I faced {move} here.", { opponent: single.opponent, move })
+      : t("In my game, I faced {move} here.", { move });
+  }
+  const shown = moves
+    .slice(0, 3)
+    .map((m, i) => `${moveLabel(ply, m.san)} (${i === 0 ? t.plural(m.count, "{n} game", "{n} games") : m.count})`);
   const list =
     moves.length > shown.length
-      ? `${shown.join(", ")} and others`
+      ? t("{list} and others", { list: shown.join(", ") })
       : shown.length === 1
         ? shown[0]
-        : `${shown.slice(0, -1).join(", ")} and ${shown[shown.length - 1]}`;
-  return ` In my games I faced ${list} here.`;
+        : t("{list} and {last}", { list: shown.slice(0, -1).join(", "), last: shown[shown.length - 1] });
+  return t("In my games I faced {list} here.", { list });
 }
 
-function freeGameLine(free: { number: number; of: number } | undefined, over: boolean): string {
-  if (!free) return over ? "That was your free game." : "This is your free game.";
+function freeGameLine(free: { number: number; of: number } | undefined, over: boolean, t: Translate): string {
+  if (!free) return over ? t("That was your free game.") : t("This is your free game.");
   const left = free.of - free.number;
-  if (!over) return `Free game ${free.number} of ${free.of}.`;
-  return left > 0 ? `That was free game ${free.number} of ${free.of}: ${left} left.` : "That was your last free game.";
+  const vars = { number: free.number, of: free.of, left };
+  if (!over) return t("Free game {number} of {of}.", vars);
+  return left > 0 ? t("That was free game {number} of {of}: {left} left.", vars) : t("That was your last free game.");
 }
 
 export function BotGame({
@@ -189,7 +204,8 @@ export function BotGame({
   speech?: boolean;
   onExit: () => void;
 }) {
-  const viewGame = (g: BotBookGame) => ({ href: gameHref(g.public_id), label: "View game" });
+  const t = useT();
+  const viewGame = (g: BotBookGame) => ({ href: gameHref(g.public_id), label: t("View game") });
   const youColor: Color = botColor === "white" ? "black" : "white";
   const book = useMemo(() => buildBook(games), [games]);
   const engine = useBotEngine();
@@ -221,8 +237,8 @@ export function BotGame({
   // What the bot says, in its speech bubble.
   const opener =
     botColor === "white"
-      ? "Let's play. I'll open the way I do in my games."
-      : "Let's play. Your move: I'll answer the way I do in my games.";
+      ? t("Let's play. I'll open the way I do in my games.")
+      : t("Let's play. Your move: I'll answer the way I do in my games.");
   const speechId = useRef(0);
   const [speech, setSpeech] = useState<Speech>({ id: 0, text: opener });
   const say = useCallback((text: string, link?: Speech["link"]) => setSpeech({ id: ++speechId.current, text, link }), []);
@@ -239,7 +255,7 @@ export function BotGame({
     return c;
   }, [moves]);
   const fen = moves.length ? moves[moves.length - 1].fen : START_FEN;
-  const result = resultOf(chess, resigned, botColor, name);
+  const result = resultOf(chess, resigned, botColor, name, t);
   const botToMove = !result && chess.turn() === botColor[0];
   const ply = moves.length;
 
@@ -259,7 +275,7 @@ export function BotGame({
     const at = line.length;
     const others = bookMoves(book, from).filter((m) => m.san !== san);
     setAlternatives(others.length ? { ply: at, single: singleRef.current, moves: others } : null);
-    const ask = others.length ? " Try another?" : "";
+    const ask = others.length ? ` ${t("Try another?")}` : "";
     const on = gamesOnLine(games, [...line, san]);
     if (on.length === 1) {
       const g = on[0];
@@ -267,14 +283,16 @@ export function BotGame({
       singleRef.current = g.public_id;
       say(
         (again
-          ? `${san}, still following my game against ${g.opponent || "them"}.`
-          : `${san}. Ah, I've been here once before: against ${gameLabel(g)}. I ${RESULT_VERB[g.result] ?? "played"} that one.`) + ask,
+          ? g.opponent
+            ? t("{san}, still following my game against {opponent}.", { san, opponent: g.opponent })
+            : t("{san}, still following my game.", { san })
+          : `${t("{san}. Ah, I've been here once before: against {game}.", { san, game: gameLabel(g, t) })} ${resultSentence(g, t)}`) + ask,
         viewGame(g),
       );
     } else {
       singleRef.current = null;
       // The bot's first move would cut "Let's play" off before it is read.
-      say((at === 0 && !swapped ? "Let's play. " : "") + bookLine(book, from, san) + ask);
+      say((at === 0 && !swapped ? `${t("Let's play.")} ` : "") + bookLine(book, from, san, t) + ask);
     }
     play(at, san, true);
   }
@@ -303,13 +321,13 @@ export function BotGame({
       const on = gamesOnLine(games, sans);
       if (on.length === 1) {
         const g = on[0];
-        say(`My game against ${gameLabel(g)} ended here. I ${RESULT_VERB[g.result] ?? "played"} that one. From here I play at ${elo}.`, viewGame(g));
+        say(`${t("My game against {game} ended here.", { game: gameLabel(g, t) })} ${resultSentence(g, t)} ${t("From here I play at {elo}.", { elo })}`, viewGame(g));
       } else {
-        say(`That's where my games run out. From here I play at ${elo}.`);
+        say(`${t("That's where my games run out.")} ${t("From here I play at {elo}.", { elo })}`);
       }
     } else if (!leftRef.current) {
       setLeftBook({ ply });
-      say(`That's ${BOOK_MOVES} moves of my prep. From here I play at ${elo}.`);
+      say(`${t("That's {moves} moves of my prep.", { moves: BOOK_MOVES })} ${t("From here I play at {elo}.", { elo })}`);
     }
 
     setThinking(true);
@@ -345,14 +363,16 @@ export function BotGame({
         const on = gamesOnLine(games, sans);
         const single = on.length === 1 ? on[0] : null;
         say(
-          `${moveLabel(ply, san)}? I've never faced that.${facedLine(book, fen, ply, single)} From here I play at ${elo}.`,
+          [t("{move}? I've never faced that.", { move: moveLabel(ply, san) }), facedLine(book, fen, ply, single, t), t("From here I play at {elo}.", { elo })]
+            .filter(Boolean)
+            .join(" "),
           single ? viewGame(single) : undefined,
         );
       }
       play(ply, san, false);
       return true;
     },
-    [result, chess, youColor, fen, leftBook, ply, book, games, sans, elo, play, say],
+    [result, chess, youColor, fen, leftBook, ply, book, games, sans, elo, play, say, t],
   );
 
   const highlights = useMemo(() => {
@@ -381,9 +401,9 @@ export function BotGame({
   const resultText = result?.text ?? null;
   useEffect(() => {
     if (!resultText) return;
-    if (resigned) return say("Thanks for the game. Another one?");
-    if (chess.isCheckmate()) return say(chess.turn() === youColor[0] ? "Checkmate! Good game." : "Checkmate. Well played, you got me.");
-    say("A draw. Good fight.");
+    if (resigned) return say(t("Thanks for the game. Another one?"));
+    if (chess.isCheckmate()) return say(chess.turn() === youColor[0] ? t("Checkmate! Good game.") : t("Checkmate. Well played, you got me."));
+    say(t("A draw. Good fight."));
     // Said once, when the game ends.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resultText]);
@@ -398,7 +418,7 @@ export function BotGame({
     if (leftBook && leftBook.ply >= takeBackTo) setLeftBook(null);
     setAlternatives(null);
     singleRef.current = null;
-    say("Take two. Your move.");
+    say(t("Take two. Your move."));
     setResigned(false);
     setEngineError(false);
   }
@@ -424,12 +444,12 @@ export function BotGame({
   const status = result
     ? result.text
     : engineError
-      ? "The engine could not start in this browser, so the bot cannot move."
+      ? t("The engine could not start in this browser, so the bot cannot move.")
       : botToMove
         ? thinking
-          ? `${name} bot is thinking…`
-          : `${name} bot to move.`
-        : "Your move.";
+          ? t("{name} bot is thinking…", { name })
+          : t("{name} bot to move.", { name })
+        : t("Your move.");
 
   const Heading = guest ? "h2" : "h1";
 
@@ -463,14 +483,12 @@ export function BotGame({
         <div className="min-w-0 sm:pt-0.5">
           {/* The public page has its own h1 above this. */}
           <Heading className="text-balance text-[18px] font-[520] leading-tight text-ink-text sm:text-[22px]">
-            Playing {name} bot
+            {t("Playing {name} bot", { name })}
           </Heading>
           <p className="mt-1 flex flex-wrap gap-x-3 text-[13px] text-ink-faint">
-            <span>You play {youColor === "white" ? "White" : "Black"}</span>
-            <span>Bot strength {elo}</span>
-            <span>
-              {games.length} {games.length === 1 ? "game" : "games"} in its book
-            </span>
+            <span>{youColor === "white" ? t("You play White") : t("You play Black")}</span>
+            <span>{t("Bot strength {elo}", { elo })}</span>
+            <span>{t.plural(games.length, "{n} game in its book", "{n} games in its book")}</span>
           </p>
         </div>
       </header>
@@ -478,7 +496,7 @@ export function BotGame({
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
         <section aria-label="Board" className="flex justify-center">
           <div className="flex w-full max-w-[min(100%,calc(100dvh-190px))] flex-col gap-1.5 lg:max-w-[min(100%,calc(100dvh-270px))]">
-            <Plate name={name} rating={botRating} color={botColor} tag={`Bot · ${elo}`} avatar={botAvatarSrc} onAvatarClick={onChangeAvatar && (() => onChangeAvatar("bot"))} />
+            <Plate name={name} rating={botRating} color={botColor} tag={t("Bot · {elo}", { elo })} avatar={botAvatarSrc} onAvatarClick={onChangeAvatar && (() => onChangeAvatar("bot"))} />
             <Board fen={fen} orientation={youColor} highlights={highlights} onMove={result ? undefined : tryMove} side={youColor[0] as "w" | "b"} />
             <Plate name={youName} rating={null} color={youColor} avatar={youAvatarSrc} onAvatarClick={onChangeAvatar && (() => onChangeAvatar("me"))} />
           </div>
@@ -492,10 +510,10 @@ export function BotGame({
                 {status}
               </p>
               {leftBook ? (
-                <span className="rounded-pill bg-amber-500/15 px-2.5 py-0.5 text-[12px] font-[520] text-amber-700 dark:text-amber-400">Engine · {elo}</span>
+                <span className="rounded-pill bg-amber-500/15 px-2.5 py-0.5 text-[12px] font-[520] text-amber-700 dark:text-amber-400">{t("Engine · {elo}", { elo })}</span>
               ) : (
                 <span className="rounded-pill bg-accent/15 px-2.5 py-0.5 text-[12px] font-[520] text-accent-soft">
-                  In prep{ply > 0 ? ` · move ${Math.floor((ply - 1) / 2) + 1}` : ""}
+                  {ply > 0 ? t("In prep · move {n}", { n: Math.floor((ply - 1) / 2) + 1 }) : t("In prep")}
                 </span>
               )}
             </div>
@@ -503,7 +521,7 @@ export function BotGame({
 
           <section aria-label="Moves" className="max-h-[45vh] overflow-y-auto rounded-xl bg-ink-card p-2 lg:max-h-[calc(100dvh-460px)] lg:min-h-[160px]">
             {rows.length === 0 ? (
-              <p className="p-2 text-[14px] text-ink-faint">{botColor === "white" ? `${name} bot opens.` : "You open."}</p>
+              <p className="p-2 text-[14px] text-ink-faint">{botColor === "white" ? t("{name} bot opens.", { name }) : t("You open.")}</p>
             ) : (
               <ol className="grid grid-cols-[2.5rem_1fr_1fr] gap-y-0.5 text-[14px]">
                 {rows.map((row, r) => (
@@ -512,7 +530,7 @@ export function BotGame({
                     {row.map((m, k) => (
                       <span
                         key={k}
-                        title={m.book ? `From ${name}'s games` : undefined}
+                        title={m.book ? t("From {name}'s games", { name }) : undefined}
                         className={`rounded px-1.5 py-0.5 ${m.book ? "text-accent-soft" : "text-ink-text"} ${r * 2 + k === ply - 1 ? "bg-ink-raised font-[520]" : ""}`}
                       >
                         {m.san}
@@ -524,15 +542,15 @@ export function BotGame({
             )}
           </section>
           <p className="text-[12px] text-ink-faint">
-            <span className="text-accent-soft">Green</span> moves are {name}&apos;s own, from their games.
+            {t("Green moves are {name}'s own, from their games.", { name })}
           </p>
 
           <div className="flex flex-wrap gap-2">
             {[
-              { label: "Take back", onClick: takeBack, disabled: takeBackTo < 0 },
-              { label: "Resign", onClick: () => setResigned(true), disabled: !!result || ply === 0 },
-              ...(guest ? [] : [{ label: "New game", onClick: newGame, disabled: ply === 0 }]),
-              { label: "Download PGN", onClick: download, disabled: ply === 0 },
+              { label: t("Take back"), onClick: takeBack, disabled: takeBackTo < 0 },
+              { label: t("Resign"), onClick: () => setResigned(true), disabled: !!result || ply === 0 },
+              ...(guest ? [] : [{ label: t("New game"), onClick: newGame, disabled: ply === 0 }]),
+              { label: t("Download PGN"), onClick: download, disabled: ply === 0 },
             ].map((a) => (
               <button
                 key={a.label}
@@ -548,13 +566,12 @@ export function BotGame({
 
           {guest && (
             <section aria-label="Free game" className={`flex flex-col gap-3 rounded-xl p-4 ${result ? "bg-accent/15" : "bg-ink-card"}`}>
-              <p className="text-[15px] font-[520] text-ink-text">{freeGameLine(freeGame, Boolean(result))}</p>
+              <p className="text-[15px] font-[520] text-ink-text">{freeGameLine(freeGame, Boolean(result), t)}</p>
               <p className="text-[14px] text-ink-muted">
-                Start a free trial to play {name} bot again, build a bot from any opponent you scout, and prepare against
-                their openings.
+                {t("Start a free trial to play {name} bot again, build a bot from any opponent you scout, and prepare against their openings.", { name })}
               </p>
               <AuthLink href="/signup" className="self-start rounded-pill bg-accent px-5 py-2 text-[15px] font-[520] text-accent-on hover:bg-accent-soft">
-                Start a free trial
+                {t("Start a free trial")}
               </AuthLink>
             </section>
           )}

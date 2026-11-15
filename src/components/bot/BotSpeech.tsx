@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { Avatar } from "@/components/avatar/Avatar";
+import { useT } from "@/hooks/useT";
 
 export interface Speech {
   /** A new id is a new remark: the bubble pops in again and retypes. */
@@ -42,6 +43,7 @@ export function BotSpeech({
   /** Its other moves here, while you can still ask for one. */
   choices?: SpeechChoice[];
 }) {
+  const t = useT();
   const [shown, setShown] = useState(speech.text.length);
 
   useEffect(() => {
@@ -89,17 +91,17 @@ export function BotSpeech({
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2} aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" d="M14 5h5v5M19 5l-8 8M10 7H6a1 1 0 00-1 1v10a1 1 0 001 1h10a1 1 0 001-1v-4" />
             </svg>
-            <span className="sr-only">(opens in a new tab)</span>
+            <span className="sr-only">{t("(opens in a new tab)")}</span>
           </a>
         )}
         {choices.length > 0 && !typing && (
-          <div role="group" aria-label="Play another move instead" className="link-in relative mt-2 flex flex-wrap gap-1.5">
+          <div role="group" aria-label={t("Play another move instead")} className="link-in relative mt-2 flex flex-wrap gap-1.5">
             {choices.map((c) => (
               <button
                 key={c.san}
                 type="button"
                 onClick={c.onPick}
-                title={`Play ${c.san} instead (${c.count} ${c.count === 1 ? "game" : "games"})`}
+                title={t.plural(c.count, "Play {san} instead ({n} game)", "Play {san} instead ({n} games)", { san: c.san })}
                 className="inline-flex items-baseline gap-1 rounded-pill border border-accent/60 px-2.5 py-0.5 text-[13px] font-[520] text-accent-soft hover:bg-accent hover:text-accent-on"
               >
                 {c.san}
