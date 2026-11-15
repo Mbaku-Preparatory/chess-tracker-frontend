@@ -4,11 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { LanguagePicker } from "@/components/LanguagePicker";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AuthLink } from "@/components/public/AuthLink";
 import { BurgerButton } from "@/components/ui/BurgerButton";
 import { useOnFunPage } from "@/components/public/FunPages";
 import { useSignedIn } from "@/hooks/useSignedIn";
+import { useT } from "@/hooks/useT";
 
 /**
  * The public header's menu on phones, tablets and small laptops (below xl): everything the
@@ -20,6 +22,7 @@ export function PublicMenu() {
   const [open, setOpen] = useState(false);
   const signedIn = useSignedIn() === true;
   const onFunPage = useOnFunPage();
+  const t = useT();
   useEffect(() => setOpen(false), [pathname]);
   useEffect(() => {
     if (!open) return;
@@ -31,12 +34,12 @@ export function PublicMenu() {
   const item = "block rounded-xl px-4 py-3 text-[16px] text-ink-text hover:bg-ink-raised";
   // Get started / Open app stay in the bar beside the burger, so not here too.
   const links = [
-    { href: "/rankings", label: "Rankings" },
-    { href: "/chess-bot", label: "Create your own bot" },
-    { href: "/chess-books", label: "Books" },
-    { href: "/chess-personality", label: "Chess personality" },
-    { href: "/tutorials", label: "Tutorials" },
-    { href: "/pricing", label: "Pricing" },
+    { href: "/rankings", label: t("Rankings") },
+    { href: "/chess-bot", label: t("Create your own bot") },
+    { href: "/chess-books", label: t("Books") },
+    { href: "/chess-personality", label: t("Chess personality") },
+    { href: "/tutorials", label: t("Tutorials") },
+    { href: "/pricing", label: t("Pricing") },
   ];
 
   return (
@@ -48,7 +51,7 @@ export function PublicMenu() {
               containing block for fixed children. */}
           <button
             type="button"
-            aria-label="Close the menu"
+            aria-label={t("Close the menu")}
             tabIndex={-1}
             onClick={() => setOpen(false)}
             className="absolute inset-x-0 top-16 z-40 h-[calc(100dvh-4rem)] cursor-default bg-black/30"
@@ -70,13 +73,17 @@ export function PublicMenu() {
               {!signedIn && !onFunPage && (
                 <li>
                   <AuthLink href="/login" className={item}>
-                    Log in
+                    {t("Log in")}
                   </AuthLink>
                 </li>
               )}
             </ul>
             <div className="mx-auto flex max-w-[1200px] items-center justify-between border-t border-ink-line/60 px-8 py-3 sm:px-10">
-              <span className="text-[15px] text-ink-muted">Theme</span>
+              <span className="text-[15px] text-ink-muted">{t("Language")}</span>
+              <LanguagePicker className="text-ink-muted hover:bg-ink-raised hover:text-ink-text" />
+            </div>
+            <div className="mx-auto flex max-w-[1200px] items-center justify-between border-t border-ink-line/60 px-8 py-3 sm:px-10">
+              <span className="text-[15px] text-ink-muted">{t("Theme")}</span>
               <ThemeToggle className="text-ink-muted hover:bg-ink-raised hover:text-ink-text" />
             </div>
           </div>

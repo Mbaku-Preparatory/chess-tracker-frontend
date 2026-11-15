@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { LanguagePicker } from "@/components/LanguagePicker";
+import { T } from "@/components/T";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Logo } from "@/components/ui/Logo";
 
@@ -16,20 +18,21 @@ export function PublicHeader() {
         </Link>
         <div className="hidden items-center gap-1 xl:flex">
           <Link href="/rankings" className="whitespace-nowrap rounded-pill px-3 py-2 text-[15px] text-ink-muted hover:bg-ink-raised hover:text-ink-text">
-            Rankings
+            <T>Rankings</T>
           </Link>
           <Link href="/chess-bot" className="whitespace-nowrap rounded-pill px-3 py-2 text-[15px] text-ink-muted hover:bg-ink-raised hover:text-ink-text">
-            Create your own bot
+            <T>Create your own bot</T>
           </Link>
           <Link href="/chess-books" className="whitespace-nowrap rounded-pill px-3 py-2 text-[15px] text-ink-muted hover:bg-ink-raised hover:text-ink-text">
-            Books
+            <T>Books</T>
           </Link>
           <Link href="/chess-personality" className="whitespace-nowrap rounded-pill px-3 py-2 text-[15px] text-ink-muted hover:bg-ink-raised hover:text-ink-text">
-            Chess personality
+            <T>Chess personality</T>
           </Link>
           <Link href="/pricing" className="whitespace-nowrap rounded-pill px-3 py-2 text-[15px] text-ink-muted hover:bg-ink-raised hover:text-ink-text">
-            Pricing
+            <T>Pricing</T>
           </Link>
+          <LanguagePicker className="text-ink-muted hover:bg-ink-raised hover:text-ink-text" />
           <ThemeToggle className="text-ink-muted hover:bg-ink-raised hover:text-ink-text" />
           <AccountLinks />
         </div>

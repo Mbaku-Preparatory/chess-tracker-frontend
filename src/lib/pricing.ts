@@ -11,6 +11,7 @@
  */
 
 import { graphqlGet } from "./publicGraphql";
+import { fill, msg } from "@/lib/i18n";
 
 // Shown only when the backend could not answer (and no prices show either).
 export const DEFAULT_TRIAL_DAYS = 14;
@@ -48,8 +49,10 @@ export async function fetchTrialDays(): Promise<number> {
 }
 
 /** The trial's terms in one line, worded the same wherever they are shown. */
+export const TRIAL_TERMS = msg("{days} days free. No card needed. Nothing renews by itself.");
+
 export function trialTerms(trialDays: number): string {
-  return `${trialDays} days free. No card needed. Nothing renews by itself.`;
+  return fill(TRIAL_TERMS, { days: trialDays });
 }
 
 const REGION_NAMES = new Intl.DisplayNames(["en"], { type: "region" });

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 
+import { useT } from "@/hooks/useT";
 import { federationFor } from "@/lib/federations";
 import { profilePath, titledName } from "@/lib/publicPlayer";
 import { searchPublicPlayers, type PlayerSearchResult } from "@/lib/publicGraphql";
@@ -41,14 +42,15 @@ function rating(r: PlayerSearchResult): string | null {
  */
 export function PlayerSearch({
   onPick,
-  placeholder = "Search by name or FIDE ID",
-  buttonLabel = "Search",
+  placeholder,
+  buttonLabel,
 }: {
   onPick?: (player: PlayerSearchResult) => void;
   placeholder?: string;
   buttonLabel?: string;
 } = {}) {
   const router = useRouter();
+  const t = useT();
   const listId = useId();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<PlayerSearchResult[]>([]);
@@ -77,11 +79,11 @@ export function PlayerSearch({
       } catch (err) {
         if (ticket !== latest.current) return;
         setResults([]);
-        setStatus({ kind: "error", message: err instanceof Error ? err.message : "Search is unavailable right now. Try again shortly." });
+        setStatus({ kind: "error", message: err instanceof Error ? err.message : t("Search is unavailable right now. Try again shortly.") });
       }
     }, DEBOUNCE_MS);
     return () => clearTimeout(timer);
-  }, [query]);
+  }, [query, t]);
 
   function go(result: PlayerSearchResult) {
     setOpen(false);
@@ -96,7 +98,7 @@ export function PlayerSearch({
     // A FIDE ID needs no search: the profile page corrects the name part.
     if (/^\d{3,10}$/.test(q) && !onPick) return router.push(`/player/player/${q}`);
     if (results[0]) return go(results[0]);
-    if (!searchable(q)) setStatus({ kind: "error", message: "Type at least three letters of a name, or a FIDE ID." });
+    if (!searchable(q)) setStatus({ kind: "error", message: t("Type at least three letters of a name, or a FIDE ID.") });
   }
 
   function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -118,15 +120,15 @@ export function PlayerSearch({
 
   const showList = open && results.length > 0;
   const message =
-    status.kind === "searching" ? "Searching…"
-    : status.kind === "empty" ? `No rated player matches “${status.query}”.`
+    status.kind === "searching" ? t("Searching…")
+    : status.kind === "empty" ? t("No rated player matches “{query}”.", { query: status.query })
     : status.kind === "error" ? status.message
-    : status.kind === "results" ? `${results.length} player${results.length === 1 ? "" : "s"} found`
+    : status.kind === "results" ? t.plural(results.length, "{n} player found", "{n} players found")
     : "";
 
   return (
     <form onSubmit={submit} className="relative flex w-full max-w-[560px] flex-col gap-2" role="search">
-      <label htmlFor={`${listId}-input`} className="sr-only">Player name or FIDE ID</label>
+      <label htmlFor={`${listId}-input`} className="sr-only">{t("Player name or FIDE ID")}</label>
       <div className="flex">
         <input
           id={`${listId}-input`}
@@ -139,7 +141,7 @@ export function PlayerSearch({
           aria-describedby={`${listId}-status`}
           autoComplete="off"
           spellCheck={false}
-          placeholder={placeholder}
+          placeholder={placeholder ?? t("Search by name or FIDE ID")}
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
@@ -154,7 +156,7 @@ export function PlayerSearch({
           type="submit"
           className="whitespace-nowrap rounded-r-pill bg-accent px-6 py-3.5 text-[16px] font-[480] text-accent-on hover:bg-accent-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
-          {buttonLabel}
+          {buttonLabel ?? t("Search")}
         </button>
       </div>
 
@@ -162,7 +164,7 @@ export function PlayerSearch({
         <ul
           id={`${listId}-list`}
           role="listbox"
-          aria-label="Players"
+          aria-label={t("Players")}
           className="absolute left-0 right-0 top-[calc(100%-0.25rem)] z-30 mt-2 max-h-[420px] overflow-y-auto rounded-xl border border-ink-line bg-ink-card py-2 shadow-[0_12px_32px_rgb(0_0_0/0.25)]"
         >
           {results.map((r, i) => {

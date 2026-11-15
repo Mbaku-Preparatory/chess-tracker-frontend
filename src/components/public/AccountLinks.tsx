@@ -4,6 +4,7 @@ import Link from "next/link";
 import { AuthLink } from "@/components/public/AuthLink";
 import { useOnFunPage } from "@/components/public/FunPages";
 import { useSignedIn } from "@/hooks/useSignedIn";
+import { useT } from "@/hooks/useT";
 
 
 /**
@@ -19,12 +20,13 @@ export function AccountLinks({ primaryOnly = false }: { primaryOnly?: boolean })
   const signedIn = useSignedIn() === true;
   // The fun pages (FunPages.tsx) have no way into the app.
   const hidden = useOnFunPage();
+  const t = useT();
 
   if (hidden) return null;
   if (signedIn) {
     return (
       <Link href="/home" className="whitespace-nowrap rounded-pill bg-accent px-5 py-2 text-[15px] font-[480] text-accent-on hover:bg-accent-soft">
-        Open app
+        {t("Open app")}
       </Link>
     );
   }
@@ -32,17 +34,17 @@ export function AccountLinks({ primaryOnly = false }: { primaryOnly?: boolean })
   if (primaryOnly) {
     return (
       <AuthLink href="/signup" className="whitespace-nowrap rounded-pill bg-accent px-4 py-2 text-[15px] font-[480] text-accent-on hover:bg-accent-soft">
-        Get started
+        {t("Get started")}
       </AuthLink>
     );
   }
   return (
     <nav className="flex items-center gap-2">
       <AuthLink href="/login" className="whitespace-nowrap rounded-pill px-3 py-2 text-[15px] text-ink-text hover:bg-ink-raised sm:px-4">
-        Log in
+        {t("Log in")}
       </AuthLink>
       <AuthLink href="/signup" className="whitespace-nowrap rounded-pill bg-accent px-4 py-2 text-[15px] font-[480] text-accent-on hover:bg-accent-soft sm:px-5">
-        Get started
+        {t("Get started")}
       </AuthLink>
     </nav>
   );
