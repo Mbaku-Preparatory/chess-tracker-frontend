@@ -6,6 +6,7 @@ import { NavigationMemory } from "@/components/NavigationMemory";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { GlobalLoader } from "@/components/ui/GlobalLoader";
 import { SIGNED_IN_SCRIPT } from "@/lib/auth";
+import { LOCALE_SCRIPT } from "@/lib/i18n";
 import { SITE_URL } from "@/lib/site";
 import { THEME_SCRIPT } from "@/lib/theme";
 import { StoreProvider } from "@/redux/provider";
@@ -36,6 +37,8 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
         {/* Marks a signed-in browser before the first paint; see lib/auth.ts. */}
         <script dangerouslySetInnerHTML={{ __html: SIGNED_IN_SCRIPT }} />
+        {/* Picks the reader's language and starts fetching it; see lib/i18n.ts. */}
+        <script dangerouslySetInnerHTML={{ __html: LOCALE_SCRIPT }} />
       </head>
       <body>
         <StoreProvider>
