@@ -5,10 +5,13 @@ import { useState } from "react";
 import { TutorialPlayer } from "@/components/tutorials/TutorialPlayer";
 import { PlayIcon } from "@/components/ui/PlayIcon";
 import { TUTORIALS, tutorialFiles, tutorialLength, type TutorialId } from "@/lib/tutorials";
+import { useT } from "@/hooks/useT";
 
 /** Every tutorial as a card; tapping one plays it. */
 export function TutorialGrid() {
   const [open, setOpen] = useState<TutorialId | null>(null);
+  // "tr", not "t": t is each tutorial below.
+  const tr = useT();
   return (
     <>
       <ol className="grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
@@ -28,8 +31,8 @@ export function TutorialGrid() {
               </span>
               <span className="flex flex-col gap-1.5">
                 <span className="text-[13px] tabular-nums text-accent-soft">{String(i + 1).padStart(2, "0")}</span>
-                <span className="text-[20px] font-[480] leading-snug text-ink-text">{t.title}</span>
-                <span className="text-[15px] leading-[1.5] text-ink-muted">{t.summary}</span>
+                <span className="text-[20px] font-[480] leading-snug text-ink-text">{tr(t.title)}</span>
+                <span className="text-[15px] leading-[1.5] text-ink-muted">{tr(t.summary)}</span>
               </span>
             </button>
           </li>

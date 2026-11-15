@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { TutorialGrid } from "@/components/tutorials/TutorialGrid";
+import { T } from "@/components/T";
 import { SHARE_IMAGE, SITE_URL } from "@/lib/site";
 import { TUTORIALS, tutorialFiles } from "@/lib/tutorials";
 
@@ -37,12 +38,12 @@ export default function TutorialsPage() {
     <div className="flex flex-col gap-14 pt-10 sm:pt-16">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       <section className="flex flex-col items-start gap-5">
-        <p className="text-[13px] uppercase tracking-[0.1em] text-accent-soft">Tutorials</p>
+        <p className="text-[13px] uppercase tracking-[0.1em] text-accent-soft"><T>{"Tutorials"}</T></p>
         <h1 className="max-w-[20ch] text-balance text-[42px] font-[480] leading-[1.08] tracking-[0.01em] sm:text-[56px]">
-          Prepare for your next opponent.
+          <T>{"Prepare for your next opponent."}</T>
         </h1>
         <p className="max-w-[58ch] text-[18px] leading-[1.5] text-ink-muted">
-          Six short videos, each under a minute, recorded in the app. Start with adding an opponent; the rest build on it.
+          <T>Six short videos, each under a minute, recorded in the app. Start with adding an opponent; the rest build on it.</T>
         </p>
       </section>
       <TutorialGrid />

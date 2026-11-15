@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { GuestBookTrial } from "@/components/public/books/GuestBookTrial";
+import { T } from "@/components/T";
 
 export const metadata: Metadata = {
   title: "Try it with your own chess book | Chess Preparatory",
@@ -16,9 +17,9 @@ export default function TryABookPage() {
   return (
     <div className="flex flex-col gap-6 pt-6">
       <nav className="text-[14px] text-ink-faint">
-        <Link href="/chess-books" className="hover:text-ink-muted">Chess books</Link>
+        <Link href="/chess-books" className="hover:text-ink-muted"><T>{"Chess books"}</T></Link>
         <span className="mx-2">/</span>
-        <span>Try your own book</span>
+        <span><T>{"Try your own book"}</T></span>
       </nav>
       <GuestBookTrial />
     </div>

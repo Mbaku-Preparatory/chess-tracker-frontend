@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import { loginRefusal } from "@/lib/apiError";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { setAuth } from "@/redux/actions/auth";
+import { useLocale } from "@/hooks/useT";
 
 /** Public: Google puts it in the page anyway. The env var is for a second
  * project (staging); production uses this one. */
@@ -37,6 +38,7 @@ export function GoogleSignIn({ context, onError }: { context: "signin" | "signup
   const dispatch = useAppDispatch();
   const router = useRouter();
   const dark = useAppSelector((s) => s.theme.mode) === "dark";
+  const locale = useLocale();
   const holder = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -81,11 +83,13 @@ export function GoogleSignIn({ context, onError }: { context: "signin" | "signup
       text: context === "signup" ? "signup_with" : "continue_with",
       shape: "pill",
       logo_alignment: "center",
+      // Google writes the words itself, in the language it is given.
+      locale,
       width: Math.min(400, holder.current.offsetWidth || 320),
     });
     id.prompt();
     return () => id.cancel();
-  }, [ready, dark, context]);
+  }, [ready, dark, context, locale]);
 
   return (
     <div>

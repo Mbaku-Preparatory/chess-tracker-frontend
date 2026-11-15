@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { AuthLink } from "@/components/public/AuthLink";
 import { useSignedIn } from "@/hooks/useSignedIn";
+import { useT } from "@/hooks/useT";
 import { SUBSCRIBE_PATH } from "@/lib/subscription";
 
 /**
@@ -15,6 +16,7 @@ import { SUBSCRIBE_PATH } from "@/lib/subscription";
  */
 export function PricingCta({ primary, className = "" }: { primary: boolean; className?: string }) {
   const signedIn = useSignedIn() === true;
+  const t = useT();
   const look = primary
     ? "bg-accent text-accent-on hover:bg-accent-soft font-[480]"
     : "border border-ink-text/80 text-ink-text hover:bg-ink-raised";
@@ -23,13 +25,13 @@ export function PricingCta({ primary, className = "" }: { primary: boolean; clas
   if (signedIn) {
     return (
       <Link href={SUBSCRIBE_PATH} className={classes}>
-        Subscribe
+        {t("Subscribe")}
       </Link>
     );
   }
   return (
     <AuthLink href="/signup" className={classes}>
-      Start a free trial
+      {t("Start a free trial")}
     </AuthLink>
   );
 }

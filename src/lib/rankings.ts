@@ -10,20 +10,21 @@
  * rankings change only when the monthly FIDE list is imported.
  */
 
+import { msg } from "@/lib/i18n";
 import { FEDERATIONS } from "./federations";
 import { graphqlGet } from "./publicGraphql";
 
 export const TIME_CONTROLS = [
-  { key: "classical", label: "Classical", api: "STANDARD" },
-  { key: "rapid", label: "Rapid", api: "RAPID" },
-  { key: "blitz", label: "Blitz", api: "BLITZ" },
+  { key: "classical", label: msg("Classical"), api: "STANDARD" },
+  { key: "rapid", label: msg("Rapid"), api: "RAPID" },
+  { key: "blitz", label: msg("Blitz"), api: "BLITZ" },
 ] as const;
 
 export const LISTS = [
-  { key: "overall", label: "Overall", api: "OVERALL", phrase: "" },
-  { key: "women", label: "Women", api: "WOMEN", phrase: "women's" },
-  { key: "juniors", label: "Juniors", api: "JUNIORS", phrase: "junior" },
-  { key: "girls", label: "Girls", api: "GIRLS", phrase: "girls'" },
+  { key: "overall", label: msg("Overall"), api: "OVERALL", phrase: "" },
+  { key: "women", label: msg("Women"), api: "WOMEN", phrase: "women's" },
+  { key: "juniors", label: msg("Juniors"), api: "JUNIORS", phrase: "junior" },
+  { key: "girls", label: msg("Girls"), api: "GIRLS", phrase: "girls'" },
 ] as const;
 
 export type TimeControlKey = (typeof TIME_CONTROLS)[number]["key"];

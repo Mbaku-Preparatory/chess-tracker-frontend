@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 
 import { tutorial, tutorialFiles, type TutorialId } from "@/lib/tutorials";
+import { useT } from "@/hooks/useT";
 
 /**
  * A tutorial video over the page: phone-shaped (the videos are 9:16), with
@@ -13,6 +14,7 @@ import { tutorial, tutorialFiles, type TutorialId } from "@/lib/tutorials";
 export function TutorialPlayer({ id, onClose }: { id: TutorialId; onClose: () => void }) {
   const video = useRef<HTMLVideoElement>(null);
   const t = tutorial(id);
+  const tr = useT();
   const files = tutorialFiles(id);
 
   useEffect(() => {
@@ -31,17 +33,17 @@ export function TutorialPlayer({ id, onClose }: { id: TutorialId; onClose: () =>
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={`Tutorial: ${t.title}`}
+      aria-label={tr("Tutorial: {title}", { title: tr(t.title) })}
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4"
       onClick={onClose}
     >
       <div className="relative flex max-h-full flex-col items-center gap-3" onClick={(e) => e.stopPropagation()}>
         <div className="flex w-full items-center justify-between gap-4 text-white">
-          <p className="text-[15px] font-semibold">{t.title}</p>
+          <p className="text-[15px] font-semibold">{tr(t.title)}</p>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close the tutorial"
+            aria-label={tr("Close the tutorial")}
             className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-xl leading-none hover:bg-white/25"
           >
             ×

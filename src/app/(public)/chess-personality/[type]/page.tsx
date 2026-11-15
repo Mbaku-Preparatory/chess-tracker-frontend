@@ -7,9 +7,11 @@ import { Emblem } from "@/components/public/personality/Emblem";
 import { ResultActions, ResultEyebrow, ResultSliders } from "@/components/public/personality/ResultParts";
 import { Sliders } from "@/components/public/personality/Sliders";
 import { TypeGrid } from "@/components/public/personality/TypeGrid";
+import { T } from "@/components/T";
 import { aName, BY_SLUG, TYPES, typicalScores } from "@/lib/chessPersonality";
 import { federationFor } from "@/lib/federations";
 import { profilePath } from "@/lib/publicPlayer";
+import { Country } from "@/components/Country";
 
 type Params = Promise<{ type: string }>;
 
@@ -45,30 +47,30 @@ export default async function PersonalityTypePage({ params }: { params: Params }
       <article className="flex flex-col gap-10 pt-6 sm:pt-12">
         <header className="flex flex-col items-center gap-4 text-center">
           <Emblem type={type} size={128} />
-          <Suspense fallback={<p className="text-[13px] uppercase tracking-[0.12em] text-accent-soft">Chess personality</p>}>
+          <Suspense fallback={<p className="text-[13px] uppercase tracking-[0.12em] text-accent-soft"><T>{"Chess personality"}</T></p>}>
             <ResultEyebrow slug={type.slug} />
           </Suspense>
           <h1 className="text-balance text-[42px] font-[480] leading-[1.08] tracking-[0.01em] sm:text-[58px]">{type.name}</h1>
-          <p className="max-w-[44ch] text-balance text-[18px] leading-[1.5] text-ink-muted">{type.tagline}</p>
+          <p className="max-w-[44ch] text-balance text-[18px] leading-[1.5] text-ink-muted"><T>{type.tagline}</T></p>
         </header>
 
         <div className="grid gap-4 md:grid-cols-[3fr_2fr]">
           <section className="flex flex-col gap-6 rounded-xl bg-ink-card p-6 sm:p-8">
-            <p className="text-[17px] leading-[1.65]">{type.description}</p>
+            <p className="text-[17px] leading-[1.65]"><T>{type.description}</T></p>
             <div>
-              <h2 className="mb-3 text-[13px] uppercase tracking-[0.1em] text-ink-muted">Superpowers</h2>
+              <h2 className="mb-3 text-[13px] uppercase tracking-[0.1em] text-ink-muted"><T>{"Superpowers"}</T></h2>
               <ul className="flex flex-col gap-2">
                 {type.strengths.map((s) => (
                   <li key={s} className="flex items-start gap-3 text-[16px]">
                     <span className="mt-2 h-2 w-2 shrink-0 rounded-full" style={{ background: type.colour }} aria-hidden />
-                    {s}
+                    <T>{s}</T>
                   </li>
                 ))}
               </ul>
             </div>
             <div>
-              <h2 className="mb-1.5 text-[13px] uppercase tracking-[0.1em] text-ink-muted">Kryptonite</h2>
-              <p className="text-[16px] text-ink-muted">{type.kryptonite}</p>
+              <h2 className="mb-1.5 text-[13px] uppercase tracking-[0.1em] text-ink-muted"><T>{"Kryptonite"}</T></h2>
+              <p className="text-[16px] text-ink-muted"><T>{type.kryptonite}</T></p>
             </div>
             <Suspense fallback={null}>
               <ResultActions slug={type.slug} />
@@ -82,15 +84,16 @@ export default async function PersonalityTypePage({ params }: { params: Params }
               </Suspense>
             </section>
             <section className="rounded-xl bg-ink-card p-6 sm:p-8">
-              <h2 className="mb-3 text-[13px] uppercase tracking-[0.1em] text-ink-muted">Player like you</h2>
+              <h2 className="mb-3 text-[13px] uppercase tracking-[0.1em] text-ink-muted"><T>{"Player like you"}</T></h2>
               <Link href={profilePath(type.player)} className="group flex flex-col gap-1">
                 <span className="text-[21px] font-[480] leading-tight group-hover:text-accent-soft">
-                  {type.player.name} is {aName(type)}
+                  {/* {aType} has the English article ("an Alchemist"); other languages use the bare {type}. */}
+                  <T vars={{ player: type.player.name, aType: aName(type), type: type.name.replace(/^The /, "") }}>{"{player} is {aType}"}</T>
                 </span>
                 <span className="text-[14px] text-ink-muted">
                   {type.player.fideName ? `${type.player.fideName} · ` : ""}
                   {type.player.title} · {fed.flag ? `${fed.flag} ` : ""}
-                  {fed.name}
+                  <Country code={type.player.federation} />
                 </span>
               </Link>
             </section>
@@ -100,7 +103,7 @@ export default async function PersonalityTypePage({ params }: { params: Params }
 
       <section aria-labelledby="all-heading" className="flex flex-col gap-6">
         <h2 id="all-heading" className="text-[28px] font-[480] leading-[1.2] tracking-[0.015em] sm:text-[32px]">
-          All {TYPES.length} chess personalities
+          <T vars={{ n: TYPES.length }}>{"All {n} chess personalities"}</T>
         </h2>
         <TypeGrid current={type.slug} />
       </section>

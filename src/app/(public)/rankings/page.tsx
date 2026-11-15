@@ -3,7 +3,10 @@ import Link from "next/link";
 
 import { AdSlot } from "@/components/public/AdSlot";
 import { FederationFilter } from "@/components/public/rankings/FederationFilter";
+import { RankingsIntro } from "@/components/public/rankings/RankingsIntro";
 import { RankingsTable } from "@/components/public/rankings/RankingsTable";
+import { Country } from "@/components/Country";
+import { T } from "@/components/T";
 import { federationFor } from "@/lib/federations";
 import { profilePath } from "@/lib/publicPlayer";
 import {
@@ -15,32 +18,12 @@ import {
   rankingsPath,
   type RankingsView,
 } from "@/lib/rankings";
+import { describe, heading } from "@/lib/rankingsText";
 import { SHARE_IMAGE, SITE_URL } from "@/lib/site";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 // FIDE's junior lists: under 20 on 1 January.
-const JUNIORS_BORN_FROM = new Date().getUTCFullYear() - 20;
-
-/** "Kenya women's rapid chess rankings", "World classical chess rankings". */
-function heading(view: RankingsView): string {
-  const scope = view.fed ? federationFor(view.fed).name : "World";
-  const list = LISTS.find((l) => l.key === view.list)!.phrase;
-  return [scope, list, view.tc, "chess rankings"].filter(Boolean).join(" ");
-}
-
-function describe(view: RankingsView, count?: number): string {
-  const who = {
-    overall: "active players",
-    women: "active women players",
-    juniors: `active juniors (born ${JUNIORS_BORN_FROM} or later)`,
-    girls: `active girls (born ${JUNIORS_BORN_FROM} or later)`,
-  }[view.list];
-  const where = view.fed ? ` in ${federationFor(view.fed).name}` : "";
-  const total = count ? `${count.toLocaleString("en")} ` : "";
-  return `FIDE's official ${view.tc} ranking of ${total}${who}${where}, from the latest monthly rating list. Tied ratings share a place.`;
-}
-
 export async function generateMetadata({ searchParams }: { searchParams: SearchParams }): Promise<Metadata> {
   const view = parseView(await searchParams);
   // The same request as the page's: Next dedupes it, so this costs nothing.
@@ -112,12 +95,8 @@ export default async function RankingsPage({ searchParams }: { searchParams: Sea
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
 
       <header className="flex flex-col gap-4 pt-4">
-        <p className="text-[13px] uppercase tracking-[0.1em] text-accent-soft">FIDE rating lists</p>
-        <h1 className="flex flex-wrap items-baseline gap-x-3 text-balance text-[32px] font-[480] capitalize leading-[1.15] tracking-[0.015em] sm:text-[42px]">
-          {fed?.flag && <span aria-hidden="true" className="text-[0.8em]">{fed.flag}</span>}
-          <span>{title}</span>
-        </h1>
-        <p className="max-w-[68ch] text-[16px] leading-[1.6] text-ink-muted">{describe(view, count)}</p>
+        <p className="text-[13px] uppercase tracking-[0.1em] text-accent-soft"><T>FIDE rating lists</T></p>
+        <RankingsIntro view={view} count={count} />
       </header>
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -125,14 +104,14 @@ export default async function RankingsPage({ searchParams }: { searchParams: Sea
           <nav aria-label="Time control" className="flex gap-2 overflow-x-auto">
             {TIME_CONTROLS.map((t) => (
               <Tab key={t.key} href={rankingsPath({ ...view, tc: t.key, page: 1 })} active={view.tc === t.key}>
-                {t.label}
+                <T>{t.label}</T>
               </Tab>
             ))}
           </nav>
           <nav aria-label="List" className="flex gap-2 overflow-x-auto">
             {LISTS.map((l) => (
               <Tab key={l.key} href={rankingsPath({ ...view, list: l.key, page: 1 })} active={view.list === l.key}>
-                {l.label}
+                <T>{l.label}</T>
               </Tab>
             ))}
           </nav>
@@ -140,7 +119,7 @@ export default async function RankingsPage({ searchParams }: { searchParams: Sea
         <div className="flex items-center gap-4">
           <FederationFilter view={view} />
           <Link href="/rankings/countries" className="whitespace-nowrap text-[14px] text-ink-muted underline decoration-ink-line underline-offset-4 hover:text-ink-text">
-            All countries
+            <T>All countries</T>
           </Link>
         </div>
       </div>
@@ -153,11 +132,15 @@ export default async function RankingsPage({ searchParams }: { searchParams: Sea
           <RankingsTable view={view} count={count} results={results} />
         ) : (
           <p className="py-12 text-center text-[15px] text-ink-faint">
-            {count > 0
-              ? "This page is past the end of the list."
-              : `No ranked players${fed ? ` in ${fed.name}` : ""} on this list.`}{" "}
+            {count > 0 ? (
+              <T>This page is past the end of the list.</T>
+            ) : fed ? (
+              <T vars={{ country: <Country code={fed.code} /> }}>{"No ranked players in {country} on this list."}</T>
+            ) : (
+              <T>No ranked players on this list.</T>
+            )}{" "}
             <Link href={rankingsPath({ ...view, page: 1, ...(count > 0 ? {} : { fed: "" }) })} className="text-ink-muted underline underline-offset-4 hover:text-ink-text">
-              {count > 0 ? "Back to the top" : "See the world list"}
+              {count > 0 ? <T>Back to the top</T> : <T>See the world list</T>}
             </Link>
           </p>
         )}

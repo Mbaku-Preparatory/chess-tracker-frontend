@@ -5,6 +5,7 @@ import { track } from "@vercel/analytics";
 import { SharePanel } from "@/components/public/share/SharePanel";
 import type { PersonalityType } from "@/lib/chessPersonality";
 import { SITE_URL } from "@/lib/site";
+import { useT } from "@/hooks/useT";
 
 /**
  * Share a chess personality result. The link carries the sliders (?s=), so
@@ -12,12 +13,13 @@ import { SITE_URL } from "@/lib/site";
  * chat; Instagram gets the type's story picture (story.png).
  */
 export function ShareResult({ type, path, mine }: { type: PersonalityType; path: string; mine: boolean }) {
+  const t = useT();
   const text = mine
-    ? `I'm ${type.name} at chess. Which chess personality are you?`
-    : `${type.name}: ${type.tagline} Which chess personality are you?`;
+    ? t("I'm {type} at chess. Which chess personality are you?", { type: type.name })
+    : t("{type}: {tagline} Which chess personality are you?", { type: type.name, tagline: t(type.tagline) });
   return (
     <SharePanel
-      label="Share result"
+      label={t("Share result")}
       text={text}
       url={`${SITE_URL}${path}`}
       picture={{ src: `/chess-personality/${type.slug}/story.png`, filename: `${type.slug}-chess-personality.png` }}

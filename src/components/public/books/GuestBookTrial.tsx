@@ -9,6 +9,7 @@ import { BookReader } from "@/components/books/BookReader";
 import { AuthLink } from "@/components/public/AuthLink";
 import { useRepeatWhile } from "@/hooks/useRepeatWhile";
 import { useSignedIn } from "@/hooks/useSignedIn";
+import { useT } from "@/hooks/useT";
 import { keepBookFile } from "@/lib/bookFiles";
 import { BOOK_POLL_MS, canOpen, getBook, isConverting, type BookDetail } from "@/lib/books";
 import { forgetGuestBook, readGuestBook, TRIAL_MS, uploadGuestBook, writeGuestBook, type GuestBook } from "@/lib/guestBook";
@@ -24,6 +25,7 @@ const n = (x: number) => x.toLocaleString("en");
  * has the arrangement). Signed in, the app's Books page is the real thing.
  */
 export function GuestBookTrial() {
+  const t = useT();
   const router = useRouter();
   // undefined until this device's record is read, on the client
   const [trial, setTrial] = useState<GuestBook | null | undefined>(undefined);
@@ -41,13 +43,13 @@ export function GuestBookTrial() {
     else setTrial((t) => (t === undefined ? readGuestBook() : t));
   }, [session, router]);
 
-  const load = useCallback(async (t: GuestBook) => {
+  const load = useCallback(async (g: GuestBook) => {
     try {
-      setBook(await getBook(t.publicId, t.key));
+      setBook(await getBook(g.publicId, g.key));
     } catch {
-      setError("Couldn't reach the server just now. This page will keep trying.");
+      setError(t("Couldn't reach the server just now. This page will keep trying."));
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (trial && !trial.claimed) void load(trial);
@@ -81,7 +83,7 @@ export function GuestBookTrial() {
       setBook(undefined);
       setTrial(fresh);
     } catch (err) {
-      if (!controller.signal.aborted) setError(err instanceof Error ? err.message : "The book could not be uploaded.");
+      if (!controller.signal.aborted) setError(err instanceof Error ? err.message : t("The book could not be uploaded."));
     } finally {
       uploadRef.current = null;
       setUploading(false);
@@ -92,9 +94,9 @@ export function GuestBookTrial() {
 
   if (trial?.claimed) {
     return (
-      <Notice title={`“${trial.title}” is in your account.`}>
+      <Notice title={t("“{title}” is in your account.", { title: trial.title })}>
         <AuthLink href="/login" className="rounded-pill bg-accent px-6 py-3 text-[16px] font-[480] text-accent-on hover:bg-accent-soft">
-          Log in to read it
+          {t("Log in to read it")}
         </AuthLink>
       </Notice>
     );
@@ -103,20 +105,21 @@ export function GuestBookTrial() {
   // No try yet on this device, or the last one couldn't be read.
   if (!trial || failed) {
     return (
-      <section aria-label="Try it with your book" className="flex flex-col items-start gap-5 rounded-xl bg-ink-card p-6 sm:p-8">
-        <h2 className="text-[24px] font-[480] leading-tight">Try it with your own book</h2>
+      <section aria-label={t("Try it with your own book")} className="flex flex-col items-start gap-5 rounded-xl bg-ink-card p-6 sm:p-8">
+        <h2 className="text-[24px] font-[480] leading-tight">{t("Try it with your own book")}</h2>
         <p className="max-w-[60ch] text-[16px] leading-[1.5] text-ink-muted">
-          Upload a chess book as a PDF, scanned or not. No account needed: we read the first 50 pages, and you have ten
-          minutes with it. The book stays on your device; the server keeps only where its moves and diagrams are.
+          {t("Upload a chess book as a PDF, scanned or not. No account needed: we read the first 50 pages, and you have ten minutes with it. The book stays on your device; the server keeps only where its moves and diagrams are.")}
         </p>
         {failed && book && (
           <p className="max-w-[60ch] text-[15px] text-amber-700 dark:text-amber-400">
-            “{book.title}” couldn&apos;t be read: {book.error || "it doesn't look like a chess book."} Try another.
+            {book.error
+              ? t("“{title}” couldn't be read: {reason} Try another.", { title: book.title, reason: book.error })
+              : t("“{title}” couldn't be read: it doesn't look like a chess book. Try another.", { title: book.title })}
           </p>
         )}
         <div className="flex flex-wrap items-center gap-3">
           <label className="cursor-pointer rounded-pill bg-accent px-6 py-3 text-[16px] font-[480] text-accent-on hover:bg-accent-soft">
-            {uploading ? "Uploading…" : "Choose a PDF"}
+            {uploading ? t("Uploading…") : t("Choose a PDF")}
             <input
               type="file"
               accept="application/pdf,.pdf"
@@ -131,10 +134,10 @@ export function GuestBookTrial() {
           </label>
           {uploading && (
             <button type="button" onClick={() => uploadRef.current?.abort()} className="text-[14px] text-ink-muted underline">
-              Cancel
+              {t("Cancel")}
             </button>
           )}
-          <span className="text-[13px] text-ink-faint">Up to 50 MB · one book per device</span>
+          <span className="text-[13px] text-ink-faint">{t("Up to 50 MB · one book per device")}</span>
         </div>
         {error && <p className="text-[14px] text-result-loss">{error}</p>}
       </section>
@@ -144,9 +147,9 @@ export function GuestBookTrial() {
   // Deleted on the server: unclaimed guest books go after a day.
   if (book === null) {
     return (
-      <Notice title={`“${trial.title}” was only kept for a day.`}>
+      <Notice title={t("“{title}” was only kept for a day.", { title: trial.title })}>
         <AuthLink href="/signup" className="rounded-pill bg-accent px-6 py-3 text-[16px] font-[480] text-accent-on hover:bg-accent-soft">
-          Start a free trial to upload books
+          {t("Start a free trial to upload books")}
         </AuthLink>
       </Notice>
     );
@@ -156,9 +159,9 @@ export function GuestBookTrial() {
 
   if (converting && !ready) {
     return (
-      <section aria-label="Reading your book" aria-live="polite" className="flex flex-col gap-3 rounded-xl bg-ink-card p-6 sm:p-8">
-        <h2 className="text-[21px] font-[480]">Reading “{book.title}”</h2>
-        <BookConverting book={book} note="Your ten minutes start when it's ready, not before. You can leave this page and come back." />
+      <section aria-label={t("Reading your book")} aria-live="polite" className="flex flex-col gap-3 rounded-xl bg-ink-card p-6 sm:p-8">
+        <h2 className="text-[21px] font-[480]">{t("Reading “{title}”", { title: book.title })}</h2>
+        <BookConverting book={book} note={t("Your ten minutes start when it's ready, not before. You can leave this page and come back.")} />
         {error && <p className="text-[14px] text-ink-faint">{error}</p>}
       </section>
     );
@@ -177,11 +180,11 @@ export function GuestBookTrial() {
       above={bar}
       partNote={
         <>
-          That&apos;s as far as a free try reads: the first {n(book.pageCount)} of {n(book.pdfPageCount)} pages.{" "}
+          {t("That's as far as a free try reads: the first {pages} of {total} pages.", { pages: n(book.pageCount), total: n(book.pdfPageCount) })}{" "}
           <AuthLink href="/signup" className="text-accent-soft underline">
-            Start a free trial
+            {t("Start a free trial")}
           </AuthLink>{" "}
-          and the book moves into it; read the whole of it from there.
+          {t("and the book moves into it; read the whole of it from there.")}
         </>
       }
     />

@@ -5,6 +5,7 @@ import { useState } from "react";
 import { TutorialPlayer } from "@/components/tutorials/TutorialPlayer";
 import { PlayIcon } from "@/components/ui/PlayIcon";
 import { tutorial, tutorialLength, type TutorialId } from "@/lib/tutorials";
+import { useT } from "@/hooks/useT";
 
 /**
  * "▶ Watch how (41s)" on the screen a tutorial explains; opens it in the
@@ -14,6 +15,7 @@ import { tutorial, tutorialLength, type TutorialId } from "@/lib/tutorials";
 export function TutorialLink({ id, className }: { id: TutorialId; className?: string }) {
   const [open, setOpen] = useState(false);
   const t = tutorial(id);
+  const tr = useT();
   return (
     <>
       <button
@@ -25,7 +27,7 @@ export function TutorialLink({ id, className }: { id: TutorialId; className?: st
         }
       >
         <PlayIcon className="h-3.5 w-3.5" />
-        Watch how <span className="opacity-70">({tutorialLength(t.seconds)})</span>
+        {tr("Watch how")} <span className="opacity-70">({tutorialLength(t.seconds)})</span>
       </button>
       {open && <TutorialPlayer id={id} onClose={() => setOpen(false)} />}
     </>

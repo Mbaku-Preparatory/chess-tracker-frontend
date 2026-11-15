@@ -10,8 +10,9 @@
  * cached on its own.
  */
 
+import { msg } from "@/lib/i18n";
+
 import { graphqlGet } from "./publicGraphql";
-import { fill, msg } from "@/lib/i18n";
 
 // Shown only when the backend could not answer (and no prices show either).
 export const DEFAULT_TRIAL_DAYS = 14;
@@ -51,25 +52,26 @@ export async function fetchTrialDays(): Promise<number> {
 /** The trial's terms in one line, worded the same wherever they are shown. */
 export const TRIAL_TERMS = msg("{days} days free. No card needed. Nothing renews by itself.");
 
-export function trialTerms(trialDays: number): string {
-  return fill(TRIAL_TERMS, { days: trialDays });
-}
-
-const REGION_NAMES = new Intl.DisplayNames(["en"], { type: "region" });
-// ICU's names for these read like a disambiguation page.
+// ICU's English names for these read like a disambiguation page.
 const SHORT_NAMES: Record<string, string> = { CD: "DR Congo", CG: "Congo", HK: "Hong Kong", MO: "Macau", PS: "Palestine" };
 
-/** "Kenya" for "KE"; "" for a code nobody knows. */
-export function countryName(code: string): string {
+/** "Kenya" for "KE" (in `locale`, from the browser's own names); "" for a code nobody knows. */
+export function countryName(code: string, locale = "en"): string {
   if (!code) return "";
   try {
-    const name = SHORT_NAMES[code] ?? REGION_NAMES.of(code) ?? "";
+    const name = (locale === "en" && SHORT_NAMES[code]) || new Intl.DisplayNames([locale], { type: "region" }).of(code) || "";
     return name === code ? "" : name;
   } catch {
     return "";
   }
 }
 
-export function currencyName(currency: string): string {
-  return currency === "USD" ? "US dollars" : currency === "KES" ? "Kenyan shillings" : currency;
+/** "Kenyan shillings"; in other languages the browser's name for the currency. */
+export function currencyName(currency: string, locale = "en"): string {
+  if (locale === "en") return currency === "USD" ? "US dollars" : currency === "KES" ? "Kenyan shillings" : currency;
+  try {
+    return new Intl.DisplayNames([locale], { type: "currency" }).of(currency) ?? currency;
+  } catch {
+    return currency;
+  }
 }
