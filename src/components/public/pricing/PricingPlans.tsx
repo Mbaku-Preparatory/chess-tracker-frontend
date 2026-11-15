@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { PricingCta } from "@/components/public/pricing/PricingCta";
-import type { PublicPlan } from "@/lib/pricing";
+import { trialTerms, type PublicPlan } from "@/lib/pricing";
 import { annualSaving, formatPrice, perMonthOfAnnual } from "@/lib/subscription";
 
 function Check() {
@@ -103,7 +103,7 @@ export function PricingPlans({
         <div className="flex flex-col gap-2 pt-1">
           <PricingCta primary />
           <p className="text-center text-[13px] text-ink-faint">
-            {trialDays} days free first. No card needed. Nothing renews by itself.
+            {trialTerms(trialDays)}
           </p>
         </div>
       </div>

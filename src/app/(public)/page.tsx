@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { AuthLink } from "@/components/public/AuthLink";
 import { PlayerSearch } from "@/components/public/PlayerSearch";
+import { TrialNote } from "@/components/TrialNote";
 import { FREE_BOT_GAMES, FREE_PROFILE_VIEWS, PUBLIC_GAMES_SHOWN } from "@/lib/freeLimits";
 import { bookPath, fetchPublicBooks } from "@/lib/publicBook";
 import { profilePath } from "@/lib/publicPlayer";
@@ -299,6 +300,7 @@ export default async function LandingPage() {
             chess-results, Chess.com and Lichess, see which openings they play and how they score with
             them, and walk into the game with a plan.
           </p>
+          <TrialNote className="text-[14px] text-ink-faint" />
         </div>
         <div className="flex flex-wrap gap-3 md:justify-end">
           <AuthLink
