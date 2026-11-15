@@ -41,6 +41,17 @@ export async function fetchPublicPricing(country: string): Promise<PublicPricing
   }
 }
 
+/** The trial's length alone: the country only changes the prices. Same
+ * request and cache as the pricing page's, for the unknown country. */
+export async function fetchTrialDays(): Promise<number> {
+  return (await fetchPublicPricing(""))?.trialDays ?? DEFAULT_TRIAL_DAYS;
+}
+
+/** The trial's terms in one line, worded the same wherever they are shown. */
+export function trialTerms(trialDays: number): string {
+  return `${trialDays} days free. No card needed. Nothing renews by itself.`;
+}
+
 const REGION_NAMES = new Intl.DisplayNames(["en"], { type: "region" });
 // ICU's names for these read like a disambiguation page.
 const SHORT_NAMES: Record<string, string> = { CD: "DR Congo", CG: "Congo", HK: "Hong Kong", MO: "Macau", PS: "Palestine" };
