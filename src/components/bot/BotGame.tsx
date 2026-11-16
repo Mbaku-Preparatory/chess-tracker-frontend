@@ -69,6 +69,7 @@ function Plate({
   /** Set when the face can be changed from here, mid-game included. */
   onAvatarClick?: () => void;
 }) {
+  const t = useT();
   return (
     <div className="flex min-w-0 items-center gap-2 px-0.5 text-[14px]">
       <span className="relative shrink-0">
@@ -76,8 +77,8 @@ function Plate({
           <button
             type="button"
             onClick={onAvatarClick}
-            aria-label={`Change the avatar for ${name}`}
-            title="Change avatar"
+            aria-label={t("Change the avatar for {name}", { name })}
+            title={t("Change avatar")}
             className="block rounded-full outline-none ring-accent hover:ring-2 focus-visible:ring-2"
           >
             <Avatar src={avatar} size={32} />
@@ -494,7 +495,7 @@ export function BotGame({
       </header>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
-        <section aria-label="Board" className="flex justify-center">
+        <section aria-label={t("Board")} className="flex justify-center">
           <div className="flex w-full max-w-[min(100%,calc(100dvh-190px))] flex-col gap-1.5 lg:max-w-[min(100%,calc(100dvh-270px))]">
             <Plate name={name} rating={botRating} color={botColor} tag={t("Bot · {elo}", { elo })} avatar={botAvatarSrc} onAvatarClick={onChangeAvatar && (() => onChangeAvatar("bot"))} />
             <Board fen={fen} orientation={youColor} highlights={highlights} onMove={result ? undefined : tryMove} side={youColor[0] as "w" | "b"} />
@@ -503,7 +504,7 @@ export function BotGame({
         </section>
 
         <aside className="flex min-w-0 flex-col gap-3">
-          <section aria-label="Game" className="flex flex-col gap-3 rounded-xl bg-ink-card p-4">
+          <section aria-label={t("Game")} className="flex flex-col gap-3 rounded-xl bg-ink-card p-4">
             {showSpeech && <BotSpeech avatar={botAvatarSrc} name={`${name} bot`} speech={speech} choices={choices} />}
             <div className={`flex flex-wrap items-center justify-between gap-2 ${showSpeech ? "border-t border-ink-line pt-3" : ""}`}>
               <p aria-live="polite" className="text-[15px] font-[520] text-ink-text">
@@ -519,7 +520,7 @@ export function BotGame({
             </div>
           </section>
 
-          <section aria-label="Moves" className="max-h-[45vh] overflow-y-auto rounded-xl bg-ink-card p-2 lg:max-h-[calc(100dvh-460px)] lg:min-h-[160px]">
+          <section aria-label={t("Moves")} className="max-h-[45vh] overflow-y-auto rounded-xl bg-ink-card p-2 lg:max-h-[calc(100dvh-460px)] lg:min-h-[160px]">
             {rows.length === 0 ? (
               <p className="p-2 text-[14px] text-ink-faint">{botColor === "white" ? t("{name} bot opens.", { name }) : t("You open.")}</p>
             ) : (
@@ -565,7 +566,7 @@ export function BotGame({
           </div>
 
           {guest && (
-            <section aria-label="Free game" className={`flex flex-col gap-3 rounded-xl p-4 ${result ? "bg-accent/15" : "bg-ink-card"}`}>
+            <section aria-label={t("Free game")} className={`flex flex-col gap-3 rounded-xl p-4 ${result ? "bg-accent/15" : "bg-ink-card"}`}>
               <p className="text-[15px] font-[520] text-ink-text">{freeGameLine(freeGame, Boolean(result), t)}</p>
               <p className="text-[14px] text-ink-muted">
                 {t("Start a free trial to play {name} bot again, build a bot from any opponent you scout, and prepare against their openings.", { name })}

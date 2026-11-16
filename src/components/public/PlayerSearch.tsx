@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 
-import { useT } from "@/hooks/useT";
+import { useT, type Translate } from "@/hooks/useT";
 import { federationFor } from "@/lib/federations";
 import { profilePath, titledName } from "@/lib/publicPlayer";
 import { searchPublicPlayers, type PlayerSearchResult } from "@/lib/publicGraphql";
@@ -20,10 +20,10 @@ const DEBOUNCE_MS = 200;
 // less only costs a request that comes back empty.
 const searchable = (q: string) => /\d/.test(q) ? /^\d{3,}$/.test(q.trim()) : /[\p{L}]{3,}/u.test(q);
 
-function rating(r: PlayerSearchResult): string | null {
+function rating(r: PlayerSearchResult, t: Translate): string | null {
   if (r.standardRating) return `${r.standardRating}`;
-  if (r.rapidRating) return `${r.rapidRating} rapid`;
-  if (r.blitzRating) return `${r.blitzRating} blitz`;
+  if (r.rapidRating) return t("{rating} rapid", { rating: r.rapidRating });
+  if (r.blitzRating) return t("{rating} blitz", { rating: r.blitzRating });
   return null;
 }
 
@@ -195,7 +195,7 @@ export function PlayerSearch({
                 </span>
                 <span className="flex shrink-0 items-baseline gap-3 text-[13px] text-ink-faint">
                   <span className="hidden sm:inline">{fed.name}</span>
-                  {rating(r) && <span className="tabular-nums text-ink-muted">{rating(r)}</span>}
+                  {rating(r, t) && <span className="tabular-nums text-ink-muted">{rating(r, t)}</span>}
                 </span>
               </li>
             );

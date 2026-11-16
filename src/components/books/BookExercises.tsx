@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { PageHeader } from "@/components/ui/PageHeader";
 import { useBookOpened, type BookReaderKind } from "@/hooks/useBookOpened";
+import { useT } from "@/hooks/useT";
 import type { BookDetail } from "@/lib/books";
 
 /**
@@ -27,7 +28,9 @@ export function BookExercises({
   /** Above the header: the trial's time left. */
   above?: React.ReactNode;
 }) {
+  const t = useT();
   useBookOpened(true, "exercises", who);
+  const num = (x: number) => x.toLocaleString("en");
   const stopped = book.exercises.filter((e) => !e.verified);
   const first = book.exercises[0]?.number;
 
@@ -36,12 +39,12 @@ export function BookExercises({
       {above}
       <PageHeader
         title={book.title}
-        subtitle={`${book.exerciseCount.toLocaleString("en")} exercises · ${book.verifiedCount.toLocaleString("en")} verified`}
+        subtitle={`${t.plural(book.exerciseCount, "{n} exercise", "{n} exercises", { n: num(book.exerciseCount) })} · ${t("{n} verified", { n: num(book.verifiedCount) })}`}
         actions={
           <>
             {first !== undefined && (
               <Link href={hrefFor(first)} className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">
-                Start solving
+                {t("Start solving")}
               </Link>
             )}
             {actions}
@@ -56,18 +59,26 @@ export function BookExercises({
           <ul className="flex list-disc flex-col gap-1.5 pl-5">
             {book.renumbered.length > 0 && (
               <li>
-                The book misprints {book.renumbered.length === 1 ? "an exercise number" : `${book.renumbered.length} exercise numbers`}; corrected from
-                the numbering: {book.renumbered.map(([printed, actual]) => `${printed} → ${actual}`).join(", ")}.
+                {t.plural(
+                  book.renumbered.length,
+                  "The book misprints an exercise number; corrected from the numbering: {list}.",
+                  "The book misprints {n} exercise numbers; corrected from the numbering: {list}.",
+                  { list: book.renumbered.map(([printed, actual]) => `${printed} → ${actual}`).join(", ") },
+                )}
               </li>
             )}
             {stopped.length > 0 && (
               <li>
-                In {stopped.length === 1 ? "one exercise" : `${stopped.length} exercises`} the book&apos;s solution has a move its own diagram does not
-                allow, so the solution stops there and the rest is kept as a note: {stopped.map((e) => `#${e.number}`).join(", ")}.
+                {t.plural(
+                  stopped.length,
+                  "In one exercise the book's solution has a move its own diagram does not allow, so the solution stops there and the rest is kept as a note: {list}.",
+                  "In {n} exercises the book's solution has a move its own diagram does not allow, so the solution stops there and the rest is kept as a note: {list}.",
+                  { list: stopped.map((e) => `#${e.number}`).join(", ") },
+                )}
               </li>
             )}
             {book.missingSolutions.length > 0 && (
-              <li>No solution was found for: {book.missingSolutions.map((n) => `#${n}`).join(", ")}.</li>
+              <li>{t("No solution was found for: {list}.", { list: book.missingSolutions.map((n) => `#${n}`).join(", ") })}</li>
             )}
           </ul>
         </section>
@@ -78,7 +89,7 @@ export function BookExercises({
           <li key={e.number}>
             <Link
               href={hrefFor(e.number)}
-              title={[`${e.white} – ${e.black}`, e.event, e.verified ? "" : "solution stops early"].filter(Boolean).join(" · ")}
+              title={[`${e.white} – ${e.black}`, e.event, e.verified ? "" : t("solution stops early")].filter(Boolean).join(" · ")}
               className={`flex h-10 items-center justify-center rounded-lg text-sm tabular-nums ${
                 e.verified
                   ? "bg-gray-100 text-gray-700 hover:bg-brand-50 hover:text-brand-700 dark:bg-dark-elevated dark:text-gray-300"

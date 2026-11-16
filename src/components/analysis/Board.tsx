@@ -4,12 +4,15 @@ import { Chess, type Move } from "chess.js";
 import { useEffect, useMemo, useState } from "react";
 import { Chessboard, defaultPieces } from "react-chessboard";
 
+import { useT } from "@/hooks/useT";
+import { msg } from "@/lib/i18n";
+
 type Promotion = "q" | "r" | "b" | "n";
 const PROMOTIONS: { piece: Promotion; name: string }[] = [
-  { piece: "q", name: "Queen" },
-  { piece: "n", name: "Knight" },
-  { piece: "r", name: "Rook" },
-  { piece: "b", name: "Bishop" },
+  { piece: "q", name: msg("Queen") },
+  { piece: "n", name: msg("Knight") },
+  { piece: "r", name: msg("Rook") },
+  { piece: "b", name: msg("Bishop") },
 ];
 
 // What touching a piece shows: the piece, a dot on each square it can move
@@ -60,6 +63,7 @@ export default function Board({
   const [selected, setSelected] = useState<string | null>(null);
   const [dragFrom, setDragFrom] = useState<string | null>(null);
   const [hover, setHover] = useState<string | null>(null);
+  const t = useT();
   const [promoting, setPromoting] = useState<{ from: string; to: string; color: "w" | "b" } | null>(null);
 
   // A new position starts with nothing picked up.
@@ -152,7 +156,7 @@ export default function Board({
           style={{ borderRadius: rounded }}
           onClick={() => setPromoting(null)}
           role="dialog"
-          aria-label="Promote the pawn to"
+          aria-label={t("Promote the pawn to")}
         >
           <div
             className={`absolute flex w-[12.5%] overflow-hidden bg-white shadow-xl ${pick.atTop ? "top-0 flex-col" : "bottom-0 flex-col-reverse"}`}
@@ -162,8 +166,8 @@ export default function Board({
               <button
                 key={piece}
                 type="button"
-                aria-label={name}
-                title={name}
+                aria-label={t(name)}
+                title={t(name)}
                 className="aspect-square w-full p-[6%] hover:bg-amber-200"
                 onClick={(e) => {
                   e.stopPropagation();

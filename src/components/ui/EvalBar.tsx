@@ -1,6 +1,7 @@
 "use client";
 
 import { cpToWhitePct, formatScore, type EngineResult } from "@/hooks/useEngine";
+import { useT } from "@/hooks/useT";
 
 type EvalBarProps = Pick<EngineResult, "depth" | "isAnalyzing" | "source"> & {
   score: number | null;
@@ -22,15 +23,16 @@ export function EvalBar({
   orientation = "vertical",
   className = "",
 }: EvalBarProps) {
+  const t = useT();
   const whitePct = cpToWhitePct(score, mate);
   const label    = formatScore(score, mate);
 
   const status = isAnalyzing ? (
-    <span className="block h-1.5 w-1.5 animate-pulse rounded-full bg-brand-400" title="Analysing…" />
+    <span className="block h-1.5 w-1.5 animate-pulse rounded-full bg-brand-400" title={t("Analysing…")} />
   ) : source === "lichess" ? (
-    <span className="block h-1.5 w-1.5 rounded-full bg-amber-400" title="Lichess cloud eval" />
+    <span className="block h-1.5 w-1.5 rounded-full bg-amber-400" title={t("Lichess cloud eval")} />
   ) : source === "local" ? (
-    <span className="block h-1.5 w-1.5 rounded-full bg-emerald-400" title="Local Stockfish" />
+    <span className="block h-1.5 w-1.5 rounded-full bg-emerald-400" title={t("Local Stockfish")} />
   ) : null;
 
   if (orientation === "horizontal") {

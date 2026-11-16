@@ -12,6 +12,8 @@ import { api } from "@/lib/api";
 import { movetext, parsePgn, pgnStart } from "@/lib/chess/pgn";
 import { useAnalysisLine } from "@/lib/chess/useAnalysisLine";
 import { useEngine } from "@/hooks/useEngine";
+import { useT } from "@/hooks/useT";
+import { msg, type Vars } from "@/lib/i18n";
 
 import { EnginePanel } from "./EnginePanel";
 import { MoveList } from "./MoveList";
@@ -110,11 +112,12 @@ const ICONS = {
 };
 
 function Nav({ index, last, goTo, className = "" }: { index: number; last: number; goTo: (i: number) => void; className?: string }) {
+  const t = useT();
   const buttons: [keyof typeof ICONS, string, number, boolean][] = [
-    ["start", "Start", -1, index === -1],
-    ["prev", "Previous move", index - 1, index === -1],
-    ["next", "Next move", index + 1, index === last],
-    ["end", "Last move", last, index === last],
+    ["start", t("Start"), -1, index === -1],
+    ["prev", t("Previous move"), index - 1, index === -1],
+    ["next", t("Next move"), index + 1, index === last],
+    ["end", t("Last move"), last, index === last],
   ];
   return (
     <div className={`grid grid-cols-4 gap-2 ${className}`}>
@@ -141,6 +144,7 @@ function Nav({ index, last, goTo, className = "" }: { index: number; last: numbe
  */
 export function AnalysisView(props: AnalysisViewProps) {
   const { pgn, white, black, orientation = "white", result, title, details, filename, shareUrl, importToLichess, back, solve = false, pager } = props;
+  const t = useT();
   const mainMoves = useMemo(() => parsePgn(pgn), [pgn]);
   const start = useMemo(() => pgnStart(pgn), [pgn]);
   const line = useAnalysisLine(mainMoves, start.fen);
@@ -150,7 +154,8 @@ export function AnalysisView(props: AnalysisViewProps) {
   // How far into the book's line the solver has got: the moves up to here are
   // theirs to see and step through; the rest is still the answer.
   const [solvedUpTo, setSolvedUpTo] = useState(-1);
-  const [feedback, setFeedback] = useState<{ ok: boolean; text: string } | null>(null);
+  // `text` is English, translated where it is shown.
+  const [feedback, setFeedback] = useState<{ ok: boolean; text: string; vars?: Vars } | null>(null);
   // The engine would give the answer away, so it waits until the line is solved.
   const engine = useEngine(fen, { enabled: prefs.engine && !solving, depth: DEPTHS[prefs.depth].depth, capMs: DEPTHS[prefs.depth].capMs });
   const top = engine.lines[0] ?? null;
@@ -178,7 +183,7 @@ export function AnalysisView(props: AnalysisViewProps) {
       }
       if (clean(san) !== clean(expected.san)) {
         if (!line.play(from, to, promotion)) return false;
-        setFeedback({ ok: false, text: `${san} is not the book's move. Explore it here, or take it back and try again.` });
+        setFeedback({ ok: false, text: msg("{move} is not the book's move. Explore it here, or take it back and try again."), vars: { move: san } });
         return true;
       }
       const reached = index + 1;
@@ -186,13 +191,13 @@ export function AnalysisView(props: AnalysisViewProps) {
       setSolvedUpTo(reached);
       const done = () => {
         setSolving(false);
-        setFeedback({ ok: true, text: "Solved. The book's notes are below." });
+        setFeedback({ ok: true, text: msg("Solved. The book's notes are below.") });
       };
       if (!mainMoves[reached + 1]) {
         done();
         return true;
       }
-      setFeedback({ ok: true, text: `${expected.san} is right.` });
+      setFeedback({ ok: true, text: msg("{move} is right."), vars: { move: expected.san } });
       window.setTimeout(() => {
         line.selectMain(reached + 1);
         setSolvedUpTo(reached + 1);
@@ -237,7 +242,7 @@ export function AnalysisView(props: AnalysisViewProps) {
     (from: string, to: string, promotion?: string) => (solving ? attempt(from, to, promotion) : line.play(from, to, promotion)),
     [line, solving, attempt],
   );
-  const toMove = start.fen.split(" ")[1] === "b" ? "Black" : "White";
+  const blackToMove = start.fen.split(" ")[1] === "b";
 
   const highlights = useMemo(() => {
     const styles: Record<string, React.CSSProperties> = {};
@@ -315,8 +320,8 @@ export function AnalysisView(props: AnalysisViewProps) {
           </p>
         </div>
         {pager && (
-          <nav aria-label="Exercises" className="flex shrink-0 items-center gap-2 sm:ml-auto">
-            {[{ href: pager.prev, label: "Previous" }, { href: pager.next, label: "Next" }].map((p) =>
+          <nav aria-label={t("Exercises")} className="flex shrink-0 items-center gap-2 sm:ml-auto">
+            {[{ href: pager.prev, label: t("Previous") }, { href: pager.next, label: t("Next") }].map((p) =>
               p.href ? (
                 <Link key={p.label} href={p.href} className="rounded-pill bg-ink-card px-3.5 py-1.5 text-[14px] text-ink-muted hover:bg-ink-raised hover:text-ink-text">
                   {p.label}
@@ -331,7 +336,7 @@ export function AnalysisView(props: AnalysisViewProps) {
       </header>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
-        <section aria-label="Board" className="flex justify-center gap-2">
+        <section aria-label={t("Board")} className="flex justify-center gap-2">
           {bar("vertical", "hidden sm:flex")}
           <div className="flex w-full max-w-[min(100%,calc(100dvh-190px))] flex-col gap-1.5 lg:max-w-[min(100%,calc(100dvh-270px))]">
             <Plate side={topSide} color={orientation === "white" ? "black" : "white"} />
@@ -345,14 +350,18 @@ export function AnalysisView(props: AnalysisViewProps) {
 
         <aside className="flex min-w-0 flex-col gap-3">
           {(solving || feedback) && (
-            <section aria-label="Solve" aria-live="polite" className="flex flex-col gap-3 rounded-xl bg-ink-card p-4">
+            <section aria-label={t("Solve")} aria-live="polite" className="flex flex-col gap-3 rounded-xl bg-ink-card p-4">
               {solving && (
                 <p className="text-[15px] font-[520] text-ink-text">
-                  {line.inBranch ? "Your own line, off the book's." : `${toMove} to move. Play the best move on the board.`}
+                  {line.inBranch
+                    ? t("Your own line, off the book's.")
+                    : blackToMove
+                      ? t("Black to move. Play the best move on the board.")
+                      : t("White to move. Play the best move on the board.")}
                 </p>
               )}
               {feedback && (
-                <p className={`text-[14px] font-[520] ${feedback.ok ? "text-accent-soft" : "text-amber-600 dark:text-amber-400"}`}>{feedback.text}</p>
+                <p className={`text-[14px] font-[520] ${feedback.ok ? "text-accent-soft" : "text-amber-600 dark:text-amber-400"}`}>{t(feedback.text, feedback.vars)}</p>
               )}
               {/* The moves found so far and, under them, the solver's own
                   line: the rest of the book's stays out of sight. */}
@@ -369,7 +378,7 @@ export function AnalysisView(props: AnalysisViewProps) {
                       onClick={takeBack}
                       className="rounded-pill bg-accent px-3.5 py-1.5 text-[13px] font-[520] text-accent-on hover:opacity-90"
                     >
-                      Take back
+                      {t("Take back")}
                     </button>
                   )}
                   <button
@@ -380,7 +389,7 @@ export function AnalysisView(props: AnalysisViewProps) {
                     }}
                     className="rounded-pill border border-ink-line px-3.5 py-1.5 text-[13px] text-ink-muted hover:bg-ink-raised hover:text-ink-text"
                   >
-                    Show solution
+                    {t("Show solution")}
                   </button>
                 </div>
               )}
@@ -390,7 +399,7 @@ export function AnalysisView(props: AnalysisViewProps) {
           {!solving && <EnginePanel prefs={prefs} setPrefs={setPrefs} engine={engine} fen={fen} />}
 
           {!solving && (
-            <section aria-label="Moves" data-moves-scroll className="max-h-[45vh] overflow-y-auto rounded-xl bg-ink-card p-2 lg:max-h-[calc(100dvh-520px)] lg:min-h-[160px]">
+            <section aria-label={t("Moves")} data-moves-scroll className="max-h-[45vh] overflow-y-auto rounded-xl bg-ink-card p-2 lg:max-h-[calc(100dvh-520px)] lg:min-h-[160px]">
               <MoveList mainMoves={mainMoves} line={line} result={finished ? result : null} intro={start.comment} />
             </section>
           )}
@@ -399,10 +408,10 @@ export function AnalysisView(props: AnalysisViewProps) {
 
           <div className="flex flex-wrap gap-2">
             {[
-              { label: "Download PGN", icon: ICON_DOWNLOAD, onClick: download },
+              { label: t("Download PGN"), icon: ICON_DOWNLOAD, onClick: download },
               { label: "Chess.com", icon: ICON_CHESSCOM, onClick: () => window.open(`https://www.chess.com/analysis?pgn=${encodeURIComponent(pgn)}`, "_blank", "noopener") },
-              { label: lichessBusy ? "Opening…" : "Lichess", icon: ICON_LICHESS, onClick: openLichess, disabled: lichessBusy },
-              { label: "Share", icon: ICON_SHARE, onClick: () => setSharing(true) },
+              { label: lichessBusy ? t("Opening…") : "Lichess", icon: ICON_LICHESS, onClick: openLichess, disabled: lichessBusy },
+              { label: t("Share"), icon: ICON_SHARE, onClick: () => setSharing(true) },
             ].map((a) => (
               <button
                 key={a.label}
@@ -419,7 +428,7 @@ export function AnalysisView(props: AnalysisViewProps) {
               </button>
             ))}
           </div>
-          <p className="hidden text-[12px] text-ink-faint lg:block">← → to step through the moves</p>
+          <p className="hidden text-[12px] text-ink-faint lg:block">{t("← → to step through the moves")}</p>
         </aside>
       </div>
     </div>

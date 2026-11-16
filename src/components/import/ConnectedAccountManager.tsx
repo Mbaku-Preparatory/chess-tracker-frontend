@@ -86,7 +86,7 @@ export function ConnectedAccountManager({
     <div className="mt-5 rounded-xl border border-gray-200 bg-white/80 p-4 dark:border-dark-border dark:bg-dark-surface/80">
       <div className="mb-3">
         <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-          Connected {PLATFORM_LABEL[platform]} accounts
+          {t("Connected {site} accounts", { site: PLATFORM_LABEL[platform] })}
         </h4>
         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
           {t("You can delink an account, delete only its imported games, or do both.")}
@@ -95,7 +95,7 @@ export function ConnectedAccountManager({
 
       {platformAccounts.length === 0 ? (
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          No {PLATFORM_LABEL[platform]} accounts linked yet.
+          {t("No {site} accounts linked yet.", { site: PLATFORM_LABEL[platform] })}
         </p>
       ) : (
         <div className="space-y-3">

@@ -19,20 +19,30 @@ import { api } from "@/lib/api";
 import { userMessage, wasAborted } from "@/lib/apiError";
 import { bookFile, forgetBookFile, keepBookFile, sha256Of } from "@/lib/bookFiles";
 import { useRepeatWhile } from "@/hooks/useRepeatWhile";
+import { useT, type Translate } from "@/hooks/useT";
+import { msg } from "@/lib/i18n";
 import { BOOK_POLL_MS, canOpen, deleteBook, isConverting, myBooks, type Book } from "@/lib/books";
 
 const n = (x: number) => x.toLocaleString("en");
 
-function status(book: Book): string {
-  if (book.status === "failed") return book.error || "This book could not be converted.";
+function status(book: Book, t: Translate): string {
+  if (book.status === "failed") return book.error || t("This book could not be converted.");
+  // t.plural written out each time, so scripts/i18n-check.mjs finds the keys.
   if (book.kind === "reader") {
-    const part = book.readInPart ? ` · first ${n(book.pageCount)} of ${n(book.pdfPageCount)} pages` : "";
-    return `Reader${part} · ${n(book.diagramCount)} diagrams · ${n(book.moveCount)} moves`;
+    return [
+      t("Reader"),
+      book.readInPart && t("first {pages} of {total} pages", { pages: n(book.pageCount), total: n(book.pdfPageCount) }),
+      t.plural(book.diagramCount, "{n} diagram", "{n} diagrams", { n: n(book.diagramCount) }),
+      t.plural(book.moveCount, "{n} move", "{n} moves", { n: n(book.moveCount) }),
+    ]
+      .filter(Boolean)
+      .join(" · ");
   }
-  return `${n(book.exerciseCount)} exercises · ${n(book.verifiedCount)} verified`;
+  return `${t.plural(book.exerciseCount, "{n} exercise", "{n} exercises", { n: n(book.exerciseCount) })} · ${t("{n} verified", { n: n(book.verifiedCount) })}`;
 }
 
 export default function BooksPage() {
+  const t = useT();
   const [books, setBooks] = useState<Book[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   // The same file uploaded again: not an error, but worth a word.
@@ -96,8 +106,8 @@ export default function BooksPage() {
     // Cancelling a book still being read is deleting it: the worker stops
     // within a page (books/services/processing.py).
     const question = isConverting(book)
-      ? `Stop reading “${book.title}”? What has been read so far is thrown away.`
-      : `Delete “${book.title}” and its exercises?`;
+      ? t("Stop reading “{title}”? What has been read so far is thrown away.", { title: book.title })
+      : t("Delete “{title}” and its exercises?", { title: book.title });
     if (!window.confirm(question)) return;
     try {
       await deleteBook(book.publicId);
@@ -111,8 +121,8 @@ export default function BooksPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
       <PageHeader
-        title="Books"
-        subtitle="Upload a chess book as a PDF. A book of exercises becomes positions to solve, with the book's solutions and notes; any other book, scanned ones too, becomes a reader where every move opens on the board. Your books are private to you."
+        title={t("Books")}
+        subtitle={t("Upload a chess book as a PDF. A book of exercises becomes positions to solve, with the book's solutions and notes; any other book, scanned ones too, becomes a reader where every move opens on the board. Your books are private to you.")}
       />
       <div className="-mt-5 mb-6"><TutorialLink id="books" /></div>
 
@@ -120,7 +130,7 @@ export default function BooksPage() {
         <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
           <label className="flex cursor-pointer items-center gap-3">
             <span className="shrink-0 whitespace-nowrap rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">
-              {uploading ? "Uploading…" : "Upload a PDF"}
+              {uploading ? t("Uploading…") : t("Upload a PDF")}
             </span>
             <input
               ref={fileRef}
@@ -140,29 +150,28 @@ export default function BooksPage() {
               onClick={cancelUpload}
               className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:border-dark-border dark:text-gray-300 dark:hover:bg-dark-elevated"
             >
-              Cancel
+              {t("Cancel")}
             </button>
           )}
           <span className="text-sm text-gray-500 dark:text-gray-400">
-            Up to 50 MB. A scanned book is read where it is: it stays on this device, and the server keeps only where
-            its moves and diagrams are.
+            {t("Up to 50 MB. A scanned book is read where it is: it stays on this device, and the server keeps only where its moves and diagrams are.")}
           </span>
         </div>
         <div className="mt-4 max-w-md">
           <NotifyMeCheckbox
             checked={notifyEmail}
             onChange={setNotifyEmail}
-            hint="A scanned book takes a few minutes to read; we'll send a link when it's ready."
+            hint={msg("A scanned book takes a few minutes to read; we'll send a link when it's ready.")}
           />
         </div>
         {error && <p className="mt-3 text-sm text-red-600 dark:text-red-400">{error}</p>}
         {already && (
           <p className="mt-3 text-sm text-gray-600 dark:text-gray-300">
-            You already have this book as “{already.title}”.{" "}
+            {t("You already have this book as “{title}”.", { title: already.title })}{" "}
             {already.ready ? (
-              <Link href={`/books/${already.publicId}`} className="text-brand-600 underline">Open it</Link>
+              <Link href={`/books/${already.publicId}`} className="text-brand-600 underline">{t("Open it")}</Link>
             ) : (
-              "It is still being converted."
+              t("It is still being converted.")
             )}
           </p>
         )}
@@ -173,7 +182,7 @@ export default function BooksPage() {
       {books === null ? (
         <div className="h-24 animate-pulse rounded-xl bg-gray-100 dark:bg-dark-elevated" />
       ) : books.length === 0 ? (
-        <p className="text-sm text-gray-500 dark:text-gray-400">No books yet.</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">{t("No books yet.")}</p>
       ) : (
         <ul className="flex flex-col gap-3">
           {books.map((book) => (
@@ -192,11 +201,11 @@ export default function BooksPage() {
                 {isConverting(book) ? (
                   <BookConverting
                     book={book}
-                    note={book.notifyEmail ? "You can leave this page: we'll email you when it's done." : "You can leave this page and come back."}
+                    note={book.notifyEmail ? t("You can leave this page: we'll email you when it's done.") : t("You can leave this page and come back.")}
                   />
                 ) : (
                   <p className={`mt-0.5 text-sm ${book.status === "failed" ? "text-red-600 dark:text-red-400" : "text-gray-500 dark:text-gray-400"}`}>
-                    {status(book)}
+                    {status(book, t)}
                   </p>
                 )}
               </div>
@@ -204,13 +213,13 @@ export default function BooksPage() {
                 {/* A reader book opens after its first pages; the rest light up as they are read. */}
                 {isConverting(book) && canOpen(book) && (
                   <Link href={`/books/${book.publicId}`} className="rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-700">
-                    Start reading
+                    {t("Start reading")}
                   </Link>
                 )}
                 {book.status === "succeeded" && (
                   <>
                     <Link href={`/books/${book.publicId}`} className="rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-700">
-                      {book.kind === "reader" ? "Read" : "Open"}
+                      {book.kind === "reader" ? t("Read") : t("Open")}
                     </Link>
                     {book.readInPart && (
                       <button
@@ -219,7 +228,7 @@ export default function BooksPage() {
                         disabled={uploading}
                         className="rounded-lg border border-brand-600 px-3 py-1.5 text-sm font-semibold text-brand-600 hover:bg-brand-50 disabled:opacity-50 dark:hover:bg-brand-900/20"
                       >
-                        Read the whole book
+                        {t("Read the whole book")}
                       </button>
                     )}
                     {book.kind === "exercises" && (
@@ -228,7 +237,7 @@ export default function BooksPage() {
                         onClick={() => void api.downloadBookPgn(book.publicId).catch((err) => setError(userMessage(err)))}
                         className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:border-dark-border dark:text-gray-300 dark:hover:bg-dark-elevated"
                       >
-                        Download PGN
+                        {t("Download PGN")}
                       </button>
                     )}
                   </>
@@ -238,7 +247,7 @@ export default function BooksPage() {
                   onClick={() => void remove(book)}
                   className="rounded-lg px-3 py-1.5 text-sm text-gray-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20"
                 >
-                  {isConverting(book) ? "Cancel" : "Delete"}
+                  {isConverting(book) ? t("Cancel") : t("Delete")}
                 </button>
               </div>
             </li>

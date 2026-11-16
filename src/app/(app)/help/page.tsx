@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { ReportProblemForm } from "@/components/support/ReportProblemForm";
+import { T } from "@/components/T";
 import { BackLink } from "@/components/ui/BackLink";
 import { fetchSupportContact } from "@/lib/support";
 
@@ -23,7 +24,7 @@ export default async function HelpPage() {
     <div className="mx-auto flex max-w-4xl flex-col gap-6">
       <div>
         <BackLink href="/home" />
-        <h1 className="mt-3 text-2xl font-bold text-gray-900 dark:text-gray-100">Help</h1>
+        <h1 className="mt-3 text-2xl font-bold text-gray-900 dark:text-gray-100"><T>Help</T></h1>
       </div>
       <section className="card p-6">
         <ReportProblemForm replyHours={contact?.replyHours ?? null} />

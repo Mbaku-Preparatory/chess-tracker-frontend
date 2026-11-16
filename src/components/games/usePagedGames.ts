@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { DEFAULT_PAGE_SIZE, fetchSize } from "@/lib/games";
+import { msg } from "@/lib/i18n";
 
 export interface GamesChunk<T> {
   count: number;
@@ -89,7 +90,7 @@ export function usePagedGames<T>(
         .then(({ count, results }) =>
           setStore((s) => (s.key === resetKey ? { key: s.key, count, items: place(s.items, offset, results) } : s)),
         )
-        .catch(() => setError("These games could not be loaded."))
+        .catch(() => setError(msg("These games could not be loaded.")))
         .finally(() => inflight.current.delete(key));
     },
     [resetKey],

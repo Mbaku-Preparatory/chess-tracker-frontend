@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { useT } from "@/hooks/useT";
 import { api } from "@/lib/api";
 
 /**
@@ -9,6 +10,7 @@ import { api } from "@/lib/api";
  * The games table's row action in the app.
  */
 export function DeleteGameButton({ gameRef, onDeleted }: { gameRef: string; onDeleted: (gameRef: string) => void }) {
+  const t = useT();
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -33,10 +35,10 @@ export function DeleteGameButton({ gameRef, onDeleted }: { gameRef: string; onDe
           disabled={deleting}
           className="rounded-pill bg-red-600 px-2.5 py-1 text-[12px] font-[520] text-white hover:bg-red-700 disabled:opacity-50"
         >
-          {deleting ? "Deleting…" : "Delete"}
+          {deleting ? t("Deleting…") : t("Delete")}
         </button>
         <button type="button" onClick={() => setConfirming(false)} className="rounded-pill px-2 py-1 text-[12px] text-ink-faint hover:text-ink-text">
-          Cancel
+          {t("Cancel")}
         </button>
       </span>
     );
@@ -46,8 +48,8 @@ export function DeleteGameButton({ gameRef, onDeleted }: { gameRef: string; onDe
     <button
       type="button"
       onClick={() => setConfirming(true)}
-      title="Delete game"
-      aria-label="Delete game"
+      title={t("Delete game")}
+      aria-label={t("Delete game")}
       className="rounded-pill p-1.5 text-ink-faint hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400"
     >
       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>

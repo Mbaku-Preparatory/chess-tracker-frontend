@@ -11,6 +11,7 @@ import { api } from "@/lib/api";
 import type { PlayerLookupResult } from "@/types";
 import { userMessage } from "@/lib/apiError";
 import { duplicatePlayerFrom, duplicatePlayerHref } from "@/lib/duplicatePlayer";
+import { useT } from "@/hooks/useT";
 
 // ── Platform metadata ────────────────────────────────────────────────────────
 
@@ -44,6 +45,7 @@ function LookupResultCard({
   onSelect: (r: PlayerLookupResult) => void;
 }) {
   const meta = PLATFORM_META[result.platform];
+  const t = useT();
   const ratings = result.ratings ?? {};
 
   return (
@@ -93,15 +95,15 @@ function LookupResultCard({
           {result.federation && <span className="text-xs text-gray-400">{result.federation}</span>}
           {result.country && !result.federation && <span className="text-xs text-gray-400">{result.country}</span>}
           {result.fide_id && <span className="text-xs text-gray-400">FIDE {result.fide_id}</span>}
-          <RatingBadge label="Std" value={ratings.standard} />
-          <RatingBadge label="Rapid" value={ratings.rapid} />
-          <RatingBadge label="Blitz" value={ratings.blitz} />
-          <RatingBadge label="Bullet" value={ratings.bullet} />
-          <RatingBadge label="Classical" value={ratings.classical} />
+          <RatingBadge label={t("Std")} value={ratings.standard} />
+          <RatingBadge label={t("Rapid")} value={ratings.rapid} />
+          <RatingBadge label={t("Blitz")} value={ratings.blitz} />
+          <RatingBadge label={t("Bullet")} value={ratings.bullet} />
+          <RatingBadge label={t("Classical")} value={ratings.classical} />
         </div>
       </div>
 
-      <span className="flex-shrink-0 text-xs font-medium text-brand-600">Select →</span>
+      <span className="flex-shrink-0 text-xs font-medium text-brand-600">{t("Select →")}</span>
     </button>
   );
 }
@@ -127,6 +129,7 @@ function PlatformUsernameSection({
   onChange: (values: string[]) => void;
   onFound: (result: PlayerLookupResult) => void;
 }) {
+  const t = useT();
   const [lookupStates, setLookupStates] = useState<
     Record<number, { loading: boolean; result: PlayerLookupResult | null; error: string | null }>
   >({});
@@ -166,10 +169,10 @@ function PlatformUsernameSection({
       if (results.length > 0) {
         setLookupStates((prev) => ({ ...prev, [idx]: { loading: false, result: results[0], error: null } }));
       } else {
-        setLookupStates((prev) => ({ ...prev, [idx]: { loading: false, result: null, error: `No ${label} user found for "${username}".` } }));
+        setLookupStates((prev) => ({ ...prev, [idx]: { loading: false, result: null, error: t("No {site} user found for \"{username}\".", { site: label, username }) } }));
       }
     } catch {
-      setLookupStates((prev) => ({ ...prev, [idx]: { loading: false, result: null, error: "Lookup failed. Check the username." } }));
+      setLookupStates((prev) => ({ ...prev, [idx]: { loading: false, result: null, error: t("Lookup failed. Check the username.") } }));
     }
   }
 
@@ -187,7 +190,7 @@ function PlatformUsernameSection({
           {icon}
         </span>
         {label}
-        <span className="text-xs font-normal text-gray-400">optional</span>
+        <span className="text-xs font-normal text-gray-400">{t("optional")}</span>
       </div>
 
       <div className="space-y-2">
@@ -212,8 +215,8 @@ function PlatformUsernameSection({
                   onClick={() => lookup(idx)}
                   disabled={!u.trim() || state?.loading}
                   className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:border-gray-300 hover:text-gray-600 disabled:opacity-40 dark:border-dark-border dark:hover:border-gray-500"
-                  aria-label={`Look up on ${label}`}
-                  title={`Look up on ${label}`}
+                  aria-label={t("Look up on {site}", { site: label })}
+                  title={t("Look up on {site}", { site: label })}
                 >
                   {state?.loading ? (
                     <svg className="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -232,7 +235,7 @@ function PlatformUsernameSection({
                     type="button"
                     onClick={() => remove(idx)}
                     className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:border-dark-border"
-                    aria-label="Remove"
+                    aria-label={t("Remove")}
                   >
                     <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5">
                       <path d="M5.28 4.22a.75.75 0 00-1.06 1.06L6.94 8l-2.72 2.72a.75.75 0 101.06 1.06L8 9.06l2.72 2.72a.75.75 0 101.06-1.06L9.06 8l2.72-2.72a.75.75 0 00-1.06-1.06L8 6.94 5.28 4.22z" />
@@ -263,7 +266,7 @@ function PlatformUsernameSection({
             <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5">
               <path d="M8 2a.75.75 0 01.75.75v4.5h4.5a.75.75 0 010 1.5h-4.5v4.5a.75.75 0 01-1.5 0v-4.5h-4.5a.75.75 0 010-1.5h4.5v-4.5A.75.75 0 018 2z" />
             </svg>
-            Add another {label} account
+            {t("Add another {site} account", { site: label })}
           </button>
         )}
       </div>
@@ -275,6 +278,7 @@ function PlatformUsernameSection({
 
 export default function NewPlayerPage() {
   const router = useRouter();
+  const t = useT();
 
   // ── FIDE search state ────────────────────────────────────────────────────
   const [fideQuery, setFideQuery] = useState("");
@@ -314,8 +318,8 @@ export default function NewPlayerPage() {
       if (results.length === 0) {
         setFideError(
           fideMode === "id"
-            ? `No FIDE player has ID ${q}.`
-            : `No FIDE player found for "${q}".`
+            ? t("No FIDE player has ID {id}.", { id: q })
+            : t("No FIDE player found for \"{query}\".", { query: q })
         );
       } else {
         setFideResults(results);
@@ -323,7 +327,7 @@ export default function NewPlayerPage() {
     } catch (err) {
       // The API explains short queries and FIDE outages — pass that through
       // rather than flattening both to "try again".
-      setFideError(userMessage(err, "FIDE search failed. Try again."));
+      setFideError(userMessage(err, t("FIDE search failed. Try again.")));
     } finally {
       setFideSearching(false);
     }
@@ -396,7 +400,7 @@ export default function NewPlayerPage() {
         router.push(duplicatePlayerHref(existing));
         return;
       }
-      setError(userMessage(err, "Could not create player. Try again."));
+      setError(userMessage(err, t("Could not create player. Try again.")));
     } finally {
       setLoading(false);
     }
@@ -406,13 +410,12 @@ export default function NewPlayerPage() {
 
   return (
     <div className="mx-auto max-w-lg">
-      <Breadcrumb items={[{ label: "My Opponents", href: "/home" }, { label: "Add Opponent" }]} />
+      <Breadcrumb items={[{ label: t("My Opponents"), href: "/home" }, { label: t("Add Opponent") }]} />
 
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Add opponent</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t("Add opponent")}</h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Search FIDE by name or ID, or enter their Chess.com / Lichess username
-          directly.
+          {t("Search FIDE by name or ID, or enter their Chess.com / Lichess username directly.")}
         </p>
         <div className="mt-3"><TutorialLink id="add-opponent" /></div>
       </div>
@@ -425,7 +428,7 @@ export default function NewPlayerPage() {
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15H9V8h2v9zm4 0h-2V8h2v9z" />
             </svg>
           </span>
-          FIDE search
+          {t("FIDE search")}
         </div>
 
         {/* Name / FIDE ID toggle. A segmented control rather than a dropdown:
@@ -433,7 +436,7 @@ export default function NewPlayerPage() {
         {!fideSelected && (
           <div
             role="tablist"
-            aria-label="Search FIDE by"
+            aria-label={t("Search FIDE by")}
             className="mb-3 inline-flex rounded-lg border border-gray-200 p-0.5 dark:border-dark-border"
           >
             {(["name", "id"] as const).map((mode) => (
@@ -458,7 +461,7 @@ export default function NewPlayerPage() {
                     : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-dark-elevated"
                 }`}
               >
-                {mode === "name" ? "By name" : "By FIDE ID"}
+                {mode === "name" ? t("By name") : t("By FIDE ID")}
               </button>
             ))}
           </div>
@@ -483,9 +486,9 @@ export default function NewPlayerPage() {
               <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-gray-500">
                 {fideSelected.fide_id && <span>#{fideSelected.fide_id}</span>}
                 {fideSelected.federation && <span>{fideSelected.federation}</span>}
-                {fideSelected.ratings?.standard && <span>Std {fideSelected.ratings.standard}</span>}
-                {fideSelected.ratings?.rapid && <span>Rapid {fideSelected.ratings.rapid}</span>}
-                {fideSelected.ratings?.blitz && <span>Blitz {fideSelected.ratings.blitz}</span>}
+                {fideSelected.ratings?.standard && <span>{t("Std")} {fideSelected.ratings.standard}</span>}
+                {fideSelected.ratings?.rapid && <span>{t("Rapid")} {fideSelected.ratings.rapid}</span>}
+                {fideSelected.ratings?.blitz && <span>{t("Blitz")} {fideSelected.ratings.blitz}</span>}
               </div>
             </div>
             <button
@@ -493,7 +496,7 @@ export default function NewPlayerPage() {
               onClick={clearFideSelection}
               className="flex-shrink-0 text-xs text-gray-400 hover:text-gray-600 underline underline-offset-2"
             >
-              Change
+              {t("Change")}
             </button>
           </div>
         ) : (
@@ -506,9 +509,9 @@ export default function NewPlayerPage() {
                 setFideQuery(e.target.value);
                 if (fideResults || fideError) { setFideResults(null); setFideError(null); }
               }}
-              placeholder={fideMode === "id" ? "e.g. 1503014" : "e.g. Magnus Carlsen"}
+              placeholder={fideMode === "id" ? t("e.g. 1503014") : t("e.g. Magnus Carlsen")}
               inputMode={fideMode === "id" ? "numeric" : "text"}
-              aria-label={fideMode === "id" ? "FIDE ID" : "Player name"}
+              aria-label={fideMode === "id" ? t("FIDE ID") : t("Player name")}
               className="block flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-dark-border dark:bg-dark-elevated dark:text-gray-100 dark:placeholder-gray-500"
               autoComplete="off"
               spellCheck={false}
@@ -525,14 +528,14 @@ export default function NewPlayerPage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
-                  Searching…
+                  {t("Searching…")}
                 </>
               ) : (
                 <>
                   <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
                     <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clipRule="evenodd" />
                   </svg>
-                  Search
+                  {t("Search")}
                 </>
               )}
             </button>
@@ -544,7 +547,7 @@ export default function NewPlayerPage() {
         {fideResults && fideResults.length > 0 && (
           <div className="mt-3 space-y-2">
             <p className="text-xs text-gray-400">
-              {fideResults.length === 1 ? "1 result" : `${fideResults.length} results`} — click to pre-fill
+              {t.plural(fideResults.length, "{n} result — click to pre-fill", "{n} results — click to pre-fill")}
             </p>
             {fideResults.map((r, i) => (
               <LookupResultCard key={i} result={r} onSelect={handleSelectFide} />
@@ -555,7 +558,7 @@ export default function NewPlayerPage() {
 
       {/* ── Form ─────────────────────────────────────────────────────────── */}
       <form onSubmit={handleSubmit} className="card space-y-5 p-6">
-        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Player details</p>
+        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{t("Player details")}</p>
 
         {error && (
           <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -568,7 +571,7 @@ export default function NewPlayerPage() {
           platform="chesscom"
           color={CC_COLOR}
           label="Chess.com"
-          placeholder="username, e.g. MagnusCarlsen"
+          placeholder={t("username, e.g. {example}", { example: "MagnusCarlsen" })}
           icon={
             <svg viewBox="0 0 24 24" fill="white" className="h-2.5 w-2.5">
               <path d="M10 2a1 1 0 00-1 1v1H8a3 3 0 00-3 3v1H4a1 1 0 000 2h1v1a3 3 0 003 3h.17l-1.9 4.55A1 1 0 007.2 20h9.6a1 1 0 00.93-1.45L15.83 14H16a3 3 0 003-3v-1h1a1 1 0 000-2h-1V7a3 3 0 00-3-3h-1V3a1 1 0 00-1-1h-4z" />
@@ -584,7 +587,7 @@ export default function NewPlayerPage() {
           platform="lichess"
           color={LI_COLOR}
           label="Lichess"
-          placeholder="username, e.g. DrNykterstein"
+          placeholder={t("username, e.g. {example}", { example: "DrNykterstein" })}
           icon={
             <svg viewBox="0 0 24 24" fill="white" className="h-2.5 w-2.5">
               <path d="M19 22H5v-2h14v2M13 2a3 3 0 00-3 3c0 .88.39 1.67 1 2.22V8l-3 1-2 4h2v1H6l-1 3h14l-1-3h-2v-1h2l-2-4-3-1V7.22c.61-.55 1-1.34 1-2.22a3 3 0 00-1-2.24V2h-1z" />
@@ -601,10 +604,10 @@ export default function NewPlayerPage() {
             disabled={loading || !hasAnyIdentifier}
             className="btn-primary disabled:opacity-60"
           >
-            {loading ? "Creating…" : "Create & import games →"}
+            {loading ? t("Creating…") : t("Create & import games →")}
           </button>
           <Link href="/home" className="btn-secondary">
-            Cancel
+            {t("Cancel")}
           </Link>
         </div>
       </form>

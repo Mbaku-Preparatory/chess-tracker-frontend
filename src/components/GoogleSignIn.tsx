@@ -8,7 +8,7 @@ import { api } from "@/lib/api";
 import { loginRefusal } from "@/lib/apiError";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { setAuth } from "@/redux/actions/auth";
-import { useLocale } from "@/hooks/useT";
+import { useLocale, useT } from "@/hooks/useT";
 
 /** Public: Google puts it in the page anyway. The env var is for a second
  * project (staging); production uses this one. */
@@ -36,6 +36,7 @@ declare global {
  */
 export function GoogleSignIn({ context, onError }: { context: "signin" | "signup"; onError: (message: string | null) => void }) {
   const dispatch = useAppDispatch();
+  const t = useT();
   const router = useRouter();
   const dark = useAppSelector((s) => s.theme.mode) === "dark";
   const locale = useLocale();
@@ -96,7 +97,7 @@ export function GoogleSignIn({ context, onError }: { context: "signin" | "signup
       <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" onReady={() => setReady(true)} />
       {/* Holds the button's height while Google's script loads, so the form below doesn't jump. */}
       <div ref={holder} className={`flex min-h-[44px] justify-center ${busy ? "pointer-events-none opacity-50" : ""}`} />
-      {busy && <p className="mt-2 text-center text-sm text-gray-500 dark:text-gray-400">Signing you in…</p>}
+      {busy && <p className="mt-2 text-center text-sm text-gray-500 dark:text-gray-400">{t("Signing you in…")}</p>}
     </div>
   );
 }

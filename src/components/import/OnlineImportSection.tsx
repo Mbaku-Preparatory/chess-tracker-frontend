@@ -28,9 +28,9 @@ type FetchOption = (typeof FETCH_OPTIONS)[number];
 
 const TIME_CLASSES: { id: TimeClass; label: string }[] = [
   { id: "bullet", label: msg("Bullet") },
-  { id: "blitz", label: "Blitz" },
-  { id: "rapid", label: "Rapid" },
-  { id: "classical", label: "Classical" },
+  { id: "blitz", label: msg("Blitz") },
+  { id: "rapid", label: msg("Rapid") },
+  { id: "classical", label: msg("Classical") },
   { id: "daily", label: msg("Daily") },
 ];
 
@@ -167,7 +167,7 @@ export function OnlineImportSection({
             </svg>
           </div>
           <div>
-            <h3 className="font-semibold text-gray-900 dark:text-gray-100">Import from {site.name}</h3>
+            <h3 className="font-semibold text-gray-900 dark:text-gray-100">{t("Import from {site}", { site: site.name })}</h3>
             <p className="text-xs text-gray-500 dark:text-gray-400">
               {t("Fetch the opponent's recent public games automatically")}
             </p>
@@ -191,7 +191,7 @@ export function OnlineImportSection({
                 htmlFor={`${platform}-username`}
                 className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
-                {site.name} username
+                {t("{site} username", { site: site.name })}
                 <span className="ml-1 text-red-500">*</span>
               </label>
               <input
@@ -239,7 +239,7 @@ export function OnlineImportSection({
 
           {note && (
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              {note} You can leave this page; the import keeps going.
+              {note} {t("You can leave this page; the import keeps going.")}
             </p>
           )}
 

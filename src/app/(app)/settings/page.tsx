@@ -567,7 +567,7 @@ function ConnectedRow({
       </div>
       {username && !hasPassword && (
         <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
-          {name} may be how you sign in, so set a password below before disconnecting it.
+          {t("{name} may be how you sign in, so set a password below before disconnecting it.", { name })}
         </p>
       )}
       {note && (

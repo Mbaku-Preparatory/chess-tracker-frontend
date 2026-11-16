@@ -1,3 +1,4 @@
+import { T } from "@/components/T";
 import { GAME_SOURCES } from "@/lib/games";
 import type { GameSource, Player } from "@/types";
 
@@ -16,7 +17,7 @@ export function GameSourceCounts({ counts, className = "" }: { counts: Player["g
       {sources.map((s) => (
         <span key={s} className="inline-flex items-center gap-1 whitespace-nowrap">
           <span className={`h-2 w-2 rounded-full ${GAME_SOURCES[s].dot}`} />
-          {counts![s]!.toLocaleString("en")} {GAME_SOURCES[s].short}
+          {counts![s]!.toLocaleString("en")} <T>{GAME_SOURCES[s].short}</T>
         </span>
       ))}
     </span>

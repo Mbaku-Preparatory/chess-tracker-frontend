@@ -25,9 +25,11 @@ import Link from "next/link";
 import { TipForm } from "@/components/TipForm";
 import { useSubscription } from "@/components/subscription/SubscriptionProvider";
 import { SUBSCRIBE_PATH } from "@/lib/subscription";
+import { useT } from "@/hooks/useT";
 
 function Support() {
   const searchParams = useSearchParams();
+  const t = useT();
   const reference = searchParams.get("reference") ?? searchParams.get("trxref");
   const { subscription } = useSubscription();
 
@@ -38,12 +40,11 @@ function Support() {
   if (!reference && subscription?.enforced) {
     return (
       <div className="mx-auto max-w-lg px-4 py-10">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Support Chess Preparatory</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t("Support Chess Preparatory")}</h1>
         <p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-300">
-          Thank you for wanting to help. We no longer take tips: the best way to support the project now is a
-          subscription.
+          {t("Thank you for wanting to help. We no longer take tips: the best way to support the project now is a subscription.")}
         </p>
-        <Link href={SUBSCRIBE_PATH} className="btn-primary mt-6">See the plans</Link>
+        <Link href={SUBSCRIBE_PATH} className="btn-primary mt-6">{t("See the plans")}</Link>
       </div>
     );
   }

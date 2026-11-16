@@ -2,14 +2,16 @@
 
 import { useEffect, useState } from "react";
 
+import { useT } from "@/hooks/useT";
 import { api } from "@/lib/api";
 import { userMessage } from "@/lib/apiError";
+import { msg } from "@/lib/i18n";
 import { categoryFor, type SupportCategory } from "@/lib/support";
 
 const CATEGORIES: { value: SupportCategory; label: string }[] = [
-  { value: "payment", label: "Payment" },
-  { value: "import", label: "Import" },
-  { value: "other", label: "Something else" },
+  { value: "payment", label: msg("Payment") },
+  { value: "import", label: msg("Import") },
+  { value: "other", label: msg("Something else") },
 ];
 
 const MAX = 4000;
@@ -49,6 +51,7 @@ function Row({ label, htmlFor, children }: { label: string; htmlFor: string; chi
  * asks for nothing but the topic and what went wrong.
  */
 export function ReportProblemForm({ replyHours }: { replyHours: number | null }) {
+  const t = useT();
   const [category, setCategory] = useState<SupportCategory | null>(null);
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
@@ -63,12 +66,10 @@ export function ReportProblemForm({ replyHours }: { replyHours: number | null })
 
   useEffect(() => {
     if (sent === null) return;
-    const t = setTimeout(() => setSent(null), SENT_SHOWN_MS);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setSent(null), SENT_SHOWN_MS);
+    return () => clearTimeout(timer);
   }, [sent]);
 
-  // Said only when the backend said it: a promise is not guessed at.
-  const within = replyHours ? ` within ${replyHours} hours` : "";
   const chosen = category ?? categoryFor(from);
 
   function clear() {
@@ -87,7 +88,7 @@ export function ReportProblemForm({ replyHours }: { replyHours: number | null })
       clear();
       setSent(reply_hours);
     } catch (err) {
-      setError(userMessage(err, "Couldn't send your message. Please try again."));
+      setError(userMessage(err, t("Couldn't send your message. Please try again.")));
     } finally {
       setSending(false);
     }
@@ -96,16 +97,19 @@ export function ReportProblemForm({ replyHours }: { replyHours: number | null })
   return (
     <div className="flex flex-col gap-5">
       <div>
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Send us a message</h2>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("Send us a message")}</h2>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Use this form to tell us about a payment, an import, or anything else. A person replies{within}.
+          {/* The reply time only when the backend said it: a promise is not guessed at. */}
+          {replyHours
+            ? t("Use this form to tell us about a payment, an import, or anything else. A person replies within {hours} hours.", { hours: replyHours })
+            : t("Use this form to tell us about a payment, an import, or anything else. A person replies.")}
         </p>
         {/* Always in the page, so a screen reader announces the text when it
             appears; inside the heading block so, empty, it adds no gap. */}
         <div role="status" aria-live="polite">
           {sent !== null && (
             <p className="mt-4 rounded-lg border border-brand-200 bg-brand-50 p-4 text-sm text-brand-800 dark:border-brand-800 dark:bg-brand-900/20 dark:text-brand-200">
-              Sent. We&apos;ll reply to your email address within {sent} hours.
+              {t("Sent. We'll reply to your email address within {hours} hours.", { hours: sent })}
             </p>
           )}
         </div>
@@ -117,7 +121,7 @@ export function ReportProblemForm({ replyHours }: { replyHours: number | null })
             {error}
           </p>
         )}
-        <Row label="Topic" htmlFor="report-topic">
+        <Row label={t("Topic")} htmlFor="report-topic">
           <select
             id="report-topic"
             value={chosen}
@@ -125,11 +129,11 @@ export function ReportProblemForm({ replyHours }: { replyHours: number | null })
             className={FIELD}
           >
             {CATEGORIES.map((c) => (
-              <option key={c.value} value={c.value}>{c.label}</option>
+              <option key={c.value} value={c.value}>{t(c.label)}</option>
             ))}
           </select>
         </Row>
-        <Row label="Message" htmlFor="report-message">
+        <Row label={t("Message")} htmlFor="report-message">
           <textarea
             id="report-message"
             value={message}
@@ -137,17 +141,17 @@ export function ReportProblemForm({ replyHours }: { replyHours: number | null })
             required
             maxLength={MAX}
             rows={6}
-            placeholder={chosen === "payment" ? "What happened, and the reference on your payment receipt if you have it." : "Message ..."}
+            placeholder={chosen === "payment" ? t("What happened, and the reference on your payment receipt if you have it.") : t("Message ...")}
             className={FIELD}
           />
         </Row>
         <div className="mt-2 flex flex-col items-center gap-3">
           <button type="submit" disabled={sending || !message.trim()} className="btn-primary w-full shadow-md disabled:opacity-60 sm:w-4/5">
-            {sending ? "Sending…" : "Send Message"}
+            {sending ? t("Sending…") : t("Send Message")}
           </button>
           {message && (
             <button type="button" onClick={clear} className="btn-secondary w-full shadow-md sm:w-4/5">
-              Cancel
+              {t("Cancel")}
             </button>
           )}
         </div>

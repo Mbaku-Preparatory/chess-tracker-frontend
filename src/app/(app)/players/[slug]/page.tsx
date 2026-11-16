@@ -209,7 +209,7 @@ export default function PlayerDetailPage() {
             <div className="mt-2 flex flex-wrap items-center gap-x-6 gap-y-1 text-sm text-gray-500 dark:text-gray-400">
               {player.federation && <span>{player.federation}</span>}
               {player.fide_id && <span>FIDE #{player.fide_id}</span>}
-              {player.birth_year && <span>Born {player.birth_year}</span>}
+              {player.birth_year && <span>{t("Born {year}", { year: player.birth_year })}</span>}
             </div>
             <GameSourceCounts counts={player.game_source_counts} className="mt-2 text-xs text-gray-500 dark:text-gray-400" />
             <div className="mt-3">
@@ -246,7 +246,7 @@ export default function PlayerDetailPage() {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4" aria-hidden>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 3h6M12 3v3m-6 3h12a2 2 0 012 2v7a2 2 0 01-2 2H6a2 2 0 01-2-2v-7a2 2 0 012-2zm3 5h.01M15 14h.01M9.5 17.5h5" />
           </svg>
-          Play {player.full_name} Bot
+          {t("Play {name} Bot", { name: player.full_name })}
         </Link>
 
         <Link href={`/players/${slug}/prep`} className="btn-secondary inline-flex items-center gap-2">

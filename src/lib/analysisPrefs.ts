@@ -2,6 +2,8 @@
 
 import { useCallback, useSyncExternalStore } from "react";
 
+import { msg } from "@/lib/i18n";
+
 /**
  * The analysis board's settings, remembered in this browser. They will move
  * to the account when the settings page exists; until then a browser that
@@ -21,9 +23,9 @@ export const DEFAULT_PREFS: AnalysisPrefs = { engine: false, depth: "standard" }
 
 /** Depth to search to, and a time cap so a phone is never stuck on "Deep". */
 export const DEPTHS: Record<EngineDepth, { label: string; depth: number; capMs: number }> = {
-  quick: { label: "Quick", depth: 12, capMs: 3_000 },
-  standard: { label: "Standard", depth: 18, capMs: 8_000 },
-  deep: { label: "Deep", depth: 24, capMs: 20_000 },
+  quick: { label: msg("Quick"), depth: 12, capMs: 3_000 },
+  standard: { label: msg("Standard"), depth: 18, capMs: 8_000 },
+  deep: { label: msg("Deep"), depth: 24, capMs: 20_000 },
 };
 
 const KEY = "analysis-prefs";

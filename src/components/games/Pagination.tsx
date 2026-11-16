@@ -87,7 +87,7 @@ export function Pagination({
   return (
     <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 text-[13px]">
       <p className="tabular-nums text-ink-faint">
-        Showing {first.toLocaleString("en")}–{last.toLocaleString("en")} of {count.toLocaleString("en")}
+        {t("Showing {first}–{last} of {count}", { first: first.toLocaleString("en"), last: last.toLocaleString("en"), count: count.toLocaleString("en") })}
       </p>
 
       {pages > 1 && (
@@ -112,7 +112,7 @@ export function Pagination({
             )}
           </span>
           <span className="px-2 tabular-nums text-ink-faint sm:hidden">
-            {page} of {pages}
+            {t("{n} of {total}", { n: page, total: pages })}
           </span>
           {page < pages ? (
             to(page + 1, <Chevron />, idle, { rel: "next", "aria-label": t("Next page") })

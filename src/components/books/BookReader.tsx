@@ -38,6 +38,8 @@ import { useEngine } from "@/hooks/useEngine";
 import { DEPTHS, useAnalysisPrefs } from "@/lib/analysisPrefs";
 import Board from "@/components/analysis/Board";
 import { useBookOpened } from "@/hooks/useBookOpened";
+import { useT } from "@/hooks/useT";
+import { msg } from "@/lib/i18n";
 import { api } from "@/lib/api";
 import { userMessage } from "@/lib/apiError";
 import { bookFile, keepBookFile, sha256Of } from "@/lib/bookFiles";
@@ -56,7 +58,8 @@ export type BookSource =
 
 async function publicFetch<T>(url: string, read: (r: Response) => Promise<T>): Promise<T> {
   const response = await fetch(url);
-  if (!response.ok) throw new Error(response.status === 404 ? "This book is no longer available." : "The book could not be loaded. Try again in a moment.");
+  // English, translated where it is shown ({t(error)}).
+  if (!response.ok) throw new Error(response.status === 404 ? msg("This book is no longer available.") : msg("The book could not be loaded. Try again in a moment."));
   return read(response);
 }
 
@@ -115,6 +118,7 @@ function lineThrough(nodes: Node[], n: number): number[] {
 // ── The PDF, from this device ────────────────────────────────────────────────
 
 function OpenYourCopy({ book, onFile }: { book: Pick<Book, "title" | "sha256">; onFile: (file: Blob) => void }) {
+  const t = useT();
   const [problem, setProblem] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
 
@@ -124,7 +128,7 @@ function OpenYourCopy({ book, onFile }: { book: Pick<Book, "title" | "sha256">; 
     const sha = await sha256Of(file);
     setChecking(false);
     if (sha !== book.sha256) {
-      setProblem("That isn't the file you uploaded for this book — a different PDF, or another edition of it.");
+      setProblem(t("That isn't the file you uploaded for this book — a different PDF, or another edition of it."));
       return;
     }
     await keepBookFile(sha, file);
@@ -133,13 +137,12 @@ function OpenYourCopy({ book, onFile }: { book: Pick<Book, "title" | "sha256">; 
 
   return (
     <section className="mx-auto mt-10 flex max-w-lg flex-col items-start gap-3 rounded-xl bg-ink-card p-6">
-      <h2 className="text-[17px] font-[520] text-ink-text">Open your copy of “{book.title}”</h2>
+      <h2 className="text-[17px] font-[520] text-ink-text">{t("Open your copy of “{title}”", { title: book.title })}</h2>
       <p className="text-[14px] leading-relaxed text-ink-muted">
-        The book stays on your device: we keep only where its moves and diagrams are. Choose the same PDF you uploaded
-        and this browser will remember it.
+        {t("The book stays on your device: we keep only where its moves and diagrams are. Choose the same PDF you uploaded and this browser will remember it.")}
       </p>
       <label className="cursor-pointer rounded-pill bg-accent px-4 py-2 text-[14px] font-[520] text-accent-on hover:opacity-90">
-        {checking ? "Checking…" : "Choose the PDF"}
+        {checking ? t("Checking…") : t("Choose the PDF")}
         <input
           type="file"
           accept="application/pdf,.pdf"
@@ -176,6 +179,7 @@ function PdfPage({
   onPick: (node: number) => void;
   register: (number: number, el: HTMLElement | null) => void;
 }) {
+  const t = useT();
   const box = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const [near, setNear] = useState(false);
@@ -232,10 +236,10 @@ function PdfPage({
       className="relative w-full bg-white shadow-sm"
       style={{ aspectRatio: `${size.w} / ${size.h}` }}
     >
-      <canvas ref={canvas} className="absolute inset-0 h-full w-full" aria-label={`Page ${number + 1}`} />
+      <canvas ref={canvas} className="absolute inset-0 h-full w-full" aria-label={t("Page {n}", { n: number + 1 })} />
       {unread && (
         <span className="absolute left-2 top-2 rounded-pill bg-ink-card/90 px-2.5 py-1 text-[12px] text-ink-muted shadow-sm">
-          Moves on this page light up once it&apos;s read
+          {t("Moves on this page light up once it's read")}
         </span>
       )}
       {page?.hot.map(([x0, y0, x1, y1, node, kind], i) => {
@@ -247,8 +251,8 @@ function PdfPage({
             type="button"
             data-node={node}
             onClick={() => onPick(node)}
-            title={kind === 0 ? "Show this position" : undefined}
-            aria-label={kind === 0 ? "Diagram" : undefined}
+            title={kind === 0 ? t("Show this position") : undefined}
+            aria-label={kind === 0 ? t("Diagram") : undefined}
             className={`absolute rounded-[3px] transition-colors ${
               kind === 0
                 ? on
@@ -320,9 +324,10 @@ function Panel({
     if (Object.keys(rest).length) setSaved(rest);
   };
   const engine = useEngine(fen, { enabled: engineOn && current !== null, depth: DEPTHS[prefs.depth].depth, capMs: DEPTHS[prefs.depth].capMs });
+  const t = useT();
   const line = useMemo(() => (current === null ? [] : lineThrough(nodes, current)), [nodes, current]);
   const moved = current === null ? null : onOwn ? own[at] : lastMove(nodes, current);
-  const toMove = fen.split(" ")[1] === "w" ? "White" : "Black";
+  const toMove = fen.split(" ")[1] === "w" ? t("White to move") : t("Black to move");
   const listRef = useRef<HTMLDivElement>(null);
   // swiping the sheet down puts it away
   const [drag, setDrag] = useState(0);
@@ -344,7 +349,7 @@ function Panel({
 
   return (
     <aside
-      aria-label="Position"
+      aria-label={t("Position")}
       aria-hidden={!open ? true : undefined}
       onTouchStart={(e) => (dragStart.current = e.touches[0].clientY)}
       onTouchMove={(e) => dragStart.current !== null && setDrag(Math.max(0, e.touches[0].clientY - dragStart.current))}
@@ -377,21 +382,21 @@ function Panel({
         <div className="flex items-center justify-between gap-3">
           <p className="min-w-0 truncate text-[14px] text-ink-muted" aria-live="polite">
             {current === null
-              ? "Tap a move or a diagram in the book"
+              ? t("Tap a move or a diagram in the book")
               : onOwn
-                ? `${numberOf(at === 0 ? nodes[current][FEN] : own[at - 1].fen)}${own[at].san} · ${toMove} to move · your line`
+                ? `${numberOf(at === 0 ? nodes[current][FEN] : own[at - 1].fen)}${own[at].san} · ${toMove} · ${t("your line")}`
                 : nodes[current][SAN]
-                  ? `${moveLabel(nodes, current)} · ${toMove} to move`
-                  : `${toMove} to move`}
+                  ? `${moveLabel(nodes, current)} · ${toMove}`
+                  : toMove}
           </p>
           <div className="flex shrink-0 gap-2">
-            <button type="button" aria-label="Previous move" disabled={back === null} onClick={() => back?.()} className={button}>
+            <button type="button" aria-label={t("Previous move")} disabled={back === null} onClick={() => back?.()} className={button}>
               ←
             </button>
-            <button type="button" aria-label="Next move" disabled={forward === null} onClick={() => forward?.()} className={button}>
+            <button type="button" aria-label={t("Next move")} disabled={forward === null} onClick={() => forward?.()} className={button}>
               →
             </button>
-            <button type="button" aria-label="Close the board" onClick={onClose} className={`${button} lg:hidden`}>
+            <button type="button" aria-label={t("Close the board")} onClick={onClose} className={`${button} lg:hidden`}>
               ✕
             </button>
           </div>
@@ -420,7 +425,7 @@ function Panel({
             {/* The reader's own line, under the book's, the way a variation sits under a game. */}
             {own && (
               <div className="my-1 ml-1 border-l-2 border-accent/60 pl-2 text-[13px] leading-6">
-                <span className="mr-1 text-ink-faint">Your line</span>
+                <span className="mr-1 text-ink-faint">{t("Your line")}</span>
                 {own.map((m, k) => {
                   const before = k === 0 ? nodes[current][FEN] : own[k - 1].fen;
                   const numbered = k === 0 || before.split(" ")[1] === "w";
@@ -446,8 +451,7 @@ function Panel({
           <EnginePanel prefs={prefs} setPrefs={setPrefs} engine={engine} fen={fen} />
         </div>
         <p className="hidden text-[13px] text-ink-faint lg:block">
-          Shaded moves are the game; underlined ones are variations in the text. The arrow keys step through the line. Play a move on the
-          board to try a line of your own; ← brings you back to the book.
+          {t("Shaded moves are the game; underlined ones are variations in the text. The arrow keys step through the line. Play a move on the board to try a line of your own; ← brings you back to the book.")}
         </p>
       </div>
     </aside>
@@ -496,6 +500,7 @@ export function BookReader({
   const [file, setFile] = useState<Blob | null | undefined>(undefined);
   const [fetching, setFetching] = useState(false);
   const [doc, setDoc] = useState<PDFDocumentProxy | null>(null);
+  const t = useT();
   const [error, setError] = useState<string | null>(null);
   const [current, setCurrent] = useState<number | null>(null);
   // The reader's own moves, played on the board from a position of the book,
@@ -567,7 +572,7 @@ export function BookReader({
       task = loading;
       const loaded = await loading.promise;
       if (!cancelled) setDoc(loaded);
-    })().catch(() => !cancelled && setError("This PDF could not be opened in the browser."));
+    })().catch(() => !cancelled && setError(msg("This PDF could not be opened in the browser.")));
     return () => {
       cancelled = true;
       void task?.destroy();
@@ -829,20 +834,20 @@ export function BookReader({
     if (el) scrollBookTo(el, "start");
   };
 
-  if (book?.status === "failed") return <p className="py-16 text-center text-sm text-red-600">{book.error || "This book could not be read."}</p>;
-  if (error) return <p className="py-16 text-center text-sm text-red-600">{error}</p>;
+  if (book?.status === "failed") return <p className="py-16 text-center text-sm text-red-600">{book.error || t("This book could not be read.")}</p>;
+  if (error) return <p className="py-16 text-center text-sm text-red-600">{t(error)}</p>;
   // Not on this device (another browser, or its storage cleared): ask for it.
   if (file === null && source.kind !== "public") return <OpenYourCopy book={{ title, sha256 }} onFile={setFile} />;
   if (!index || !doc || !file) {
     return (
       <div className="mx-auto mt-8 flex h-40 max-w-4xl flex-col items-center justify-center gap-2 rounded-xl bg-ink-card text-[14px] text-ink-faint">
-        {fetching ? <p>Fetching the book, once: this browser keeps it for next time.</p> : <span className="h-4 w-24 animate-pulse rounded bg-ink-raised" />}
+        {fetching ? <p>{t("Fetching the book, once: this browser keeps it for next time.")}</p> : <span className="h-4 w-24 animate-pulse rounded bg-ink-raised" />}
       </div>
     );
   }
   // Fewer pages in the index is a book read in part; more cannot be this file.
   if (doc.numPages < index.pages.length) {
-    return <p className="py-16 text-center text-sm text-red-600">This copy of the book has a different number of pages from the one uploaded.</p>;
+    return <p className="py-16 text-center text-sm text-red-600">{t("This copy of the book has a different number of pages from the one uploaded.")}</p>;
   }
 
   return (
@@ -853,11 +858,11 @@ export function BookReader({
       {above}
       <header className="flex flex-wrap items-center gap-3">
         <Link href={backHref} className="hidden rounded-pill border-2 border-accent px-3.5 py-1 text-[14px] font-[520] text-ink-text hover:bg-accent/10 sm:inline">
-          Back
+          {t("Back")}
         </Link>
         <h1 className="min-w-0 flex-1 truncate text-[18px] font-[520] text-ink-text sm:text-[22px]">{title}</h1>
         <label className="flex items-center gap-2 text-[13px] text-ink-faint">
-          Page
+          {t("Page")}
           <input
             type="number"
             min={1}
@@ -868,13 +873,16 @@ export function BookReader({
             onBlur={(e) => jump(e.target.value)}
             className="w-16 rounded-md border border-ink-line bg-ink-canvas px-2 py-1 text-ink-text"
           />
-          <span className="tabular-nums">of {totalPages}</span>
+          <span className="tabular-nums">{t("of {total}", { total: totalPages })}</span>
         </label>
       </header>
       {reading && book && (
         <p aria-live="polite" className="rounded-lg bg-ink-card px-4 py-2 text-[13px] leading-relaxed text-ink-muted">
-          Pages 1–{loadedPages} are ready: tap a move or a diagram. We&apos;re still reading the rest (page{" "}
-          {Math.min(book.pagesDone + 1, book.pageCount)} of {book.pageCount}), and its moves light up as we go.
+          {t("Pages 1–{loaded} are ready: tap a move or a diagram. We're still reading the rest (page {page} of {pages}), and its moves light up as we go.", {
+            loaded: loadedPages,
+            page: Math.min(book.pagesDone + 1, book.pageCount),
+            pages: book.pageCount,
+          })}
         </p>
       )}
 

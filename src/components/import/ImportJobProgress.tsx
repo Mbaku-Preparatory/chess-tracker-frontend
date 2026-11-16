@@ -53,7 +53,7 @@ export function ImportJobProgress({
         </div>
         <p className="text-xs text-gray-500 dark:text-gray-400">
           {t("This runs on the server — you can close this page and come back to it.")}
-          {job.notify_email ? " We'll email you when it's done." : ""}
+          {job.notify_email ? ` ${t("We'll email you when it's done.")}` : ""}
         </p>
       </div>
     );
@@ -67,13 +67,13 @@ export function ImportJobProgress({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
           <span className="text-sm font-semibold">
-            {job.games_imported} game{job.games_imported !== 1 ? "s" : ""} imported successfully
+            {t.plural(job.games_imported, "{n} game imported successfully", "{n} games imported successfully")}
           </span>
         </div>
         <div className="flex flex-wrap gap-2 text-xs">
           {entry?.games_skipped ? (
             <span className="rounded-full border border-gray-200 bg-gray-100 px-2.5 py-1 text-gray-500 dark:border-dark-border dark:text-gray-400">
-              {entry.games_skipped} game{entry.games_skipped !== 1 ? "s" : ""} skipped
+              {t.plural(entry.games_skipped, "{n} game skipped", "{n} games skipped")}
             </span>
           ) : null}
           {entry?.skipped_reason === "no_games" && (
@@ -96,7 +96,7 @@ export function ImportJobProgress({
 
   return (
     <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-      {entry?.message || "The import failed. You can try again."}
+      {entry?.message || t("The import failed. You can try again.")}
     </div>
   );
 }

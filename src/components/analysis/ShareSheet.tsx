@@ -2,8 +2,11 @@
 
 import { useRef, useState } from "react";
 
+import { useT } from "@/hooks/useT";
+
 /** Copy the PGN, or send it on, with the page's link when there is one. */
 export function ShareSheet({ pgn, title, url, onClose }: { pgn: string; title: string; url: string | null; onClose: () => void }) {
+  const t = useT();
   const [copied, setCopied] = useState(false);
   const textRef = useRef<HTMLTextAreaElement>(null);
 
@@ -21,7 +24,7 @@ export function ShareSheet({ pgn, title, url, onClose }: { pgn: string; title: s
 
   const platforms = [
     {
-      label: copied ? "Copied!" : "Copy PGN", bg: "bg-gray-700", action: copy,
+      label: copied ? t("Copied!") : t("Copy PGN"), bg: "bg-gray-700", action: copy,
       icon: copied
         ? <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
         : <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-4 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>,
@@ -39,7 +42,7 @@ export function ShareSheet({ pgn, title, url, onClose }: { pgn: string; title: s
       icon: <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.835L1.254 2.25H8.08l4.253 5.622 5.911-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>,
     },
     {
-      label: "Email", bg: "bg-gray-500", action: () => window.open(`mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(url ? `${url}\n\n${snippet}` : snippet)}`, "_self"),
+      label: t("Email"), bg: "bg-gray-500", action: () => window.open(`mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(url ? `${url}\n\n${snippet}` : snippet)}`, "_self"),
       icon: <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>,
     },
   ];
@@ -49,8 +52,8 @@ export function ShareSheet({ pgn, title, url, onClose }: { pgn: string; title: s
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className="relative z-10 w-full max-w-md rounded-t-2xl bg-ink-card px-5 pb-8 pt-5 shadow-2xl sm:rounded-2xl">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-base font-semibold text-ink-text">Share game</h3>
-          <button onClick={onClose} aria-label="Close" className="rounded-lg p-1.5 text-ink-faint transition-colors hover:bg-ink-raised hover:text-ink-text">
+          <h3 className="text-base font-semibold text-ink-text">{t("Share game")}</h3>
+          <button onClick={onClose} aria-label={t("Close")} className="rounded-lg p-1.5 text-ink-faint transition-colors hover:bg-ink-raised hover:text-ink-text">
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </div>
@@ -66,7 +69,7 @@ export function ShareSheet({ pgn, title, url, onClose }: { pgn: string; title: s
           <textarea ref={textRef} readOnly value={pgn} rows={2} onClick={() => textRef.current?.select()}
             className="min-w-0 flex-1 resize-none bg-transparent font-mono text-[11px] text-ink-muted focus:outline-none" />
           <button onClick={copy} className="shrink-0 self-center rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-accent-on hover:bg-accent-soft">
-            {copied ? "Copied!" : "Copy"}
+            {copied ? t("Copied!") : t("Copy")}
           </button>
         </div>
       </div>

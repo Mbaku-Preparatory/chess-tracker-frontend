@@ -8,11 +8,14 @@ import { api } from "@/lib/api";
 import { buildPgn, pgnFilename } from "@/lib/chess/pgn";
 import { NO_SCORES, scoresFromResultTag } from "@/lib/chessScore";
 import type { MasterGame } from "@/types";
+import { useT } from "@/hooks/useT";
+import { msg } from "@/lib/i18n";
 
 export default function MasterGameAnalysisPage() {
   const { id } = useParams<{ id: string }>();
   const [game, setGame] = useState<MasterGame | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const t = useT();
 
   useEffect(() => {
     let cancelled = false;
@@ -21,13 +24,13 @@ export default function MasterGameAnalysisPage() {
     api
       .getMasterGame(id)
       .then((g) => !cancelled && setGame(g))
-      .catch((err) => !cancelled && setError(err.message || "This game could not be loaded."));
+      .catch((err) => !cancelled && setError(err.message || msg("This game could not be loaded.")));
     return () => {
       cancelled = true;
     };
   }, [id]);
 
-  if (error) return <p className="py-16 text-center text-[15px] text-ink-faint">{error}</p>;
+  if (error) return <p className="py-16 text-center text-[15px] text-ink-faint">{t(error)}</p>;
   if (!game) return <div className="mx-auto aspect-square w-full max-w-[640px] animate-pulse rounded-xl bg-ink-raised" />;
 
   // A master game's result is already the PGN token, readable without a colour.
