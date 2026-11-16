@@ -17,7 +17,7 @@ import { federationFor } from "@/lib/federations";
 import { PUBLIC_GAMES_SHOWN } from "@/lib/freeLimits";
 import { msg } from "@/lib/i18n";
 import { preparePath } from "@/lib/prepare";
-import { summary, titleName, type SummaryPlayer } from "@/lib/profileSummary";
+import { metaDescription, titleName, type SummaryPlayer } from "@/lib/profileSummary";
 import { fetchPublicPlayer, profilePath, titledName, type PublicPlayer } from "@/lib/publicPlayer";
 import { series } from "@/lib/ratingSeries";
 import { SHARE_IMAGE, SITE_URL } from "@/lib/site";
@@ -56,7 +56,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const name = titledName(player);
   const rating = player.standardRating ?? player.rapidRating ?? player.blitzRating;
   const title = `${name}${rating ? ` · FIDE ${rating}` : ""} | Chess Preparatory`;
-  const description = summary(player, country);
+  const description = metaDescription(player, country, player.ratingHistory[0]?.month);
   const canonical = profilePath(player);
   return {
     title,
