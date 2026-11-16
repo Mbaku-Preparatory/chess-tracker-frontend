@@ -10,10 +10,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useActiveImports } from "./ActiveImportsProvider";
+import { useT } from "@/hooks/useT";
 
 const PAWN_CELLS = 10;
 
 export function ActiveImportsIndicator() {
+  const t = useT();
   const { jobs } = useActiveImports();
   const pathname = usePathname();
 
@@ -58,14 +60,14 @@ export function ActiveImportsIndicator() {
 
       <span className="min-w-0">
         <span className="block truncate text-xs font-semibold text-gray-900 dark:text-gray-100">
-          {queued ? "Import queued" : `Importing ${label}`}
+          {queued ? t("Import queued") : t("Importing {name}", { name: label })}
         </span>
         <span className="block text-xs tabular-nums text-gray-500 dark:text-gray-400">
           {queued
             ? ahead > 0
-              ? `${ahead} ahead of yours`
-              : "starting…"
-            : `${completed} of ${total} · ${games} games`}
+              ? t("{n} ahead of yours", { n: ahead })
+              : t("starting…")
+            : t("{done} of {total} · {games} games", { done: completed, total, games })}
         </span>
       </span>
     </Link>

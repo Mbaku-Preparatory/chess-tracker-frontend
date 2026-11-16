@@ -7,6 +7,8 @@ import type { GameRow } from "@/lib/games";
 import { GamesTable } from "./GamesTable";
 import { Pagination } from "./Pagination";
 import { usePagedGames, type FetchGames, type GamesSeed } from "./usePagedGames";
+import { useT } from "@/hooks/useT";
+import { msg } from "@/lib/i18n";
 
 /**
  * A player's games, a page at a time: the table, the pager, and the fetching
@@ -24,7 +26,7 @@ export function PagedGamesTable<T>({
   basePath,
   onPageChange,
   onCount,
-  empty = "No games found.",
+  empty = msg("No games found."),
   label,
 }: {
   fetchGames: FetchGames<T>;
@@ -47,6 +49,7 @@ export function PagedGamesTable<T>({
   empty?: string;
   label?: string;
 }) {
+  const t = useT();
   const list = usePagedGames(fetchGames, resetKey, seed, start);
   const top = useRef<HTMLDivElement>(null);
 
@@ -88,12 +91,12 @@ export function PagedGamesTable<T>({
       <p className="flex flex-wrap items-center gap-3 py-6 text-[14px] text-ink-faint">
         {list.error}
         <button type="button" onClick={list.retry} className="text-accent-soft underline">
-          Try again
+          {t("Try again")}
         </button>
       </p>
     );
   }
-  if (list.count === 0) return <p className="py-8 text-center text-[14px] text-ink-faint">{empty}</p>;
+  if (list.count === 0) return <p className="py-8 text-center text-[14px] text-ink-faint">{t(empty)}</p>;
 
   return (
     <div ref={top} className="flex scroll-mt-24 flex-col gap-4">

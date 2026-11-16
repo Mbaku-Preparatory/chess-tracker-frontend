@@ -1,3 +1,4 @@
+import { T } from "@/components/T";
 import type { OpeningStat } from "@/types";
 import { EcoBadge } from "@/components/ui/Badge";
 
@@ -38,7 +39,7 @@ export function OpeningBreakdownCard({ title, openings, colorLabel }: OpeningBre
             </div>
             <div className="flex items-center gap-4 flex-shrink-0 ml-4">
               <span className="text-xs text-gray-400 dark:text-gray-500">
-                {opening.games_count} game{opening.games_count !== 1 ? "s" : ""}
+                <T n={opening.games_count} one="{n} game">{"{n} games"}</T>
               </span>
               {opening.score_percent !== null && (
                 <span

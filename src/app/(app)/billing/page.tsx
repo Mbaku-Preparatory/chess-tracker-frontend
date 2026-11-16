@@ -16,25 +16,28 @@ import Link from "next/link";
 import { useSubscription } from "@/components/subscription/SubscriptionProvider";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { api } from "@/lib/api";
+import { useLocale, useT, type Translate } from "@/hooks/useT";
 import { userMessage } from "@/lib/apiError";
+import { msg } from "@/lib/i18n";
 import { formatDate, formatPrice, formatShortDate, SUBSCRIBE_PATH } from "@/lib/subscription";
 import type { Billing, BillingEntry, MySubscription } from "@/types";
 
-const PER = { month: "month", year: "year" } as const;
+const PER = { month: msg("{price} a month"), year: msg("{price} a year") } as const;
 
 function StatusBadge({ sub }: { sub: MySubscription }) {
+  const t = useT();
   const [text, tone] =
-    sub.state === "trial" ? ["Free trial", "brand"]
-      : sub.state === "paid" ? ["Active", "brand"]
-        : sub.state === "negotiated" ? ["Active, agreed terms", "brand"]
-          : sub.state === "staff" ? ["Staff", "gray"]
-            : ["Expired", "red"];
+    sub.state === "trial" ? [msg("Free trial"), "brand"]
+      : sub.state === "paid" ? [msg("Active"), "brand"]
+        : sub.state === "negotiated" ? [msg("Active, agreed terms"), "brand"]
+          : sub.state === "staff" ? [msg("Staff"), "gray"]
+            : [msg("Expired"), "red"];
   const colours = {
     brand: "bg-brand-50 text-brand-700 ring-brand-600/20 dark:bg-brand-900/30 dark:text-brand-300",
     gray: "bg-gray-100 text-gray-700 ring-gray-500/20 dark:bg-dark-elevated dark:text-gray-300",
     red: "bg-red-50 text-red-700 ring-red-600/20 dark:bg-red-900/20 dark:text-red-300",
   }[tone];
-  return <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${colours}`}>{text}</span>;
+  return <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${colours}`}>{t(text)}</span>;
 }
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
@@ -46,64 +49,68 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   );
 }
 
-function planName(entry: BillingEntry | null, sub: MySubscription): string {
-  // Plan names already say the period ("Pro, monthly").
+function planName(entry: BillingEntry | null, sub: MySubscription, t: Translate): string {
+  // Plan names already say the period ("Pro, monthly"); they are the backend's, shown as they are.
   if (entry?.plan) return entry.plan;
-  if (entry) return "Paid";
-  if (sub.state === "trial") return "Free trial";
-  if (sub.state === "negotiated") return "Agreed with us";
-  return "None";
+  if (entry) return t("Paid");
+  if (sub.state === "trial") return t("Free trial");
+  if (sub.state === "negotiated") return t("Agreed with us");
+  return t("None");
 }
 
 /** The date the time they have runs out, worded for where they stand. */
-function dueRow(sub: MySubscription): { label: string; value: string } {
-  const when = formatDate(sub.access_until);
-  const left = sub.days_left === 1 ? "1 day left" : `${sub.days_left} days left`;
+function dueRow(sub: MySubscription, t: Translate, locale: string): { label: string; value: string } {
+  const when = formatDate(sub.access_until, locale);
+  const left = t.plural(sub.days_left, "{n} day left", "{n} days left");
+  const dated = `${when} (${left})`;
   switch (sub.state) {
     case "trial":
-      return { label: "Trial ends", value: `${when} (${left})` };
+      return { label: t("Trial ends"), value: dated };
     case "paid":
-      return { label: "Next payment due", value: `${when} (${left})` };
+      return { label: t("Next payment due"), value: dated };
     case "negotiated":
-      return { label: "Pay by", value: `${when} (${left})` };
+      return { label: t("Pay by"), value: dated };
     case "staff":
-      return { label: "Next payment due", value: "Never: staff access" };
+      return { label: t("Next payment due"), value: t("Never: staff access") };
     default:
       return sub.access_until
-        ? { label: "Access ended", value: formatDate(sub.access_until) }
-        : { label: "Next payment due", value: "Now" };
+        ? { label: t("Access ended"), value: when }
+        : { label: t("Next payment due"), value: t("Now") };
   }
 }
 
 /** "$0.99 a month · $9.99 a year": what they would pay today. */
-function priceText(sub: MySubscription): string {
-  return sub.plans.map((p) => `${formatPrice(p.price, p.currency)} a ${PER[p.period]}`).join(" · ");
+function priceText(sub: MySubscription, t: Translate): string {
+  return sub.plans.map((p) => t(PER[p.period], { price: formatPrice(p.price, p.currency) })).join(" · ");
 }
 
-function entryTitle(e: BillingEntry): string {
-  if (e.kind === "trial") return "Free trial";
-  if (e.kind === "free") return "Free time from us";
-  return e.plan ?? "Payment";
+function entryTitle(e: BillingEntry, t: Translate): string {
+  if (e.kind === "trial") return t("Free trial");
+  if (e.kind === "free") return t("Free time from us");
+  return e.plan ?? t("Payment");
 }
 
 function History({ entries }: { entries: BillingEntry[] }) {
+  const t = useT();
+  const locale = useLocale();
+  const short = (iso: string | null) => formatShortDate(iso, locale);
   if (entries.length === 0) {
-    return <p className="text-sm text-gray-500 dark:text-gray-400">Nothing yet.</p>;
+    return <p className="text-sm text-gray-500 dark:text-gray-400">{t("Nothing yet.")}</p>;
   }
   return (
     <ul className="divide-y divide-gray-100 dark:divide-dark-border">
       {entries.map((e, i) => (
         <li key={`${e.given_at}-${i}`} className="flex flex-wrap items-start justify-between gap-x-6 gap-y-1 py-3 first:pt-0 last:pb-0">
           <div className="min-w-0">
-            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{entryTitle(e)}</p>
+            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{entryTitle(e, t)}</p>
             <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-              {formatShortDate(e.given_at)}
-              {e.starts_at && e.ends_at && <> · covers {formatShortDate(e.starts_at)} to {formatShortDate(e.ends_at)}</>}
+              {short(e.given_at)}
+              {e.starts_at && e.ends_at && <> · {t("covers {from} to {to}", { from: short(e.starts_at), to: short(e.ends_at) })}</>}
             </p>
             {e.reference && <p className="mt-0.5 break-all font-mono text-xs text-gray-500 dark:text-gray-400">{e.reference}</p>}
           </div>
           <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-            {e.kind === "payment" ? formatPrice(e.amount, e.currency) : "Free"}
+            {e.kind === "payment" ? formatPrice(e.amount, e.currency) : t("Free")}
           </p>
         </li>
       ))}
@@ -115,50 +122,57 @@ export default function BillingPage() {
   const { subscription: sub, refresh } = useSubscription();
   const [billing, setBilling] = useState<Billing | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const t = useT();
+  const locale = useLocale();
 
   useEffect(() => {
     void refresh();
     api.getBilling().then(setBilling).catch((e) => setError(userMessage(e)));
   }, [refresh]);
 
-  const due = sub ? dueRow(sub) : null;
+  const due = sub ? dueRow(sub, t, locale) : null;
   const button =
     !sub || sub.state === "staff" ? null
-      : sub.state === "paid" || sub.state === "negotiated" ? "Renew or add time"
-        : "Subscribe";
+      : sub.state === "paid" || sub.state === "negotiated" ? t("Renew or add time")
+        : t("Subscribe");
 
   return (
     <div className="mx-auto max-w-2xl">
-      <PageHeader title="Billing" subtitle="Your plan, when the next payment is due, and what you have paid." />
+      <PageHeader title={t("Billing")} subtitle={t("Your plan, when the next payment is due, and what you have paid.")} />
 
       <div className="flex flex-col gap-6">
         <section className="card p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Subscription</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("Subscription")}</h2>
             {sub && sub.enforced && <StatusBadge sub={sub} />}
           </div>
 
           {!sub ? (
-            <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">Loading…</p>
+            <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">{t("Loading…")}</p>
           ) : !sub.enforced ? (
-            <p className="mt-4 text-sm text-gray-600 dark:text-gray-300">Chess Preparatory is free for now. There is nothing to pay.</p>
+            <p className="mt-4 text-sm text-gray-600 dark:text-gray-300">{t("Chess Preparatory is free for now. There is nothing to pay.")}</p>
           ) : (
             <>
               <dl className="mt-3 divide-y divide-gray-100 dark:divide-dark-border">
-                <Row label="Current plan">{planName(billing?.current_plan ?? null, sub)}</Row>
+                <Row label={t("Current plan")}>{planName(billing?.current_plan ?? null, sub, t)}</Row>
                 {billing?.current_plan && (
-                  <Row label="Last payment">
-                    {formatPrice(billing.current_plan.amount, billing.current_plan.currency)} on {formatShortDate(billing.current_plan.given_at)}
+                  <Row label={t("Last payment")}>
+                    {t("{amount} on {date}", {
+                      amount: formatPrice(billing.current_plan.amount, billing.current_plan.currency),
+                      date: formatShortDate(billing.current_plan.given_at, locale),
+                    })}
                   </Row>
                 )}
                 {due && <Row label={due.label}>{due.value}</Row>}
-                {sub.state !== "staff" && sub.plans.length > 0 && <Row label="Your price">{priceText(sub)}</Row>}
+                {sub.state !== "staff" && sub.plans.length > 0 && <Row label={t("Your price")}>{priceText(sub, t)}</Row>}
               </dl>
 
               {button && (
                 <div className="mt-5 flex flex-col gap-3 border-t border-gray-100 pt-5 sm:flex-row sm:items-center sm:justify-between dark:border-dark-border">
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Nothing renews by itself. Pay ahead {sub.currency === "KES" ? "with M‑Pesa or a card" : "by card"} whenever you want more time.
+                    {sub.currency === "KES"
+                      ? t("Nothing renews by itself. Pay ahead with M‑Pesa or a card whenever you want more time.")
+                      : t("Nothing renews by itself. Pay ahead by card whenever you want more time.")}
                   </p>
                   <Link href={SUBSCRIBE_PATH} className="btn-primary shrink-0 justify-center text-center">
                     {button}
@@ -170,14 +184,14 @@ export default function BillingPage() {
         </section>
 
         <section className="card p-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Payments and free time</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("Payments and free time")}</h2>
           <div className="mt-4">
             {error ? (
-              <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>
+              <p role="alert" className="text-sm text-red-600 dark:text-red-400">{t(error)}</p>
             ) : billing ? (
               <History entries={billing.history} />
             ) : (
-              <p className="text-sm text-gray-500 dark:text-gray-400">Loading…</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{t("Loading…")}</p>
             )}
           </div>
         </section>

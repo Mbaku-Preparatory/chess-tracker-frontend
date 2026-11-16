@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { usePreferences } from "@/components/PreferencesProvider";
+import { useT } from "@/hooks/useT";
+import { msg } from "@/lib/i18n";
 
 /**
  * The box's state for an import form. Starts as Settings says ("Email me when
@@ -23,12 +25,13 @@ export function useNotifyMe() {
 export function NotifyMeCheckbox({
   checked,
   onChange,
-  hint = "Useful for big imports — we'll send a link straight to the player.",
+  hint = msg("Useful for big imports — we'll send a link straight to the player."),
 }: {
   checked: boolean;
   onChange: (v: boolean) => void;
   hint?: string;
 }) {
+  const t = useT();
   return (
     <label className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 transition hover:border-gray-300 dark:border-dark-border dark:bg-dark-surface dark:hover:border-gray-600">
       <input
@@ -39,10 +42,10 @@ export function NotifyMeCheckbox({
       />
       <span className="min-w-0">
         <span className="block text-sm font-medium text-gray-900 dark:text-gray-100">
-          Email me when this is done
+          {t("Email me when this is done")}
         </span>
         <span className="block text-xs text-gray-500 dark:text-gray-400">
-          {hint}
+          {t(hint)}
         </span>
       </span>
     </label>

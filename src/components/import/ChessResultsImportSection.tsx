@@ -11,6 +11,9 @@ import { searchPublicPlayers, type PlayerSearchResult } from "@/lib/publicGraphq
 import { NotifyMeCheckbox, useNotifyMe } from "@/components/ui/NotifyMeCheckbox";
 import { ImportElsewhereNote } from "./ImportElsewhereNote";
 import { isTerminal, useImportJob } from "./useImportJob";
+import { useT } from "@/hooks/useT";
+import { msg } from "@/lib/i18n";
+import { T } from "@/components/T";
 
 interface ChessResultsImportSectionProps {
   slug: string;
@@ -35,6 +38,7 @@ export function ChessResultsImportSection({
   fideId,
   onSuccess,
 }: ChessResultsImportSectionProps) {
+  const t = useT();
   // The profile already knows who this is — don't offer to import someone else.
   const knownFideId = fideId?.trim() || "";
 
@@ -57,7 +61,7 @@ export function ChessResultsImportSection({
 
   function startImport(id: string) {
     setError(null);
-    start(() => api.createCareerImportJob(slug, id, notifyEmail), "Could not start the import.");
+    start(() => api.createCareerImportJob(slug, id, notifyEmail), t("Could not start the import."));
   }
 
   async function handleNameSearch(e: React.FormEvent) {
@@ -68,9 +72,9 @@ export function ChessResultsImportSection({
     try {
       const found = await searchPublicPlayers(nameInput.trim());
       setCandidates(found);
-      if (found.length === 0) setError("No rated players found with that name.");
+      if (found.length === 0) setError(t("No rated players found with that name."));
     } catch (err) {
-      setError(userMessage(err, "Search failed. Try again."));
+      setError(t(userMessage(err, msg("Search failed. Try again."))));
     } finally {
       setSearching(false);
     }
@@ -94,10 +98,10 @@ export function ChessResultsImportSection({
         </div>
         <div>
           <h3 className="font-semibold text-gray-900 dark:text-gray-100">
-            Import OTB Games from Chess-Results
+            {t("Import OTB Games from Chess-Results")}
           </h3>
           <p className="text-xs text-gray-500 dark:text-gray-400">
-            Every over-the-board game chess-results.com has for this player
+            {t("Every over-the-board game chess-results.com has for this player")}
           </p>
         </div>
       </div>
@@ -117,13 +121,13 @@ export function ChessResultsImportSection({
             // invites importing another player's games onto this profile.
             <div className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2.5 dark:border-dark-border dark:bg-dark-surface">
               <div className="min-w-0">
-                <p className="text-xs text-gray-500 dark:text-gray-400">FIDE ID</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{t("FIDE ID")}</p>
                 <p className="font-mono text-sm font-medium text-gray-900 dark:text-gray-100">
                   {knownFideId}
                 </p>
               </div>
               <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-                From profile
+                {t("From profile")}
               </span>
             </div>
           ) : (
@@ -137,7 +141,7 @@ export function ChessResultsImportSection({
                   inputMode="numeric"
                   value={fideInput}
                   onChange={(e) => setFideInput(e.target.value)}
-                  placeholder="FIDE ID, e.g. 1503014"
+                  placeholder={t("FIDE ID, e.g. 1503014")}
                   autoComplete="off"
                   className={inputClass}
                 />
@@ -147,12 +151,12 @@ export function ChessResultsImportSection({
                   type="text"
                   value={nameInput}
                   onChange={(e) => setNameInput(e.target.value)}
-                  placeholder="Or find them by name"
+                  placeholder={t("Or find them by name")}
                   autoComplete="off"
                   className={inputClass}
                 />
                 <button type="submit" disabled={searching || !nameInput.trim()} className={buttonClass}>
-                  {searching ? "Searching…" : "Find"}
+                  {searching ? t("Searching…") : t("Find")}
                 </button>
               </form>
               {candidates && candidates.length > 0 && (
@@ -172,7 +176,7 @@ export function ChessResultsImportSection({
                             .join(" · ")}
                         </span>
                       </span>
-                      <span className="shrink-0 text-xs font-medium text-[#1a3a6b] dark:text-blue-400">Use →</span>
+                      <span className="shrink-0 text-xs font-medium text-[#1a3a6b] dark:text-blue-400">{t("Use →")}</span>
                     </button>
                   ))}
                 </div>
@@ -192,7 +196,7 @@ export function ChessResultsImportSection({
             disabled={starting || !(knownFideId || fideInput.trim())}
             className={buttonClass}
           >
-            {starting ? "Starting…" : elsewhere ? "Add to queue" : "Import all games"}
+            {starting ? t("Starting…") : elsewhere ? t("Add to queue") : t("Import all games")}
           </button>
         </div>
       )}
@@ -218,6 +222,7 @@ function ImportProgressBar({
   total: number;
   games: number;
 }) {
+  const t = useT();
   // Always render a full rank, even for a one-tournament import — a bar with a
   // single cell has nowhere for the wave to travel.
   const cells = PROGRESS_CELLS;
@@ -230,11 +235,11 @@ function ImportProgressBar({
       aria-valuenow={done}
       aria-valuemin={0}
       aria-valuemax={total}
-      aria-label="Import progress"
+      aria-label={t("Import progress")}
     >
       <div className="mb-2 flex items-baseline justify-between">
         <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-          Importing games
+          {t("Importing games")}
         </span>
         <span className="text-xs tabular-nums text-gray-500 dark:text-gray-400">
           {done} of {total}
@@ -284,6 +289,7 @@ function ImportProgress({
   onReset: () => void;
   onCancel: () => void;
 }) {
+  const t = useT();
   const pathname = usePathname();
   const finished = isTerminal(job);
   const errorCount = job.results.filter((r) => r.status === "error").length;
@@ -323,10 +329,10 @@ function ImportProgress({
               </svg>
               <span className="text-sm text-gray-600 dark:text-gray-300">
                 {stalled
-                  ? "This is taking longer than usual to start."
+                  ? t("This is taking longer than usual to start.")
                   : ahead > 0
-                    ? `Waiting on ${ahead} other import${ahead === 1 ? "" : "s"} to finish first…`
-                    : "Starting your import…"}
+                    ? t.plural(ahead, "Waiting on {n} other import to finish first…", "Waiting on {n} other imports to finish first…")
+                    : t("Starting your import…")}
               </span>
             </div>
           ) : (
@@ -339,21 +345,21 @@ function ImportProgress({
 
           {queued && ahead > 0 && !stalled && (
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              Yours starts automatically as soon as they&apos;re done. Nothing to do.
+              {t("Yours starts automatically as soon as they're done. Nothing to do.")}
             </p>
           )}
 
           {stalled && (
             <p className="text-xs text-amber-600 dark:text-amber-400">
-              Your games are still queued and nothing has been lost. If this
-              doesn&apos;t move shortly,{" "}
-              <Link href={helpHref(pathname)} className="underline">tell us</Link>.
+              <T vars={{ link: <Link href={helpHref(pathname)} className="underline">{t("tell us")}</Link> }}>
+                {"Your games are still queued and nothing has been lost. If this doesn't move shortly, {link}."}
+              </T>
             </p>
           )}
 
           <p className="text-xs text-gray-500 dark:text-gray-400">
-            You can leave this page — the import keeps going.
-            {job.notify_email ? " We'll email you when it's done." : ""}
+            {t("You can leave this page — the import keeps going.")}
+            {job.notify_email ? ` ${t("We'll email you when it's done.")}` : ""}
           </p>
         </>
       )}
@@ -365,8 +371,9 @@ function ImportProgress({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
           <span className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
-            {job.games_imported} game{job.games_imported !== 1 ? "s" : ""} imported
-            {job.total > 1 ? ` across ${job.total} tournaments` : ""}
+            {job.total > 1
+              ? t.plural(job.games_imported, "{n} game imported across {total} tournaments", "{n} games imported across {total} tournaments", { total: job.total })
+              : t.plural(job.games_imported, "{n} game imported", "{n} games imported")}
           </span>
         </div>
       )}
@@ -374,10 +381,10 @@ function ImportProgress({
       {job.status === "failed" && (
         <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 dark:border-red-900 dark:bg-red-950/30">
           <p className="text-sm font-semibold text-red-800 dark:text-red-300">
-            This import didn&apos;t complete.
+            {t("This import didn't complete.")}
           </p>
           <p className="mt-0.5 text-xs text-red-700 dark:text-red-400">
-            You can try again — anything already imported was kept.
+            {t("You can try again — anything already imported was kept.")}
           </p>
         </div>
       )}
@@ -385,7 +392,7 @@ function ImportProgress({
       {job.status === "cancelled" && (
         <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 dark:border-dark-border dark:bg-dark-elevated">
           <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-            Import cancelled
+            {t("Import cancelled")}
           </p>
           <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
             {job.completed} of {job.total} tournaments finished before stopping, and those were kept.
@@ -395,11 +402,11 @@ function ImportProgress({
 
       {job.cancel_requested && !finished && (
         <p className="text-xs text-gray-500 dark:text-gray-400">
-          Stopping…
+          {t("Stopping…")}
         </p>
       )}
 
-      {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
+      {error && <p className="text-xs text-red-600 dark:text-red-400">{t(error)}</p>}
 
       {/* Per-tournament rows, as the worker reports them */}
       <div className="space-y-2">
@@ -427,7 +434,7 @@ function ImportProgress({
 
               {r.status === "done" && r.skipped_reason === "no_moves" ? (
                 <p className="mt-0.5 text-xs text-amber-600 dark:text-amber-400">
-                  No moves available — skipped (PGNs not uploaded to chess-results)
+                  {t("No moves available — skipped (PGNs not uploaded to chess-results)")}
                 </p>
               ) : r.status === "done" ? (
                 <div className="mt-1 flex flex-wrap gap-1.5">
@@ -467,7 +474,7 @@ function ImportProgress({
             disabled={job.cancel_requested}
             className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-600 transition hover:border-gray-400 hover:text-gray-900 disabled:opacity-50 dark:border-dark-border dark:text-gray-300 dark:hover:text-gray-100"
           >
-            {job.cancel_requested ? "Cancelling…" : "Cancel import"}
+            {job.cancel_requested ? t("Cancelling…") : t("Cancel import")}
           </button>
         )}
 
@@ -479,7 +486,7 @@ function ImportProgress({
                 onClick={onReset}
                 className="text-xs text-gray-500 hover:text-gray-800 dark:hover:text-gray-200"
               >
-                ← Import more
+                {t("← Import more")}
               </button>
               {errorCount > 0 && (
                 <span className="text-xs text-red-600 dark:text-red-400">
@@ -488,7 +495,7 @@ function ImportProgress({
               )}
             </div>
             <Link href={`/players/${playerRef}`} className="btn-secondary text-sm">
-              View Profile
+              {t("View Profile")}
             </Link>
           </>
         )}

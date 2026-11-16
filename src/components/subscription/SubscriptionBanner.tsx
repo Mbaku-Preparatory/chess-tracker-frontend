@@ -10,26 +10,29 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { useSubscription } from "@/components/subscription/SubscriptionProvider";
+import { useLocale, useT, type Translate } from "@/hooks/useT";
 import { formatDate, isOpenWithoutAccess, SUBSCRIBE_PATH } from "@/lib/subscription";
 
 const LAST_DAYS = 3;
 
-function daysText(days: number): string {
-  if (days <= 0) return "less than a day";
-  return days === 1 ? "1 day" : `${days} days`;
+function trialText(days: number, t: Translate): string {
+  if (days <= 0) return t("Free trial: less than a day left.");
+  return t.plural(days, "Free trial: {n} day left.", "Free trial: {n} days left.");
 }
 
 export function SubscriptionBanner() {
   const pathname = usePathname();
   const { subscription: sub } = useSubscription();
+  const t = useT();
+  const locale = useLocale();
 
   if (!sub || !sub.enforced || !sub.allowed || isOpenWithoutAccess(pathname)) return null;
 
   let text: string;
   if (sub.state === "trial") {
-    text = `Free trial: ${daysText(sub.days_left)} left.`;
+    text = trialText(sub.days_left, t);
   } else if ((sub.state === "paid" || sub.state === "negotiated") && sub.days_left < LAST_DAYS) {
-    text = `Your access ends on ${formatDate(sub.access_until)}.`;
+    text = t("Your access ends on {date}.", { date: formatDate(sub.access_until, locale) });
   } else {
     return null;
   }
@@ -39,7 +42,7 @@ export function SubscriptionBanner() {
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-3 gap-y-1 px-4 py-2 text-sm text-brand-800 sm:px-6 lg:px-8 dark:text-brand-200">
         <span>{text}</span>
         <Link href={SUBSCRIBE_PATH} className="font-semibold underline underline-offset-2">
-          {sub.state === "trial" ? "Subscribe" : "Renew"}
+          {sub.state === "trial" ? t("Subscribe") : t("Renew")}
         </Link>
       </div>
     </div>

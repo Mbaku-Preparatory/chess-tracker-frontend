@@ -6,6 +6,8 @@
  * endpoint answers 402 once access has run out. Both end up here.
  */
 
+import { dateLocale } from "@/lib/i18n";
+
 import { HELP_PATH } from "./support";
 
 export const SUBSCRIPTION_EXPIRED_PATH = "/subscription-expired";
@@ -63,13 +65,13 @@ export function perMonthOfAnnual(annualPrice: string, currency: string): string 
 }
 
 /** "7 Nov 2026": for lists, where the year matters and the weekday doesn't. */
-export function formatShortDate(iso: string | null): string {
+export function formatShortDate(iso: string | null, locale = "en"): string {
   if (!iso) return "";
-  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  return new Date(iso).toLocaleDateString(dateLocale(locale), { day: "numeric", month: "short", year: "numeric" });
 }
 
 /** "Friday 20 November". */
-export function formatDate(iso: string | null): string {
+export function formatDate(iso: string | null, locale = "en"): string {
   if (!iso) return "";
-  return new Date(iso).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+  return new Date(iso).toLocaleDateString(dateLocale(locale), { weekday: "long", day: "numeric", month: "long" });
 }

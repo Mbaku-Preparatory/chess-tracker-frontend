@@ -1,8 +1,10 @@
 import Link from "next/link";
 
 import type { PGNImportResult } from "@/types";
+import { useT } from "@/hooks/useT";
 
 export function ImportResultPanel({ result }: { result: PGNImportResult }) {
+  const t = useT();
   const {
     player_public_id,
     player_slug,
@@ -29,12 +31,10 @@ export function ImportResultPanel({ result }: { result: PGNImportResult }) {
       >
         {noneImported ? (
           <p className="text-sm font-semibold text-amber-800">
-            No games were imported.
+            {t("No games were imported.")}
             {games_skipped > 0 && (
               <span className="ml-1 font-normal text-amber-700">
-                {games_skipped} game{games_skipped !== 1 ? "s" : ""} skipped — the player name
-                didn&rsquo;t match any PGN header. Try &ldquo;Always White&rdquo; or &ldquo;Always
-                Black&rdquo;.
+                {t.plural(games_skipped, "{n} game skipped — the player name didn’t match any PGN header. Try “Always White” or “Always Black”.", "{n} games skipped — the player name didn’t match any PGN header. Try “Always White” or “Always Black”.")}
               </span>
             )}
           </p>
@@ -72,7 +72,7 @@ export function ImportResultPanel({ result }: { result: PGNImportResult }) {
             href={`/players/${playerRef}`}
             className="btn-primary inline-flex items-center gap-1.5 text-sm"
           >
-            View Player Profile
+            {t("View Player Profile")}
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 strokeLinecap="round"
@@ -90,13 +90,13 @@ export function ImportResultPanel({ result }: { result: PGNImportResult }) {
           {/* ── Win / Draw / Loss ── */}
           <div className="card p-5">
             <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-              Results from this import
+              {t("Results from this import")}
             </h3>
             <div className="flex gap-3">
               {[
-                { label: "Wins", value: wins, bar: "bg-green-400" },
-                { label: "Draws", value: draws, bar: "bg-yellow-400" },
-                { label: "Losses", value: losses, bar: "bg-red-400" },
+                { label: t("Wins"), value: wins, bar: "bg-green-400" },
+                { label: t("Draws"), value: draws, bar: "bg-yellow-400" },
+                { label: t("Losses"), value: losses, bar: "bg-red-400" },
               ].map(({ label, value, bar }) => (
                 <div key={label} className="flex-1 rounded-lg bg-gray-50 px-3 py-3 text-center dark:bg-dark-elevated">
                   <div className={`mx-auto mb-1.5 h-1 w-8 rounded-full ${bar}`} />
@@ -116,7 +116,7 @@ export function ImportResultPanel({ result }: { result: PGNImportResult }) {
           {opening_summary.length > 0 && (
             <div className="card p-5">
               <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                Openings detected
+                {t("Openings detected")}
               </h3>
               <ul className="space-y-3">
                 {opening_summary.map(({ name, count, percent }) => (

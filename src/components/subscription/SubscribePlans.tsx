@@ -22,10 +22,13 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
 import { useSubscription } from "@/components/subscription/SubscriptionProvider";
+import { T } from "@/components/T";
 import { usePaymentStatus } from "@/hooks/usePaymentStatus";
 import { POPULAR_LABEL, POPULAR_PERIOD, usePlanHighlight } from "@/hooks/usePlanHighlight";
+import { useLocale, useT } from "@/hooks/useT";
 import { api } from "@/lib/api";
 import { userMessage } from "@/lib/apiError";
+import { msg } from "@/lib/i18n";
 import { annualSaving, formatDate, formatPrice, perMonthOfAnnual } from "@/lib/subscription";
 import { helpHref } from "@/lib/support";
 import type { MySubscription, SubscriptionPlan } from "@/types";
@@ -38,18 +41,14 @@ function saving(plans: SubscriptionPlan[], annual: SubscriptionPlan): number | n
 }
 
 function StatusLine({ sub }: { sub: MySubscription }) {
-  if (sub.state === "staff") return <>You have staff access.</>;
-  if (sub.state === "trial") {
-    return <>Your free trial runs until <strong>{formatDate(sub.access_until)}</strong>.</>;
-  }
+  const locale = useLocale();
+  const date = (iso: string | null) => <strong>{formatDate(iso, locale)}</strong>;
+  if (sub.state === "staff") return <T>You have staff access.</T>;
+  if (sub.state === "trial") return <T vars={{ date: date(sub.access_until) }}>{"Your free trial runs until {date}."}</T>;
   if (sub.state === "paid" || sub.state === "negotiated") {
-    return (
-      <>
-        You have access until <strong>{formatDate(sub.access_until)}</strong>. Paying now adds the time on after that.
-      </>
-    );
+    return <T vars={{ date: date(sub.access_until) }}>{"You have access until {date}. Paying now adds the time on after that."}</T>;
   }
-  if (sub.paid_until) return <>Your access ended on <strong>{formatDate(sub.paid_until)}</strong>.</>;
+  if (sub.paid_until) return <T vars={{ date: date(sub.paid_until) }}>{"Your access ended on {date}."}</T>;
   return null;
 }
 
@@ -69,6 +68,7 @@ function PlanCard({
   onMouseEnter: () => void;
   onFocus: () => void;
 }) {
+  const t = useT();
   const annual = plan.period === "year";
   const pct = annual ? saving(plans, plan) : null;
   const perMonth = annual ? perMonthOfAnnual(plan.price, plan.currency) : null;
@@ -79,31 +79,31 @@ function PlanCard({
     >
       {plan.period === POPULAR_PERIOD && (
         <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-brand-600 px-3 py-0.5 text-xs font-semibold text-white dark:bg-brand-500">
-          {POPULAR_LABEL}
+          {t(POPULAR_LABEL)}
         </span>
       )}
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">{annual ? "Annual" : "Monthly"}</h3>
+        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">{annual ? t("Annual") : t("Monthly")}</h3>
         {pct !== null && (
           <span className="rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-semibold text-brand-800 dark:bg-brand-900/50 dark:text-brand-200">
-            Save {pct}%
+            {t("Save {pct}%", { pct })}
           </span>
         )}
       </div>
       <p className="mt-3 text-3xl font-bold text-gray-900 dark:text-gray-100">
         {formatPrice(plan.price, plan.currency)}
-        <span className="ml-1 text-sm font-medium text-gray-500 dark:text-gray-400">/ {annual ? "year" : "month"}</span>
+        <span className="ml-1 text-sm font-medium text-gray-500 dark:text-gray-400">/ {annual ? t("year") : t("month")}</span>
       </p>
       {plan.negotiated && plan.list_price !== plan.price && (
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Your agreed price. Usually <span className="line-through">{formatPrice(plan.list_price, plan.currency)}</span>.
+          <T vars={{ price: <span className="line-through">{formatPrice(plan.list_price, plan.currency)}</span> }}>{"Your agreed price. Usually {price}."}</T>
         </p>
       )}
       {perMonth && !plan.negotiated && (
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">That&apos;s {perMonth} a month.</p>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{t("That's {price} a month.", { price: perMonth })}</p>
       )}
       <p className="mt-3 flex-1 text-sm text-gray-600 dark:text-gray-300">
-        {plan.days} days of everything: scouting, prep, the player bots and your books.
+        {t("{days} days of everything: scouting, prep, the player bots and your books.", { days: plan.days })}
       </p>
       <button
         type="button"
@@ -111,13 +111,15 @@ function PlanCard({
         disabled={busy !== null}
         className={`${highlighted ? "btn-primary" : "btn-secondary"} mt-5 w-full disabled:opacity-60`}
       >
-        {busy === plan.code ? "Opening Paystack…" : `Pay ${formatPrice(plan.price, plan.currency)}`}
+        {busy === plan.code ? t("Opening Paystack…") : t("Pay {price}", { price: formatPrice(plan.price, plan.currency) })}
       </button>
     </div>
   );
 }
 
 export function SubscribePlans({ expired, returnedReference }: { expired: boolean; returnedReference: string | null }) {
+  const t = useT();
+  const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
   const { subscription: sub, refresh } = useSubscription();
@@ -168,7 +170,7 @@ export function SubscribePlans({ expired, returnedReference }: { expired: boolea
       // Same tab, as for tips: a blocked popup looks like a broken button.
       window.location.assign(created.authorization_url);
     } catch (err) {
-      setError(userMessage(err, "Couldn't start the payment. Please try again."));
+      setError(userMessage(err, msg("Couldn't start the payment. Please try again.")));
       setBusy(null);
     }
   }, []);
@@ -187,8 +189,8 @@ export function SubscribePlans({ expired, returnedReference }: { expired: boolea
     return (
       <div className="card p-6 text-center">
         <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-gray-200 border-t-brand-600 dark:border-dark-border dark:border-t-brand-400" />
-        <p className="text-base font-semibold text-gray-900 dark:text-gray-100">Confirming your payment</p>
-        <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">This usually takes a few seconds.</p>
+        <p className="text-base font-semibold text-gray-900 dark:text-gray-100">{t("Confirming your payment")}</p>
+        <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">{t("This usually takes a few seconds.")}</p>
       </div>
     );
   }
@@ -199,13 +201,13 @@ export function SubscribePlans({ expired, returnedReference }: { expired: boolea
   if (paidNow) {
     return (
       <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-6 text-center dark:border-emerald-800 dark:bg-emerald-950/30">
-        <p className="text-base font-semibold text-gray-900 dark:text-gray-100">You&apos;re subscribed. Thank you.</p>
+        <p className="text-base font-semibold text-gray-900 dark:text-gray-100">{t("You're subscribed. Thank you.")}</p>
         <p className="mx-auto mt-1 max-w-sm text-sm text-gray-600 dark:text-gray-300">
           {sub?.access_until
-            ? <>Your {payment.currency} {payment.amount} went through. You have access until {formatDate(sub.access_until)}.</>
-            : <>Your {payment.currency} {payment.amount} went through.</>}
+            ? t("Your {currency} {amount} went through. You have access until {date}.", { currency: payment.currency, amount: payment.amount, date: formatDate(sub.access_until, locale) })
+            : t("Your {currency} {amount} went through.", { currency: payment.currency, amount: payment.amount })}
         </p>
-        <a href="/home" className="btn-primary mt-5">Go to the app</a>
+        <a href="/home" className="btn-primary mt-5">{t("Go to the app")}</a>
       </div>
     );
   }
@@ -220,13 +222,12 @@ export function SubscribePlans({ expired, returnedReference }: { expired: boolea
     <div className="flex flex-col gap-6">
       {failedNow && (
         <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300">
-          {payment.failure_reason ?? "That payment didn't go through. No money was taken."} You can try again below.
+          {payment.failure_reason ?? t("That payment didn't go through. No money was taken.")} {t("You can try again below.")}
         </p>
       )}
       {returnedReference && (state === "gave-up" || state === "unavailable") && (
         <p className="rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-gray-600 dark:border-dark-border dark:bg-dark-surface dark:text-gray-300">
-          We&apos;re still waiting to hear from Paystack. If you completed the payment, your access will appear here
-          shortly, and Paystack has emailed you a receipt.
+          {t("We're still waiting to hear from Paystack. If you completed the payment, your access will appear here shortly, and Paystack has emailed you a receipt.")}
         </p>
       )}
 
@@ -236,7 +237,7 @@ export function SubscribePlans({ expired, returnedReference }: { expired: boolea
 
       {sub.plans.length === 0 ? (
         <div className="card p-6 text-sm text-gray-600 dark:text-gray-300">
-          Subscriptions aren&apos;t on sale just yet. Check back soon, or <Link href={helpHref(pathname)} className="font-medium text-brand-600 hover:underline dark:text-brand-400">ask us</Link>.
+          {t("Subscriptions aren't on sale just yet. Check back soon, or")} <Link href={helpHref(pathname)} className="font-medium text-brand-600 hover:underline dark:text-brand-400">{t("ask us")}</Link>.
         </div>
       ) : (
         <div {...highlight.gridProps} className="grid gap-4 pt-3 sm:grid-cols-2">
@@ -255,27 +256,27 @@ export function SubscribePlans({ expired, returnedReference }: { expired: boolea
       )}
 
       {error && (
-        <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>
+        <p role="alert" className="text-sm text-red-600 dark:text-red-400">{t(error)}</p>
       )}
 
       <div className="flex flex-col gap-2 text-sm text-gray-500 dark:text-gray-400">
         <p>
           {sub.currency === "KES"
-            ? "Pay with M-Pesa or a card. Payments are handled by Paystack."
-            : "Pay by card. Payments are handled by Paystack."}{" "}
-          Nothing renews automatically: when your time runs out, you choose whether to pay again.{" "}
-          <Link href="/pricing#refunds" className="font-medium text-brand-600 hover:underline dark:text-brand-400">Refunds</Link>
+            ? t("Pay with M-Pesa or a card. Payments are handled by Paystack.")
+            : t("Pay by card. Payments are handled by Paystack.")}{" "}
+          {t("Nothing renews automatically: when your time runs out, you choose whether to pay again.")}{" "}
+          <Link href="/pricing#refunds" className="font-medium text-brand-600 hover:underline dark:text-brand-400">{t("Refunds")}</Link>
           {" · "}
-          <Link href={helpHref(pathname)} className="font-medium text-brand-600 hover:underline dark:text-brand-400">A payment that hasn&apos;t arrived</Link>
+          <Link href={helpHref(pathname)} className="font-medium text-brand-600 hover:underline dark:text-brand-400">{t("A payment that hasn't arrived")}</Link>
         </p>
         {expired && (
           <div className="flex flex-wrap items-center gap-3">
             <button type="button" onClick={iHavePaid} disabled={checking} className="btn-secondary disabled:opacity-60">
-              {checking ? "Checking…" : "I've already paid"}
+              {checking ? t("Checking…") : t("I've already paid")}
             </button>
             {notYet && (
               <span role="status">
-                We haven&apos;t received it yet. M-Pesa can take a minute; this page checks again by itself.
+                {t("We haven't received it yet. M-Pesa can take a minute; this page checks again by itself.")}
               </span>
             )}
           </div>

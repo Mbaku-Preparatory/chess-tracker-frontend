@@ -19,6 +19,9 @@ import { clearAuth, setAuth } from "@/redux/actions/auth";
 import { setTheme } from "@/redux/actions/theme";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import type { Linked, Me, Preferences } from "@/types";
+import { T } from "@/components/T";
+import { useLocale, useT } from "@/hooks/useT";
+import { msg } from "@/lib/i18n";
 
 const input =
   "block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-dark-border dark:bg-dark-elevated dark:text-gray-100 dark:placeholder-gray-500";
@@ -38,19 +41,22 @@ function Section({ title, hint, children, danger = false }: { title: string; hin
  * Hidden until the paywall is switched on. */
 function SubscriptionSection() {
   const { subscription: sub } = useSubscription();
+  const t = useT();
+  const locale = useLocale();
   if (!sub || !sub.enforced) return null;
+  const date = (iso: string | null) => formatDate(iso, locale);
   const line =
-    sub.state === "staff" ? "Staff access: never expires."
-      : sub.state === "trial" ? `Free trial until ${formatDate(sub.access_until)}.`
-        : sub.state === "paid" ? `Subscribed until ${formatDate(sub.access_until)}.`
-          : sub.state === "negotiated" ? `Access until ${formatDate(sub.access_until)}, as agreed with us.`
-            : sub.paid_until ? `Your access ended on ${formatDate(sub.paid_until)}.` : "No subscription yet.";
+    sub.state === "staff" ? t("Staff access: never expires.")
+      : sub.state === "trial" ? t("Free trial until {date}.", { date: date(sub.access_until) })
+        : sub.state === "paid" ? t("Subscribed until {date}.", { date: date(sub.access_until) })
+          : sub.state === "negotiated" ? t("Access until {date}, as agreed with us.", { date: date(sub.access_until) })
+            : sub.paid_until ? t("Your access ended on {date}.", { date: date(sub.paid_until) }) : t("No subscription yet.");
   return (
-    <Section title="Subscription">
+    <Section title={t("Subscription")}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-gray-700 dark:text-gray-300">{line}</p>
         <Link href={BILLING_PATH} className="btn-secondary">
-          Billing
+          {t("Billing")}
         </Link>
       </div>
     </Section>
@@ -68,18 +74,18 @@ function Note({ kind, children }: { kind: "ok" | "error"; children: React.ReactN
 const SWITCHES: { key: keyof Preferences; title: string; hint: string }[] = [
   {
     key: "mbaku_enabled",
-    title: "Mbaku AI",
-    hint: "The assistant that answers questions about a player from their games, under Ask in their prep.",
+    title: msg("Mbaku AI"),
+    hint: msg("The assistant that answers questions about a player from their games, under Ask in their prep."),
   },
   {
     key: "bot_speech",
-    title: "The bot talks",
-    hint: "While you play a player's bot, it tells you which of their games you are in and when you leave them.",
+    title: msg("The bot talks"),
+    hint: msg("While you play a player's bot, it tells you which of their games you are in and when you leave them."),
   },
   {
     key: "import_emails",
-    title: "Email me when an import finishes",
-    hint: "Ticks “Email me when this is done” for you when you import a player's games.",
+    title: msg("Email me when an import finishes"),
+    hint: msg("Ticks “Email me when this is done” for you when you import a player's games."),
   },
 ];
 
@@ -109,6 +115,7 @@ export default function SettingsPage() {
   const email = useAppSelector((s) => s.auth.email);
   const themeMode = useAppSelector((s) => s.theme.mode);
   const { preferences, update, setAvatar: showAvatar } = usePreferences();
+  const t = useT();
 
   const [me, setMe] = useState<Me | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -152,7 +159,7 @@ export default function SettingsPage() {
         setFirstName(m.first_name);
         setLastName(m.last_name);
       })
-      .catch((err) => setLoadError(userMessage(err, "Couldn't load your settings.")));
+      .catch((err) => setLoadError(t(userMessage(err, msg("Couldn't load your settings.")))));
     // Back from connecting an account (components/LinkedReturn).
     const back = new URLSearchParams(window.location.search).get("connected");
     if (back === "lichess" || back === "chesscom") {
@@ -183,9 +190,9 @@ export default function SettingsPage() {
       setMe(m);
       setFirstName(m.first_name);
       setLastName(m.last_name);
-      setNameNote({ kind: "ok", text: "Saved." });
+      setNameNote({ kind: "ok", text: t("Saved.") });
     } catch (err) {
-      setNameNote({ kind: "error", text: userMessage(err, "Couldn't save your name.") });
+      setNameNote({ kind: "error", text: t(userMessage(err, msg("Couldn't save your name."))) });
     } finally {
       setSavingName(false);
     }
@@ -201,7 +208,7 @@ export default function SettingsPage() {
     } catch (err) {
       setMe(before);
       showAvatar(before?.avatar ?? null);
-      setNameNote({ kind: "error", text: userMessage(err, "Couldn't save that avatar.") });
+      setNameNote({ kind: "error", text: t(userMessage(err, msg("Couldn't save that avatar."))) });
     }
   }
 
@@ -210,7 +217,7 @@ export default function SettingsPage() {
     try {
       await update({ [key]: on });
     } catch (err) {
-      setSwitchError(userMessage(err, "Couldn't save that. Try again."));
+      setSwitchError(t(userMessage(err, msg("Couldn't save that. Try again."))));
     }
   }
 
@@ -222,7 +229,7 @@ export default function SettingsPage() {
   async function changePassword(e: React.FormEvent) {
     e.preventDefault();
     setPasswordNote(null);
-    if (next !== confirm) return setPasswordNote({ kind: "error", text: "The new passwords don't match." });
+    if (next !== confirm) return setPasswordNote({ kind: "error", text: t("The new passwords don't match.") });
     setChanging(true);
     try {
       const tokens = await api.changePassword(hasPassword ? current : "", next);
@@ -234,12 +241,12 @@ export default function SettingsPage() {
       setPasswordNote({
         kind: "ok",
         text: hasPassword
-          ? "Password changed. Your other devices have been signed out."
-          : "Password set. You can now sign in with your email too.",
+          ? t("Password changed. Your other devices have been signed out.")
+          : t("Password set. You can now sign in with your email too."),
       });
       if (me) setMe({ ...me, has_password: true });
     } catch (err) {
-      setPasswordNote({ kind: "error", text: userMessage(err, "Couldn't change your password.") });
+      setPasswordNote({ kind: "error", text: t(userMessage(err, msg("Couldn't change your password."))) });
     } finally {
       setChanging(false);
     }
@@ -260,7 +267,7 @@ export default function SettingsPage() {
       }
       dispatch(clearAuth());
     } catch (err) {
-      setDeleteError(userMessage(err, "Couldn't delete your account."));
+      setDeleteError(t(userMessage(err, msg("Couldn't delete your account."))));
       setDeleting(false);
     }
   }
@@ -272,15 +279,15 @@ export default function SettingsPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <PageHeader title="Settings" subtitle={me.email} />
+      <PageHeader title={t("Settings")} subtitle={me.email} />
 
       <div className="flex flex-col gap-6">
-        <Section title="Account">
+        <Section title={t("Account")}>
           <div className="mb-6 flex items-center gap-4">
             <button
               type="button"
               onClick={() => setPicking(true)}
-              aria-label="Change your avatar"
+              aria-label={t("Change your avatar")}
               className="rounded-full outline-none ring-brand-500 hover:ring-2 focus-visible:ring-2"
             >
               <Avatar src={faceSrc} size={64} />
@@ -288,28 +295,28 @@ export default function SettingsPage() {
             <div className="min-w-0">
               <p className="truncate font-medium text-gray-900 dark:text-gray-100">{me.username}</p>
               <button type="button" onClick={() => setPicking(true)} className="text-sm text-brand-600 underline dark:text-brand-300">
-                Change avatar
+                {t("Change avatar")}
               </button>
             </div>
           </div>
           <form onSubmit={saveName} className="flex flex-col gap-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label htmlFor="first-name" className={label}>First name</label>
+                <label htmlFor="first-name" className={label}>{t("First name")}</label>
                 <input id="first-name" value={firstName} onChange={(e) => setFirstName(e.target.value)} className={input} autoComplete="given-name" />
               </div>
               <div>
-                <label htmlFor="last-name" className={label}>Last name</label>
+                <label htmlFor="last-name" className={label}>{t("Last name")}</label>
                 <input id="last-name" value={lastName} onChange={(e) => setLastName(e.target.value)} className={input} autoComplete="family-name" />
               </div>
             </div>
             <div>
-              <p className={label}>Email</p>
+              <p className={label}>{t("Email")}</p>
               <p className="text-sm text-gray-600 dark:text-gray-300">{me.email}</p>
             </div>
             <div className="flex items-center gap-3">
               <button type="submit" disabled={!nameChanged || savingName} className="btn-primary disabled:opacity-50">
-                {savingName ? "Saving…" : "Save"}
+                {savingName ? t("Saving…") : t("Save")}
               </button>
               {nameNote && <Note kind={nameNote.kind}>{nameNote.text}</Note>}
             </div>
@@ -318,13 +325,13 @@ export default function SettingsPage() {
 
         <SubscriptionSection />
 
-        <Section title="Features" hint="Turn parts of the app on or off. Saved on your account, so they follow you to every device.">
+        <Section title={t("Features")} hint={t("Turn parts of the app on or off. Saved on your account, so they follow you to every device.")}>
           <ul className="flex flex-col divide-y divide-gray-100 dark:divide-dark-border">
             {SWITCHES.map((s) => (
               <li key={s.key} className="flex items-start justify-between gap-4 py-4 first:pt-0 last:pb-0">
                 <div className="min-w-0">
-                  <p id={`switch-${s.key}`} className="font-medium text-gray-900 dark:text-gray-100">{s.title}</p>
-                  <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">{s.hint}</p>
+                  <p id={`switch-${s.key}`} className="font-medium text-gray-900 dark:text-gray-100">{t(s.title)}</p>
+                  <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">{t(s.hint)}</p>
                 </div>
                 <Switch on={preferences[s.key]} onChange={(on) => flip(s.key, on)} labelledBy={`switch-${s.key}`} />
               </li>
@@ -333,13 +340,13 @@ export default function SettingsPage() {
           {switchError && <div className="mt-3"><Note kind="error">{switchError}</Note></div>}
         </Section>
 
-        <Section title="Appearance">
-          <div role="radiogroup" aria-label="Theme" className="flex w-fit gap-1 rounded-lg bg-gray-100 p-1 dark:bg-dark-elevated">
+        <Section title={t("Appearance")}>
+          <div role="radiogroup" aria-label={t("Theme")} className="flex w-fit gap-1 rounded-lg bg-gray-100 p-1 dark:bg-dark-elevated">
             {(
               [
-                ["light", "Light"],
-                ["dark", "Dark"],
-                ["system", "Match my device"],
+                ["light", msg("Light")],
+                ["dark", msg("Dark")],
+                ["system", msg("Match my device")],
               ] as const
             ).map(([value, text]) => (
               <button
@@ -354,16 +361,18 @@ export default function SettingsPage() {
                     : "text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
                 }`}
               >
-                {text}
+                {t(text)}
               </button>
             ))}
           </div>
           {themeChoice === "system" && (
-            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Your device is set to {themeMode} right now.</p>
+            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+              {themeMode === "dark" ? t("Your device is set to dark right now.") : t("Your device is set to light right now.")}
+            </p>
           )}
         </Section>
 
-        <Section title="Connected accounts" hint="Sign in with these instead of your password.">
+        <Section title={t("Connected accounts")} hint={t("Sign in with these instead of your password.")}>
           <div className="flex flex-col gap-5">
             {enabledProviders().map((provider) => (
               <ConnectedRow
@@ -379,33 +388,33 @@ export default function SettingsPage() {
         </Section>
 
         <Section
-          title="Password"
+          title={t("Password")}
           hint={
             hasPassword
-              ? "Changing it signs you out on your other devices."
-              : `You sign in with ${signsInWith}. Set a password to sign in with your email address too.`
+              ? t("Changing it signs you out on your other devices.")
+              : t("You sign in with {provider}. Set a password to sign in with your email address too.", { provider: signsInWith })
           }
         >
           <form onSubmit={changePassword} className="flex flex-col gap-4">
             {hasPassword && (
               <div>
-                <label htmlFor="current-password" className={label}>Current password</label>
+                <label htmlFor="current-password" className={label}>{t("Current password")}</label>
                 <input id="current-password" type="password" value={current} onChange={(e) => setCurrent(e.target.value)} className={input} autoComplete="current-password" required />
               </div>
             )}
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label htmlFor="new-password" className={label}>New password</label>
+                <label htmlFor="new-password" className={label}>{t("New password")}</label>
                 <input id="new-password" type="password" value={next} onChange={(e) => setNext(e.target.value)} className={input} autoComplete="new-password" required />
               </div>
               <div>
-                <label htmlFor="confirm-password" className={label}>New password again</label>
+                <label htmlFor="confirm-password" className={label}>{t("New password again")}</label>
                 <input id="confirm-password" type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className={input} autoComplete="new-password" required />
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <button type="submit" disabled={changing || (hasPassword && !current) || !next || !confirm} className="btn-primary disabled:opacity-50">
-                {changing ? "Saving…" : hasPassword ? "Change password" : "Set password"}
+                {changing ? t("Saving…") : hasPassword ? t("Change password") : t("Set password")}
               </button>
               {passwordNote && <Note kind={passwordNote.kind}>{passwordNote.text}</Note>}
             </div>
@@ -413,8 +422,8 @@ export default function SettingsPage() {
         </Section>
 
         <Section
-          title="Delete account"
-          hint="Deletes your account and everything in it: your opponents and their games, your prep, your books and your imports. This cannot be undone."
+          title={t("Delete account")}
+          hint={t("Deletes your account and everything in it: your opponents and their games, your prep, your books and your imports. This cannot be undone.")}
           danger
         >
           {!deleteOpen ? (
@@ -423,26 +432,27 @@ export default function SettingsPage() {
               onClick={() => setDeleteOpen(true)}
               className="rounded-lg border border-red-300 px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 dark:border-red-900/60 dark:text-red-400 dark:hover:bg-red-950/30"
             >
-              Delete my account…
+              {t("Delete my account…")}
             </button>
           ) : (
             <form onSubmit={deleteAccount} className="flex flex-col gap-4">
               <div>
                 {hasPassword ? (
                   <>
-                    <label htmlFor="delete-password" className={label}>Your password</label>
+                    <label htmlFor="delete-password" className={label}>{t("Your password")}</label>
                     <input id="delete-password" type="password" value={deletePassword} onChange={(e) => setDeletePassword(e.target.value)} className={input} autoComplete="current-password" required />
                   </>
                 ) : (
                   <>
-                    <label htmlFor="delete-password" className={label}>Your email address</label>
+                    <label htmlFor="delete-password" className={label}>{t("Your email address")}</label>
                     <input id="delete-password" type="email" value={deletePassword} onChange={(e) => setDeletePassword(e.target.value)} className={input} autoComplete="off" spellCheck={false} required />
                   </>
                 )}
               </div>
               <div>
                 <label htmlFor="delete-word" className={label}>
-                  Type <span className="font-mono font-semibold">DELETE</span> to confirm
+                  {/* The word stays DELETE in every language: it is what the box checks for. */}
+                  <T vars={{ word: <span className="font-mono font-semibold">DELETE</span> }}>{"Type {word} to confirm"}</T>
                 </label>
                 <input id="delete-word" value={deleteWord} onChange={(e) => setDeleteWord(e.target.value)} className={input} autoComplete="off" spellCheck={false} required />
               </div>
@@ -452,7 +462,7 @@ export default function SettingsPage() {
                   disabled={deleting || !deletePassword || deleteWord !== "DELETE"}
                   className="rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
                 >
-                  {deleting ? "Deleting…" : "Delete my account forever"}
+                  {deleting ? t("Deleting…") : t("Delete my account forever")}
                 </button>
                 <button
                   type="button"
@@ -464,7 +474,7 @@ export default function SettingsPage() {
                   }}
                   className="btn-secondary"
                 >
-                  Cancel
+                  {t("Cancel")}
                 </button>
               </div>
               {deleteError && <Note kind="error">{deleteError}</Note>}
@@ -475,10 +485,10 @@ export default function SettingsPage() {
 
       {picking && (
         <AvatarPicker
-          title="Your avatar"
+          title={t("Your avatar")}
           current={me.avatar}
           defaultSrc={defaultSrc}
-          defaultLabel="Default"
+          defaultLabel={t("Default")}
           onPick={pickAvatar}
           onClose={() => setPicking(false)}
         />
@@ -506,8 +516,9 @@ function ConnectedRow({
   const name = providerName(provider);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
+  const t = useT();
   useEffect(() => {
-    if (justConnected) setNote({ kind: "ok", text: `${name} connected. You can now sign in with it.` });
+    if (justConnected) setNote({ kind: "ok", text: t("{name} connected. You can now sign in with it.", { name }) });
   }, [justConnected, name]);
 
   async function disconnect() {
@@ -518,7 +529,7 @@ function ConnectedRow({
       onLinked(linked);
       setNote({ kind: "ok", text: `${name} disconnected.` });
     } catch (err) {
-      setNote({ kind: "error", text: userMessage(err, `Couldn't disconnect ${name}.`) });
+      setNote({ kind: "error", text: t(userMessage(err, t("Couldn't disconnect {name}.", { name }))) });
     } finally {
       setBusy(false);
     }
@@ -533,12 +544,12 @@ function ConnectedRow({
           </span>
           <div>
             <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{name}</p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">{username ? `Connected as ${username}` : "Not connected"}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{username ? t("Connected as {name}", { name: username }) : t("Not connected")}</p>
           </div>
         </div>
         {username ? (
           <button type="button" onClick={disconnect} disabled={busy || !hasPassword} className="btn-secondary disabled:opacity-50">
-            {busy ? "Disconnecting…" : "Disconnect"}
+            {busy ? t("Disconnecting…") : t("Disconnect")}
           </button>
         ) : (
           <button
@@ -550,7 +561,7 @@ function ConnectedRow({
             disabled={busy}
             className="btn-secondary disabled:opacity-50"
           >
-            {busy ? `Opening ${name}…` : `Connect ${name}`}
+            {busy ? t("Opening {name}…", { name }) : t("Connect {name}", { name })}
           </button>
         )}
       </div>

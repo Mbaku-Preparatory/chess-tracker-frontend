@@ -10,16 +10,18 @@ import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { SubscribePlans } from "@/components/subscription/SubscribePlans";
+import { useT } from "@/hooks/useT";
 
 function Subscribe() {
   const searchParams = useSearchParams();
   const reference = searchParams.get("reference") ?? searchParams.get("trxref");
+  const t = useT();
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Subscribe to Chess Preparatory</h1>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t("Subscribe to Chess Preparatory")}</h1>
       <p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-300">
-        Scout your opponents, build your prep and play their bots, for as long as you need.
+        {t("Scout your opponents, build your prep and play their bots, for as long as you need.")}
       </p>
       <div className="mt-6">
         <SubscribePlans expired={false} returnedReference={reference} />

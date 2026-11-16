@@ -2,6 +2,7 @@
 
 import type { ImportJob } from "@/types";
 import { isTerminal } from "./useImportJob";
+import { useT } from "@/hooks/useT";
 
 /**
  * What a queued import looks like while it runs and once it settles.
@@ -20,6 +21,7 @@ export function ImportJobProgress({
   onCancel: () => void;
   runningLabel: string;
 }) {
+  const t = useT();
   if (!job) return null;
 
   const entry = job.results?.[0];
@@ -35,9 +37,9 @@ export function ImportJobProgress({
             </svg>
             <span>
               {job.queue_ahead != null && job.queue_ahead > 0
-                ? `Waiting behind ${job.queue_ahead} other import${job.queue_ahead !== 1 ? "s" : ""}…`
-                : runningLabel}
-              {job.games_imported > 0 && ` ${job.games_imported.toLocaleString("en")} games imported so far.`}
+                ? t.plural(job.queue_ahead, "Waiting behind {n} other import…", "Waiting behind {n} other imports…")
+                : t(runningLabel)}
+              {job.games_imported > 0 && ` ${t.plural(job.games_imported, "{n} game imported so far.", "{n} games imported so far.", { n: job.games_imported.toLocaleString("en") })}`}
             </span>
           </div>
           <button
@@ -46,11 +48,11 @@ export function ImportJobProgress({
             disabled={job.cancel_requested}
             className="text-sm text-gray-500 hover:text-gray-800 disabled:opacity-50 dark:text-gray-400 dark:hover:text-gray-200"
           >
-            {job.cancel_requested ? "Cancelling…" : "Cancel"}
+            {job.cancel_requested ? t("Cancelling…") : t("Cancel")}
           </button>
         </div>
         <p className="text-xs text-gray-500 dark:text-gray-400">
-          This runs on the server — you can close this page and come back to it.
+          {t("This runs on the server — you can close this page and come back to it.")}
           {job.notify_email ? " We'll email you when it's done." : ""}
         </p>
       </div>
@@ -76,7 +78,7 @@ export function ImportJobProgress({
           ) : null}
           {entry?.skipped_reason === "no_games" && (
             <span className="rounded-full border border-amber-200 bg-amber-100 px-2.5 py-1 text-amber-700">
-              No public standard games found
+              {t("No public standard games found")}
             </span>
           )}
         </div>
@@ -87,7 +89,7 @@ export function ImportJobProgress({
   if (job.status === "cancelled") {
     return (
       <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600 dark:border-dark-border dark:bg-dark-elevated dark:text-gray-300">
-        Import cancelled.
+        {t("Import cancelled.")}
       </div>
     );
   }

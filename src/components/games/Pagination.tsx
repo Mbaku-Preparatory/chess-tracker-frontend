@@ -1,6 +1,7 @@
 "use client";
 
 import { PAGE_SIZES, pagedHref } from "@/lib/games";
+import { useT } from "@/hooks/useT";
 
 /** The pages to show as numbers: the ends, and two either side of this one. */
 function pageWindow(page: number, pages: number): (number | "…")[] {
@@ -42,7 +43,7 @@ export function Pagination({
   pageSize,
   basePath,
   onChange,
-  label = "Games pages",
+  label,
 }: {
   count: number;
   page: number;
@@ -51,6 +52,7 @@ export function Pagination({
   onChange: (page: number, pageSize: number) => void;
   label?: string;
 }) {
+  const t = useT();
   const pages = Math.max(1, Math.ceil(count / pageSize));
   if (count === 0) return null;
 
@@ -89,9 +91,9 @@ export function Pagination({
       </p>
 
       {pages > 1 && (
-        <nav aria-label={label} className="flex items-center gap-1">
+        <nav aria-label={label ?? t("Games pages")} className="flex items-center gap-1">
           {page > 1 ? (
-            to(page - 1, <Chevron back />, idle, { rel: "prev", "aria-label": "Previous page" })
+            to(page - 1, <Chevron back />, idle, { rel: "prev", "aria-label": t("Previous page") })
           ) : (
             <span className={off} aria-hidden>
               <Chevron back />
@@ -105,7 +107,7 @@ export function Pagination({
                   …
                 </span>
               ) : (
-                <span key={p}>{to(p, p, p === page ? current : idle, { "aria-label": `Page ${p}`, ...(p === page && { "aria-current": "page" as const }) })}</span>
+                <span key={p}>{to(p, p, p === page ? current : idle, { "aria-label": t("Page {n}", { n: p }), ...(p === page && { "aria-current": "page" as const }) })}</span>
               ),
             )}
           </span>
@@ -113,7 +115,7 @@ export function Pagination({
             {page} of {pages}
           </span>
           {page < pages ? (
-            to(page + 1, <Chevron />, idle, { rel: "next", "aria-label": "Next page" })
+            to(page + 1, <Chevron />, idle, { rel: "next", "aria-label": t("Next page") })
           ) : (
             <span className={off} aria-hidden>
               <Chevron />
@@ -124,7 +126,7 @@ export function Pagination({
 
       {count > PAGE_SIZES[0] && (
         <label className="flex items-center gap-2 text-ink-faint">
-          Per page
+          {t("Per page")}
           <select
             value={pageSize}
             onChange={(e) => onChange(page, Number(e.target.value))}

@@ -16,6 +16,8 @@ import {
   type PlayerOrdering,
 } from "@/redux/actions/players";
 import type { Player } from "@/types";
+import { useT } from "@/hooks/useT";
+import { msg } from "@/lib/i18n";
 
 const PAGE_SIZE = 25;
 const PLAYER_VIEW_STORAGE_KEY = "players_view_mode";
@@ -26,15 +28,16 @@ const VALID_ORDERINGS = new Set(["-created_at", "created_at", "full_name", "-sta
 type PlayerViewMode = "card" | "list";
 
 const SORT_OPTIONS: { value: PlayerOrdering; label: string }[] = [
-  { value: "-created_at",      label: "Recently added" },
-  { value: "created_at",       label: "Oldest first" },
-  { value: "full_name",        label: "Name A–Z" },
-  { value: "-standard_rating", label: "Highest rated" },
+  { value: "-created_at",      label: msg("Recently added") },
+  { value: "created_at",       label: msg("Oldest first") },
+  { value: "full_name",        label: msg("Name A–Z") },
+  { value: "-standard_rating", label: msg("Highest rated") },
 ];
 
 // ── Opponent list helpers ──────────────────────────────────────────────────────
 
 function AddOpponentCard() {
+  const t = useT();
   return (
     <Link
       href="/players/new"
@@ -44,14 +47,15 @@ function AddOpponentCard() {
         +
       </div>
       <p className="text-sm font-semibold text-gray-600 group-hover:text-brand-600 dark:text-gray-400 dark:group-hover:text-brand-400">
-        Add Opponent
+        {t("Add Opponent")}
       </p>
-      <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Create a new opponent profile</p>
+      <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">{t("Create a new opponent profile")}</p>
     </Link>
   );
 }
 
 function AddOpponentListRow() {
+  const t = useT();
   return (
     <Link
       href="/players/new"
@@ -63,15 +67,15 @@ function AddOpponentListRow() {
         </div>
         <div>
           <p className="text-sm font-semibold text-gray-700 group-hover:text-brand-700 dark:text-gray-300 dark:group-hover:text-brand-400">
-            Add Opponent
+            {t("Add Opponent")}
           </p>
           <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
-            Create a new opponent profile
+            {t("Create a new opponent profile")}
           </p>
         </div>
       </div>
       <span className="text-xs font-medium text-brand-600 dark:text-brand-400">
-        New →
+        {t("New →")}
       </span>
     </Link>
   );
@@ -102,6 +106,7 @@ export default function HomePage() {
   const { items, total, loading, error, searchQuery, ordering, currentPage } =
     useAppSelector((s) => s.players);
   const [viewMode, setViewMode] = useState<PlayerViewMode>("list");
+  const t = useT();
 
   useEffect(() => {
     dispatch(fetchPlayers({ search: searchQuery || undefined, page: currentPage, ordering }));
@@ -168,7 +173,7 @@ export default function HomePage() {
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 flex-1 items-center gap-2 py-1">
             {/* The page's heading, now that there's no "Dashboard" above it */}
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">My Opponents</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t("My Opponents")}</h1>
             {total > 0 && (
               <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500 dark:bg-dark-elevated dark:text-gray-400">
                 {total}
@@ -176,7 +181,7 @@ export default function HomePage() {
             )}
           </div>
           <Link href="/players/new" className="btn-primary shrink-0 text-sm py-1.5 px-3">
-            + Add Opponent
+            {t("+ Add Opponent")}
           </Link>
         </div>
 
@@ -196,7 +201,7 @@ export default function HomePage() {
               {([
                 {
                   value: "list" as const,
-                  label: "List",
+                  label: t("List"),
                   icon: (
                     <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
                       <path d="M3 4.5A1.5 1.5 0 114.5 6 1.5 1.5 0 013 4.5zm0 5A1.5 1.5 0 114.5 11 1.5 1.5 0 013 9.5zm0 5A1.5 1.5 0 114.5 16 1.5 1.5 0 013 14.5zM7 5h10v2H7V5zm0 5h10v2H7v-2zm0 5h10v2H7v-2z" />
@@ -205,7 +210,7 @@ export default function HomePage() {
                 },
                 {
                   value: "card" as const,
-                  label: "Cards",
+                  label: t("Cards"),
                   icon: (
                     <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
                       <path d="M3 3h6v6H3V3zm8 0h6v6h-6V3zM3 11h6v6H3v-6zm8 0h6v6h-6v-6z" />
@@ -240,7 +245,7 @@ export default function HomePage() {
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-dark-elevated dark:text-gray-300 dark:hover:bg-dark-muted"
                   }`}
                 >
-                  {opt.label}
+                  {t(opt.label)}
                 </button>
               ))}
             </div>
@@ -249,7 +254,7 @@ export default function HomePage() {
 
         {error && (
           <div className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {error}
+            {t(error)}
           </div>
         )}
 
@@ -303,28 +308,28 @@ export default function HomePage() {
                   disabled={currentPage <= 1}
                   className="btn-secondary text-sm disabled:opacity-50"
                 >
-                  Previous
+                  {t("Previous")}
                 </button>
                 <span className="px-3 text-sm text-gray-500 dark:text-gray-400">
-                  Page {currentPage} of {totalPages}
+                  {t("Page {page} of {pages}", { page: currentPage, pages: totalPages })}
                 </span>
                 <button
                   onClick={() => dispatch(setCurrentPage(currentPage + 1))}
                   disabled={currentPage >= totalPages}
                   className="btn-secondary text-sm disabled:opacity-50"
                 >
-                  Next
+                  {t("Next")}
                 </button>
               </div>
             )}
           </>
         ) : (
           <EmptyState
-            title={searchQuery ? "No opponents found" : "No opponents yet"}
+            title={searchQuery ? t("No opponents found") : t("No opponents yet")}
             description={
               searchQuery
-                ? "Nothing in your list matches. Click the search box to add them from FIDE."
-                : "Add your first opponent to get started."
+                ? t("Nothing in your list matches. Click the search box to add them from FIDE.")
+                : t("Add your first opponent to get started.")
             }
           />
         )}

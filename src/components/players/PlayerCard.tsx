@@ -9,6 +9,8 @@ import type { Player } from "@/types";
 import { userMessage } from "@/lib/apiError";
 
 import { GameSourceCounts } from "./GameSourceCounts";
+import { useT } from "@/hooks/useT";
+import { msg } from "@/lib/i18n";
 
 /** Games by source, or the bare total when the counts aren't loaded. */
 function GameSourcePills({ player }: { player: Player }) {
@@ -29,6 +31,7 @@ export function PlayerCard({
   onDeleted,
   variant = "card",
 }: PlayerCardProps) {
+  const t = useT();
   const playerRef = player.public_id || player.slug;
   const initials = player.full_name
     .split(" ")
@@ -41,7 +44,7 @@ export function PlayerCard({
 
   async function handleDelete() {
     const confirmed = window.confirm(
-      `Delete player profile "${player.full_name}"? This will permanently remove the player, linked accounts, imported games, and derived stats.`
+      t("Delete player profile “{name}”? This will permanently remove the player, linked accounts, imported games, and derived stats.", { name: player.full_name })
     );
     if (!confirmed) return;
 
@@ -52,7 +55,7 @@ export function PlayerCard({
       await api.deletePlayer(playerRef);
       onDeleted?.(player);
     } catch (err: unknown) {
-      setDeleteError(userMessage(err, "Failed to delete player."));
+      setDeleteError(userMessage(err, msg("Failed to delete player.")));
     } finally {
       setDeleting(false);
     }
@@ -88,14 +91,14 @@ export function PlayerCard({
 
           <div className="flex flex-wrap items-center gap-3 md:flex-nowrap">
             <Link href={`/players/${playerRef}`} className="btn-primary text-sm">
-              View Profile
+              {t("View Profile")}
             </Link>
             {showDelete && (
               <button
                 type="button"
                 onClick={handleDelete}
                 disabled={deleting}
-                title="Delete player profile"
+                title={t("Delete player profile")}
                 className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-red-200 bg-red-50 text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40"
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-4 w-4" strokeWidth={2}>
@@ -108,7 +111,7 @@ export function PlayerCard({
 
         {deleteError && (
           <div className="mt-4 rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-400">
-            {deleteError}
+            {t(deleteError)}
           </div>
         )}
       </div>
@@ -150,7 +153,7 @@ export function PlayerCard({
                 type="button"
                 onClick={handleDelete}
                 disabled={deleting}
-                title="Delete player profile"
+                title={t("Delete player profile")}
                 className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-red-200 bg-red-50 text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40"
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-4 w-4" strokeWidth={2}>
@@ -164,13 +167,13 @@ export function PlayerCard({
 
       <div className="flex flex-wrap gap-3 px-6 py-5">
         <Link href={`/players/${playerRef}`} className="btn-primary flex-1">
-          View Profile
+          {t("View Profile")}
         </Link>
       </div>
 
       {deleteError && (
         <div className="border-t border-red-100 bg-red-50 px-6 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-400">
-          {deleteError}
+          {t(deleteError)}
         </div>
       )}
     </div>
