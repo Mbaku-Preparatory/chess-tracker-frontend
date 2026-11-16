@@ -8,6 +8,8 @@ import { ImportElsewhereNote } from "./ImportElsewhereNote";
 import { ImportJobProgress } from "./ImportJobProgress";
 import { useImportJob } from "./useImportJob";
 import type { ImportJob, OnlineImportRequest, PlayerAccount, TimeClass } from "@/types";
+import { useT, type Translate } from "@/hooks/useT";
+import { msg } from "@/lib/i18n";
 
 type Platform = "chesscom" | "lichess";
 
@@ -18,26 +20,28 @@ const ALL_GAMES = 10000;
 /** "Games to fetch": a number of the newest games, or every game in a period. */
 const FETCH_OPTIONS: { label: string; limit: number; sinceDays?: number }[] = [
   ...[25, 50, 100, 200, 500, 1000].map((n) => ({ label: n.toLocaleString("en"), limit: n })),
-  { label: "Last 3 months", limit: ALL_GAMES, sinceDays: 90 },
-  { label: "Last 12 months", limit: ALL_GAMES, sinceDays: 365 },
-  { label: "All", limit: ALL_GAMES },
+  { label: msg("Last 3 months"), limit: ALL_GAMES, sinceDays: 90 },
+  { label: msg("Last 12 months"), limit: ALL_GAMES, sinceDays: 365 },
+  { label: msg("All"), limit: ALL_GAMES },
 ];
 type FetchOption = (typeof FETCH_OPTIONS)[number];
 
 const TIME_CLASSES: { id: TimeClass; label: string }[] = [
-  { id: "bullet", label: "Bullet" },
+  { id: "bullet", label: msg("Bullet") },
   { id: "blitz", label: "Blitz" },
   { id: "rapid", label: "Rapid" },
   { id: "classical", label: "Classical" },
-  { id: "daily", label: "Daily" },
+  { id: "daily", label: msg("Daily") },
 ];
 
 /** What the chosen option will do, for the line under the form. Null when quick. */
-function fetchNote(o: FetchOption): string | null {
+function fetchNote(o: FetchOption, t: Translate): string | null {
   if (o.limit <= 200) return null;
-  if (o.sinceDays) return `Every game from the ${o.label.toLowerCase()}, up to ${ALL_GAMES.toLocaleString("en")}. This can take a few minutes.`;
-  if (o.limit === ALL_GAMES) return `Up to their newest ${ALL_GAMES.toLocaleString("en")} games. This can take ten minutes or so.`;
-  return `${o.label} games take a minute or two.`;
+  const max = ALL_GAMES.toLocaleString("en");
+  if (o.sinceDays === 90) return t("Every game from the last 3 months, up to {max}. This can take a few minutes.", { max });
+  if (o.sinceDays) return t("Every game from the last 12 months, up to {max}. This can take a few minutes.", { max });
+  if (o.limit === ALL_GAMES) return t("Up to their newest {max} games. This can take ten minutes or so.", { max });
+  return t("{label} games take a minute or two.", { label: t(o.label) });
 }
 
 /**
@@ -63,7 +67,7 @@ const SITES: Record<
   chesscom: {
     name: "Chess.com",
     placeholder: "e.g. hikaru",
-    runningLabel: "Fetching archives from Chess.com…",
+    runningLabel: msg("Fetching archives from Chess.com…"),
     icon: "M10 2a1 1 0 00-1 1v1H8a3 3 0 00-3 3v1H4a1 1 0 000 2h1v1a3 3 0 003 3h.17l-1.9 4.55A1 1 0 007.2 20h9.6a1 1 0 00.93-1.45L15.83 14H16a3 3 0 003-3v-1h1a1 1 0 000-2h-1V7a3 3 0 00-3-3h-1V3a1 1 0 00-1-1h-4z",
     start: (slug, body) => api.importFromChessCom(slug, body),
     iconBox: "bg-[#7fa650]",
@@ -75,7 +79,7 @@ const SITES: Record<
   lichess: {
     name: "Lichess",
     placeholder: "e.g. DrNykterstein",
-    runningLabel: "Fetching games from Lichess…",
+    runningLabel: msg("Fetching games from Lichess…"),
     icon: "M19 22H5v-2h14v2M13 2a3 3 0 00-3 3c0 .88.39 1.67 1 2.22V8l-3 1-2 4h2v1H6l-1 3h14l-1-3h-2v-1h2l-2-4-3-1V7.22c.61-.55 1-1.34 1-2.22a3 3 0 00-1-2.24V2h-1z",
     start: (slug, body) => api.importFromLichess(slug, body),
     iconBox: "bg-[#b05000]",
@@ -102,13 +106,14 @@ export function OnlineImportSection({
   onSuccess,
   onUpdated,
 }: OnlineImportSectionProps) {
+  const t = useT();
   const site = SITES[platform];
   const siteAccounts = accounts.filter((a) => a.platform === platform);
   const [username, setUsername] = useState(siteAccounts[0]?.username || "");
   const [choice, setChoice] = useState<FetchOption>(FETCH_OPTIONS[1]); // 50
   const [timeClasses, setTimeClasses] = useState<TimeClass[]>(TIME_CLASSES.map((t) => t.id));
   const [notifyEmail, setNotifyEmail] = useNotifyMe();
-  const note = fetchNote(choice);
+  const note = fetchNote(choice, t);
 
   function chooseFetch(label: string) {
     const option = FETCH_OPTIONS.find((o) => o.label === label) ?? FETCH_OPTIONS[1];
@@ -148,7 +153,7 @@ export function OnlineImportSection({
         time_classes: timeClasses,
         notify_email: notifyEmail,
       }),
-      "Import failed. Check the username and try again.",
+      t("Import failed. Check the username and try again."),
     );
   }
 
@@ -164,7 +169,7 @@ export function OnlineImportSection({
           <div>
             <h3 className="font-semibold text-gray-900 dark:text-gray-100">Import from {site.name}</h3>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              Fetch the opponent&apos;s recent public games automatically
+              {t("Fetch the opponent's recent public games automatically")}
             </p>
           </div>
         </div>
@@ -206,7 +211,7 @@ export function OnlineImportSection({
                 htmlFor={`${platform}-limit`}
                 className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
-                Games to fetch
+                {t("Games to fetch")}
               </label>
               <select
                 id={`${platform}-limit`}
@@ -215,18 +220,18 @@ export function OnlineImportSection({
                 className={`block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 ${site.selectFocus} focus:outline-none focus:ring-1 dark:border-dark-border dark:bg-dark-surface dark:text-gray-100`}
               >
                 {FETCH_OPTIONS.map((o) => (
-                  <option key={o.label} value={o.label}>{o.label}</option>
+                  <option key={o.label} value={o.label}>{t(o.label)}</option>
                 ))}
               </select>
             </div>
           </div>
 
           <fieldset>
-            <legend className="mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">Time controls</legend>
+            <legend className="mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">{t("Time controls")}</legend>
             <div className="flex flex-wrap gap-1.5">
-              {TIME_CLASSES.map((t) => (
-                <Chip key={t.id} on={timeClasses.includes(t.id)} site={site} onClick={() => toggleTimeClass(t.id)}>
-                  {t.label}
+              {TIME_CLASSES.map((tc) => (
+                <Chip key={tc.id} on={timeClasses.includes(tc.id)} site={site} onClick={() => toggleTimeClass(tc.id)}>
+                  {t(tc.label)}
                 </Chip>
               ))}
             </div>
@@ -258,14 +263,14 @@ export function OnlineImportSection({
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
               )}
-              {starting ? "Queueing…" : isRunning ? "Import running…" : elsewhere ? "Add to queue" : `Import from ${site.name}`}
+              {starting ? t("Queueing…") : isRunning ? t("Import running…") : elsewhere ? t("Add to queue") : t("Import from {site}", { site: site.name })}
             </button>
           </div>
         </form>
 
         {error && (
           <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {error}
+            {t(error)}
           </div>
         )}
 

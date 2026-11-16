@@ -5,6 +5,8 @@ import { useState } from "react";
 import { api } from "@/lib/api";
 import type { PlayerAccount } from "@/types";
 import { userMessage } from "@/lib/apiError";
+import { useT } from "@/hooks/useT";
+import { msg } from "@/lib/i18n";
 
 interface ConnectedAccountManagerProps {
   slug: string;
@@ -24,6 +26,7 @@ export function ConnectedAccountManager({
   accounts,
   onUpdated,
 }: ConnectedAccountManagerProps) {
+  const t = useT();
   const platformAccounts = accounts.filter((account) => account.platform === platform);
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -41,7 +44,7 @@ export function ConnectedAccountManager({
       await action();
       await onUpdated?.();
     } catch (err: unknown) {
-      setError(userMessage(err, "Action failed."));
+      setError(t(userMessage(err, msg("Action failed."))));
     } finally {
       setBusyKey(null);
     }
@@ -50,8 +53,8 @@ export function ConnectedAccountManager({
   async function handleDelink(account: PlayerAccount, deleteGames: boolean) {
     const confirmed = window.confirm(
       deleteGames
-        ? `Delink ${PLATFORM_LABEL[platform]} account "${account.username}" and also delete all imported games tied to it? This cannot be undone.`
-        : `Delink ${PLATFORM_LABEL[platform]} account "${account.username}" and keep its imported games?`
+        ? t("Delink {site} account “{user}” and also delete all imported games tied to it? This cannot be undone.", { site: PLATFORM_LABEL[platform], user: account.username })
+        : t("Delink {site} account “{user}” and keep its imported games?", { site: PLATFORM_LABEL[platform], user: account.username })
     );
     if (!confirmed) return;
 
@@ -59,22 +62,22 @@ export function ConnectedAccountManager({
       const result = await api.removeAccount(slug, account.public_id, { deleteGames });
       setMessage(
         deleteGames
-          ? `Delinked ${result.username} and deleted ${result.deleted_games} imported game${result.deleted_games === 1 ? "" : "s"}.`
-          : `Delinked ${result.username}. Imported games were kept.`
+          ? t.plural(result.deleted_games, "Delinked {user} and deleted {n} imported game.", "Delinked {user} and deleted {n} imported games.", { user: result.username })
+          : t("Delinked {user}. Imported games were kept.", { user: result.username })
       );
     });
   }
 
   async function handleDeleteGames(account: PlayerAccount) {
     const confirmed = window.confirm(
-      `Delete all imported ${PLATFORM_LABEL[platform]} games tied to "${account.username}" but keep the account linked? This cannot be undone.`
+      t("Delete all imported {site} games tied to “{user}” but keep the account linked? This cannot be undone.", { site: PLATFORM_LABEL[platform], user: account.username })
     );
     if (!confirmed) return;
 
     await runAction(`games-${account.id}`, async () => {
       const result = await api.deleteImportedGamesForAccount(slug, account.public_id);
       setMessage(
-        `Deleted ${result.deleted_games} imported game${result.deleted_games === 1 ? "" : "s"} for ${result.username}. The account is still linked.`
+        t.plural(result.deleted_games, "Deleted {n} imported game for {user}. The account is still linked.", "Deleted {n} imported games for {user}. The account is still linked.", { user: result.username })
       );
     });
   }
@@ -86,7 +89,7 @@ export function ConnectedAccountManager({
           Connected {PLATFORM_LABEL[platform]} accounts
         </h4>
         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          You can delink an account, delete only its imported games, or do both.
+          {t("You can delink an account, delete only its imported games, or do both.")}
         </p>
       </div>
 
@@ -110,7 +113,7 @@ export function ConnectedAccountManager({
                       {account.username}
                     </div>
                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                      Imported games from this linked account can be removed separately.
+                      {t("Imported games from this linked account can be removed separately.")}
                     </p>
                   </div>
 
@@ -121,7 +124,7 @@ export function ConnectedAccountManager({
                       onClick={() => handleDelink(account, false)}
                       className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-semibold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-dark-border dark:bg-dark-surface dark:text-gray-300 dark:hover:bg-dark-muted"
                     >
-                      {isBusy && busyKey?.startsWith("delink") ? "Working…" : "Delink only"}
+                      {isBusy && busyKey?.startsWith("delink") ? t("Working…") : t("Delink only")}
                     </button>
                     <button
                       type="button"
@@ -129,7 +132,7 @@ export function ConnectedAccountManager({
                       onClick={() => handleDeleteGames(account)}
                       className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      {busyKey === `games-${account.id}` ? "Deleting…" : "Delete imported games"}
+                      {busyKey === `games-${account.id}` ? t("Deleting…") : t("Delete imported games")}
                     </button>
                     <button
                       type="button"
@@ -137,7 +140,7 @@ export function ConnectedAccountManager({
                       onClick={() => handleDelink(account, true)}
                       className="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      {busyKey === `delink-${account.id}-purge` ? "Deleting…" : "Delink + delete games"}
+                      {busyKey === `delink-${account.id}-purge` ? t("Deleting…") : t("Delink + delete games")}
                     </button>
                   </div>
                 </div>
@@ -154,7 +157,7 @@ export function ConnectedAccountManager({
       )}
       {error && (
         <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-          {error}
+          {t(error)}
         </div>
       )}
     </div>

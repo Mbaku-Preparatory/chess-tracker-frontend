@@ -33,11 +33,26 @@ for (const file of files(join(ROOT, "src"))) {
   // Comments out, so the examples in them are not taken for text the site shows.
   const src = readFileSync(file, "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
   const where = file.slice(ROOT.length);
-  // <T attr="…" attr={…}>text</T>: one= makes it a count, keyed by the text (the "other" form).
-  const ATTR = String.raw`\s+\w+=(?:"[^"]*"|\{(?:[^{}]|\{[^{}]*\})*\})`;
-  for (const m of src.matchAll(new RegExp(String.raw`<T((?:${ATTR})*)\s*>([\s\S]*?)<\/T>`, "g"))) {
-    const plural = /\sone=/.test(m[1]);
-    const body = m[2].trim();
+  // <T attr="…" attr={…}>text</T>: one= makes it a count, keyed by the text (the
+  // "other" form). Attributes are scanned by brace depth, since a value can be
+  // an element with its own {…} inside.
+  for (let at = src.indexOf("<T"); at !== -1; at = src.indexOf("<T", at + 2)) {
+    if (!/[\s>]/.test(src[at + 2] ?? "")) continue; // <Tab>, <TutorialLink>…
+    let i = at + 2, depth = 0, quote = "";
+    for (; i < src.length; i++) {
+      const c = src[i];
+      if (quote) { if (c === quote) quote = ""; continue; }
+      if (c === '"' || c === "'" || c === "`") quote = c;
+      else if (c === "{") depth++;
+      else if (c === "}") depth--;
+      else if (c === ">" && depth === 0) break;
+    }
+    const attrs = src.slice(at + 2, i);
+    if (attrs.trimEnd().endsWith("/")) continue;
+    const close = src.indexOf("</T>", i);
+    if (close === -1) continue;
+    const plural = /\sone=/.test(attrs);
+    const body = src.slice(i + 1, close).trim();
     if (new RegExp(`^\\{${STR}\\}$`).test(body)) add(JSON.parse(body.slice(1, -1)), where, plural);
     else if (!body.startsWith("{")) add(jsxText(body), where, plural); // {variable}: its value is marked with msg()
   }

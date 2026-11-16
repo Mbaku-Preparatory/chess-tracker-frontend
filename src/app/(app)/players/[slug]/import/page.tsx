@@ -14,6 +14,7 @@ import type { PlayerDetail, PGNImportResult } from "@/types";
 import { userMessage } from "@/lib/apiError";
 import { useT } from "@/hooks/useT";
 import { msg } from "@/lib/i18n";
+import { T } from "@/components/T";
 
 type Color = "auto" | "white" | "black";
 type ImportSource = "chesscom" | "lichess" | "chess_results" | "pgn";
@@ -21,18 +22,18 @@ type ImportSource = "chesscom" | "lichess" | "chess_results" | "pgn";
 const COLOR_OPTIONS: { value: Color; label: string; hint: string }[] = [
   {
     value: "auto",
-    label: "Auto-detect",
-    hint: "Match by player name in PGN headers",
+    label: msg("Auto-detect"),
+    hint: msg("Match by player name in PGN headers"),
   },
   {
     value: "white",
-    label: "Always White",
-    hint: "Player had the white pieces in every game",
+    label: msg("Always White"),
+    hint: msg("Player had the white pieces in every game"),
   },
   {
     value: "black",
-    label: "Always Black",
-    hint: "Player had the black pieces in every game",
+    label: msg("Always Black"),
+    hint: msg("Player had the black pieces in every game"),
   },
 ];
 
@@ -138,7 +139,7 @@ export default function PlayerImportPage() {
     if (!slug) return;
     setPlayerLoading(true);
     refreshPlayer()
-      .catch(() => setPlayerError("Player not found."))
+      .catch(() => setPlayerError(t("Player not found.")))
       .finally(() => setPlayerLoading(false));
   }, [slug]);
 
@@ -155,7 +156,7 @@ export default function PlayerImportPage() {
         setError(null);
       }
     };
-    reader.onerror = () => setError("Could not read the file.");
+    reader.onerror = () => setError(t("Could not read the file."));
     reader.readAsText(file, "utf-8");
   }
 
@@ -204,7 +205,7 @@ export default function PlayerImportPage() {
       setResult(data);
     } catch (err: unknown) {
       setError(
-        userMessage(err, "Import failed. Check your PGN and try again.")
+        t(userMessage(err, msg("Import failed. Check your PGN and try again.")))
       );
     } finally {
       setLoading(false);
@@ -232,7 +233,7 @@ export default function PlayerImportPage() {
   if (playerError || !player) {
     return (
       <div className="py-16 text-center">
-        <p className="text-gray-500 dark:text-gray-400">{playerError ?? "Player not found."}</p>
+        <p className="text-gray-500 dark:text-gray-400">{playerError ?? t("Player not found.")}</p>
         <Link href="/home" className="btn-primary mt-4 inline-flex">
           {t("Back to players")}
         </Link>
@@ -250,7 +251,7 @@ export default function PlayerImportPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <Breadcrumb items={[{ label: player.full_name, href: `/players/${slug}` }, { label: "Import Games" }]} />
+      <Breadcrumb items={[{ label: player.full_name, href: `/players/${slug}` }, { label: t("Import Games") }]} />
 
       {/* Player badge */}
       <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
@@ -261,8 +262,7 @@ export default function PlayerImportPage() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t("Import Games")}</h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              {t("Adding games for")}{" "}
-              <span className="font-medium text-gray-700 dark:text-gray-300">{player.full_name}</span>
+              <T vars={{ name: <span className="font-medium text-gray-700 dark:text-gray-300">{player.full_name}</span> }}>{"Adding games for {name}"}</T>
             </p>
             <div className="mt-2"><TutorialLink id="online-games" /></div>
           </div>
@@ -379,9 +379,9 @@ export default function PlayerImportPage() {
                         {value === "black" && (
                           <span className="mr-1.5 inline-block h-3 w-3 rounded-full bg-gray-800 align-middle" />
                         )}
-                        {label}
+                        {t(label)}
                       </span>
-                      <span className="text-xs text-gray-400 dark:text-gray-500">{hint}</span>
+                      <span className="text-xs text-gray-400 dark:text-gray-500">{t(hint)}</span>
                     </label>
                   ))}
                 </div>
@@ -464,7 +464,7 @@ export default function PlayerImportPage() {
                     }}
                     rows={12}
                     spellCheck={false}
-                    placeholder={`[Event "Tournament"]\n[White "${color === "white" ? player.full_name : "Opponent"}"]\n[Black "${color === "black" ? player.full_name : "Opponent"}"]\n[Result "1-0"]\n\n1. e4 e5 2. Nf3 Nc6 ...`}
+                    placeholder={`[Event "Tournament"]\n[White "${color === "white" ? player.full_name : t("Opponent")}"]\n[Black "${color === "black" ? player.full_name : t("Opponent")}"]\n[Result "1-0"]\n\n1. e4 e5 2. Nf3 Nc6 ...`}
                     className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 font-mono text-xs text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-dark-border dark:bg-dark-surface dark:text-gray-100 dark:placeholder-gray-500"
                   />
                 </div>
@@ -519,7 +519,7 @@ export default function PlayerImportPage() {
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                     </svg>
                   )}
-                  {loading ? "Importing…" : "Import Games"}
+                  {loading ? t("Importing…") : t("Import Games")}
                 </button>
                 <Link href={`/players/${slug}`} className="btn-secondary">
                   {t("Cancel")}
