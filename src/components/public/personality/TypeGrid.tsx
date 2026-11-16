@@ -19,7 +19,7 @@ export function TypeGrid({ current }: { current?: string }) {
             }`}
           >
             <Emblem type={t} size={64} />
-            <span className="text-[16px] font-[480] leading-tight">{t.name}</span>
+            <span className="text-[16px] font-[480] leading-tight"><T>{t.name}</T></span>
             <span className="hidden text-[13px] leading-[1.4] text-ink-muted sm:block"><T>{t.tagline}</T></span>
           </Link>
         </li>
