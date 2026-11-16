@@ -50,6 +50,27 @@ export function summary(player: SummaryPlayer, country: string): string {
   return parts.join(" ");
 }
 
+/** Below this, search engines call a meta description too short (Bing's
+ * Webmaster Tools flags them). Most profiles are a name, a federation and one
+ * rating: about 100 characters. */
+export const SHORT_DESCRIPTION = 120;
+
+/**
+ * The page's meta description: the summary, and when that alone is short,
+ * how long FIDE has rated them. `historyFrom` is the first month of the
+ * player's rating history ("2014-03-01"), when there is one.
+ */
+export function metaDescription(player: SummaryPlayer, country: string, historyFrom?: string): string {
+  const text = summary(player, country);
+  if (text.length >= SHORT_DESCRIPTION) return text;
+  // One short sentence, so the result stays under ~160 characters, where
+  // search results cut a description off. A month, not a year: a player first
+  // rated this month would read "since 2026", which sounds like years of it.
+  const since = historyFrom && new Date(historyFrom).toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" });
+  const more = since ? `On FIDE's rating lists since ${since}.` : "FIDE ratings, ranks and tournament games.";
+  return `${text} ${more}`;
+}
+
 function rankedRating(label: string, rating: number, world: number | null, national: number | null, country: string) {
   const ranks = [world && `world #${world.toLocaleString("en")}`, national && `#${national.toLocaleString("en")} in ${country}`]
     .filter(Boolean)

@@ -8,7 +8,7 @@ import { ResultActions, ResultEyebrow, ResultSliders } from "@/components/public
 import { Sliders } from "@/components/public/personality/Sliders";
 import { TypeGrid } from "@/components/public/personality/TypeGrid";
 import { T } from "@/components/T";
-import { aName, BY_SLUG, TYPES, typicalScores } from "@/lib/chessPersonality";
+import { aName, BY_SLUG, QUESTIONS, TYPES, typicalScores } from "@/lib/chessPersonality";
 import { federationFor } from "@/lib/federations";
 import { profilePath } from "@/lib/publicPlayer";
 import { Country } from "@/components/Country";
@@ -26,7 +26,9 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const type = BY_SLUG.get((await params).type);
   if (!type) return {};
   const title = `${type.name}: chess personality`;
-  const description = `${type.tagline} ${type.player.name} is ${aName(type)}. Which chess personality are you?`;
+  // The question alone left these at ~100 characters, which Bing flags as
+  // too short; the second sentence says what answering it takes.
+  const description = `${type.tagline} ${type.player.name} is ${aName(type)}. Which chess personality are you? Take the free ${QUESTIONS.length}-question quiz.`;
   const url = `/chess-personality/${type.slug}`;
   return {
     title,
