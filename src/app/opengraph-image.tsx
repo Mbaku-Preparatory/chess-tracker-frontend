@@ -1,3 +1,4 @@
+// i18n-ignore-file: an image made once at build time for link previews, where the reader's language is unknown.
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 

@@ -1,3 +1,4 @@
+// i18n-ignore-file: the privacy policy is a legal text; a machine translation could misstate it, so it stays in English.
 import type { Metadata } from "next";
 import Link from "next/link";
 

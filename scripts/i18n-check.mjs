@@ -1,11 +1,21 @@
-// Lists the English the site shows through <T>, t(), t.plural() and msg()
-// that a translation file in public/locales/ lacks, and translations whose
-// English is gone (reworded or deleted). See src/lib/i18n.ts.
+// Checks the site's translations (see src/lib/i18n.ts). It reports, and exits
+// 1 for:
+//   - English shown through <T>, t(), t.plural() and msg() that a file in
+//     public/locales/ lacks;
+//   - a count whose translation lacks a plural form its language uses
+//     (Russian needs one/few/many, Arabic six);
+//   - English the site shows that is not marked for translation at all
+//     (scripts/i18n-untranslated.mjs).
+// And lists translations whose English is gone (reworded or deleted).
 //
-//   pnpm i18n:check              report, exit 1 if anything is missing
-//   pnpm i18n:check --missing    print the missing English as JSON, to translate
-import { readFileSync, readdirSync, statSync } from "node:fs";
+//   pnpm i18n:check                  the report
+//   pnpm i18n:check --missing        the English every file lacks, as JSON to translate
+//   pnpm i18n:check --missing sw     what sw.json lacks, with Swahili's plural forms
+//                                    (all of it, for a new language without a file yet)
+import { existsSync, readFileSync, readdirSync, statSync, writeSync } from "node:fs";
 import { join } from "node:path";
+
+import { untranslated } from "./i18n-untranslated.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const ENTITIES = { "&apos;": "'", "&quot;": '"', "&amp;": "&", "&nbsp;": " ", "&lt;": "<", "&gt;": ">" };
@@ -61,25 +71,51 @@ for (const file of files(join(ROOT, "src"))) {
   for (const m of src.matchAll(new RegExp(String.raw`\btr?\.plural\([^,]+,\s*(${STR}),\s*(${STR})`, "g"))) add(JSON.parse(m[2]), where, true);
 }
 
-const locales = readdirSync(join(ROOT, "public/locales")).filter((f) => f.endsWith(".json"));
-const wantMissing = process.argv.includes("--missing");
+// The plural forms a language uses for whole numbers. Intl also knows forms
+// only fractions or millions take (Spanish "many" is for 1,000,000); a count
+// of games never needs those, and t.plural falls back to "other".
+const formsOf = (code) => {
+  const rules = new Intl.PluralRules(code);
+  return [...new Set(Array.from({ length: 201 }, (_, n) => rules.select(n)))];
+};
+
+const LOCALE_DIR = join(ROOT, "public/locales");
+const locales = readdirSync(LOCALE_DIR).filter((f) => f.endsWith(".json"));
+const at = process.argv.indexOf("--missing");
+if (at !== -1) {
+  // What one language, or every file, still needs: JSON to fill in.
+  const code = process.argv[at + 1];
+  const file = code && join(LOCALE_DIR, `${code}.json`);
+  const have = code ? [existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : {}] : locales.map((f) => JSON.parse(readFileSync(join(LOCALE_DIR, f), "utf8")));
+  const forms = code ? formsOf(code) : ["one", "other"];
+  const lacking = [...keys.keys()].filter((k) => have.some((m) => !(k in m)));
+  // Written synchronously: process.exit() would cut off a pipe at 64 KB.
+  writeSync(1, JSON.stringify(Object.fromEntries(lacking.map((k) => [k, keys.get(k).plural ? Object.fromEntries(forms.map((f) => [f, ""])) : ""])), null, 1) + "\n");
+  process.exit(0);
+}
+
 let problems = 0;
-const missingAll = {};
 for (const f of locales) {
-  const messages = JSON.parse(readFileSync(join(ROOT, "public/locales", f), "utf8"));
+  const messages = JSON.parse(readFileSync(join(LOCALE_DIR, f), "utf8"));
+  const forms = formsOf(f.replace(/\.json$/, ""));
   const missing = [...keys.keys()].filter((k) => !(k in messages));
   const unused = Object.keys(messages).filter((k) => !keys.has(k));
-  const badPlural = [...keys].filter(([k, v]) => v.plural && typeof messages[k] === "string").map(([k]) => k);
-  missingAll[f] = missing;
+  const badPlural = [...keys]
+    .filter(([k, v]) => v.plural && k in messages)
+    .map(([k]) => [k, typeof messages[k] === "string" ? forms : forms.filter((form) => !(form in messages[k]))])
+    .filter(([, lacks]) => lacks.length);
   problems += missing.length + badPlural.length;
-  if (wantMissing) continue;
   console.log(`${f}: ${keys.size - missing.length}/${keys.size} translated` + (unused.length ? `, ${unused.length} unused` : ""));
   for (const k of missing) console.log(`  missing  ${JSON.stringify(k)}  (${keys.get(k).where})`);
-  for (const k of badPlural) console.log(`  plural   ${JSON.stringify(k)} needs {"one": …, "other": …} forms`);
+  for (const [k, lacks] of badPlural) console.log(`  plural   ${JSON.stringify(k)} lacks the ${lacks.join(", ")} form${lacks.length > 1 ? "s" : ""}`);
   for (const k of unused) console.log(`  unused   ${JSON.stringify(k)}`);
 }
-if (wantMissing) {
-  const union = [...new Set(Object.values(missingAll).flat())];
-  console.log(JSON.stringify(Object.fromEntries(union.map((k) => [k, keys.get(k).plural ? { one: "", other: "" } : ""])), null, 1));
-}
-process.exit(problems ? 1 : 0);
+
+const english = untranslated(ROOT);
+problems += english.length;
+console.log(english.length ? `untranslated: ${english.length} piece${english.length > 1 ? "s" : ""} of English not marked for translation` : "untranslated: none");
+for (const { file, line, text } of english) console.log(`  english  ${file}:${line}  ${JSON.stringify(text.slice(0, 100))}`);
+if (english.length) console.log('  Wrap it in t() or <T>, or, if it must stay English, add an "i18n-ignore: <why>" comment on the line before.');
+
+// exitCode, not exit(): the report must reach the end of a pipe first.
+process.exitCode = problems ? 1 : 0;

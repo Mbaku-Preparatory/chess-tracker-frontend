@@ -51,10 +51,10 @@ function Support() {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-10">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{/* i18n-ignore: the tip screen; tips are off (see TipForm) */}
         Buy the developer a coffee
       </h1>
-      <p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-300">
+      <p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-300">{/* i18n-ignore: the tip screen */}
         Chess Preparatory is built and paid for by one person. A tip is on top of
         any subscription and buys nothing extra, which is rather the point. It
         just keeps the servers on.
