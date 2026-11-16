@@ -111,6 +111,14 @@ for (const f of locales) {
   for (const k of unused) console.log(`  unused   ${JSON.stringify(k)}`);
 }
 
+// The homepage promo plays the video for the reader's language (PromoVideo):
+// a language without its three files would show a broken player.
+const promo = ["en", ...locales.map((f) => f.replace(/\.json$/, ""))].flatMap((code) =>
+  ["mp4", "jpg", "vtt"].map((ext) => `public/promo/chess-preparatory-${code}.${ext}`).filter((p) => !existsSync(join(ROOT, p))),
+);
+problems += promo.length;
+for (const p of promo) console.log(`  missing  ${p}  (make it with marketing/promo-voiceover/horizontal_cut.py)`);
+
 const english = untranslated(ROOT);
 problems += english.length;
 console.log(english.length ? `untranslated: ${english.length} piece${english.length > 1 ? "s" : ""} of English not marked for translation` : "untranslated: none");

@@ -1559,5 +1559,6 @@
  "Rating history from FIDE has not been loaded for this player yet.": "История рейтинга ФИДЕ для этого игрока ещё не загружена.",
  "Rating history from FIDE couldn't be loaded right now.": "Сейчас не удалось загрузить историю рейтинга ФИДЕ.",
  "Games from chess-results.com have not been loaded for this player yet.": "Партии с chess-results.com для этого игрока ещё не загружены.",
- "Games from chess-results.com couldn't be loaded right now.": "Сейчас не удалось загрузить партии с chess-results.com."
+ "Games from chess-results.com couldn't be loaded right now.": "Сейчас не удалось загрузить партии с chess-results.com.",
+ "Play the Chess Preparatory video ({length})": "Смотреть видео о Chess Preparatory ({length})"
 }

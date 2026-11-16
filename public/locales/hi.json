@@ -1485,5 +1485,6 @@
  "Rating history from FIDE has not been loaded for this player yet.": "इस खिलाड़ी का FIDE रेटिंग इतिहास अभी लोड नहीं हुआ है।",
  "Rating history from FIDE couldn't be loaded right now.": "FIDE रेटिंग इतिहास अभी लोड नहीं हो सका।",
  "Games from chess-results.com have not been loaded for this player yet.": "इस खिलाड़ी की chess-results.com से बाज़ियाँ अभी लोड नहीं हुई हैं।",
- "Games from chess-results.com couldn't be loaded right now.": "chess-results.com से बाज़ियाँ अभी लोड नहीं हो सकीं।"
+ "Games from chess-results.com couldn't be loaded right now.": "chess-results.com से बाज़ियाँ अभी लोड नहीं हो सकीं।",
+ "Play the Chess Preparatory video ({length})": "Chess Preparatory का वीडियो चलाएँ ({length})"
 }
