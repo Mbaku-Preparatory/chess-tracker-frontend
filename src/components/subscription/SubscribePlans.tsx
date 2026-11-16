@@ -5,7 +5,7 @@
  * wants to pay, early or not) and /subscription-expired (where the paywall
  * sends people).
  *
- * Paying leaves the app, like a tip does (components/TipForm.tsx): Paystack's
+ * Paying leaves the app: Paystack's
  * page takes the M-Pesa PIN or the card, then sends the payer back to
  * /subscribe?reference=…. The reference in the URL proves nothing by itself;
  * the backend is asked what became of it, and access is whatever the backend
@@ -167,7 +167,7 @@ export function SubscribePlans({ expired, returnedReference }: { expired: boolea
     setBusy(code);
     try {
       const created = await api.startSubscriptionCheckout(code);
-      // Same tab, as for tips: a blocked popup looks like a broken button.
+      // Same tab: a blocked popup looks like a broken button.
       window.location.assign(created.authorization_url);
     } catch (err) {
       setError(userMessage(err, msg("Couldn't start the payment. Please try again.")));

@@ -20,7 +20,7 @@ export const BILLING_PATH = "/billing";
  * sends them to SUBSCRIPTION_EXPIRED_PATH.
  */
 export function isOpenWithoutAccess(pathname: string): boolean {
-  return [SUBSCRIPTION_EXPIRED_PATH, SUBSCRIBE_PATH, BILLING_PATH, "/settings", "/support", HELP_PATH].includes(pathname);
+  return [SUBSCRIPTION_EXPIRED_PATH, SUBSCRIBE_PATH, BILLING_PATH, "/settings", HELP_PATH].includes(pathname);
 }
 
 let redirecting = false;

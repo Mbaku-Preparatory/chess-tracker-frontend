@@ -5,7 +5,7 @@
  *
  * Extracted rather than written into the form because the waiting is the part
  * that is easy to get wrong and the part every future payment flow will need
- * unchanged — a tip today, an unlock or a renewal later. The form should only
+ * unchanged — a subscription today, a renewal or an unlock later. The form should only
  * have to decide what to render.
  *
  * Two rules, both learned from the M-Pesa build:
