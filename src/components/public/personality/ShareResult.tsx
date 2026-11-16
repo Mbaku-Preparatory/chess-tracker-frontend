@@ -15,8 +15,8 @@ import { useT } from "@/hooks/useT";
 export function ShareResult({ type, path, mine }: { type: PersonalityType; path: string; mine: boolean }) {
   const t = useT();
   const text = mine
-    ? t("I'm {type} at chess. Which chess personality are you?", { type: type.name })
-    : t("{type}: {tagline} Which chess personality are you?", { type: type.name, tagline: t(type.tagline) });
+    ? t("I'm {type} at chess. Which chess personality are you?", { type: t(type.name) })
+    : t("{type}: {tagline} Which chess personality are you?", { type: t(type.name), tagline: t(type.tagline) });
   return (
     <SharePanel
       label={t("Share result")}

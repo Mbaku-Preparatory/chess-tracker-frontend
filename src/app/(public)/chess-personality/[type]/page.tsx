@@ -50,7 +50,7 @@ export default async function PersonalityTypePage({ params }: { params: Params }
           <Suspense fallback={<p className="text-[13px] uppercase tracking-[0.12em] text-accent-soft"><T>{"Chess personality"}</T></p>}>
             <ResultEyebrow slug={type.slug} />
           </Suspense>
-          <h1 className="text-balance text-[42px] font-[480] leading-[1.08] tracking-[0.01em] sm:text-[58px]">{type.name}</h1>
+          <h1 className="text-balance text-[42px] font-[480] leading-[1.08] tracking-[0.01em] sm:text-[58px]"><T>{type.name}</T></h1>
           <p className="max-w-[44ch] text-balance text-[18px] leading-[1.5] text-ink-muted"><T>{type.tagline}</T></p>
         </header>
 
@@ -87,8 +87,8 @@ export default async function PersonalityTypePage({ params }: { params: Params }
               <h2 className="mb-3 text-[13px] uppercase tracking-[0.1em] text-ink-muted"><T>{"Player like you"}</T></h2>
               <Link href={profilePath(type.player)} className="group flex flex-col gap-1">
                 <span className="text-[21px] font-[480] leading-tight group-hover:text-accent-soft">
-                  {/* {aType} has the English article ("an Alchemist"); other languages use the bare {type}. */}
-                  <T vars={{ player: type.player.name, aType: aName(type), type: type.name.replace(/^The /, "") }}>{"{player} is {aType}"}</T>
+                  {/* {aType} has the English article ("an Alchemist"); other languages use {type}, the name translated (without an article). */}
+                  <T vars={{ player: type.player.name, aType: aName(type), type: <T>{type.name}</T> }}>{"{player} is {aType}"}</T>
                 </span>
                 <span className="text-[14px] text-ink-muted">
                   {type.player.fideName ? `${type.player.fideName} · ` : ""}

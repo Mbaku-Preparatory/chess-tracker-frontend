@@ -140,6 +140,8 @@ export type PersonalityType = {
   slug: string;
   /** Four letters, one per axis in AXES order. */
   code: string;
+  /** English, marked with msg() and translated where shown. The page title,
+   * the address and the share image keep it in English. */
   name: string;
   tagline: string;
   description: string;
@@ -153,7 +155,7 @@ export type PersonalityType = {
 
 export const TYPES: PersonalityType[] = [
   {
-    slug: "firestarter", code: "SAGF", name: "The Firestarter", tagline: msg("The board is on fire, and you brought the matches."),
+    slug: "firestarter", code: "SAGF", name: msg("The Firestarter"), tagline: msg("The board is on fire, and you brought the matches."),
     description:
       msg("Firestarters want the board on fire by move ten. They play fast, trust their instinct and would rather lose a wild game than win a dull one. Sacrifices are a love language. Their opponents never know what is coming next, and, to be fair, neither do they. A game against a Firestarter is many things, but it is never boring."),
     strengths: [msg("Fearless in sharp positions"), msg("Plays fast and makes you play fast"), msg("Turns quiet games into chaos")],
@@ -162,7 +164,7 @@ export const TYPES: PersonalityType[] = [
     player: { name: "Witty Alien", fideName: "Volen Dyulgerov", title: "CM", federation: "BUL", fideId: "2918978", slug: "volen-dyulgerov" },
   },
   {
-    slug: "daredevil", code: "SAGI", name: "The Daredevil", tagline: msg("Huge risks, perfectly straight face."),
+    slug: "daredevil", code: "SAGI", name: msg("The Daredevil"), tagline: msg("Huge risks, perfectly straight face."),
     description:
       msg("Daredevils take enormous risks without blinking. They move quickly, go straight for the king and never look nervous, even when the position is hanging by a thread. That calm is a weapon: opponents start doubting a sacrifice that might not even work. Daredevils trust their eyes, their speed and their nerve, in that order."),
     strengths: [msg("Ice-cold under pressure"), msg("Spots attacking chances in a flash"), msg("Bluffs better than anyone")],
@@ -171,7 +173,7 @@ export const TYPES: PersonalityType[] = [
     player: { name: "Alireza Firouzja", title: "GM", federation: "FRA", fideId: "12573981", slug: "alireza-firouzja" },
   },
   {
-    slug: "thunderstorm", code: "SAUF", name: "The Thunderstorm", tagline: msg("Fast, loud, and built on solid ground."),
+    slug: "thunderstorm", code: "SAUF", name: msg("The Thunderstorm"), tagline: msg("Fast, loud, and built on solid ground."),
     description:
       msg("Thunderstorms attack with an energy you can feel from across the room, but their attacks stand on solid ground. They develop, they castle, and then the lightning starts. They play with heart and they show it, celebrating the wins and feeling the losses. When a Thunderstorm is in form, there is nowhere on the board to hide."),
     strengths: [msg("Attacks that are fast and sound"), msg("Fighting spirit in every game"), msg("Momentum: one win becomes five")],
@@ -180,7 +182,7 @@ export const TYPES: PersonalityType[] = [
     player: { name: "Divya Deshmukh", title: "GM", federation: "IND", fideId: "35006916", slug: "divya-deshmukh" },
   },
   {
-    slug: "lightning-bolt", code: "SAUI", name: "The Lightning Bolt", tagline: msg("The right move, before the position has finished appearing."),
+    slug: "lightning-bolt", code: "SAUI", name: msg("The Lightning Bolt"), tagline: msg("The right move, before the position has finished appearing."),
     description:
       msg("Lightning Bolts see the right move almost before the position has appeared. They attack, but cleverly: they take what the position offers and never more than they can keep. Fast, practical and very hard to rattle, they shine brightest when the clock is running low and everyone else is starting to panic."),
     strengths: [msg("Lightning-fast intuition"), msg("Practical, low-risk attacks"), msg("At their best in time trouble")],
@@ -189,7 +191,7 @@ export const TYPES: PersonalityType[] = [
     player: { name: "Hikaru Nakamura", title: "GM", federation: "USA", fideId: "2016192", slug: "hikaru-nakamura" },
   },
   {
-    slug: "trickster", code: "SCGF", name: "The Trickster", tagline: msg("Every quiet move hides a little surprise."),
+    slug: "trickster", code: "SCGF", name: msg("The Trickster"), tagline: msg("Every quiet move hides a little surprise."),
     description:
       msg("Tricksters love a trap. They steer the game into quiet-looking positions and hide a little surprise in every one of them, and when the opponent finally steps on it, everybody hears about it. They play quickly, they play for fun and they talk to the board the whole time. A game against a Trickster is a show, and the Trickster is the host."),
     strengths: [msg("Traps hidden in plain sight"), msg("Quick, confident moves"), msg("Makes chess fun to watch")],
@@ -198,7 +200,7 @@ export const TYPES: PersonalityType[] = [
     player: { name: "GothamChess", fideName: "Levy Rozman", title: "IM", federation: "USA", fideId: "2039877", slug: "levy-rozman" },
   },
   {
-    slug: "card-shark", code: "SCGI", name: "The Card Shark", tagline: msg("Calm voice, quiet moves. Then the trap closes."),
+    slug: "card-shark", code: "SCGI", name: msg("The Card Shark"), tagline: msg("Calm voice, quiet moves. Then the trap closes."),
     description:
       msg("Card Sharks look harmless. Calm voice, quiet moves, nothing to see here. They play quickly and keep the position under control, but underneath they are always quietly betting that you will reach for the wrong piece. And when you do, they are very polite about it."),
     strengths: [msg("Unshakeable calm"), msg("Sneaky, well-hidden tricks"), msg("Steady control of the position")],
@@ -207,7 +209,7 @@ export const TYPES: PersonalityType[] = [
     player: { name: "Eric Rosen", title: "IM", federation: "USA", fideId: "2032562", slug: "eric-rosen" },
   },
   {
-    slug: "bulldog", code: "SCUF", name: "The Bulldog", tagline: msg("Grabs hold of a position and never lets go."),
+    slug: "bulldog", code: "SCUF", name: msg("The Bulldog"), tagline: msg("Grabs hold of a position and never lets go."),
     description:
       msg("Bulldogs grab hold of a position and never let go. They play quickly and solidly, defend as if their life depended on it and fight in every single game. They feel every result deeply, which is exactly what keeps them coming back stronger. You can beat a Bulldog, but you will be exhausted afterwards."),
     strengths: [msg("Tenacious defence"), msg("Quick, solid decisions"), msg("Never, ever gives up")],
@@ -216,7 +218,7 @@ export const TYPES: PersonalityType[] = [
     player: { name: "Humpy Koneru", title: "GM", federation: "IND", fideId: "5008123", slug: "humpy-koneru" },
   },
   {
-    slug: "metronome", code: "SCUI", name: "The Metronome", tagline: msg("Good move, good move, good move."),
+    slug: "metronome", code: "SCUI", name: msg("The Metronome"), tagline: msg("Good move, good move, good move."),
     description:
       msg("Metronomes keep a steady beat that slowly wears opponents down. Good move, good move, good move. They play quickly and accurately, keep everything under control and take no risks they don't need, and they never look worried. An error from the other side is noticed instantly and punished politely."),
     strengths: [msg("Relentless consistency"), msg("Fast, accurate decisions"), msg("Squeezes wins out of equal positions")],
@@ -225,7 +227,7 @@ export const TYPES: PersonalityType[] = [
     player: { name: "Magnus Carlsen", title: "GM", federation: "NOR", fideId: "1503014", slug: "magnus-carlsen" },
   },
   {
-    slug: "volcano", code: "DAGF", name: "The Volcano", tagline: msg("Quiet pressure, then an eruption."),
+    slug: "volcano", code: "DAGF", name: msg("The Volcano"), tagline: msg("Quiet pressure, then an eruption."),
     description:
       msg("Volcanoes calculate deeply, build pressure quietly and then erupt all over the board. They will sacrifice anything for the initiative, and there is real calculation behind the fireworks. When a Volcano goes for the king, the whole room knows. Theirs are the games people still talk about years later."),
     strengths: [msg("Deep attacking calculation"), msg("Fearless sacrifices"), msg("Pure fighting energy")],
@@ -234,7 +236,7 @@ export const TYPES: PersonalityType[] = [
     player: { name: "Judit Polgar", title: "GM", federation: "HUN", fideId: "700070", slug: "judit-polgar" },
   },
   {
-    slug: "gambiteer", code: "DAGI", name: "The Gambiteer", tagline: msg("Gives up material calmly, because it's already worked out."),
+    slug: "gambiteer", code: "DAGI", name: msg("The Gambiteer"), tagline: msg("Gives up material calmly, because it's already worked out."),
     description:
       msg("Gambiteers give up material calmly, because they have already seen why it is worth it. They calculate deeply, attack with purpose and never panic when the position turns wild. Bold by nature, they will take on anyone, and the bigger the name across the board, the happier they are."),
     strengths: [msg("Fearless against anyone"), msg("Calm in wild positions"), msg("Sacrifices backed by calculation")],
@@ -243,7 +245,7 @@ export const TYPES: PersonalityType[] = [
     player: { name: "Praggnanandhaa R", title: "GM", federation: "IND", fideId: "25059530", slug: "praggnanandhaa-r" },
   },
   {
-    slug: "gladiator", code: "DAUF", name: "The Gladiator", tagline: msg("Here for a real fight, and to win it."),
+    slug: "gladiator", code: "DAUF", name: msg("The Gladiator"), tagline: msg("Here for a real fight, and to win it."),
     description:
       msg("Gladiators come to fight. They prepare carefully, build a sound position and then go after the king with everything they have. They play with passion, and it shows. Gladiators don't want a quiet draw: they want a real battle, and they want to win it."),
     strengths: [msg("Prepared, purposeful attacks"), msg("Passion in every move"), msg("At home in a fight")],
@@ -252,7 +254,7 @@ export const TYPES: PersonalityType[] = [
     player: { name: "Vaishali Rameshbabu", fideName: "Rameshbabu Vaishali", title: "GM", federation: "IND", fideId: "5091756", slug: "rameshbabu-vaishali" },
   },
   {
-    slug: "surgeon", code: "DAUI", name: "The Surgeon", tagline: msg("Attacks that are rarely spectacular for long. Just correct."),
+    slug: "surgeon", code: "DAUI", name: msg("The Surgeon"), tagline: msg("Attacks that are rarely spectacular for long. Just correct."),
     description:
       msg("Surgeons attack with precision. They calculate everything, take only the risks they have measured, and stay completely calm while they do it. When a Surgeon goes for the king, it is rarely spectacular for long: it is simply correct. Their composure at the board is almost unsettling."),
     strengths: [msg("Precise calculation"), msg("Total composure"), msg("Attacks with no loose ends")],
@@ -261,7 +263,7 @@ export const TYPES: PersonalityType[] = [
     player: { name: "Gukesh D", title: "GM", federation: "IND", fideId: "46616543", slug: "gukesh-d" },
   },
   {
-    slug: "alchemist", code: "DCGF", name: "The Alchemist", tagline: msg("Turns strange positions into gold."),
+    slug: "alchemist", code: "DCGF", name: msg("The Alchemist"), tagline: msg("Turns strange positions into gold."),
     description:
       msg("Alchemists turn strange positions into gold. They love imbalances: bishops against knights, pawns against an exchange, kings marching up the board. They calculate deeply and take bold, creative risks in quiet positions where nobody else sees any chances at all. Playing an Alchemist means playing chess you have never seen before."),
     strengths: [msg("Creative with imbalances"), msg("Finds chances in quiet positions"), msg("Plays for a win every game")],
@@ -270,7 +272,7 @@ export const TYPES: PersonalityType[] = [
     player: { name: "Arjun Erigaisi", fideName: "Erigaisi Arjun", title: "GM", federation: "IND", fideId: "35009192", slug: "erigaisi-arjun" },
   },
   {
-    slug: "puppeteer", code: "DCGI", name: "The Puppeteer", tagline: msg("Pulls strings you can't see."),
+    slug: "puppeteer", code: "DCGI", name: msg("The Puppeteer"), tagline: msg("Pulls strings you can't see."),
     description:
       msg("Puppeteers pull strings you can't see. They calculate deeply, keep control of the position and calmly steer opponents into choices that look natural and turn out to be fatal. They are happy to gamble, but only once they have worked out exactly how you will react. By the time you notice the strings, it is too late."),
     strengths: [msg("Deep, patient planning"), msg("Steers opponents into mistakes"), msg("Calm, calculated risks")],
@@ -279,7 +281,7 @@ export const TYPES: PersonalityType[] = [
     player: { name: "Javokhir Sindarov", title: "GM", federation: "UZB", fideId: "14205483", slug: "javokhir-sindarov" },
   },
   {
-    slug: "iron-wall", code: "DCUF", name: "The Iron Wall", tagline: msg("You will have to earn every half point."),
+    slug: "iron-wall", code: "DCUF", name: msg("The Iron Wall"), tagline: msg("You will have to earn every half point."),
     description:
       msg("Iron Walls are very, very hard to beat. They prepare thoroughly, keep their position solid and defend with real pride. Underneath the calm structure is a fierce competitor who hates losing more than anything. They might not win every game, but you will have to earn every half point against them."),
     strengths: [msg("Rock-solid preparation"), msg("Excellent defence"), msg("Very hard to beat")],
@@ -288,7 +290,7 @@ export const TYPES: PersonalityType[] = [
     player: { name: "Anish Giri", title: "GM", federation: "NED", fideId: "24116068", slug: "anish-giri" },
   },
   {
-    slug: "architect", code: "DCUI", name: "The Architect", tagline: msg("Designs the game before playing it."),
+    slug: "architect", code: "DCUI", name: msg("The Architect"), tagline: msg("Designs the game before playing it."),
     description:
       msg("Architects design their games before they play them. Deep preparation, careful plans, every piece on its square. They take only the risks the blueprint allows and stay calm whatever happens. Opponents feel squeezed without quite knowing why. That is the Architect, quietly adding another floor."),
     strengths: [msg("Deep preparation"), msg("Long-term planning"), msg("Calm, accurate play")],
