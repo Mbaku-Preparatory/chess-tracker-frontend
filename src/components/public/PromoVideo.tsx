@@ -3,12 +3,15 @@
 import { useState } from "react";
 
 import { PlayIcon } from "@/components/ui/PlayIcon";
-import { useT } from "@/hooks/useT";
+import { useLocale, useT } from "@/hooks/useT";
+import { LOCALES } from "@/lib/i18n";
 import { tutorialLength } from "@/lib/tutorials";
 
-// The three files are the 16:9 cut in marketing/promo-voiceover (af_heart voice),
-// re-encoded to 720p for the web: public/promo/chess-preparatory.{mp4,jpg,vtt}.
-const FILES = "/promo/chess-preparatory";
+// One video per site language, each with its text on screen and, except
+// Swahili (no voice licensed for adverts yet), its own voice. All are made by
+// marketing/promo-voiceover/horizontal_cut.py: public/promo/chess-preparatory-<code>.{mp4,jpg,vtt},
+// one set for every code in LOCALES (pnpm i18n:check fails without them). The
+// server renders English, so another language swaps in its poster on load.
 const SECONDS = 57;
 
 /**
@@ -23,13 +26,15 @@ const SECONDS = 57;
  */
 export function PromoVideo({ className = "" }: { className?: string }) {
   const t = useT();
+  const locale = useLocale();
+  const files = `/promo/chess-preparatory-${locale}`;
   const [playing, setPlaying] = useState(false);
   const frame = `relative block aspect-video w-full overflow-hidden rounded-2xl bg-ink-card ${className}`;
 
   if (playing) {
     return (
-      <video className={frame} src={`${FILES}.mp4`} poster={`${FILES}.jpg`} controls autoPlay playsInline>
-        <track kind="captions" src={`${FILES}.vtt`} srcLang="en" label="English" />
+      <video className={frame} src={`${files}.mp4`} poster={`${files}.jpg`} controls autoPlay playsInline>
+        <track kind="captions" src={`${files}.vtt`} srcLang={locale} label={LOCALES.find((l) => l.code === locale)?.name} />
       </video>
     );
   }
@@ -41,7 +46,7 @@ export function PromoVideo({ className = "" }: { className?: string }) {
       className={`group ${frame}`}
     >
       {/* eslint-disable-next-line @next/next/no-img-element -- a fixed 720p poster; the image optimiser would add a cost per visit for nothing */}
-      <img src={`${FILES}.jpg`} alt="" width={1280} height={720} className="h-full w-full object-cover" />
+      <img src={`${files}.jpg`} alt="" width={1280} height={720} className="h-full w-full object-cover" />
       <span className="absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-accent text-accent-on shadow-lg group-hover:scale-105">
         <PlayIcon className="ml-1 h-7 w-7" />
       </span>
