@@ -200,7 +200,7 @@ export default async function PublicPlayerPage({ params }: { params: Params }) {
           {player.historyFetchedAt ? (
             <RatingHistoryChart history={history} />
           ) : (
-            <PendingChart label={<T>Fetching rating history from FIDE…</T>} />
+            <PendingChart part="history" />
           )}
         </section>
 
@@ -220,7 +220,7 @@ export default async function PublicPlayerPage({ params }: { params: Params }) {
             </p>
           </div>
           {player.stats.games > 0 && <PerformancePanel stats={player.stats} />}
-          {!player.gamesFetchedAt && <PendingRows label={<T>Waiting for games from chess-results.com…</T>} rows={3} />}
+          {!player.gamesFetchedAt && <PendingRows part="games" rows={3} />}
         </section>
       </div>
 
@@ -238,7 +238,7 @@ export default async function PublicPlayerPage({ params }: { params: Params }) {
             count={player.games.count}
           />
         ) : !player.gamesFetchedAt ? (
-          <PendingRows label={<T>Fetching games from chess-results.com…</T>} />
+          <PendingRows part="games" />
         ) : (
           <p className="py-8 text-center text-[14px] text-ink-faint"><T>No games with recorded moves on chess-results.com.</T></p>
         )}

@@ -94,7 +94,6 @@
  },
  "No games with recorded moves on chess-results.com": "No hay partidas con jugadas registradas en chess-results.com",
  "Calculated from this player's games once they arrive": "Se calculará con las partidas de este jugador cuando lleguen",
- "Waiting for games from chess-results.com…": "Esperando las partidas de chess-results.com…",
  "Games": "Partidas",
  "{n} total": "{n} en total",
  "Fetching games from chess-results.com…": "Descargando partidas de chess-results.com…",
@@ -1486,5 +1485,9 @@
  "The Puppeteer": "Marionetista",
  "The Iron Wall": "Muro de hierro",
  "The Architect": "Estratega",
- "Chess Preparatory home": "Inicio de Chess Preparatory"
+ "Chess Preparatory home": "Inicio de Chess Preparatory",
+ "Rating history from FIDE has not been loaded for this player yet.": "El historial de Elo de FIDE aún no se ha cargado para este jugador.",
+ "Rating history from FIDE couldn't be loaded right now.": "No se pudo cargar ahora el historial de Elo de FIDE.",
+ "Games from chess-results.com have not been loaded for this player yet.": "Las partidas de chess-results.com aún no se han cargado para este jugador.",
+ "Games from chess-results.com couldn't be loaded right now.": "No se pudieron cargar ahora las partidas de chess-results.com."
 }

@@ -98,7 +98,6 @@
  },
  "No games with recorded moves on chess-results.com": "На chess-results.com нет партий с записанными ходами",
  "Calculated from this player's games once they arrive": "Будет рассчитано по партиям игрока, когда они загрузятся",
- "Waiting for games from chess-results.com…": "Ждём партии с chess-results.com…",
  "Games": "Партии",
  "{n} total": "всего {n}",
  "Fetching games from chess-results.com…": "Загружаем партии с chess-results.com…",
@@ -1560,5 +1559,9 @@
  "The Puppeteer": "Кукловод",
  "The Iron Wall": "Железная стена",
  "The Architect": "Архитектор",
- "Chess Preparatory home": "Chess Preparatory — на главную"
+ "Chess Preparatory home": "Chess Preparatory — на главную",
+ "Rating history from FIDE has not been loaded for this player yet.": "История рейтинга ФИДЕ для этого игрока ещё не загружена.",
+ "Rating history from FIDE couldn't be loaded right now.": "Сейчас не удалось загрузить историю рейтинга ФИДЕ.",
+ "Games from chess-results.com have not been loaded for this player yet.": "Партии с chess-results.com для этого игрока ещё не загружены.",
+ "Games from chess-results.com couldn't be loaded right now.": "Сейчас не удалось загрузить партии с chess-results.com."
 }
