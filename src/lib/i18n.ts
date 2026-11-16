@@ -10,14 +10,24 @@
  * from that exact English to the translation, in public/locales/<code>.json,
  * fetched only by someone reading in that language. English readers download
  * nothing extra. A string with no translation (new, or reworded since it was
- * translated) simply stays in English. `pnpm i18n:check` lists them.
+ * translated) simply stays in English. `pnpm i18n:check` lists them, and
+ * fails on English the site shows that is not wrapped at all.
  *
  * The hooks and the store are in hooks/useT.ts.
  *
  * In a page: <T>Some text</T>, or <T vars={{ n }}>{"{n} games"}</T>.
  * In a client component: const t = useT(); t("Some text"), t("{n} games", { n }).
  * Counted nouns: t.plural(n, "{n} game", "{n} games"); the translation of the
- * second (the "other" form) may give one/few/many/other forms, for Russian.
+ * second (the "other" form) gives the forms its language uses (Russian
+ * one/few/many/other). Call t.plural directly, not through a helper, or the
+ * checker cannot see the key.
+ *
+ * Adding a language: a line in LOCALES below, then
+ * `pnpm i18n:check --missing <code> > public/locales/<code>.json` and translate
+ * it. Dates, plural rules, numbers and country names come from the browser.
+ * Not supported yet: right-to-left scripts (nothing flips direction), and
+ * regional variants (the device's language is matched on its first two
+ * letters, so pt-BR and pt-PT are one "pt").
  */
 export const LOCALES = [
   { code: "en", name: "English" },

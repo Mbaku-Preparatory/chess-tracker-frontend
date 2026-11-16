@@ -1,3 +1,4 @@
+// i18n-ignore-file: an image made on the server for link previews, where the reader's language is unknown.
 import { ImageResponse } from "next/og";
 
 import type { PersonalityType } from "@/lib/chessPersonality";

@@ -93,6 +93,7 @@ export function SignupForm({ trialNote }: { trialNote: React.ReactNode }) {
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-dark-border dark:bg-dark-elevated dark:text-gray-100 dark:placeholder-gray-500"
+                // i18n-ignore: an example name, not words
                 placeholder="Ada"
               />
             </div>
@@ -108,6 +109,7 @@ export function SignupForm({ trialNote }: { trialNote: React.ReactNode }) {
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-dark-border dark:bg-dark-elevated dark:text-gray-100 dark:placeholder-gray-500"
+                // i18n-ignore: an example name, not words
                 placeholder="Lovelace"
               />
             </div>

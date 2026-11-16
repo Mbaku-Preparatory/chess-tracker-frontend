@@ -1,5 +1,7 @@
 "use client";
 
+// i18n-ignore-file: tips are off; this is only seen by someone coming back from an old Paystack tip. Delete it rather than translate it.
+
 /**
  * The tip flow: pick an amount, pay on Paystack, come back.
  *

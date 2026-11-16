@@ -1,0 +1,23 @@
+# Runs `pnpm i18n:check` on every pull request: a missing translation, a
+# count without its language's plural forms, or English shown on the site
+# without t()/<T> fails the PR (see scripts/i18n-check.mjs). It only needs
+# Node and TypeScript, so it takes about a minute and never builds the site.
+name: Translations
+
+on:
+  pull_request:
+
+jobs:
+  i18n:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm i18n:check
