@@ -88,7 +88,6 @@
  "Prepare: their openings with each colour, results and full games, kept in your account. The bot opens the way {name} does, from their games.": "Подготовка: дебюты игрока каждым цветом, результаты и полные партии — в вашем аккаунте. Бот разыгрывает дебюты так же, как {name}, по партиям игрока.",
  "Ranks among active players on FIDE's latest list": "Места среди активных игроков последнего листа ФИДЕ",
  "Official monthly FIDE ratings": "Официальные ежемесячные рейтинги ФИДЕ",
- "Fetching rating history from FIDE…": "Загружаем историю рейтинга из ФИДЕ…",
  "Overall performance": "Общие результаты",
  "Across {n} games with recorded moves": {
   "one": "По {n} партии с записанными ходами",
@@ -134,12 +133,7 @@
  "This player's data could not be fetched right now": "Сейчас не удалось загрузить данные игрока",
  "Still fetching: this is taking longer than usual": "Всё ещё загружаем: это дольше обычного",
  "Fetching this player's data": "Загружаем данные игрока",
- "Ratings and ranks above are current. Rating history and games will be fetched the next time this page is opened.": "Рейтинги и места выше актуальны. История рейтинга и партии загрузятся при следующем открытии страницы.",
  "You can keep reading; the page fills in by itself when they arrive.": "Можно читать дальше: страница дополнится сама, когда данные придут.",
- "This page fills in by itself as each part arrives.": "Страница дополняется сама по мере загрузки.",
- "from {source}": "с {source}",
- ": done": ": готово",
- ": fetching": ": загрузка",
  "{n} more games, with their openings, in your account.": {
   "one": "Ещё {n} партия с дебютом — в вашем аккаунте.",
   "other": "Ещё {n} партии с дебютами — в вашем аккаунте.",
@@ -1560,8 +1554,7 @@
  "The Iron Wall": "Железная стена",
  "The Architect": "Архитектор",
  "Chess Preparatory home": "Chess Preparatory — на главную",
- "Rating history from FIDE has not been loaded for this player yet.": "История рейтинга ФИДЕ для этого игрока ещё не загружена.",
- "Rating history from FIDE couldn't be loaded right now.": "Сейчас не удалось загрузить историю рейтинга ФИДЕ.",
  "Games from chess-results.com have not been loaded for this player yet.": "Партии с chess-results.com для этого игрока ещё не загружены.",
- "Games from chess-results.com couldn't be loaded right now.": "Сейчас не удалось загрузить партии с chess-results.com."
+ "Games from chess-results.com couldn't be loaded right now.": "Сейчас не удалось загрузить партии с chess-results.com.",
+ "Ratings, ranks and rating history above are current. Games will be fetched the next time this page is opened.": "Рейтинги, места и история рейтинга выше актуальны. Партии загрузятся, когда эту страницу откроют в следующий раз."
 }

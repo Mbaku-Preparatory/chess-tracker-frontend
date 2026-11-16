@@ -452,7 +452,6 @@
  "Prepare: their openings with each colour, results and full games, kept in your account. The bot opens the way {name} does, from their games.": "Jiandae: ufunguzi wake kwa kila rangi, matokeo na michezo kamili, vimehifadhiwa kwenye akaunti yako. Boti inafungua kama {name} anavyofungua, kutoka kwa michezo yake.",
  "Ranks among active players on FIDE's latest list": "Nafasi kati ya wachezaji hai kwenye orodha ya karibuni ya FIDE",
  "Official monthly FIDE ratings": "Ukadiriaji rasmi wa kila mwezi wa FIDE",
- "Fetching rating history from FIDE…": "Inaleta historia ya ukadiriaji kutoka FIDE…",
  "Overall performance": "Matokeo ya jumla",
  "Across {n} games with recorded moves": {
   "one": "Katika mchezo {n} wenye hatua zilizorekodiwa",
@@ -1112,12 +1111,7 @@
  "This player's data could not be fetched right now": "Data ya mchezaji huyu haikuweza kuletwa kwa sasa",
  "Still fetching: this is taking longer than usual": "Bado inaleta: hii inachukua muda zaidi kuliko kawaida",
  "Fetching this player's data": "Inaleta data ya mchezaji huyu",
- "Ratings and ranks above are current. Rating history and games will be fetched the next time this page is opened.": "Ukadiriaji na nafasi zilizo juu ni za sasa. Historia ya ukadiriaji na michezo italetwa wakati ujao ukurasa huu utakapofunguliwa.",
  "You can keep reading; the page fills in by itself when they arrive.": "Unaweza kuendelea kusoma; ukurasa unajaza wenyewe vikifika.",
- "This page fills in by itself as each part arrives.": "Ukurasa huu unajaza wenyewe kila sehemu inapofika.",
- "from {source}": "kutoka {source}",
- ": done": ": imekamilika",
- ": fetching": ": inaleta",
  "{n} more games, with their openings, in your account.": {
   "one": "Mchezo {n} zaidi, pamoja na ufunguzi wake, kwenye akaunti yako.",
   "other": "Michezo {n} zaidi, pamoja na ufunguzi wake, kwenye akaunti yako."
@@ -1486,8 +1480,7 @@
  "Ask questions about an opponent and get answers drawn only from their games.": "Uliza maswali kuhusu mpinzani na upate majibu yanayotokana tu na michezo yake.",
  "Read a chess book on a board": "Soma kitabu cha chesi ubaoni",
  "Upload a PDF chess book; tap any move in it and the position opens on a board.": "Pakia kitabu cha chesi cha PDF; gusa hatua yoyote ndani yake na nafasi inafunguka ubaoni.",
- "Rating history from FIDE has not been loaded for this player yet.": "Historia ya ukadiriaji kutoka FIDE bado haijapakiwa kwa mchezaji huyu.",
- "Rating history from FIDE couldn't be loaded right now.": "Historia ya ukadiriaji kutoka FIDE haikuweza kupakiwa kwa sasa.",
  "Games from chess-results.com have not been loaded for this player yet.": "Michezo kutoka chess-results.com bado haijapakiwa kwa mchezaji huyu.",
- "Games from chess-results.com couldn't be loaded right now.": "Michezo kutoka chess-results.com haikuweza kupakiwa kwa sasa."
+ "Games from chess-results.com couldn't be loaded right now.": "Michezo kutoka chess-results.com haikuweza kupakiwa kwa sasa.",
+ "Ratings, ranks and rating history above are current. Games will be fetched the next time this page is opened.": "Ukadiriaji, nafasi na historia ya ukadiriaji vilivyo juu ni vya sasa. Michezo italetwa wakati ujao ukurasa huu utakapofunguliwa."
 }

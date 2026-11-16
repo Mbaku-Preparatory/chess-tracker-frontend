@@ -86,7 +86,6 @@
  "Prepare: their openings with each colour, results and full games, kept in your account. The bot opens the way {name} does, from their games.": "Préparation : ses ouvertures avec chaque couleur, ses résultats et ses parties complètes, gardés dans votre compte. Le bot ouvre comme {name}, d'après ses parties.",
  "Ranks among active players on FIDE's latest list": "Rangs parmi les joueurs actifs de la dernière liste FIDE",
  "Official monthly FIDE ratings": "Classements FIDE officiels, mois par mois",
- "Fetching rating history from FIDE…": "Récupération de l'historique auprès de la FIDE…",
  "Overall performance": "Performance globale",
  "Across {n} games with recorded moves": {
   "one": "Sur {n} partie avec coups enregistrés",
@@ -128,12 +127,7 @@
  "This player's data could not be fetched right now": "Les données de ce joueur n'ont pas pu être récupérées pour l'instant",
  "Still fetching: this is taking longer than usual": "Récupération en cours : cela prend plus de temps que d'habitude",
  "Fetching this player's data": "Récupération des données de ce joueur",
- "Ratings and ranks above are current. Rating history and games will be fetched the next time this page is opened.": "Les classements et rangs ci-dessus sont à jour. L'historique et les parties seront récupérés à la prochaine ouverture de cette page.",
  "You can keep reading; the page fills in by itself when they arrive.": "Vous pouvez continuer à lire ; la page se complète d'elle-même à leur arrivée.",
- "This page fills in by itself as each part arrives.": "Cette page se complète d'elle-même à mesure que chaque partie arrive.",
- "from {source}": "depuis {source}",
- ": done": " : terminé",
- ": fetching": " : en cours",
  "{n} more games, with their openings, in your account.": {
   "one": "{n} partie de plus, avec son ouverture, dans votre compte.",
   "other": "{n} parties de plus, avec leurs ouvertures, dans votre compte."
@@ -1486,8 +1480,7 @@
  "The Iron Wall": "Mur de fer",
  "The Architect": "Architecte",
  "Chess Preparatory home": "Accueil de Chess Preparatory",
- "Rating history from FIDE has not been loaded for this player yet.": "L'historique Elo de la FIDE n'a pas encore été chargé pour ce joueur.",
- "Rating history from FIDE couldn't be loaded right now.": "L'historique Elo de la FIDE n'a pas pu être chargé pour le moment.",
  "Games from chess-results.com have not been loaded for this player yet.": "Les parties de chess-results.com n'ont pas encore été chargées pour ce joueur.",
- "Games from chess-results.com couldn't be loaded right now.": "Les parties de chess-results.com n'ont pas pu être chargées pour le moment."
+ "Games from chess-results.com couldn't be loaded right now.": "Les parties de chess-results.com n'ont pas pu être chargées pour le moment.",
+ "Ratings, ranks and rating history above are current. Games will be fetched the next time this page is opened.": "Les classements, les rangs et l'historique Elo ci-dessus sont à jour. Les parties seront chargées la prochaine fois que cette page sera ouverte."
 }

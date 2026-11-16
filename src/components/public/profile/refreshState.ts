@@ -3,26 +3,24 @@
 import { useSyncExternalStore } from "react";
 
 /**
- * Where a profile's missing part stands, shared by ProfileRefresher (which
- * knows) and the placeholders (which say so). Without it a placeholder could
- * only ever say "Fetching…", and that is what search engines stored: a crawler's
- * refresh is refused, so for them nothing is ever fetched, and a part FIDE
- * refuses stays missing for everyone.
+ * Where a profile's missing games stand, shared by ProfileRefresher (which
+ * knows) and the placeholder (which says so). Without it the placeholder could
+ * only ever say "Fetching…", and that is what search engines stored: a
+ * crawler's refresh is refused, so for them nothing is ever fetched.
  *
  * "waiting": what the server renders, before the browser has asked; also all a
  *   crawler that runs no scripts ever sees.
  * "fetching": a refresh was accepted and is running.
- * "unavailable": the refresh was refused, failed, gave up, or finished without
- *   this part.
+ * "unavailable": the refresh was refused, failed, gave up, or finished
+ *   without the games.
  */
-export type PartStatus = "waiting" | "fetching" | "unavailable";
-export type ProfilePart = "history" | "games";
+export type GamesStatus = "waiting" | "fetching" | "unavailable";
 
-let state: Record<ProfilePart, PartStatus> = { history: "waiting", games: "waiting" };
+let state: GamesStatus = "waiting";
 const listeners = new Set<() => void>();
 
-export function setPartStatus(parts: ProfilePart[], status: PartStatus) {
-  state = { ...state, ...Object.fromEntries(parts.map((p) => [p, status])) };
+export function setGamesStatus(status: GamesStatus) {
+  state = status;
   listeners.forEach((l) => l());
 }
 
@@ -31,8 +29,6 @@ function subscribe(listener: () => void) {
   return () => listeners.delete(listener);
 }
 
-const SERVER: Record<ProfilePart, PartStatus> = { history: "waiting", games: "waiting" };
-
-export function usePartStatus(part: ProfilePart): PartStatus {
-  return useSyncExternalStore(subscribe, () => state[part], () => SERVER[part]);
+export function useGamesStatus(): GamesStatus {
+  return useSyncExternalStore(subscribe, () => state, () => "waiting");
 }

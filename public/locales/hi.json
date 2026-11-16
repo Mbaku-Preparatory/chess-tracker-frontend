@@ -86,7 +86,6 @@
  "Prepare: their openings with each colour, results and full games, kept in your account. The bot opens the way {name} does, from their games.": "तैयारी: हर रंग से उनकी ओपनिंग, नतीजे और पूरी बाज़ियाँ, आपके खाते में। बॉट उनकी बाज़ियों के आधार पर वैसे ही ओपनिंग खेलता है जैसे {name}।",
  "Ranks among active players on FIDE's latest list": "FIDE की ताज़ा सूची के सक्रिय खिलाड़ियों में रैंक",
  "Official monthly FIDE ratings": "आधिकारिक मासिक FIDE रेटिंग",
- "Fetching rating history from FIDE…": "FIDE से रेटिंग इतिहास लाया जा रहा है…",
  "Overall performance": "कुल प्रदर्शन",
  "Across {n} games with recorded moves": {
   "one": "चालों वाली {n} बाज़ी के आधार पर",
@@ -128,12 +127,7 @@
  "This player's data could not be fetched right now": "इस खिलाड़ी का डेटा अभी नहीं लाया जा सका",
  "Still fetching: this is taking longer than usual": "अभी भी लाया जा रहा है: सामान्य से ज़्यादा समय लग रहा है",
  "Fetching this player's data": "इस खिलाड़ी का डेटा लाया जा रहा है",
- "Ratings and ranks above are current. Rating history and games will be fetched the next time this page is opened.": "ऊपर की रेटिंग और रैंक ताज़ा हैं। रेटिंग इतिहास और बाज़ियाँ अगली बार यह पेज खोलने पर लाई जाएँगी।",
  "You can keep reading; the page fills in by itself when they arrive.": "आप पढ़ते रहें; डेटा आते ही पेज अपने आप भर जाएगा।",
- "This page fills in by itself as each part arrives.": "हर हिस्सा आते ही यह पेज अपने आप भरता है।",
- "from {source}": "{source} से",
- ": done": ": पूरा",
- ": fetching": ": लाया जा रहा है",
  "{n} more games, with their openings, in your account.": {
   "one": "{n} और बाज़ी, उसकी ओपनिंग के साथ, आपके खाते में।",
   "other": "{n} और बाज़ियाँ, उनकी ओपनिंग के साथ, आपके खाते में।"
@@ -1486,8 +1480,7 @@
  "The Iron Wall": "लोहे की दीवार",
  "The Architect": "वास्तुकार",
  "Chess Preparatory home": "Chess Preparatory होम",
- "Rating history from FIDE has not been loaded for this player yet.": "इस खिलाड़ी का FIDE रेटिंग इतिहास अभी लोड नहीं हुआ है।",
- "Rating history from FIDE couldn't be loaded right now.": "FIDE रेटिंग इतिहास अभी लोड नहीं हो सका।",
  "Games from chess-results.com have not been loaded for this player yet.": "इस खिलाड़ी की chess-results.com से बाज़ियाँ अभी लोड नहीं हुई हैं।",
- "Games from chess-results.com couldn't be loaded right now.": "chess-results.com से बाज़ियाँ अभी लोड नहीं हो सकीं।"
+ "Games from chess-results.com couldn't be loaded right now.": "chess-results.com से बाज़ियाँ अभी लोड नहीं हो सकीं।",
+ "Ratings, ranks and rating history above are current. Games will be fetched the next time this page is opened.": "ऊपर की रेटिंग, रैंक और रेटिंग इतिहास ताज़ा हैं। बाज़ियाँ अगली बार यह पेज खुलने पर लाई जाएँगी।"
 }
