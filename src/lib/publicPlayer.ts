@@ -63,7 +63,7 @@ export type PublicPlayer = {
   nationalRankStandard: number | null;
   nationalRankRapid: number | null;
   nationalRankBlitz: number | null;
-  historyFetchedAt: string | null;
+
   gamesFetchedAt: string | null;
   refreshStatus: "pending" | "running" | null;
   ratingHistory: RatingPoint[];
@@ -85,7 +85,7 @@ query PublicProfile($fideId: String!, $page: Int!, $pageSize: Int!) {
     standardRating rapidRating blitzRating standardGames rapidGames blitzGames
     worldRankStandard worldRankRapid worldRankBlitz
     nationalRankStandard nationalRankRapid nationalRankBlitz
-    historyFetchedAt gamesFetchedAt refreshStatus
+    gamesFetchedAt refreshStatus
     ratingHistory { month standardRating standardGames rapidRating rapidGames blitzRating blitzGames }
     stats {
       games wins draws losses averageOpponentElo

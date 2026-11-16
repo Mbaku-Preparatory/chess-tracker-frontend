@@ -7,7 +7,7 @@ import { AdSlot } from "@/components/public/AdSlot";
 import { PerformancePanel } from "@/components/public/profile/PerformancePanel";
 import { ProfileMeter } from "@/components/public/profile/ProfileMeter";
 import { PublicGames } from "@/components/public/profile/PublicGames";
-import { PendingChart, PendingRows } from "@/components/public/profile/Pending";
+import { PendingGames } from "@/components/public/profile/Pending";
 import { ProfileRefresher } from "@/components/public/profile/ProfileRefresher";
 import { ProfileSummary } from "@/components/public/profile/ProfileSummary";
 import { RatingCard } from "@/components/public/profile/RatingCard";
@@ -171,7 +171,7 @@ export default async function PublicPlayerPage({ params }: { params: Params }) {
 
       <ProfileRefresher
         fideId={player.fideId}
-        historyFetchedAt={player.historyFetchedAt}
+
         gamesFetchedAt={player.gamesFetchedAt}
         queued={player.refreshStatus != null}
       />
@@ -197,11 +197,8 @@ export default async function PublicPlayerPage({ params }: { params: Params }) {
             <h2 id="history-heading" className="text-[21px] font-[480]"><T>Rating history</T></h2>
             <p className="text-[13px] text-ink-faint"><T>Official monthly FIDE ratings</T></p>
           </div>
-          {player.historyFetchedAt ? (
-            <RatingHistoryChart history={history} />
-          ) : (
-            <PendingChart part="history" />
-          )}
+          {/* From FIDE's rating lists, which every import stores: never pending. */}
+          <RatingHistoryChart history={history} />
         </section>
 
         <section className="flex flex-col gap-4 rounded-xl bg-ink-card p-6 sm:p-8" aria-labelledby="performance-heading">
@@ -220,7 +217,7 @@ export default async function PublicPlayerPage({ params }: { params: Params }) {
             </p>
           </div>
           {player.stats.games > 0 && <PerformancePanel stats={player.stats} />}
-          {!player.gamesFetchedAt && <PendingRows part="games" rows={3} />}
+          {!player.gamesFetchedAt && <PendingGames rows={3} />}
         </section>
       </div>
 
@@ -238,7 +235,7 @@ export default async function PublicPlayerPage({ params }: { params: Params }) {
             count={player.games.count}
           />
         ) : !player.gamesFetchedAt ? (
-          <PendingRows part="games" />
+          <PendingGames />
         ) : (
           <p className="py-8 text-center text-[14px] text-ink-faint"><T>No games with recorded moves on chess-results.com.</T></p>
         )}

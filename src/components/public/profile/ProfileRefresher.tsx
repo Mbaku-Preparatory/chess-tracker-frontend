@@ -5,10 +5,9 @@ import { useEffect, useRef, useState } from "react";
 
 import { revalidatePlayer } from "@/app/(public)/player/actions";
 import { useT } from "@/hooks/useT";
-import { msg } from "@/lib/i18n";
 import { graphqlPost } from "@/lib/publicGraphql";
 
-import { setPartStatus, type ProfilePart } from "./refreshState";
+import { setGamesStatus } from "./refreshState";
 
 const POLL_EVERY_MS = 3000;
 const SLOW_AFTER_MS = 90 * 1000;
@@ -22,67 +21,52 @@ function stale(fetchedAt: string | null): boolean {
   return !fetchedAt || Date.now() - new Date(fetchedAt).getTime() > STALE_AFTER_MS;
 }
 
-type Part = "history" | "games";
-type PartState = "fetching" | "done" | "ready";
 type Phase = "working" | "slow" | "stopped" | "hidden";
-
-const PARTS: { key: Part; label: string; source: string }[] = [
-  { key: "history", label: msg("Rating history"), source: "FIDE" },
-  { key: "games", label: msg("Games"), source: "chess-results.com" },
-];
 
 /** A failed request is a miss, not an error: the poll asks again. */
 const graphql = <T,>(query: string, variables: Record<string, unknown>) => graphqlPost<T>(query, variables).catch(() => null);
 
 /**
- * Fetches this profile's history and games when they are missing or stale,
- * and shows the visitor what is happening while it does.
+ * Fetches this profile's games when they are missing or stale, and shows the
+ * visitor what is happening while it does. (Its rating history needs no fetch:
+ * the backend builds it from FIDE's rating lists, backend rating_history.py.)
  *
  * Runs in the browser after the page has rendered, never on the server: the
  * request is rate-limited per visitor IP, and the server's IP would stand in
- * for every visitor. Each part re-renders the page as soon as it lands, so
- * the rating chart does not wait for the games.
+ * for every visitor.
  *
- * A profile whose data is merely stale refreshes quietly; the panel only
- * shows when something on the page is actually missing.
+ * A profile whose games are merely stale refreshes quietly; the panel only
+ * shows when they are actually missing.
  */
 export function ProfileRefresher({
   fideId,
-  historyFetchedAt,
   gamesFetchedAt,
   queued,
 }: {
   fideId: string;
-  historyFetchedAt: string | null;
   gamesFetchedAt: string | null;
   queued: boolean;
 }) {
   const router = useRouter();
   const t = useT();
-  // Missing is always stale too, so the panel shows exactly when a part is
+  // Missing is always stale too, so the panel shows exactly when the games are
   // missing, and the first render needs no clock (it must match the server's).
-  const missing = historyFetchedAt == null || gamesFetchedAt == null;
-  const [phase, setPhase] = useState<Phase>(missing ? "working" : "hidden");
-  const [parts, setParts] = useState<Record<Part, PartState>>({
-    history: historyFetchedAt ? "ready" : "fetching",
-    games: gamesFetchedAt ? "ready" : "fetching",
-  });
+  const [phase, setPhase] = useState<Phase>(gamesFetchedAt == null ? "working" : "hidden");
 
-  // What the page was rendered with. Read once: a part landing re-renders the
-  // page and hands this component new props, and that must not restart the
-  // whole request.
-  const initial = useRef({ historyFetchedAt, gamesFetchedAt, queued });
+  // What the page was rendered with. Read once: the games landing re-renders
+  // the page and hands this component new props, and that must not restart
+  // the request.
+  const initial = useRef({ gamesFetchedAt, queued });
 
   useEffect(() => {
     const start = initial.current;
-    const seen = { history: start.historyFetchedAt, games: start.gamesFetchedAt };
-    // The placeholders say what is happening to the parts still missing
+    let seen = start.gamesFetchedAt;
+    // The placeholders say what is happening while the games are missing
     // (refreshState.ts); whatever the page last said belongs to another profile.
     let cancelled = false;
-    const missingNow = () => (["history", "games"] as ProfilePart[]).filter((p) => !seen[p]);
-    const say = (status: "fetching" | "unavailable") => !cancelled && setPartStatus(missingNow(), status);
-    setPartStatus(["history", "games"], "waiting");
-    if (!stale(start.historyFetchedAt) && !stale(start.gamesFetchedAt) && !start.queued) return;
+    const say = (status: "fetching" | "unavailable") => !cancelled && !seen && setGamesStatus(status);
+    setGamesStatus("waiting");
+    if (!stale(start.gamesFetchedAt) && !start.queued) return;
     const startedAt = Date.now();
     if (start.queued) say("fetching");
 
@@ -105,8 +89,8 @@ export function ProfileRefresher({
           return;
         }
         if (outcome !== "queued") {
-          // Busy or refused. Only worth saying when the page is missing
-          // something; a stale profile that has its data stays quiet.
+          // Busy or refused. Only worth saying when the games are missing;
+          // a stale profile that has them stays quiet.
           if (!cancelled) setPhase((p) => (p === "hidden" ? p : "stopped"));
           say("unavailable");
           return;
@@ -119,27 +103,19 @@ export function ProfileRefresher({
         if (cancelled) return;
         if (Date.now() - startedAt > SLOW_AFTER_MS) setPhase((p) => (p === "working" ? "slow" : p));
 
-        const polled = await graphql<{
-          publicPlayer: { refreshStatus: string | null; historyFetchedAt: string | null; gamesFetchedAt: string | null } | null;
-        }>(
-          "query Status($fideId: String!) { publicPlayer(fideId: $fideId) { refreshStatus historyFetchedAt gamesFetchedAt } }",
+        const polled = await graphql<{ publicPlayer: { refreshStatus: string | null; gamesFetchedAt: string | null } | null }>(
+          "query Status($fideId: String!) { publicPlayer(fideId: $fideId) { refreshStatus gamesFetchedAt } }",
           { fideId },
         );
         const now = polled?.publicPlayer;
         if (!now) continue;
 
-        let changed = false;
-        for (const [part, value] of [["history", now.historyFetchedAt], ["games", now.gamesFetchedAt]] as const) {
-          if (value && value !== seen[part]) {
-            seen[part] = value;
-            changed = true;
-            setParts((p) => ({ ...p, [part]: "done" }));
-          }
+        if (now.gamesFetchedAt && now.gamesFetchedAt !== seen) {
+          seen = now.gamesFetchedAt;
+          await landed();
         }
-        if (changed) await landed();
-
         if (now.refreshStatus == null) {
-          // Finished. A part it did not bring (FIDE refused, say) is not coming.
+          // Finished. If it did not bring the games, they are not coming.
           if (!cancelled) setPhase("hidden");
           say("unavailable");
           return;
@@ -165,36 +141,13 @@ export function ProfileRefresher({
         : t("Fetching this player's data");
   const note =
     phase === "stopped"
-      ? t("Ratings and ranks above are current. Rating history and games will be fetched the next time this page is opened.")
-      : phase === "slow"
-        ? t("You can keep reading; the page fills in by itself when they arrive.")
-        : t("This page fills in by itself as each part arrives.");
+      ? t("Ratings, ranks and rating history above are current. Games will be fetched the next time this page is opened.")
+      : t("You can keep reading; the page fills in by itself when they arrive.");
 
   return (
-    <section role="status" aria-live="polite" className="flex flex-col gap-3 rounded-xl bg-ink-card px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex flex-col gap-1">
-        <p className="text-[15px] font-[480] text-ink-text">{heading}</p>
-        <p className="text-[13px] text-ink-faint">{note}</p>
-      </div>
-      {phase !== "stopped" && (
-        <ul className="flex flex-wrap gap-x-5 gap-y-2 text-[13px]">
-          {PARTS.filter(({ key }) => parts[key] !== "ready").map(({ key, label, source }) => (
-            <li key={key} className="flex items-center gap-2 text-ink-muted">
-              {parts[key] === "done" ? (
-                <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 text-accent" aria-hidden="true">
-                  <path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              ) : (
-                <span className="h-2 w-2 animate-pulse rounded-full bg-accent motion-reduce:animate-none" aria-hidden="true" />
-              )}
-              <span>
-                {t(label)} <span className="text-ink-faint">{t("from {source}", { source })}</span>
-                <span className="sr-only">{parts[key] === "done" ? t(": done") : t(": fetching")}</span>
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
+    <section role="status" aria-live="polite" className="flex flex-col gap-1 rounded-xl bg-ink-card px-5 py-4">
+      <p className="text-[15px] font-[480] text-ink-text">{heading}</p>
+      <p className="text-[13px] text-ink-faint">{note}</p>
     </section>
   );
 }
