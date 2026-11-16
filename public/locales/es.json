@@ -1485,5 +1485,6 @@
  "Rating history from FIDE has not been loaded for this player yet.": "El historial de Elo de FIDE aún no se ha cargado para este jugador.",
  "Rating history from FIDE couldn't be loaded right now.": "No se pudo cargar ahora el historial de Elo de FIDE.",
  "Games from chess-results.com have not been loaded for this player yet.": "Las partidas de chess-results.com aún no se han cargado para este jugador.",
- "Games from chess-results.com couldn't be loaded right now.": "No se pudieron cargar ahora las partidas de chess-results.com."
+ "Games from chess-results.com couldn't be loaded right now.": "No se pudieron cargar ahora las partidas de chess-results.com.",
+ "Play the Chess Preparatory video ({length})": "Reproducir el vídeo de Chess Preparatory ({length})"
 }
