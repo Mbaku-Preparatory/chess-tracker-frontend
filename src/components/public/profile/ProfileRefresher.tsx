@@ -8,6 +8,8 @@ import { useT } from "@/hooks/useT";
 import { msg } from "@/lib/i18n";
 import { graphqlPost } from "@/lib/publicGraphql";
 
+import { setPartStatus, type ProfilePart } from "./refreshState";
+
 const POLL_EVERY_MS = 3000;
 const SLOW_AFTER_MS = 90 * 1000;
 const GIVE_UP_AFTER_MS = 4 * 60 * 1000;
@@ -73,10 +75,16 @@ export function ProfileRefresher({
 
   useEffect(() => {
     const start = initial.current;
-    if (!stale(start.historyFetchedAt) && !stale(start.gamesFetchedAt) && !start.queued) return;
-    let cancelled = false;
-    const startedAt = Date.now();
     const seen = { history: start.historyFetchedAt, games: start.gamesFetchedAt };
+    // The placeholders say what is happening to the parts still missing
+    // (refreshState.ts); whatever the page last said belongs to another profile.
+    let cancelled = false;
+    const missingNow = () => (["history", "games"] as ProfilePart[]).filter((p) => !seen[p]);
+    const say = (status: "fetching" | "unavailable") => !cancelled && setPartStatus(missingNow(), status);
+    setPartStatus(["history", "games"], "waiting");
+    if (!stale(start.historyFetchedAt) && !stale(start.gamesFetchedAt) && !start.queued) return;
+    const startedAt = Date.now();
+    if (start.queued) say("fetching");
 
     async function landed() {
       await revalidatePlayer(fideId);
@@ -100,8 +108,10 @@ export function ProfileRefresher({
           // Busy or refused. Only worth saying when the page is missing
           // something; a stale profile that has its data stays quiet.
           if (!cancelled) setPhase((p) => (p === "hidden" ? p : "stopped"));
+          say("unavailable");
           return;
         }
+        say("fetching");
       }
 
       while (!cancelled && Date.now() - startedAt < GIVE_UP_AFTER_MS) {
@@ -129,11 +139,14 @@ export function ProfileRefresher({
         if (changed) await landed();
 
         if (now.refreshStatus == null) {
+          // Finished. A part it did not bring (FIDE refused, say) is not coming.
           if (!cancelled) setPhase("hidden");
+          say("unavailable");
           return;
         }
       }
       if (!cancelled) setPhase((p) => (p === "hidden" ? p : "stopped"));
+      say("unavailable");
     }
 
     run();
