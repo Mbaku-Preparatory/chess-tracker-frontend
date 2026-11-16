@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { api } from "@/lib/api";
+import { msg } from "@/lib/i18n";
 import type { PlayerLookupResult } from "@/types";
 
 /**
@@ -69,7 +70,7 @@ export function useFideSearch(query: string) {
         if (seq !== requestSeq.current) return;
         // FIDE being unreachable must not break the box — your own opponents
         // are listed above it, which is the more important half.
-        setError("Could not reach FIDE just now.");
+        setError(msg("Could not reach FIDE just now."));
         setResults(null);
       } finally {
         if (seq === requestSeq.current) setSearching(false);

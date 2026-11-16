@@ -10,9 +10,11 @@ import { providerName, takePending, type Provider } from "@/lib/linkedAuth";
 import { useAppDispatch } from "@/redux/hooks";
 import { setAuth } from "@/redux/actions/auth";
 import { Logo } from "@/components/ui/Logo";
+import { useT } from "@/hooks/useT";
 
 type Outcome =
   | { kind: "working" }
+  // Ours is translated when set; the backend's English where it is shown.
   | { kind: "error"; message: string; back: "login" | "settings" }
   // The email has an account that is not linked to this account on the other site.
   | { kind: "has-account"; message: string };
@@ -20,6 +22,7 @@ type Outcome =
 /** Where Lichess or Chess.com sends someone back after "Continue with …". */
 function Return({ provider }: { provider: Provider }) {
   const name = providerName(provider);
+  const t = useT();
   const params = useSearchParams();
   const router = useRouter();
   const dispatch = useAppDispatch();
@@ -35,12 +38,12 @@ function Return({ provider }: { provider: Provider }) {
     const pending = takePending(provider, params.get("state"));
     const back = pending?.mode === "connect" ? "settings" : "login";
     if (params.get("error")) {
-      setOutcome({ kind: "error", message: `You cancelled on ${name}, so nothing changed.`, back });
+      setOutcome({ kind: "error", message: t("You cancelled on {name}, so nothing changed.", { name }), back });
       return;
     }
     const code = params.get("code");
     if (!pending || !code) {
-      setOutcome({ kind: "error", message: `This ${name} sign-in expired or didn't start here. Please try again.`, back });
+      setOutcome({ kind: "error", message: t("This {name} sign-in expired or didn't start here. Please try again.", { name }), back });
       return;
     }
 
@@ -74,23 +77,23 @@ function Return({ provider }: { provider: Provider }) {
     <div className="flex min-h-[70vh] items-center justify-center px-4">
       <div className="card w-full max-w-sm p-6 text-center">
         <Logo size={40} variant="tile" className="mx-auto mb-4" />
-        {outcome.kind === "working" && <p className="text-sm text-gray-600 dark:text-gray-300">Signing you in with {name}…</p>}
+        {outcome.kind === "working" && <p className="text-sm text-gray-600 dark:text-gray-300">{t("Signing you in with {name}…", { name })}</p>}
         {outcome.kind === "error" && (
           <>
-            <p className="text-sm text-gray-700 dark:text-gray-300">{outcome.message}</p>
+            <p className="text-sm text-gray-700 dark:text-gray-300">{t(outcome.message)}</p>
             <Link href={outcome.back === "settings" ? "/settings" : "/login"} className="btn-primary mt-5 inline-flex">
-              {outcome.back === "settings" ? "Back to Settings" : "Back to sign in"}
+              {outcome.back === "settings" ? t("Back to Settings") : t("Back to sign in")}
             </Link>
           </>
         )}
         {outcome.kind === "has-account" && (
           <>
-            <p className="text-sm text-gray-700 dark:text-gray-300">{outcome.message}</p>
+            <p className="text-sm text-gray-700 dark:text-gray-300">{t(outcome.message)}</p>
             <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
-              You only do this once. After that, Continue with {name} takes you straight in.
+              {t("You only do this once. After that, Continue with {name} takes you straight in.", { name })}
             </p>
             <Link href="/login" className="btn-primary mt-5 inline-flex">
-              Sign in
+              {t("Sign in")}
             </Link>
           </>
         )}

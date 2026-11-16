@@ -1,5 +1,7 @@
 "use client";
 
+import { useT } from "@/hooks/useT";
+
 /** The ☰ button for phones and tablets: three lines that fold into an X. */
 export function BurgerButton({
   open,
@@ -13,13 +15,14 @@ export function BurgerButton({
   controls: string;
   className?: string;
 }) {
+  const t = useT();
   return (
     <button
       type="button"
       onClick={onClick}
       aria-expanded={open}
       aria-controls={controls}
-      aria-label={open ? "Close the menu" : "Open the menu"}
+      aria-label={open ? t("Close the menu") : t("Open the menu")}
       className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${className}`}
     >
       {[-6, 0, 6].map((y, i) => (

@@ -1,3 +1,4 @@
+import { T } from "@/components/T";
 import Link from "next/link";
 
 import type { PGNImportResult } from "@/types";
@@ -41,26 +42,27 @@ export function ImportResultPanel({ result }: { result: PGNImportResult }) {
         ) : (
           <>
             <p className="text-sm font-semibold text-green-800">
-              {games_imported} game{games_imported !== 1 ? "s" : ""} imported for{" "}
-              <span className="font-bold">{player_name}</span>.
+              <T n={games_imported} one="{n} game imported for {name}." vars={{ name: <span className="font-bold">{player_name}</span> }}>
+                {"{n} games imported for {name}."}
+              </T>
             </p>
 
             {/* Created / updated / skipped breakdown */}
             <p className="mt-0.5 text-xs text-green-700">
               {games_created > 0 && (
                 <span>
-                  {games_created} new
+                  {t("{n} new", { n: games_created })}
                   {games_updated > 0 || games_skipped > 0 ? " · " : ""}
                 </span>
               )}
               {games_updated > 0 && (
                 <span>
-                  {games_updated} already existed (updated)
+                  {t("{n} already existed (updated)", { n: games_updated })}
                   {games_skipped > 0 ? " · " : ""}
                 </span>
               )}
               {games_skipped > 0 && (
-                <span>{games_skipped} skipped (name mismatch or unknown result)</span>
+                <span>{t("{n} skipped (name mismatch or unknown result)", { n: games_skipped })}</span>
               )}
             </p>
           </>

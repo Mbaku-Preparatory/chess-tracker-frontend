@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { T } from "@/components/T";
 
 /**
  * Log in or sign up, from a public page: in a new tab. The app's own pages
@@ -18,7 +19,7 @@ export function AuthLink({
   return (
     <Link href={href} target="_blank" rel="noopener" className={className}>
       {children}
-      <span className="sr-only"> (opens in a new tab)</span>
+      <span className="sr-only"> <T>(opens in a new tab)</T></span>
     </Link>
   );
 }

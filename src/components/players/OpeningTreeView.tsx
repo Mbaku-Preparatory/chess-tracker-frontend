@@ -2,7 +2,9 @@
 
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { useT } from "@/hooks/useT";
 import { api } from "@/lib/api";
+import { msg } from "@/lib/i18n";
 import { ColorBadge, EcoBadge } from "@/components/ui/Badge";
 import { PagedGamesTable } from "@/components/games/PagedGamesTable";
 import { rowFromGame } from "@/lib/games";
@@ -83,6 +85,7 @@ interface VariationRowProps {
 }
 
 function VariationRow({ stat, slug, playerName, sourceFilter, resultFilter, yearFilter, isExpanded, onToggle }: VariationRowProps) {
+  const t = useT();
   // A line's games, fetched when it is opened and refetched when a filter changes.
   const fetchGames = useCallback(
     (offset: number, limit: number) =>
@@ -136,7 +139,7 @@ function VariationRow({ stat, slug, playerName, sourceFilter, resultFilter, year
 
         {/* Games count */}
         <span className="w-16 text-right text-xs text-gray-500 dark:text-gray-400">
-          {stat.games_count} game{stat.games_count !== 1 ? "s" : ""}
+          {t.plural(stat.games_count, "{n} game", "{n} games")}
         </span>
 
         {/* Score */}
@@ -157,7 +160,7 @@ function VariationRow({ stat, slug, playerName, sourceFilter, resultFilter, year
             resetKey={[sourceFilter, resultFilter, yearFilter].join("|")}
             toRow={(g) => rowFromGame(g, playerName)}
             rowAction={(row, remove) => <DeleteGameButton gameRef={row.key} onDeleted={remove} />}
-            label={`${stat.opening_name} games pages`}
+            label={t("{opening} games pages", { opening: stat.opening_name })}
           />
         </div>
       )}
@@ -175,6 +178,7 @@ interface FamilyRowProps {
 }
 
 function FamilyRow({ group, slug, playerName, sourceFilter, resultFilter, yearFilter }: FamilyRowProps) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [expandedVariations, setExpandedVariations] = useState<Set<string>>(new Set());
 
@@ -213,11 +217,11 @@ function FamilyRow({ group, slug, playerName, sourceFilter, resultFilter, yearFi
         <span className="flex-1 font-semibold text-gray-900 dark:text-gray-100">{group.family}</span>
 
         <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600 dark:bg-dark-elevated dark:text-gray-300">
-          {group.totalGames} game{group.totalGames !== 1 ? "s" : ""}
+          {t.plural(group.totalGames, "{n} game", "{n} games")}
         </span>
 
         <span className="ml-1 w-12 text-right text-xs text-gray-400 dark:text-gray-500">
-          {group.variations.length} line{group.variations.length !== 1 ? "s" : ""}
+          {t.plural(group.variations.length, "{n} line", "{n} lines")}
         </span>
 
         {group.weightedScore !== null ? (
@@ -256,6 +260,7 @@ function FamilyRow({ group, slug, playerName, sourceFilter, resultFilter, yearFi
 }
 
 export function OpeningTreeView({ slug, playerName }: OpeningTreeViewProps) {
+  const t = useT();
   const [families, setFamilies] = useState<FamilyGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -275,7 +280,7 @@ export function OpeningTreeView({ slug, playerName }: OpeningTreeViewProps) {
         yearFilter || undefined,
       )
       .then((data) => setFamilies(groupByFamily(data)))
-      .catch(() => setError("Could not load opening data."))
+      .catch(() => setError(msg("Could not load opening data.")))
       .finally(() => setLoading(false));
   }, [slug, sourceFilter, resultFilter, yearFilter]);
 
@@ -314,7 +319,7 @@ export function OpeningTreeView({ slug, playerName }: OpeningTreeViewProps) {
 
       {error ? (
         <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
+          {t(error)}
         </div>
       ) : loading ? (
         <div className="space-y-3">
@@ -340,8 +345,8 @@ export function OpeningTreeView({ slug, playerName }: OpeningTreeViewProps) {
         <div className="rounded-xl border border-dashed border-gray-300 py-16 text-center dark:border-dark-border">
           <p className="text-sm text-gray-500 dark:text-gray-500">
             {hasActiveFilters
-              ? "No opening data matches the current filters. Adjust the filters above."
-              : "No opening data yet. Import some games first."}
+              ? t("No opening data matches the current filters. Adjust the filters above.")
+              : t("No opening data yet. Import some games first.")}
           </p>
         </div>
       )}

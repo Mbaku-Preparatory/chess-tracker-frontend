@@ -1,7 +1,10 @@
+import { T } from "@/components/T";
+import { msg } from "@/lib/i18n";
+
 type BadgeVariant = "default" | "eco" | "win" | "draw" | "loss" | "white" | "black";
 
 interface BadgeProps {
-  label: string;
+  label: React.ReactNode;
   variant?: BadgeVariant;
   className?: string;
 }
@@ -26,13 +29,17 @@ export function Badge({ label, variant = "default", className = "" }: BadgeProps
   );
 }
 
+// The words for a result or a colour, translated where shown; anything else
+// the backend sends is shown capitalised, as it comes.
+const WORDS: Record<string, string> = { win: msg("Win"), draw: msg("Draw"), loss: msg("Loss"), white: msg("White"), black: msg("Black") };
+const word = (value: string) => <T>{WORDS[value] ?? value.charAt(0).toUpperCase() + value.slice(1)}</T>;
+
 export function ResultBadge({ result }: { result: string }) {
-  const variant = result as BadgeVariant;
-  return <Badge label={result.charAt(0).toUpperCase() + result.slice(1)} variant={variant} />;
+  return <Badge label={word(result)} variant={result as BadgeVariant} />;
 }
 
 export function ColorBadge({ color }: { color: string }) {
-  return <Badge label={color.charAt(0).toUpperCase() + color.slice(1)} variant={color as BadgeVariant} />;
+  return <Badge label={word(color)} variant={color as BadgeVariant} />;
 }
 
 export function EcoBadge({ code }: { code: string }) {

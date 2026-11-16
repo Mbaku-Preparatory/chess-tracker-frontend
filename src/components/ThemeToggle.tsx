@@ -2,13 +2,15 @@
 
 import { toggleTheme } from "@/redux/actions/theme";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { useT } from "@/hooks/useT";
 
 /** The light/dark switch. One component, used by every header, so the switch
  * looks and behaves the same wherever someone finds it. */
 export function ThemeToggle({ className = "" }: { className?: string }) {
   const dispatch = useAppDispatch();
+  const t = useT();
   const { mode, loaded } = useAppSelector((s) => s.theme);
-  const label = mode === "dark" ? "Switch to light theme" : "Switch to dark theme";
+  const label = mode === "dark" ? t("Switch to light theme") : t("Switch to dark theme");
 
   return (
     <button

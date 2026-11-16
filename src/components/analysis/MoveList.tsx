@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
+import { useT } from "@/hooks/useT";
 import type { ParsedMove } from "@/lib/chess/types";
 import type { AnalysisLine } from "@/lib/chess/useAnalysisLine";
 
@@ -23,6 +24,7 @@ export function MoveList({
   /** The annotator's note before the first move. */
   intro?: string | null;
 }) {
+  const t = useT();
   const activeRef = useRef<HTMLButtonElement>(null);
   const startsAt = line.branchStartsAt;
 
@@ -99,7 +101,7 @@ export function MoveList({
     ) : null;
 
   if (mainMoves.length === 0 && !line.branch) {
-    return <p className="py-6 text-center text-[14px] text-ink-faint">No moves recorded for this game.</p>;
+    return <p className="py-6 text-center text-[14px] text-ink-faint">{t("No moves recorded for this game.")}</p>;
   }
 
   return (

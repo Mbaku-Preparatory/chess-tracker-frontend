@@ -89,7 +89,7 @@ export function PagedGamesTable<T>({
   if (list.error) {
     return (
       <p className="flex flex-wrap items-center gap-3 py-6 text-[14px] text-ink-faint">
-        {list.error}
+        {t(list.error)}
         <button type="button" onClick={list.retry} className="text-accent-soft underline">
           {t("Try again")}
         </button>

@@ -8,6 +8,8 @@ import { api } from "@/lib/api";
 import { gameRef } from "@/lib/gameRef";
 import { formatGameDate, gameSource } from "@/lib/games";
 import { ColorBadge, ResultBadge } from "@/components/ui/Badge";
+import { useLocale, useT } from "@/hooks/useT";
+import { dateLocale, msg } from "@/lib/i18n";
 import type { PrepSummary, PrepTree, PrepTreeNode, Game } from "@/types";
 
 // ── Chess helpers ─────────────────────────────────────────────────────────────
@@ -53,9 +55,9 @@ function moveLabel(index: number): string {
 
 // ── Meta helpers ──────────────────────────────────────────────────────────────
 
-function formatDate(iso: string | null) {
+function formatDate(iso: string | null, locale: string) {
   if (!iso) return "—";
-  return new Date(iso).toLocaleDateString("en-GB", { year: "numeric", month: "short" });
+  return new Date(iso).toLocaleDateString(dateLocale(locale), { year: "numeric", month: "short" });
 }
 
 // ── Game row ─────────────────────────────────────────────────────────────────
@@ -67,22 +69,24 @@ function GameRow({
   game: Game;
   onOpenViewer: (g: Game) => void;
 }) {
+  const t = useT();
+  const locale = useLocale();
   const { short: label, dot } = gameSource(game.source);
   const isOnline = game.source === "chess_com" || game.source === "lichess";
-  const dateStr = formatGameDate(game.date_played);
+  const dateStr = formatGameDate(game.date_played, "short", locale);
 
   const inner = (
     <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-left transition hover:bg-gray-50 dark:border-dark-border dark:bg-dark-surface dark:hover:bg-dark-elevated">
       <span className={`h-2 w-2 shrink-0 rounded-full ${dot}`} />
       <div className="flex-1 min-w-0">
         <p className="truncate text-sm font-medium text-gray-800 dark:text-gray-200">
-          vs {game.opponent_name}
+          {t("vs {name}", { name: game.opponent_name })}
           {game.opponent_rating && (
             <span className="ml-1 text-xs font-normal text-gray-400 dark:text-gray-500">({game.opponent_rating})</span>
           )}
         </p>
         <p className="text-xs text-gray-400 dark:text-gray-500">
-          {label}{dateStr ? ` · ${dateStr}` : ""}{game.opening_name ? ` · ${game.opening_name}` : ""}
+          {t(label)}{dateStr ? ` · ${dateStr}` : ""}{game.opening_name ? ` · ${game.opening_name}` : ""}
         </p>
       </div>
       <div className="flex shrink-0 items-center gap-1.5">
@@ -128,6 +132,7 @@ interface InteractivePrepTreeProps {
 }
 
 function InteractivePrepTree({ tree, orientation, totalGames, slug, color, source }: InteractivePrepTreeProps) {
+  const t = useT();
   const [path, setPath] = useState<string[]>([]);
   const [games, setGames] = useState<Game[]>([]);
   const [gamesTotal, setGamesTotal] = useState(0);
@@ -200,12 +205,12 @@ function InteractivePrepTree({ tree, orientation, totalGames, slug, color, sourc
           <button
             onClick={reset}
             className="rounded px-1.5 py-0.5 text-xs text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-dark-elevated dark:hover:text-gray-300"
-            title="Reset to start"
+            title={t("Reset to start")}
           >
             ⌂
           </button>
           {path.length === 0 ? (
-            <span className="text-xs text-gray-400 dark:text-gray-500">Starting position</span>
+            <span className="text-xs text-gray-400 dark:text-gray-500">{t("Starting position")}</span>
           ) : (
             path.map((san, i) => (
               <button
@@ -232,10 +237,10 @@ function InteractivePrepTree({ tree, orientation, totalGames, slug, color, sourc
         <div className="mb-3 flex items-center justify-between">
           <span className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">
             {nextMoves.length > 0
-              ? `${nextMoves.length} move${nextMoves.length !== 1 ? "s" : ""} from here`
+              ? t.plural(nextMoves.length, "{n} move from here", "{n} moves from here")
               : path.length === 0
-              ? "No data"
-              : "End of tree"}
+              ? t("No data")
+              : t("End of tree")}
           </span>
           {path.length > 0 && (
             <button
@@ -245,7 +250,7 @@ function InteractivePrepTree({ tree, orientation, totalGames, slug, color, sourc
               <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
               </svg>
-              Back
+              {t("Back")}
             </button>
           )}
         </div>
@@ -274,7 +279,7 @@ function InteractivePrepTree({ tree, orientation, totalGames, slug, color, sourc
                   </div>
                   <div className="shrink-0 text-right">
                     <span className="block text-sm font-semibold text-gray-800 dark:text-gray-200">{node.pct}%</span>
-                    <span className="block text-xs text-gray-400 dark:text-gray-500">{node.count}g</span>
+                    <span className="block text-xs text-gray-400 dark:text-gray-500">{t("{n}g", { n: node.count })}</span>
                   </div>
                   <svg
                     className="h-4 w-4 shrink-0 text-gray-300 group-hover:text-brand-400 dark:text-gray-600 dark:group-hover:text-brand-500"
@@ -291,13 +296,13 @@ function InteractivePrepTree({ tree, orientation, totalGames, slug, color, sourc
           </div>
         ) : (
           <div className="rounded-xl border border-dashed border-gray-200 py-8 text-center text-sm text-gray-400 dark:border-dark-border dark:text-gray-600">
-            {path.length === 0 ? "No move data available." : "No further moves recorded at this depth."}
+            {path.length === 0 ? t("No move data available.") : t("No further moves recorded at this depth.")}
           </div>
         )}
 
         {totalGames > 0 && (
           <p className="mt-3 text-right text-xs text-gray-400 dark:text-gray-600">
-            {totalGames} total game{totalGames !== 1 ? "s" : ""} · percentages relative to parent node
+            {t.plural(totalGames, "{n} total game", "{n} total games")} · {t("percentages relative to parent node")}
           </p>
         )}
 
@@ -306,8 +311,8 @@ function InteractivePrepTree({ tree, orientation, totalGames, slug, color, sourc
           <div className="mb-3 flex items-center justify-between gap-2">
             <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-200">
               {gamesLoading && games.length === 0
-                ? "Loading games…"
-                : `${gamesTotal} game${gamesTotal !== 1 ? "s" : ""} in this line`}
+                ? t("Loading games…")
+                : t.plural(gamesTotal, "{n} game in this line", "{n} games in this line")}
             </h4>
             {gamesTotal > 0 && (
               <button
@@ -318,7 +323,7 @@ function InteractivePrepTree({ tree, orientation, totalGames, slug, color, sourc
                 <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
-                {downloading ? "Downloading…" : "Download PGN"}
+                {downloading ? t("Downloading…") : t("Download PGN")}
               </button>
             )}
           </div>
@@ -338,14 +343,14 @@ function InteractivePrepTree({ tree, orientation, totalGames, slug, color, sourc
                   disabled={gamesLoading}
                   className="w-full rounded-lg border border-dashed border-gray-200 py-2 text-xs text-gray-500 hover:bg-gray-50 disabled:opacity-50 dark:border-dark-border dark:text-gray-500 dark:hover:bg-dark-elevated"
                 >
-                  {gamesLoading ? "Loading…" : `Show more (${gamesTotal - games.length} remaining)`}
+                  {gamesLoading ? t("Loading…") : t("Show more ({n} remaining)", { n: gamesTotal - games.length })}
                 </button>
               )}
             </div>
           )}
 
           {!gamesLoading && games.length === 0 && (
-            <p className="text-xs text-gray-400 dark:text-gray-600">No games recorded for this line.</p>
+            <p className="text-xs text-gray-400 dark:text-gray-600">{t("No games recorded for this line.")}</p>
           )}
         </div>
       </div>
@@ -356,6 +361,7 @@ function InteractivePrepTree({ tree, orientation, totalGames, slug, color, sourc
 // ── Trend card ────────────────────────────────────────────────────────────────
 
 function TrendCard({ trend }: { trend: PrepSummary["trends"][number] }) {
+  const t = useT();
   const badge =
     trend.confidence === "high"
       ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400"
@@ -366,31 +372,31 @@ function TrendCard({ trend }: { trend: PrepSummary["trends"][number] }) {
         <div className="flex-1">
           <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">{trend.description}</p>
           <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-500">
-            {trend.color === "white" ? "White" : "Black"} · {trend.label}{trend.move}
+            {trend.color === "white" ? t("White") : t("Black")} · {trend.label}{trend.move}
           </p>
         </div>
         <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${badge}`}>
-          {trend.confidence === "high" ? "Strong signal" : "Emerging"}
+          {trend.confidence === "high" ? t("Strong signal") : t("Emerging")}
         </span>
       </div>
       <div className="mt-3 flex items-end gap-4">
         <div className="flex-1">
-          <p className="mb-1 text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-600">Overall</p>
+          <p className="mb-1 text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-600">{t("Overall")}</p>
           <div className="h-2 overflow-hidden rounded bg-gray-100 dark:bg-dark-elevated">
             <div className="h-full rounded bg-gray-400 dark:bg-gray-600" style={{ width: `${trend.overall_pct}%` }} />
           </div>
           <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-500">{trend.overall_pct}%</p>
         </div>
         <div className="flex-1">
-          <p className="mb-1 text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-600">Recent</p>
+          <p className="mb-1 text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-600">{t("Recent")}</p>
           <div className="h-2 overflow-hidden rounded bg-gray-100 dark:bg-dark-elevated">
             <div className="h-full rounded bg-brand-500" style={{ width: `${trend.recent_pct}%` }} />
           </div>
           <p className="mt-0.5 text-xs font-medium text-gray-700 dark:text-gray-300">{trend.recent_pct}%</p>
         </div>
         <div className="shrink-0 text-right">
-          <p className="mb-1 text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-600">Shift</p>
-          <p className="text-sm font-bold text-amber-600 dark:text-amber-400">+{trend.delta}pp</p>
+          <p className="mb-1 text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-600">{t("Shift")}</p>
+          <p className="text-sm font-bold text-amber-600 dark:text-amber-400">{t("+{delta}pp", { delta: trend.delta })}</p>
         </div>
       </div>
     </div>
@@ -408,6 +414,7 @@ function SourceFilterToggle({
   value: SourceFilter;
   onChange: (v: SourceFilter) => void;
 }) {
+  const t = useT();
   return (
     <div className="flex gap-1 rounded-lg border border-gray-200 bg-gray-50 p-0.5 dark:border-dark-border dark:bg-dark-elevated">
       {(["all", "otb"] as SourceFilter[]).map((opt) => (
@@ -420,10 +427,10 @@ function SourceFilterToggle({
               : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
           }`}
         >
-          {opt === "all" ? "All games" : (
+          {opt === "all" ? t("All games") : (
             <span className="flex items-center gap-1">
               <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-              OTB only
+              {t("OTB only")}
             </span>
           )}
         </button>
@@ -435,6 +442,8 @@ function SourceFilterToggle({
 // ── Main panel ────────────────────────────────────────────────────────────────
 
 export function PrepSummaryPanel({ slug }: { slug: string }) {
+  const t = useT();
+  const locale = useLocale();
   const [data, setData] = useState<PrepSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -448,7 +457,7 @@ export function PrepSummaryPanel({ slug }: { slug: string }) {
     api
       .getPrepSummary(slug, source)
       .then(setData)
-      .catch((err) => setError(err.message ?? "Failed to load."))
+      .catch((err) => setError(err.message ?? msg("Failed to load.")))
       .finally(() => setLoading(false));
   }, [slug, sourceFilter]);
 
@@ -464,7 +473,7 @@ export function PrepSummaryPanel({ slug }: { slug: string }) {
   if (error) {
     return (
       <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-        {error}
+        {t(error)}
       </div>
     );
   }
@@ -483,7 +492,7 @@ export function PrepSummaryPanel({ slug }: { slug: string }) {
       <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-dark-border dark:bg-dark-surface">
         <div className="flex flex-wrap items-center gap-4">
           <div>
-            <p className="text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500">Games analyzed</p>
+            <p className="text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500">{t("Games analyzed")}</p>
             <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{meta.total_games.toLocaleString("en")}</p>
           </div>
           {sourcesEntries.length > 0 && (
@@ -494,7 +503,7 @@ export function PrepSummaryPanel({ slug }: { slug: string }) {
                   className="flex items-center gap-1.5 rounded-full border border-gray-200 px-2.5 py-1 text-xs text-gray-700 dark:border-dark-border dark:text-gray-300"
                 >
                   <span className={`h-2 w-2 rounded-full ${gameSource(src).dot}`} />
-                  {gameSource(src).short}: {(n ?? 0).toLocaleString("en")}
+                  {t(gameSource(src).short)}: {(n ?? 0).toLocaleString("en")}
                 </span>
               ))}
             </div>
@@ -503,9 +512,9 @@ export function PrepSummaryPanel({ slug }: { slug: string }) {
             <SourceFilterToggle value={sourceFilter} onChange={setSourceFilter} />
             {(meta.date_range.first || meta.date_range.last) && (
               <div className="text-right">
-                <p className="text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500">Date range</p>
+                <p className="text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500">{t("Date range")}</p>
                 <p className="text-sm text-gray-700 dark:text-gray-300">
-                  {formatDate(meta.date_range.first)} – {formatDate(meta.date_range.last)}
+                  {formatDate(meta.date_range.first, locale)} – {formatDate(meta.date_range.last, locale)}
                 </p>
               </div>
             )}
@@ -518,8 +527,8 @@ export function PrepSummaryPanel({ slug }: { slug: string }) {
         <div className="rounded-xl border border-dashed border-gray-300 py-16 text-center dark:border-dark-border">
           <p className="text-sm text-gray-500 dark:text-gray-500">
             {sourceFilter === "otb"
-              ? "No OTB games with move data. Try switching to All games."
-              : "No move data yet. Import games with move text first."}
+              ? t("No OTB games with move data. Try switching to All games.")
+              : t("No move data yet. Import games with move text first.")}
           </p>
         </div>
       )}
@@ -547,7 +556,7 @@ export function PrepSummaryPanel({ slug }: { slug: string }) {
                         : "border-gray-500 bg-gray-700 dark:border-gray-400 dark:bg-gray-300"
                     }`}
                   />
-                  As {color === "white" ? "White" : "Black"}
+                  {color === "white" ? t("As White") : t("As Black")}
                   <span className="rounded-full bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500 dark:bg-dark-muted dark:text-gray-400">
                     {count}
                   </span>
@@ -560,7 +569,7 @@ export function PrepSummaryPanel({ slug }: { slug: string }) {
           <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-dark-border dark:bg-dark-surface">
             {colorTab === "white" ? (
               as_white.total === 0 ? (
-                <p className="text-center text-sm text-gray-400 py-8 dark:text-gray-600">No games as White.</p>
+                <p className="text-center text-sm text-gray-400 py-8 dark:text-gray-600">{t("No games as White.")}</p>
               ) : (
                 <InteractivePrepTree
                   key={`white-${sourceFilter}`}
@@ -574,7 +583,7 @@ export function PrepSummaryPanel({ slug }: { slug: string }) {
               )
             ) : (
               as_black.total === 0 ? (
-                <p className="text-center text-sm text-gray-400 py-8 dark:text-gray-600">No games as Black.</p>
+                <p className="text-center text-sm text-gray-400 py-8 dark:text-gray-600">{t("No games as Black.")}</p>
               ) : (
                 <InteractivePrepTree
                   key={`black-${sourceFilter}`}
@@ -592,13 +601,13 @@ export function PrepSummaryPanel({ slug }: { slug: string }) {
           {/* Trends */}
           {trends.length > 0 && (
             <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-dark-border dark:bg-dark-surface">
-              <h3 className="mb-1 font-semibold text-gray-900 dark:text-gray-100">Recent trends</h3>
+              <h3 className="mb-1 font-semibold text-gray-900 dark:text-gray-100">{t("Recent trends")}</h3>
               <p className="mb-4 text-xs text-gray-500 dark:text-gray-500">
-                Comparing the most recent 15 games against the full dataset.
+                {t("Comparing the most recent 15 games against the full dataset.")}
               </p>
               <div className="space-y-3">
-                {trends.map((t, i) => (
-                  <TrendCard key={i} trend={t} />
+                {trends.map((trend, i) => (
+                  <TrendCard key={i} trend={trend} />
                 ))}
               </div>
             </div>

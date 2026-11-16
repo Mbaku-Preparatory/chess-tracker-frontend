@@ -2,7 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useT } from "@/hooks/useT";
 import { api } from "@/lib/api";
+import { msg } from "@/lib/i18n";
 import type {
   OpeningExplorerData,
   ExplorerEngineMove,
@@ -25,6 +27,7 @@ function WDBBar({
   black: number;
   playerColor: ColorChoice;
 }) {
+  const t = useT();
   return (
     <div>
       <div className="flex h-8 w-full overflow-hidden rounded-lg text-[11px] font-bold">
@@ -55,11 +58,11 @@ function WDBBar({
       </div>
       <div className="mt-1.5 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">
         <span className={playerColor === "white" ? "font-bold text-gray-700 dark:text-gray-200" : ""}>
-          {white}% White
+          {t("{pct}% White", { pct: white })}
         </span>
-        <span>{draw}% Draw</span>
+        <span>{t("{pct}% Draw", { pct: draw })}</span>
         <span className={playerColor === "black" ? "font-bold text-gray-700 dark:text-gray-200" : ""}>
-          {black}% Black
+          {t("{pct}% Black", { pct: black })}
         </span>
       </div>
     </div>
@@ -76,6 +79,7 @@ function scoreToCp(score: number | null): string {
 }
 
 function EngineMoveRow({ move, index }: { move: ExplorerEngineMove; index: number }) {
+  const t = useT();
   const cpText = scoreToCp(move.score);
   const winrate = move.winrate ? parseFloat(move.winrate) : null;
   const isTop = index === 0;
@@ -126,7 +130,7 @@ function EngineMoveRow({ move, index }: { move: ExplorerEngineMove; index: numbe
       {/* Best move badge */}
       {isTop && (
         <span className="shrink-0 rounded-full bg-brand-100 px-1.5 py-0.5 text-[10px] font-semibold text-brand-700 dark:bg-brand-900/40 dark:text-brand-400">
-          Best
+          {t("Best")}
         </span>
       )}
     </div>
@@ -148,6 +152,7 @@ function DbGameRow({
   game: ExplorerDbGame;
   onOpen: (g: ExplorerDbGame) => void;
 }) {
+  const t = useT();
   const ri = RESULT_ICON[game.result];
   const year = game.date_played ? game.date_played.slice(0, 4) : null;
 
@@ -160,7 +165,7 @@ function DbGameRow({
           ? "hover:bg-white dark:hover:bg-dark-surface cursor-pointer"
           : "cursor-default opacity-70"
       }`}
-      title={game.pgn_available ? "View game" : "No moves recorded"}
+      title={game.pgn_available ? t("View game") : t("No moves recorded")}
     >
       {/* Result dot */}
       <span className={`shrink-0 text-base font-bold leading-none ${ri.cls}`} aria-label={game.result}>
@@ -171,7 +176,7 @@ function DbGameRow({
       <div className="min-w-0 flex-1">
         <span className="font-medium text-gray-800 dark:text-gray-200 truncate">
           {game.player_name}
-          <span className="mx-1 font-normal text-gray-400">vs</span>
+          <span className="mx-1 font-normal text-gray-400">{t("vs")}</span>
           {game.opponent_name}
           {game.opponent_rating && (
             <span className="ml-1 text-gray-400">({game.opponent_rating})</span>
@@ -273,6 +278,7 @@ const RESULT_LABEL: Record<string, string> = {
 };
 
 function MasterGameRow({ game, onOpen }: { game: MasterGame; onOpen: (g: MasterGame) => void }) {
+  const t = useT();
   const resultCls = RESULT_COLOR[game.result] ?? "text-gray-500";
   const resultLabel = RESULT_LABEL[game.result] ?? game.result;
   const hasMoves = Boolean(game.moves?.trim());
@@ -286,7 +292,7 @@ function MasterGameRow({ game, onOpen }: { game: MasterGame; onOpen: (g: MasterG
           ? "hover:bg-white dark:hover:bg-dark-surface cursor-pointer"
           : "cursor-default opacity-60"
       }`}
-      title={hasMoves ? `View ${game.white} vs ${game.black}` : "No moves recorded"}
+      title={hasMoves ? t("View {white} vs {black}", { white: game.white, black: game.black }) : t("No moves recorded")}
     >
       {/* Result */}
       <span className={`w-7 shrink-0 font-mono font-bold ${resultCls}`}>
@@ -299,7 +305,7 @@ function MasterGameRow({ game, onOpen }: { game: MasterGame; onOpen: (g: MasterG
           {game.white}
           {game.white_elo ? <span className="ml-0.5 font-normal text-gray-400">({game.white_elo})</span> : null}
         </span>
-        <span className="mx-1 text-gray-300 dark:text-gray-600">vs</span>
+        <span className="mx-1 text-gray-300 dark:text-gray-600">{t("vs")}</span>
         <span className="font-medium text-gray-800 dark:text-gray-200">
           {game.black}
           {game.black_elo ? <span className="ml-0.5 font-normal text-gray-400">({game.black_elo})</span> : null}
@@ -338,6 +344,7 @@ export function OpeningExplorer({
   openingName: string;
   playerColor: ColorChoice;
 }) {
+  const t = useT();
   const [data, setData] = useState<OpeningExplorerData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -355,7 +362,7 @@ export function OpeningExplorer({
     api
       .getOpeningExplorer(slug, ecoCode, openingName)
       .then((d) => { if (!cancelled) setData(d); })
-      .catch((err) => { if (!cancelled) setError(err.message ?? "Failed to load explorer."); })
+      .catch((err) => { if (!cancelled) setError(err.message ?? msg("Failed to load explorer.")); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [slug, ecoCode, openingName]);
@@ -376,7 +383,7 @@ export function OpeningExplorer({
 
   if (error) {
     return (
-      <div className="px-4 py-3 text-xs text-red-500 dark:text-red-400">{error}</div>
+      <div className="px-4 py-3 text-xs text-red-500 dark:text-red-400">{t(error)}</div>
     );
   }
 
@@ -396,8 +403,8 @@ export function OpeningExplorer({
         {/* ── Community stats ──────────────────────────────────────────────── */}
         <div>
           <SectionHeader
-            label="In this tracker"
-            count={hasStats ? `${db_stats.total} game${db_stats.total !== 1 ? "s" : ""}` : "no games yet"}
+            label={t("In this tracker")}
+            count={hasStats ? t.plural(db_stats.total, "{n} game", "{n} games") : t("no games yet")}
           />
           {hasStats ? (
             <WDBBar
@@ -408,7 +415,7 @@ export function OpeningExplorer({
             />
           ) : (
             <p className="text-xs text-gray-400 dark:text-gray-600">
-              No games with this opening have been imported yet.
+              {t("No games with this opening have been imported yet.")}
             </p>
           )}
         </div>
@@ -416,7 +423,7 @@ export function OpeningExplorer({
         {/* ── Engine best moves ─────────────────────────────────────────────── */}
         {hasEngine && (
           <div>
-            <SectionHeader label="Theory — best moves" />
+            <SectionHeader label={t("Theory — best moves")} />
             <div className="space-y-1">
               {visibleMoves.map((mv, i) => (
                 <EngineMoveRow key={mv.uci || mv.san} move={mv} index={i} />
@@ -427,11 +434,11 @@ export function OpeningExplorer({
                 onClick={() => setShowAllMoves((v) => !v)}
                 className="mt-1.5 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
               >
-                {showAllMoves ? "Show fewer moves" : `+${engine_moves.length - 3} more moves`}
+                {showAllMoves ? t("Show fewer moves") : t("+{n} more moves", { n: engine_moves.length - 3 })}
               </button>
             )}
             <p className="mt-1.5 text-[10px] text-gray-400 dark:text-gray-600">
-              Engine analysis via ChessDB · winrate from database positions
+              {t("Engine analysis via ChessDB · winrate from database positions")}
             </p>
           </div>
         )}
@@ -452,7 +459,7 @@ export function OpeningExplorer({
                 <svg viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3 text-amber-500">
                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                 </svg>
-                GM Games
+                {t("GM Games")}
                 {!masterLoading && masterGames.length > 0 && (
                   <span className="rounded-full bg-gray-200 px-1.5 text-[10px] text-gray-600 dark:bg-dark-muted dark:text-gray-400">
                     {masterGames.length}
@@ -467,7 +474,7 @@ export function OpeningExplorer({
                     : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                 }`}
               >
-                Recent Games
+                {t("Recent Games")}
                 {hasGames && (
                   <span className="rounded-full bg-gray-200 px-1.5 text-[10px] text-gray-600 dark:bg-dark-muted dark:text-gray-400">
                     {top_games.length}
@@ -495,7 +502,7 @@ export function OpeningExplorer({
                 </div>
               ) : (
                 <p className="py-3 text-center text-xs text-gray-400 dark:text-gray-600">
-                  No GM games imported for this opening yet.
+                  {t("No GM games imported for this opening yet.")}
                 </p>
               )
             )}
@@ -514,13 +521,13 @@ export function OpeningExplorer({
                   </div>
                   {top_games.some((g) => g.pgn_available) && (
                     <p className="mt-1 text-[10px] text-gray-400 dark:text-gray-600">
-                      Click a game to view moves
+                      {t("Click a game to view moves")}
                     </p>
                   )}
                 </>
               ) : (
                 <p className="py-3 text-center text-xs text-gray-400 dark:text-gray-600">
-                  No games in this line yet.
+                  {t("No games in this line yet.")}
                 </p>
               )
             )}
@@ -529,7 +536,7 @@ export function OpeningExplorer({
 
         {/* ── Lichess study link ────────────────────────────────────────────── */}
         <div className="flex items-center justify-between border-t border-gray-100 pt-3 dark:border-dark-border">
-          <span className="text-xs text-gray-400 dark:text-gray-500">Study theory on Lichess</span>
+          <span className="text-xs text-gray-400 dark:text-gray-500">{t("Study theory on Lichess")}</span>
           <a
             href={lichess_opening_url}
             target="_blank"
@@ -540,7 +547,7 @@ export function OpeningExplorer({
             <svg viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5">
               <path d="M19 22H5v-2h14v2M13 2a3 3 0 00-3 3c0 .88.39 1.67 1 2.22V8l-3 1-2 4h2v1H6l-1 3h14l-1-3h-2v-1h2l-2-4-3-1V7.22c.61-.55 1-1.34 1-2.22a3 3 0 00-1-2.24V2h-1z" />
             </svg>
-            Open on Lichess
+            {t("Open on Lichess")}
             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
             </svg>

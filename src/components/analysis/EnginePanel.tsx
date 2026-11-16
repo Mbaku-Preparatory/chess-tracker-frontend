@@ -2,6 +2,7 @@
 
 import { DEPTHS, type AnalysisPrefs, type EngineDepth } from "@/lib/analysisPrefs";
 import { MULTI_PV, formatScore, pvToSan, type EngineResult } from "@/hooks/useEngine";
+import { useT } from "@/hooks/useT";
 
 function Switch({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
   return (
@@ -33,21 +34,23 @@ export function EnginePanel({
   engine: EngineResult;
   fen: string;
 }) {
+  const t = useT();
+  const depth = engine.depth;
   const status = engine.isAnalyzing
-    ? engine.depth > 0 ? `Analysing · depth ${engine.depth}` : "Analysing…"
+    ? depth > 0 ? t("Analysing · depth {depth}", { depth }) : t("Analysing…")
     : engine.source === "lichess"
-      ? `Depth ${engine.depth} · Lichess cloud`
+      ? t("Depth {depth} · Lichess cloud", { depth })
       : engine.source === "local"
-        ? `Depth ${engine.depth} · Stockfish on this device`
+        ? t("Depth {depth} · Stockfish on this device", { depth })
         : null;
 
-  const toggle = <Switch checked={prefs.engine} onChange={(engineOn) => setPrefs({ engine: engineOn })} label="Engine" />;
-  if (!prefs.engine) return <section aria-label="Engine">{toggle}</section>;
+  const toggle = <Switch checked={prefs.engine} onChange={(engineOn) => setPrefs({ engine: engineOn })} label={t("Engine")} />;
+  if (!prefs.engine) return <section aria-label={t("Engine")}>{toggle}</section>;
 
   return (
-    <section aria-label="Engine" className="flex flex-col gap-3 rounded-xl bg-ink-card p-4">
+    <section aria-label={t("Engine")} className="flex flex-col gap-3 rounded-xl bg-ink-card p-4">
       {toggle}
-      <div role="radiogroup" aria-label="Engine depth" className="flex gap-1 rounded-lg bg-ink-raised p-0.5">
+      <div role="radiogroup" aria-label={t("Engine depth")} className="flex gap-1 rounded-lg bg-ink-raised p-0.5">
         {(Object.keys(DEPTHS) as EngineDepth[]).map((key) => (
           <button
             key={key}
@@ -59,7 +62,7 @@ export function EnginePanel({
               prefs.depth === key ? "bg-ink-card font-[520] text-ink-text shadow-sm" : "text-ink-muted hover:text-ink-text"
             }`}
           >
-            {DEPTHS[key].label} <span className="text-ink-faint">{DEPTHS[key].depth}</span>
+            {t(DEPTHS[key].label)} <span className="text-ink-faint">{DEPTHS[key].depth}</span>
           </button>
         ))}
       </div>
@@ -88,7 +91,7 @@ export function EnginePanel({
                   <span className="min-w-0 truncate font-mono text-ink-muted">{pvToSan(fen, line.pv)}</span>
                 </>
               ) : empty && i === 0 ? (
-                <span className="text-ink-faint">No evaluation for this position.</span>
+                <span className="text-ink-faint">{t("No evaluation for this position.")}</span>
               ) : (
                 <span className={`h-5 w-14 shrink-0 rounded bg-ink-raised ${engine.isAnalyzing ? "animate-pulse" : "opacity-0"}`} />
               )}

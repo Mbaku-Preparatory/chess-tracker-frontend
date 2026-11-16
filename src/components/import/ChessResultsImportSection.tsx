@@ -188,7 +188,7 @@ export function ChessResultsImportSection({
 
           {elsewhere && <ImportElsewhereNote job={elsewhere} />}
 
-          {(error || jobError) && <p className="text-xs text-red-600 dark:text-red-400">{error || jobError}</p>}
+          {(error || jobError) && <p className="text-xs text-red-600 dark:text-red-400">{t((error || jobError)!)}</p>}
 
           <button
             type="button"
@@ -242,7 +242,7 @@ function ImportProgressBar({
           {t("Importing games")}
         </span>
         <span className="text-xs tabular-nums text-gray-500 dark:text-gray-400">
-          {done} of {total}
+          {t("{n} of {total}", { n: done, total })}
         </span>
       </div>
 
@@ -268,8 +268,9 @@ function ImportProgressBar({
       </div>
 
       <p className="mt-2 text-xs tabular-nums text-gray-500 dark:text-gray-400">
-        <span className="font-semibold text-gray-900 dark:text-gray-100">{games}</span> game
-        {games !== 1 ? "s" : ""} imported so far
+        <T n={games} one="{count} game imported so far" vars={{ count: <span className="font-semibold text-gray-900 dark:text-gray-100">{games}</span> }}>
+          {"{count} games imported so far"}
+        </T>
       </p>
     </div>
   );
@@ -395,7 +396,7 @@ function ImportProgress({
             {t("Import cancelled")}
           </p>
           <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-            {job.completed} of {job.total} tournaments finished before stopping, and those were kept.
+            {t("{done} of {total} tournaments finished before stopping, and those were kept.", { done: job.completed, total: job.total })}
           </p>
         </div>
       )}
@@ -439,11 +440,11 @@ function ImportProgress({
               ) : r.status === "done" ? (
                 <div className="mt-1 flex flex-wrap gap-1.5">
                   <span className="rounded-full border border-blue-200 bg-blue-100 px-2 py-0.5 text-xs text-blue-700 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                    {r.games_imported ?? 0} imported
+                    {t("{n} imported", { n: r.games_imported ?? 0 })}
                   </span>
                   {(r.games_skipped ?? 0) > 0 && (
                     <span className="rounded-full border border-gray-200 bg-gray-100 px-2 py-0.5 text-xs text-gray-500 dark:border-dark-border dark:bg-dark-elevated dark:text-gray-400">
-                      {r.games_skipped} skipped
+                      {t("{n} skipped", { n: r.games_skipped ?? 0 })}
                     </span>
                   )}
                 </div>
@@ -490,7 +491,7 @@ function ImportProgress({
               </button>
               {errorCount > 0 && (
                 <span className="text-xs text-red-600 dark:text-red-400">
-                  {errorCount} tournament{errorCount !== 1 ? "s" : ""} failed — you can try those again
+                  {t.plural(errorCount, "{n} tournament failed — you can try those again", "{n} tournaments failed — you can try those again")}
                 </span>
               )}
             </div>

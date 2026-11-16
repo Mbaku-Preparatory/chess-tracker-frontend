@@ -345,7 +345,7 @@ export default function PlayerImportPage() {
               {/* Color selection */}
               <fieldset>
                 <legend className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {player.full_name} played as…
+                  {t("{name} played as…", { name: player.full_name })}
                 </legend>
                 <div className="grid grid-cols-3 gap-3">
                   {COLOR_OPTIONS.map(({ value, label, hint }) => (
@@ -484,7 +484,7 @@ export default function PlayerImportPage() {
                     </span>
                   ) : (
                     <p className="text-xs text-gray-400 dark:text-gray-500">
-                      Paste PGN above, upload a file, or drag &amp; drop a .pgn here.
+                      {t("Paste PGN above, upload a file, or drag & drop a .pgn here.")}
                     </p>
                   )}
                   {(pgn || fileName) && (

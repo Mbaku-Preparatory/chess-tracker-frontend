@@ -109,7 +109,7 @@ export function AskAssistant({ slug, playerName }: AskAssistantProps) {
         </span>
         <div className="flex-1">
           <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-brand-100">
-            Ask {ASSISTANT_NAME}
+            {t("Ask {name}", { name: ASSISTANT_NAME })}
           </p>
           <h3 className="text-lg font-bold text-white">
             {playerName

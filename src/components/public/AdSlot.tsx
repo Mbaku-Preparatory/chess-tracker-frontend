@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { useSignedIn } from "@/hooks/useSignedIn";
 import { ADSENSE_CLIENT, ADSENSE_SCRIPT_SRC, AD_SLOT } from "@/lib/ads";
+import { useT } from "@/hooks/useT";
 
 declare global {
   interface Window {
@@ -36,6 +37,7 @@ const AD_HEIGHT = "h-[280px]";
 
 export function AdSlot() {
   const signedIn = useSignedIn();
+  const t = useT();
   // The script was blocked (an ad blocker) or failed: drop the empty space.
   const [failed, setFailed] = useState(false);
   // React runs effects twice in development; a second push on the same <ins>
@@ -62,8 +64,8 @@ export function AdSlot() {
   if (AD_SLOT === null || signedIn === true || failed) return null;
   return (
     // Hidden when Google has no ad to fill it with, so no empty labelled box is left.
-    <aside aria-label="Advertisement" data-ad-space className="flex flex-col gap-1 has-[[data-ad-status=unfilled]]:hidden">
-      <p className="text-[11px] uppercase tracking-[0.1em] text-ink-faint">Advertisement</p>
+    <aside aria-label={t("Advertisement")} data-ad-space className="flex flex-col gap-1 has-[[data-ad-status=unfilled]]:hidden">
+      <p className="text-[11px] uppercase tracking-[0.1em] text-ink-faint">{t("Advertisement")}</p>
       {signedIn === false && (
         // next/script loads one copy however many slots a page has (same id).
         <Script

@@ -14,8 +14,10 @@ import { msg } from "@/lib/i18n";
 
 /** Games by source, or the bare total when the counts aren't loaded. */
 function GameSourcePills({ player }: { player: Player }) {
+  const t = useT();
   if (player.game_source_counts) return <GameSourceCounts counts={player.game_source_counts} />;
-  return player.games_count ? <span>{player.games_count.toLocaleString("en")} games</span> : null;
+  const n = player.games_count;
+  return n ? <span>{t.plural(n, "{n} game", "{n} games", { n: n.toLocaleString("en") })}</span> : null;
 }
 
 interface PlayerCardProps {
@@ -38,7 +40,7 @@ export function PlayerCard({
     .map((name) => name[0])
     .join("");
   const rating = getPrimaryRating(player);
-  const productName = getPrepProductName(player);
+  const productName = getPrepProductName(player, t);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
@@ -83,7 +85,7 @@ export function PlayerCard({
               <p className="mt-0.5 text-sm font-medium text-brand-700 dark:text-brand-400">{productName}</p>
               <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500 dark:text-gray-400">
                 {player.federation && <span>{player.federation}</span>}
-                {rating && <span>Rating {rating}</span>}
+                {rating && <span>{t("Rating {rating}", { rating })}</span>}
                 <GameSourcePills player={player} />
               </div>
             </div>
@@ -141,7 +143,7 @@ export function PlayerCard({
               <p className="mt-1 text-sm font-medium text-brand-700 dark:text-brand-400">{productName}</p>
               <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500 dark:text-gray-400">
                 {player.federation && <span>{player.federation}</span>}
-                {rating && <span>Rating {rating}</span>}
+                {rating && <span>{t("Rating {rating}", { rating })}</span>}
                 <GameSourcePills player={player} />
               </div>
             </div>

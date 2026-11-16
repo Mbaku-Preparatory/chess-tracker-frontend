@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import type { ActiveImportJob, ImportJob, ImportSource } from "@/types";
 import { userMessage } from "@/lib/apiError";
+import { msg } from "@/lib/i18n";
 import { useActiveImports } from "./ActiveImportsProvider";
 
 const POLL_INTERVAL_MS = 2000;
@@ -131,7 +132,7 @@ export function useImportJob({ slug, source, onSettled }: UseImportJobOptions) {
       setJob(await api.cancelImportJob(activeJobId));
       refreshRef.current();
     } catch (err) {
-      setError(userMessage(err, "Could not cancel the import."));
+      setError(userMessage(err, msg("Could not cancel the import.")));
     }
   }, [activeJobId]);
 

@@ -4,19 +4,20 @@
  * agree.
  */
 
-import { dateLocale } from "@/lib/i18n";
+import { dateLocale, msg } from "@/lib/i18n";
 import type { Game, GameSource } from "@/types";
 
 import { gameRef } from "./gameRef";
 import { gamePath } from "./publicGame";
 import { profilePath, type PlayerRef, type PublicGame } from "./publicPlayer";
 
+// Labels are English, translated where shown (site names are not translated).
 export const GAME_SOURCES: Record<GameSource, { label: string; short: string; dot: string }> = {
-  chess_results: { label: "Chess-Results (OTB)", short: "OTB", dot: "bg-amber-500" },
+  chess_results: { label: msg("Chess-Results (OTB)"), short: msg("OTB"), dot: "bg-amber-500" },
   chess_com: { label: "Chess.com", short: "Chess.com", dot: "bg-[#7fa650]" },
   lichess: { label: "Lichess", short: "Lichess", dot: "bg-[#b05000]" },
-  pgn_import: { label: "PGN import", short: "PGN", dot: "bg-blue-400" },
-  manual: { label: "Manual", short: "Manual", dot: "bg-gray-400" },
+  pgn_import: { label: msg("PGN import"), short: "PGN", dot: "bg-blue-400" },
+  manual: { label: msg("Manual"), short: msg("Manual"), dot: "bg-gray-400" },
 };
 
 /** A source the backend added after this list: shown as it comes. */

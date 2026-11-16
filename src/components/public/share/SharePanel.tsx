@@ -163,7 +163,7 @@ export function SharePanel({
               <span className={`${circle} text-ink-text`}>
                 <MoreIcon />
               </span>
-              More
+              {t("More")}
             </button>
           )}
         </div>

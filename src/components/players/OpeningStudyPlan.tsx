@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useT } from "@/hooks/useT";
 import { api } from "@/lib/api";
+import { msg } from "@/lib/i18n";
 import { OpeningExplorer } from "@/components/players/OpeningExplorer";
 import type { OpeningStudySuggestion } from "@/types";
 
@@ -37,14 +39,16 @@ const SCORE_BAR_COLOR: Record<ScoreTier, string> = {
 };
 
 const PRIORITY_BADGE: Record<ScoreTier, { label: string; cls: string }> = {
-  low: { label: "Focus", cls: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" },
-  mid: { label: "Improve", cls: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
-  high: { label: "Solid", cls: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" },
+  low: { label: msg("Focus"), cls: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" },
+  mid: { label: msg("Improve"), cls: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
+  high: { label: msg("Solid"), cls: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" },
 };
 
 // ── Tab type ──────────────────────────────────────────────────────────────────
 
 type ColorTab = "all" | "white" | "black";
+
+const TAB_LABEL: Record<ColorTab, string> = { all: msg("All"), white: msg("White"), black: msg("Black") };
 
 // ── Skeleton row ──────────────────────────────────────────────────────────────
 
@@ -72,6 +76,7 @@ function SuggestionRow({
   isExplorerOpen: boolean;
   onToggleExplorer: () => void;
 }) {
+  const t = useT();
   const colors = ecoColors(item.eco_code);
   const tier = scoreTier(item.score_percent);
   const badge = PRIORITY_BADGE[tier];
@@ -109,10 +114,10 @@ function SuggestionRow({
                   : "border-gray-600 bg-gray-700 dark:border-gray-400 dark:bg-gray-300"
               }`}
             />
-            {item.color === "white" ? "White" : "Black"}
+            {item.color === "white" ? t("White") : t("Black")}
           </span>
           <span className="text-xs text-gray-300 dark:text-gray-600">·</span>
-          <span className="text-xs text-gray-500 dark:text-gray-400">{item.games}g</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400">{t("{n}g", { n: item.games })}</span>
           {/* Score bar */}
           <div className="flex flex-1 items-center gap-1.5">
             <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-gray-100 dark:bg-dark-elevated">
@@ -132,13 +137,13 @@ function SuggestionRow({
       <span
         className={`hidden shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold sm:inline-flex ${badge.cls}`}
       >
-        {badge.label}
+        {t(badge.label)}
       </span>
 
       {/* Explore toggle */}
       <button
         onClick={onToggleExplorer}
-        title={isExplorerOpen ? "Close explorer" : "Explore stats & theory"}
+        title={isExplorerOpen ? t("Close explorer") : t("Explore stats & theory")}
         className={`flex shrink-0 items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium transition-colors ${
           isExplorerOpen
             ? "border-brand-300 bg-brand-50 text-brand-700 dark:border-brand-700/60 dark:bg-brand-900/30 dark:text-brand-400"
@@ -165,12 +170,12 @@ function SuggestionRow({
         rel="noopener noreferrer"
         className="flex shrink-0 items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium transition hover:opacity-80"
         style={{ borderColor: "#b05000", color: "#b05000" }}
-        title={`Open ${item.opening_name} on Lichess`}
+        title={t("Open {opening} on Lichess", { opening: item.opening_name })}
       >
         <svg viewBox="0 0 24 24" fill="currentColor" className="hidden h-3.5 w-3.5 sm:block" aria-hidden="true">
           <path d="M19 22H5v-2h14v2M13 2a3 3 0 00-3 3c0 .88.39 1.67 1 2.22V8l-3 1-2 4h2v1H6l-1 3h14l-1-3h-2v-1h2l-2-4-3-1V7.22c.61-.55 1-1.34 1-2.22a3 3 0 00-1-2.24V2h-1z" />
         </svg>
-        Study
+        {t("Study")}
         <svg viewBox="0 0 20 20" fill="currentColor" className="hidden h-3 w-3 sm:block" aria-hidden="true">
           <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
         </svg>
@@ -184,6 +189,7 @@ function SuggestionRow({
 const DEFAULT_VISIBLE = 5;
 
 export function OpeningStudyPlan({ slug }: { slug: string }) {
+  const t = useT();
   const [suggestions, setSuggestions] = useState<OpeningStudySuggestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<ColorTab>("all");
@@ -220,35 +226,35 @@ export function OpeningStudyPlan({ slug }: { slug: string }) {
           </svg>
         </span>
         <div className="flex-1 min-w-0">
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Opening Studies</h2>
-          <p className="text-xs text-gray-500 dark:text-gray-400">Ranked by games played &times; room to improve</p>
+          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t("Opening Studies")}</h2>
+          <p className="text-xs text-gray-500 dark:text-gray-400">{t("Ranked by games played × room to improve")}</p>
         </div>
       </div>
 
       {/* Tab bar */}
       <div className="flex gap-1 border-b border-gray-100 px-4 py-2 dark:border-dark-border">
-        {(["all", "white", "black"] as ColorTab[]).map((t) => {
+        {(["all", "white", "black"] as ColorTab[]).map((c) => {
           const count =
-            t === "all"
+            c === "all"
               ? suggestions.length
-              : suggestions.filter((s) => s.color === t).length;
+              : suggestions.filter((s) => s.color === c).length;
           return (
             <button
-              key={t}
-              onClick={() => { setTab(t); setExpanded(false); setOpenExplorerKey(null); }}
+              key={c}
+              onClick={() => { setTab(c); setExpanded(false); setOpenExplorerKey(null); }}
               className={`flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-medium transition-all ${
-                tab === t
+                tab === c
                   ? "bg-gray-100 text-gray-900 dark:bg-dark-elevated dark:text-gray-100"
                   : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
               }`}
             >
-              {t === "white" && (
+              {c === "white" && (
                 <span className="h-2 w-2 rounded-full border border-gray-400 bg-white dark:border-gray-500" />
               )}
-              {t === "black" && (
+              {c === "black" && (
                 <span className="h-2 w-2 rounded-full border border-gray-600 bg-gray-700 dark:border-gray-400 dark:bg-gray-300" />
               )}
-              {t.charAt(0).toUpperCase() + t.slice(1)}
+              {t(TAB_LABEL[c])}
               <span className="rounded-full bg-gray-200 px-1.5 py-0.5 text-[10px] text-gray-600 dark:bg-dark-muted dark:text-gray-400">
                 {count}
               </span>
@@ -267,7 +273,7 @@ export function OpeningStudyPlan({ slug }: { slug: string }) {
           </>
         ) : filtered.length === 0 ? (
           <p className="py-4 text-center text-sm text-gray-400 dark:text-gray-600">
-            No suggestions for {tab === "all" ? "any color" : tab}.
+            {tab === "all" ? t("No suggestions for any color.") : tab === "white" ? t("No suggestions for White.") : t("No suggestions for Black.")}
           </p>
         ) : (
           <>
@@ -303,7 +309,7 @@ export function OpeningStudyPlan({ slug }: { slug: string }) {
                 onClick={() => setExpanded(true)}
                 className="mt-1 w-full rounded-lg border border-dashed border-gray-200 py-2 text-xs text-gray-500 transition hover:bg-gray-50 dark:border-dark-border dark:text-gray-500 dark:hover:bg-dark-elevated"
               >
-                Show all {filtered.length}
+                {t("Show all {n}", { n: filtered.length })}
               </button>
             )}
             {expanded && filtered.length > DEFAULT_VISIBLE && (
@@ -311,7 +317,7 @@ export function OpeningStudyPlan({ slug }: { slug: string }) {
                 onClick={() => setExpanded(false)}
                 className="mt-1 w-full rounded-lg border border-dashed border-gray-200 py-2 text-xs text-gray-500 transition hover:bg-gray-50 dark:border-dark-border dark:text-gray-500 dark:hover:bg-dark-elevated"
               >
-                Show less
+                {t("Show less")}
               </button>
             )}
           </>
