@@ -3,7 +3,10 @@
 /**
  * Subscribe, or pay ahead. Also Paystack's callback for subscription payments
  * (PAYSTACK_SUBSCRIPTION_CALLBACK_URL on the backend), so the payer lands here
- * with `?reference=…&trxref=…`; see app/(app)/support/page.tsx for why both.
+ * with `?reference=…&trxref=…`. Both name the same transaction: `reference`
+ * is the one we asked for, `trxref` Paystack's legacy alias, and reading
+ * either means a stray link with only the old parameter still works. The
+ * reference is only used to ask our backend what happened; anyone can type one.
  */
 
 import { Suspense } from "react";

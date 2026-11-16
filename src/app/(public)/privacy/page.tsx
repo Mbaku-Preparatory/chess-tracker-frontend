@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     "How Chess Preparatory collects, uses, stores, and deletes your data across the web app and the Android app.",
 };
 
-const LAST_UPDATED = "14 November 2026";
+const LAST_UPDATED = "16 November 2026";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -246,11 +246,10 @@ export default async function PrivacyPolicyPage() {
         </p>
       </Section>
 
-      <Section title="Subscriptions and tips (web only)">
+      <Section title="Subscriptions (web only)">
         <p>
           Every account starts with a free trial. After that the app needs a subscription, paid
-          ahead on the web app by M-Pesa or card; nothing renews automatically. The web app also has
-          a page where you can send the developer a tip, which buys nothing extra.{" "}
+          ahead on the web app by M-Pesa or card; nothing renews automatically.{" "}
           <strong className="font-[480] text-ink-text">The Android app takes no payments.</strong>
         </p>
         <p>
@@ -319,7 +318,7 @@ export default async function PrivacyPolicyPage() {
           </li>
           <li>
             <strong className="font-[480] text-ink-text">Paystack</strong>{" "}
-            &mdash; the email address and amount of a subscription or tip you pay for, on the web app only.
+            &mdash; the email address and amount of a subscription you pay for (and, until November 2026, of a tip), on the web app only.
           </li>
           <li>
             <strong className="font-[480] text-ink-text">Google</strong>{" "}

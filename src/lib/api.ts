@@ -224,21 +224,7 @@ export const api = {
 
   // ── Payments ───────────────────────────────────────────────────────────────
 
-  /**
-   * Open a Paystack checkout for a tip.
-   *
-   * Resolves with somewhere to pay, not with a payment — send the payer to
-   * `authorization_url` and poll getPayment until the status settles. The
-   * amount is the only thing the client gets to choose; what it is for is
-   * decided by the backend.
-   */
-  createTip(amount: number): Promise<Payment> {
-    return fetchJson(`${API_BASE}/payments/tip/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amount }),
-    });
-  },
+
 
   getPayment(reference: string): Promise<Payment> {
     return fetchJson(`${API_BASE}/payments/${encodeURIComponent(reference)}/`);
@@ -259,7 +245,7 @@ export const api = {
   /**
    * Open a Paystack checkout for a plan. Only the plan's code is sent: the
    * price and the days are the backend's, so nothing here can change them.
-   * Poll the returned payment with getPayment, as for a tip.
+   * Poll the returned payment with getPayment.
    */
   startSubscriptionCheckout(plan: string): Promise<Payment> {
     return fetchJson(`${API_BASE}/subscriptions/checkout/`, {

@@ -16,6 +16,11 @@ const nextConfig: NextConfig = {
       // Guess the player was removed on 2026-11-10. Shared puzzle links land on
       // the other fun page instead of a 404.
       { source: "/guess-the-player/:path*", destination: "/chess-personality", permanent: true },
+      // The tip page was removed on 2026-11-16 (tips ended with the paywall).
+      // A bookmark, or an old Paystack tip coming back with ?reference=, lands
+      // on Billing, which lists the account's payments, tips included. Not
+      // /subscribe: it reads ?reference= and would call a tip a subscription.
+      { source: "/support", destination: "/billing", permanent: true },
     ];
   },
   async rewrites() {
