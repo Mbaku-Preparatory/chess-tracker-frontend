@@ -13,6 +13,7 @@ import {
   LISTS,
   RANKINGS_PAGE_SIZE,
   TIME_CONTROLS,
+  federationRankingsPath,
   fetchRankings,
   parseView,
   rankingsPath,
@@ -85,7 +86,7 @@ export default async function RankingsPage({ searchParams }: { searchParams: Sea
       itemListElement: [
         { "@type": "ListItem", position: 1, name: "Home", item: `${SITE_URL}/` },
         { "@type": "ListItem", position: 2, name: "Rankings", item: `${SITE_URL}/rankings` },
-        ...(fed ? [{ "@type": "ListItem", position: 3, name: fed.name, item: `${SITE_URL}/rankings?fed=${fed.code}` }] : []),
+        ...(fed ? [{ "@type": "ListItem", position: 3, name: fed.name, item: `${SITE_URL}${federationRankingsPath(fed.code)}` }] : []),
       ],
     },
   ];

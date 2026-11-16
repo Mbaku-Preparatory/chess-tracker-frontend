@@ -78,6 +78,12 @@ export function rankingsPath(view: RankingsView): string {
   return qs ? `/rankings?${qs}` : "/rankings";
 }
 
+/** A federation's classical ranking, or null for a code FIDE's list does not
+ * have (parseView would drop it, so the link would land on the world list). */
+export function federationRankingsPath(code: string): string | null {
+  return FEDERATION_CODES.has(code) ? rankingsPath({ tc: "classical", list: "overall", fed: code, page: 1 }) : null;
+}
+
 const RANKINGS_QUERY = `
 query Rankings($tc: RankingTimeControl!, $list: RankingCategory!, $fed: String!, $page: Int!) {
   publicRankings(timeControl: $tc, category: $list, federation: $fed, page: $page, pageSize: ${RANKINGS_PAGE_SIZE}) {

@@ -19,6 +19,7 @@ import { msg } from "@/lib/i18n";
 import { preparePath } from "@/lib/prepare";
 import { metaDescription, titleName, type SummaryPlayer } from "@/lib/profileSummary";
 import { fetchPublicPlayer, profilePath, titledName, type PublicPlayer } from "@/lib/publicPlayer";
+import { federationRankingsPath } from "@/lib/rankings";
 import { series } from "@/lib/ratingSeries";
 import { SHARE_IMAGE, SITE_URL } from "@/lib/site";
 
@@ -75,6 +76,7 @@ export default async function PublicPlayerPage({ params }: { params: Params }) {
   if (slug !== player.slug) permanentRedirect(canonical);
 
   const fed = federationFor(player.federation);
+  const fedRankings = federationRankingsPath(player.federation);
   const history = player.ratingHistory;
   const award = titleName(player);
 
@@ -97,9 +99,11 @@ export default async function PublicPlayerPage({ params }: { params: Params }) {
       "@context": "https://schema.org",
       "@type": "BreadcrumbList",
       itemListElement: [
+        // Google needs a link on every crumb but the last ("Missing field
+        // 'item'"), so the country is its ranking, or left out when FIDE's list has none.
         { "@type": "ListItem", position: 1, name: "Players", item: `${SITE_URL}/` },
-        { "@type": "ListItem", position: 2, name: fed.name },
-        { "@type": "ListItem", position: 3, name: player.fullName, item: `${SITE_URL}${canonical}` },
+        ...(fedRankings ? [{ "@type": "ListItem", position: 2, name: fed.name, item: `${SITE_URL}${fedRankings}` }] : []),
+        { "@type": "ListItem", position: fedRankings ? 3 : 2, name: player.fullName, item: `${SITE_URL}${canonical}` },
       ],
     },
   ];
@@ -112,7 +116,13 @@ export default async function PublicPlayerPage({ params }: { params: Params }) {
         <ol className="flex flex-wrap items-center gap-2">
           <li><Link href="/" className="hover:text-ink-muted"><T>Players</T></Link></li>
           <li aria-hidden="true">›</li>
-          <li><Country code={player.federation} /></li>
+          <li>
+            {fedRankings ? (
+              <Link href={fedRankings} className="hover:text-ink-muted"><Country code={player.federation} /></Link>
+            ) : (
+              <Country code={player.federation} />
+            )}
+          </li>
           <li aria-hidden="true">›</li>
           <li className="text-ink-muted" aria-current="page">{player.fullName}</li>
         </ol>
