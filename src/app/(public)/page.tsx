@@ -10,7 +10,7 @@ import { fill, msg } from "@/lib/i18n";
 import { bookPath, fetchPublicBooks } from "@/lib/publicBook";
 import { profilePath } from "@/lib/publicPlayer";
 import { fetchRankings, type RankingEntry } from "@/lib/rankings";
-import { SHARE_IMAGE, SITE_URL } from "@/lib/site";
+import { APP_SCHEMA, SHARE_IMAGE, SITE_URL } from "@/lib/site";
 
 const TITLE = "Chess Preparatory · FIDE player ratings, history, games and chess books";
 const DESCRIPTION =
@@ -129,12 +129,7 @@ export default async function LandingPage() {
       url: SITE_URL,
     },
     {
-      "@context": "https://schema.org",
-      "@type": "SoftwareApplication",
-      name: "Chess Preparatory",
-      url: SITE_URL,
-      applicationCategory: "SportsApplication",
-      operatingSystem: "Web",
+      ...APP_SCHEMA,
       featureList: [
         "FIDE player profiles with ratings, ranks, rating history and games",
         "World and national rankings",

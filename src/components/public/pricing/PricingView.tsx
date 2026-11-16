@@ -8,7 +8,7 @@ import { billingQuestions } from "@/lib/billingQuestions";
 import { FREE_BOT_GAMES, FREE_PROFILE_VIEWS, PUBLIC_GAMES_SHOWN } from "@/lib/freeLimits";
 import { fill, msg } from "@/lib/i18n";
 import { DEFAULT_ASSISTANT_QUESTIONS, DEFAULT_TRIAL_DAYS, fetchPublicPricing } from "@/lib/pricing";
-import { SHARE_IMAGE, SITE_URL } from "@/lib/site";
+import { APP_SCHEMA, SHARE_IMAGE, SITE_URL } from "@/lib/site";
 import { fetchSupportContact } from "@/lib/support";
 
 const TITLE = "Pricing | Chess Preparatory";
@@ -75,12 +75,8 @@ export async function PricingView({ country }: { country: string }) {
     ...(region
       ? [
           {
-            "@context": "https://schema.org",
-            "@type": "Product",
-            name: "Chess Preparatory",
+            ...APP_SCHEMA,
             description: DESCRIPTION,
-            url: `${SITE_URL}/pricing`,
-            brand: { "@type": "Brand", name: "Chess Preparatory" },
             offers: region.plans.map((p) => ({
               "@type": "Offer",
               name: p.period === "year" ? "Yearly" : "Monthly",
