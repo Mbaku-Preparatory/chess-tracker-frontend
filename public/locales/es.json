@@ -1478,5 +1478,9 @@
  "Chess Preparatory home": "Inicio de Chess Preparatory",
  "Games from chess-results.com have not been loaded for this player yet.": "Las partidas de chess-results.com aún no se han cargado para este jugador.",
  "Games from chess-results.com couldn't be loaded right now.": "No se pudieron cargar ahora las partidas de chess-results.com.",
- "Ratings, ranks and rating history above are current. Games will be fetched the next time this page is opened.": "Los Elo, las posiciones y el historial de Elo de arriba están al día. Las partidas se cargarán la próxima vez que se abra esta página."
+ "Ratings, ranks and rating history above are current. Games will be fetched the next time this page is opened.": "Los Elo, las posiciones y el historial de Elo de arriba están al día. Las partidas se cargarán la próxima vez que se abra esta página.",
+ "Tester": "Probador",
+ "Tester access: never expires.": "Acceso de probador: no caduca nunca.",
+ "Never: tester access": "Nunca: acceso de probador",
+ "You have tester access.": "Tienes acceso de probador."
 }

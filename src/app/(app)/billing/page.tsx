@@ -31,7 +31,8 @@ function StatusBadge({ sub }: { sub: MySubscription }) {
       : sub.state === "paid" ? [msg("Active"), "brand"]
         : sub.state === "negotiated" ? [msg("Active, agreed terms"), "brand"]
           : sub.state === "staff" ? [msg("Staff"), "gray"]
-            : [msg("Expired"), "red"];
+            : sub.state === "tester" ? [msg("Tester"), "gray"]
+              : [msg("Expired"), "red"];
   const colours = {
     brand: "bg-brand-50 text-brand-700 ring-brand-600/20 dark:bg-brand-900/30 dark:text-brand-300",
     gray: "bg-gray-100 text-gray-700 ring-gray-500/20 dark:bg-dark-elevated dark:text-gray-300",
@@ -72,6 +73,8 @@ function dueRow(sub: MySubscription, t: Translate, locale: string): { label: str
       return { label: t("Pay by"), value: dated };
     case "staff":
       return { label: t("Next payment due"), value: t("Never: staff access") };
+    case "tester":
+      return { label: t("Next payment due"), value: t("Never: tester access") };
     default:
       return sub.access_until
         ? { label: t("Access ended"), value: when }
@@ -132,7 +135,7 @@ export default function BillingPage() {
 
   const due = sub ? dueRow(sub, t, locale) : null;
   const button =
-    !sub || sub.state === "staff" ? null
+    !sub || sub.state === "staff" || sub.state === "tester" ? null
       : sub.state === "paid" || sub.state === "negotiated" ? t("Renew or add time")
         : t("Subscribe");
 
@@ -164,7 +167,7 @@ export default function BillingPage() {
                   </Row>
                 )}
                 {due && <Row label={due.label}>{due.value}</Row>}
-                {sub.state !== "staff" && sub.plans.length > 0 && <Row label={t("Your price")}>{priceText(sub, t)}</Row>}
+                {sub.state !== "staff" && sub.state !== "tester" && sub.plans.length > 0 && <Row label={t("Your price")}>{priceText(sub, t)}</Row>}
               </dl>
 
               {button && (
