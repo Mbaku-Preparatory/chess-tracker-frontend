@@ -1482,5 +1482,14 @@
  "You have tester access.": "आपके पास टेस्टर एक्सेस है।",
  "Never: free in your country": "कभी नहीं: आपके देश में मुफ़्त",
  "Free in your country: nothing to pay.": "आपके देश में मुफ़्त: कुछ भी चुकाना नहीं है।",
- "It's free in your country: create an account and use everything, with nothing to pay.": "आपके देश में यह मुफ़्त है: खाता बनाएँ और सब कुछ इस्तेमाल करें, बिना कुछ चुकाए।"
+ "It's free in your country: create an account and use everything, with nothing to pay.": "आपके देश में यह मुफ़्त है: खाता बनाएँ और सब कुछ इस्तेमाल करें, बिना कुछ चुकाए।",
+ "About": "परिचय",
+ "Hello, I'm Clifford Ombiro.": "नमस्ते, मैं Clifford Ombiro हूँ।",
+ "My FIDE profile": "मेरी FIDE प्रोफ़ाइल",
+ "I'm a passionate chess player from Kenya. I built Chess Preparatory because I always found it hard to look up a player online and find their games. The app brings them together in one place: Chess.com, Lichess and, most importantly, over-the-board games.": "मैं केन्या का एक जुनूनी शतरंज खिलाड़ी हूँ। मैंने Chess Preparatory इसलिए बनाया क्योंकि मुझे हमेशा ऑनलाइन किसी खिलाड़ी को ढूँढना और उसकी बाज़ियाँ खोजना मुश्किल लगता था। यह ऐप उन्हें एक जगह लाता है: Chess.com, Lichess और, सबसे ज़रूरी, बोर्ड पर खेली गई बाज़ियाँ।",
+ "I'm a chess player above all else, and for some reason I'm known for knowing only openings. That says a lot about the guy who would build a tool like this.": "मैं सबसे पहले एक शतरंज खिलाड़ी हूँ, और न जाने क्यों मेरे बारे में कहा जाता है कि मुझे सिर्फ़ ओपनिंग आती हैं। ऐसा टूल बनाने वाले के बारे में यह बहुत कुछ कहता है।",
+ "I play in the Kenya Chess Premier League and I'm a regular tournament player, so you can be sure this app is made and curated for passionate players.": "मैं Kenya Chess Premier League में खेलता हूँ और नियमित रूप से टूर्नामेंट खेलता हूँ, इसलिए आप भरोसा रख सकते हैं कि यह ऐप जुनूनी खिलाड़ियों के लिए बनाया और सँवारा गया है।",
+ "My goal may not be to become a GM, but I enjoy the game, and I always love the look of despair on my opponents' faces when they realise, fifteen moves in, that they're wrapped up in my opening theory.": "शायद मेरा लक्ष्य GM बनना न हो, लेकिन मुझे यह खेल पसंद है, और मुझे हमेशा अपने प्रतिद्वंद्वियों के चेहरे पर वह निराशा देखना अच्छा लगता है जब पंद्रह चालों के बाद उन्हें एहसास होता है कि वे मेरी ओपनिंग थ्योरी में फँस चुके हैं।",
+ "Away from the board, I've been a software developer for about four years. I speak three languages: English, Swahili and JavaScript.": "बोर्ड से दूर, मैं लगभग चार साल से सॉफ़्टवेयर डेवलपर हूँ। मैं तीन भाषाएँ बोलता हूँ: अंग्रेज़ी, स्वाहिली और JavaScript।",
+ "You're more than welcome to give the app a try.": "आप इस ऐप को आज़माने के लिए दिल से आमंत्रित हैं।"
 }

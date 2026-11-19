@@ -1556,5 +1556,14 @@
  "You have tester access.": "У вас доступ тестировщика.",
  "Never: free in your country": "Никогда: бесплатно в вашей стране",
  "Free in your country: nothing to pay.": "Бесплатно в вашей стране: платить ничего не нужно.",
- "It's free in your country: create an account and use everything, with nothing to pay.": "В вашей стране это бесплатно: создайте аккаунт и пользуйтесь всем, ничего не платя."
+ "It's free in your country: create an account and use everything, with nothing to pay.": "В вашей стране это бесплатно: создайте аккаунт и пользуйтесь всем, ничего не платя.",
+ "About": "О проекте",
+ "Hello, I'm Clifford Ombiro.": "Привет, я Clifford Ombiro.",
+ "My FIDE profile": "Мой профиль FIDE",
+ "I'm a passionate chess player from Kenya. I built Chess Preparatory because I always found it hard to look up a player online and find their games. The app brings them together in one place: Chess.com, Lichess and, most importantly, over-the-board games.": "Я увлечённый шахматист из Кении. Я создал Chess Preparatory, потому что мне всегда было трудно найти игрока в интернете и отыскать его партии. Приложение собирает их в одном месте: Chess.com, Lichess и, самое главное, очные партии.",
+ "I'm a chess player above all else, and for some reason I'm known for knowing only openings. That says a lot about the guy who would build a tool like this.": "Прежде всего я шахматист, и почему-то про меня говорят, что я знаю только дебюты. Это многое говорит о человеке, который создал бы такой инструмент.",
+ "I play in the Kenya Chess Premier League and I'm a regular tournament player, so you can be sure this app is made and curated for passionate players.": "Я играю в Kenya Chess Premier League и регулярно выступаю в турнирах, так что можете быть уверены: это приложение создано и продумано для увлечённых шахматистов.",
+ "My goal may not be to become a GM, but I enjoy the game, and I always love the look of despair on my opponents' faces when they realise, fifteen moves in, that they're wrapped up in my opening theory.": "Возможно, моя цель — не стать гроссмейстером, но я люблю эту игру и всегда обожаю видеть отчаяние на лицах соперников, когда на пятнадцатом ходу они понимают, что запутались в моей дебютной теории.",
+ "Away from the board, I've been a software developer for about four years. I speak three languages: English, Swahili and JavaScript.": "Вне доски я около четырёх лет работаю разработчиком. Я говорю на трёх языках: английском, суахили и JavaScript.",
+ "You're more than welcome to give the app a try.": "Буду рад, если вы попробуете приложение."
 }
