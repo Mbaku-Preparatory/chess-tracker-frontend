@@ -1552,5 +1552,9 @@
  "Chess Preparatory home": "Chess Preparatory — на главную",
  "Games from chess-results.com have not been loaded for this player yet.": "Партии с chess-results.com для этого игрока ещё не загружены.",
  "Games from chess-results.com couldn't be loaded right now.": "Сейчас не удалось загрузить партии с chess-results.com.",
- "Ratings, ranks and rating history above are current. Games will be fetched the next time this page is opened.": "Рейтинги, места и история рейтинга выше актуальны. Партии загрузятся, когда эту страницу откроют в следующий раз."
+ "Ratings, ranks and rating history above are current. Games will be fetched the next time this page is opened.": "Рейтинги, места и история рейтинга выше актуальны. Партии загрузятся, когда эту страницу откроют в следующий раз.",
+ "Tester": "Тестировщик",
+ "Tester access: never expires.": "Доступ тестировщика: бессрочно.",
+ "Never: tester access": "Никогда: доступ тестировщика",
+ "You have tester access.": "У вас доступ тестировщика."
 }

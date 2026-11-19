@@ -1478,5 +1478,9 @@
  "Upload a PDF chess book; tap any move in it and the position opens on a board.": "Pakia kitabu cha chesi cha PDF; gusa hatua yoyote ndani yake na nafasi inafunguka ubaoni.",
  "Games from chess-results.com have not been loaded for this player yet.": "Michezo kutoka chess-results.com bado haijapakiwa kwa mchezaji huyu.",
  "Games from chess-results.com couldn't be loaded right now.": "Michezo kutoka chess-results.com haikuweza kupakiwa kwa sasa.",
- "Ratings, ranks and rating history above are current. Games will be fetched the next time this page is opened.": "Ukadiriaji, nafasi na historia ya ukadiriaji vilivyo juu ni vya sasa. Michezo italetwa wakati ujao ukurasa huu utakapofunguliwa."
+ "Ratings, ranks and rating history above are current. Games will be fetched the next time this page is opened.": "Ukadiriaji, nafasi na historia ya ukadiriaji vilivyo juu ni vya sasa. Michezo italetwa wakati ujao ukurasa huu utakapofunguliwa.",
+ "Tester": "Mjaribu",
+ "Tester access: never expires.": "Ufikiaji wa mjaribu: hauishi kamwe.",
+ "Never: tester access": "Kamwe: ufikiaji wa mjaribu",
+ "You have tester access.": "Una ufikiaji wa mjaribu."
 }

@@ -47,6 +47,7 @@ function SubscriptionSection() {
   const date = (iso: string | null) => formatDate(iso, locale);
   const line =
     sub.state === "staff" ? t("Staff access: never expires.")
+      : sub.state === "tester" ? t("Tester access: never expires.")
       : sub.state === "trial" ? t("Free trial until {date}.", { date: date(sub.access_until) })
         : sub.state === "paid" ? t("Subscribed until {date}.", { date: date(sub.access_until) })
           : sub.state === "negotiated" ? t("Access until {date}, as agreed with us.", { date: date(sub.access_until) })

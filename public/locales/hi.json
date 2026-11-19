@@ -1478,5 +1478,9 @@
  "Chess Preparatory home": "Chess Preparatory होम",
  "Games from chess-results.com have not been loaded for this player yet.": "इस खिलाड़ी की chess-results.com से बाज़ियाँ अभी लोड नहीं हुई हैं।",
  "Games from chess-results.com couldn't be loaded right now.": "chess-results.com से बाज़ियाँ अभी लोड नहीं हो सकीं।",
- "Ratings, ranks and rating history above are current. Games will be fetched the next time this page is opened.": "ऊपर की रेटिंग, रैंक और रेटिंग इतिहास ताज़ा हैं। बाज़ियाँ अगली बार यह पेज खुलने पर लाई जाएँगी।"
+ "Ratings, ranks and rating history above are current. Games will be fetched the next time this page is opened.": "ऊपर की रेटिंग, रैंक और रेटिंग इतिहास ताज़ा हैं। बाज़ियाँ अगली बार यह पेज खुलने पर लाई जाएँगी।",
+ "Tester": "टेस्टर",
+ "Tester access: never expires.": "टेस्टर एक्सेस: कभी ख़त्म नहीं होता।",
+ "Never: tester access": "कभी नहीं: टेस्टर एक्सेस",
+ "You have tester access.": "आपके पास टेस्टर एक्सेस है।"
 }

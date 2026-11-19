@@ -44,6 +44,7 @@ function StatusLine({ sub }: { sub: MySubscription }) {
   const locale = useLocale();
   const date = (iso: string | null) => <strong>{formatDate(iso, locale)}</strong>;
   if (sub.state === "staff") return <T>You have staff access.</T>;
+  if (sub.state === "tester") return <T>You have tester access.</T>;
   if (sub.state === "trial") return <T vars={{ date: date(sub.access_until) }}>{"Your free trial runs until {date}."}</T>;
   if (sub.state === "paid" || sub.state === "negotiated") {
     return <T vars={{ date: date(sub.access_until) }}>{"You have access until {date}. Paying now adds the time on after that."}</T>;
