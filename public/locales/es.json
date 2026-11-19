@@ -1482,5 +1482,14 @@
  "You have tester access.": "Tienes acceso de probador.",
  "Never: free in your country": "Nunca: gratis en tu país",
  "Free in your country: nothing to pay.": "Gratis en tu país: no hay nada que pagar.",
- "It's free in your country: create an account and use everything, with nothing to pay.": "Es gratis en tu país: crea una cuenta y úsalo todo, sin pagar nada."
+ "It's free in your country: create an account and use everything, with nothing to pay.": "Es gratis en tu país: crea una cuenta y úsalo todo, sin pagar nada.",
+ "About": "Acerca de",
+ "Hello, I'm Clifford Ombiro.": "Hola, soy Clifford Ombiro.",
+ "My FIDE profile": "Mi perfil FIDE",
+ "I'm a passionate chess player from Kenya. I built Chess Preparatory because I always found it hard to look up a player online and find their games. The app brings them together in one place: Chess.com, Lichess and, most importantly, over-the-board games.": "Soy un apasionado jugador de ajedrez de Kenia. Creé Chess Preparatory porque siempre me costaba buscar a un jugador en internet y encontrar sus partidas. La app las reúne en un solo lugar: Chess.com, Lichess y, sobre todo, las partidas sobre el tablero.",
+ "I'm a chess player above all else, and for some reason I'm known for knowing only openings. That says a lot about the guy who would build a tool like this.": "Ante todo soy ajedrecista, y por alguna razón tengo fama de saber solo aperturas. Eso dice mucho del tipo que construiría una herramienta así.",
+ "I play in the Kenya Chess Premier League and I'm a regular tournament player, so you can be sure this app is made and curated for passionate players.": "Juego en la Kenya Chess Premier League y participo con regularidad en torneos, así que puedes estar seguro de que esta app está hecha y cuidada para jugadores apasionados.",
+ "My goal may not be to become a GM, but I enjoy the game, and I always love the look of despair on my opponents' faces when they realise, fifteen moves in, that they're wrapped up in my opening theory.": "Puede que mi meta no sea llegar a GM, pero disfruto el juego, y siempre me encanta la cara de desesperación de mis rivales cuando se dan cuenta, quince jugadas después, de que están atrapados en mi teoría de aperturas.",
+ "Away from the board, I've been a software developer for about four years. I speak three languages: English, Swahili and JavaScript.": "Fuera del tablero, llevo unos cuatro años como desarrollador de software. Hablo tres idiomas: inglés, suajili y JavaScript.",
+ "You're more than welcome to give the app a try.": "Estás más que invitado a probar la app."
 }

@@ -1482,5 +1482,14 @@
  "You have tester access.": "Vous avez un accès testeur.",
  "Never: free in your country": "Jamais : gratuit dans votre pays",
  "Free in your country: nothing to pay.": "Gratuit dans votre pays : rien à payer.",
- "It's free in your country: create an account and use everything, with nothing to pay.": "C'est gratuit dans votre pays : créez un compte et utilisez tout, sans rien payer."
+ "It's free in your country: create an account and use everything, with nothing to pay.": "C'est gratuit dans votre pays : créez un compte et utilisez tout, sans rien payer.",
+ "About": "À propos",
+ "Hello, I'm Clifford Ombiro.": "Bonjour, je suis Clifford Ombiro.",
+ "My FIDE profile": "Mon profil FIDE",
+ "I'm a passionate chess player from Kenya. I built Chess Preparatory because I always found it hard to look up a player online and find their games. The app brings them together in one place: Chess.com, Lichess and, most importantly, over-the-board games.": "Je suis un joueur d'échecs passionné, originaire du Kenya. J'ai créé Chess Preparatory parce que j'ai toujours eu du mal à trouver un joueur en ligne et à retrouver ses parties. L'application les rassemble en un seul endroit : Chess.com, Lichess et, surtout, les parties sur l'échiquier.",
+ "I'm a chess player above all else, and for some reason I'm known for knowing only openings. That says a lot about the guy who would build a tool like this.": "Je suis avant tout un joueur d'échecs, et pour une raison ou une autre, on dit que je ne connais que les ouvertures. Ça en dit long sur le gars qui construirait un tel outil.",
+ "I play in the Kenya Chess Premier League and I'm a regular tournament player, so you can be sure this app is made and curated for passionate players.": "Je joue en Kenya Chess Premier League et je dispute régulièrement des tournois : vous pouvez donc être sûr que cette application est conçue et soignée pour les joueurs passionnés.",
+ "My goal may not be to become a GM, but I enjoy the game, and I always love the look of despair on my opponents' faces when they realise, fifteen moves in, that they're wrapped up in my opening theory.": "Mon objectif n'est peut-être pas de devenir GMI, mais j'aime ce jeu, et j'adore toujours voir le désespoir sur le visage de mes adversaires quand ils réalisent, au bout de quinze coups, qu'ils sont pris dans ma théorie d'ouverture.",
+ "Away from the board, I've been a software developer for about four years. I speak three languages: English, Swahili and JavaScript.": "Loin de l'échiquier, je suis développeur depuis environ quatre ans. Je parle trois langues : l'anglais, le swahili et le JavaScript.",
+ "You're more than welcome to give the app a try.": "Vous êtes plus que bienvenu pour essayer l'application."
 }

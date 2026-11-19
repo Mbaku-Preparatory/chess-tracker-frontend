@@ -18,6 +18,7 @@ export function PublicFooter() {
           <Link href="/chess-personality" className="hover:text-ink-muted"><T>Chess personality test</T></Link>
           <Link href="/tutorials" className="hover:text-ink-muted"><T>Tutorials</T></Link>
           <Link href="/pricing" className="hover:text-ink-muted"><T>Pricing</T></Link>
+          <Link href="/about" className="hover:text-ink-muted"><T>About</T></Link>
           <Link href="/privacy" className="hover:text-ink-muted"><T>Privacy</T></Link>
           <NotOnFunPage>
             <AuthLink href="/login" className="hover:text-ink-muted"><T>Log in</T></AuthLink>

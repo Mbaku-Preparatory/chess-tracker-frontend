@@ -51,6 +51,7 @@ export function GET() {
 - [Chess books](${SITE_URL}/chess-books): the book reader and exercise solver, with demo books
 - [Tutorials](${SITE_URL}/tutorials): six short videos on preparing for an opponent with the app
 - [Pricing](${SITE_URL}/pricing): the free trial, and the monthly and yearly prices by region
+- [About](${SITE_URL}/about): who builds the app, a Kenyan tournament player, and why
 - [Sitemap](${SITE_URL}/sitemap.xml): every active player's profile
 - [Privacy policy](${SITE_URL}/privacy)
 `;
