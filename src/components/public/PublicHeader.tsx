@@ -32,6 +32,9 @@ export function PublicHeader() {
           <Link href="/pricing" className="whitespace-nowrap rounded-pill px-3 py-2 text-[15px] text-ink-muted hover:bg-ink-raised hover:text-ink-text">
             <T>Pricing</T>
           </Link>
+          <Link href="/about" className="whitespace-nowrap rounded-pill px-3 py-2 text-[15px] text-ink-muted hover:bg-ink-raised hover:text-ink-text">
+            <T>About</T>
+          </Link>
           <LanguagePicker className="text-ink-muted hover:bg-ink-raised hover:text-ink-text" />
           <ThemeToggle className="text-ink-muted hover:bg-ink-raised hover:text-ink-text" />
           <AccountLinks />

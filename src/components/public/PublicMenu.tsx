@@ -40,6 +40,7 @@ export function PublicMenu() {
     { href: "/chess-personality", label: t("Chess personality") },
     { href: "/tutorials", label: t("Tutorials") },
     { href: "/pricing", label: t("Pricing") },
+    { href: "/about", label: t("About") },
   ];
 
   return (
