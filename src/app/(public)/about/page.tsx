@@ -71,8 +71,8 @@ export default function AboutPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
 
       <div className="grid gap-10 md:grid-cols-[minmax(0,1fr)_300px] md:items-start md:gap-16">
-        {/* First on a phone, beside the text from md up. */}
-        <figure className="flex flex-col items-start gap-6 md:sticky md:top-24 md:order-last md:items-center">
+        {/* First on a phone, centred; beside the text from md up. */}
+        <figure className="flex flex-col items-center gap-6 md:sticky md:top-24 md:order-last">
           {/* A plain img, sized at the source: no image-optimisation calls on Vercel. */}
           <img
             src="/about/clifford-ombiro.jpg"
