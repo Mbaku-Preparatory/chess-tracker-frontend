@@ -498,7 +498,6 @@
  "Start with {days} days free, no card needed. Then pay for a month or a year at a time, by M-Pesa or card. Nothing renews by itself.": "Empieza con {days} días gratis, sin tarjeta. Después paga por meses o por años, con M-Pesa o tarjeta. Nada se renueva solo.",
  "Start with {days} days free, no card needed. Then pay for a month or a year at a time, by card. Nothing renews by itself.": "Empieza con {days} días gratis, sin tarjeta. Después paga por meses o por años, con tarjeta. Nada se renueva solo.",
  "The prices couldn't be loaded just now. Please try again in a few minutes.": "No se pudieron cargar los precios. Inténtalo en unos minutos.",
- "Subscriptions aren't on sale just yet. Everything is free while we get ready.": "Las suscripciones aún no están a la venta. Todo es gratis mientras nos preparamos.",
  "Free for everyone, no account needed": "Gratis para todos, sin cuenta",
  "Your opponents' games from chess-results, Chess.com and Lichess": "Las partidas de tus rivales de chess-results, Chess.com y Lichess",
  "Their games brought up to date when you open them": "Sus partidas, actualizadas al abrirlas",
@@ -944,8 +943,6 @@
  "That payment didn't go through. No money was taken.": "Ese pago no se completó. No se ha cobrado nada.",
  "You can try again below.": "Puedes volver a intentarlo abajo.",
  "We're still waiting to hear from Paystack. If you completed the payment, your access will appear here shortly, and Paystack has emailed you a receipt.": "Seguimos esperando la respuesta de Paystack. Si completaste el pago, tu acceso aparecerá aquí en breve y Paystack te ha enviado un recibo por correo.",
- "Subscriptions aren't on sale just yet. Check back soon, or": "Las suscripciones aún no están a la venta. Vuelve pronto, o",
- "ask us": "pregúntanos",
  "Pay with M-Pesa or a card. Payments are handled by Paystack.": "Paga con M-Pesa o tarjeta. Los pagos los gestiona Paystack.",
  "Pay by card. Payments are handled by Paystack.": "Paga con tarjeta. Los pagos los gestiona Paystack.",
  "Nothing renews automatically: when your time runs out, you choose whether to pay again.": "Nada se renueva automáticamente: cuando se acabe tu tiempo, tú decides si vuelves a pagar.",
@@ -1482,5 +1479,8 @@
  "Tester": "Probador",
  "Tester access: never expires.": "Acceso de probador: no caduca nunca.",
  "Never: tester access": "Nunca: acceso de probador",
- "You have tester access.": "Tienes acceso de probador."
+ "You have tester access.": "Tienes acceso de probador.",
+ "Never: free in your country": "Nunca: gratis en tu país",
+ "Free in your country: nothing to pay.": "Gratis en tu país: no hay nada que pagar.",
+ "It's free in your country: create an account and use everything, with nothing to pay.": "Es gratis en tu país: crea una cuenta y úsalo todo, sin pagar nada."
 }

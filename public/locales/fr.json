@@ -498,7 +498,6 @@
  "Start with {days} days free, no card needed. Then pay for a month or a year at a time, by M-Pesa or card. Nothing renews by itself.": "Commencez avec {days} jours gratuits, sans carte. Payez ensuite au mois ou à l'année, par M-Pesa ou carte. Rien ne se renouvelle tout seul.",
  "Start with {days} days free, no card needed. Then pay for a month or a year at a time, by card. Nothing renews by itself.": "Commencez avec {days} jours gratuits, sans carte. Payez ensuite au mois ou à l'année, par carte. Rien ne se renouvelle tout seul.",
  "The prices couldn't be loaded just now. Please try again in a few minutes.": "Les prix n'ont pas pu être chargés. Réessayez dans quelques minutes.",
- "Subscriptions aren't on sale just yet. Everything is free while we get ready.": "Les abonnements ne sont pas encore en vente. Tout est gratuit pendant la préparation.",
  "Free for everyone, no account needed": "Gratuit pour tous, sans compte",
  "Your opponents' games from chess-results, Chess.com and Lichess": "Les parties de vos adversaires depuis chess-results, Chess.com et Lichess",
  "Their games brought up to date when you open them": "Leurs parties mises à jour à l'ouverture",
@@ -944,8 +943,6 @@
  "That payment didn't go through. No money was taken.": "Ce paiement n'est pas passé. Aucun argent n'a été prélevé.",
  "You can try again below.": "Vous pouvez réessayer ci-dessous.",
  "We're still waiting to hear from Paystack. If you completed the payment, your access will appear here shortly, and Paystack has emailed you a receipt.": "Nous attendons encore la réponse de Paystack. Si vous avez payé, votre accès apparaîtra ici sous peu, et Paystack vous a envoyé un reçu par e-mail.",
- "Subscriptions aren't on sale just yet. Check back soon, or": "Les abonnements ne sont pas encore en vente. Revenez bientôt, ou",
- "ask us": "posez-nous la question",
  "Pay with M-Pesa or a card. Payments are handled by Paystack.": "Payez par M-Pesa ou carte. Les paiements passent par Paystack.",
  "Pay by card. Payments are handled by Paystack.": "Payez par carte. Les paiements passent par Paystack.",
  "Nothing renews automatically: when your time runs out, you choose whether to pay again.": "Rien ne se renouvelle automatiquement : à la fin de votre période, vous choisissez de repayer ou non.",
@@ -1482,5 +1479,8 @@
  "Tester": "Testeur",
  "Tester access: never expires.": "Accès testeur : n'expire jamais.",
  "Never: tester access": "Jamais : accès testeur",
- "You have tester access.": "Vous avez un accès testeur."
+ "You have tester access.": "Vous avez un accès testeur.",
+ "Never: free in your country": "Jamais : gratuit dans votre pays",
+ "Free in your country: nothing to pay.": "Gratuit dans votre pays : rien à payer.",
+ "It's free in your country: create an account and use everything, with nothing to pay.": "C'est gratuit dans votre pays : créez un compte et utilisez tout, sans rien payer."
 }

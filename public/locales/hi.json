@@ -498,7 +498,6 @@
  "Start with {days} days free, no card needed. Then pay for a month or a year at a time, by M-Pesa or card. Nothing renews by itself.": "{days} दिन मुफ़्त से शुरू करें, कार्ड की ज़रूरत नहीं। फिर एक महीने या साल का भुगतान M-Pesa या कार्ड से करें। अपने आप कुछ रिन्यू नहीं होता।",
  "Start with {days} days free, no card needed. Then pay for a month or a year at a time, by card. Nothing renews by itself.": "{days} दिन मुफ़्त से शुरू करें, कार्ड की ज़रूरत नहीं। फिर एक महीने या साल का भुगतान कार्ड से करें। अपने आप कुछ रिन्यू नहीं होता।",
  "The prices couldn't be loaded just now. Please try again in a few minutes.": "अभी क़ीमतें लोड नहीं हो सकीं। कुछ मिनट में फिर कोशिश करें।",
- "Subscriptions aren't on sale just yet. Everything is free while we get ready.": "सब्सक्रिप्शन अभी बिक्री पर नहीं हैं। तैयारी के दौरान सब मुफ़्त है।",
  "Free for everyone, no account needed": "सबके लिए मुफ़्त, खाते की ज़रूरत नहीं",
  "Your opponents' games from chess-results, Chess.com and Lichess": "chess-results, Chess.com और Lichess से आपके प्रतिद्वंद्वियों की बाज़ियाँ",
  "Their games brought up to date when you open them": "खोलते ही उनकी बाज़ियाँ अपडेट",
@@ -944,8 +943,6 @@
  "That payment didn't go through. No money was taken.": "वह भुगतान नहीं हुआ। कोई पैसा नहीं कटा।",
  "You can try again below.": "आप नीचे फिर कोशिश कर सकते हैं।",
  "We're still waiting to hear from Paystack. If you completed the payment, your access will appear here shortly, and Paystack has emailed you a receipt.": "हम अभी भी Paystack के जवाब का इंतज़ार कर रहे हैं। अगर आपने भुगतान कर दिया है, तो आपका एक्सेस जल्द यहाँ दिखेगा, और Paystack ने आपको रसीद ईमेल कर दी है।",
- "Subscriptions aren't on sale just yet. Check back soon, or": "सब्सक्रिप्शन अभी बिक्री पर नहीं हैं। जल्द फिर देखें, या",
- "ask us": "हमसे पूछें",
  "Pay with M-Pesa or a card. Payments are handled by Paystack.": "M-Pesa या कार्ड से भुगतान करें। भुगतान Paystack संभालता है।",
  "Pay by card. Payments are handled by Paystack.": "कार्ड से भुगतान करें। भुगतान Paystack संभालता है।",
  "Nothing renews automatically: when your time runs out, you choose whether to pay again.": "अपने आप कुछ रिन्यू नहीं होता: समय ख़त्म होने पर आप तय करते हैं कि फिर भुगतान करना है या नहीं।",
@@ -1482,5 +1479,8 @@
  "Tester": "टेस्टर",
  "Tester access: never expires.": "टेस्टर एक्सेस: कभी ख़त्म नहीं होता।",
  "Never: tester access": "कभी नहीं: टेस्टर एक्सेस",
- "You have tester access.": "आपके पास टेस्टर एक्सेस है।"
+ "You have tester access.": "आपके पास टेस्टर एक्सेस है।",
+ "Never: free in your country": "कभी नहीं: आपके देश में मुफ़्त",
+ "Free in your country: nothing to pay.": "आपके देश में मुफ़्त: कुछ भी चुकाना नहीं है।",
+ "It's free in your country: create an account and use everything, with nothing to pay.": "आपके देश में यह मुफ़्त है: खाता बनाएँ और सब कुछ इस्तेमाल करें, बिना कुछ चुकाए।"
 }

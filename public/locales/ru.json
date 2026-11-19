@@ -518,7 +518,6 @@
  "Start with {days} days free, no card needed. Then pay for a month or a year at a time, by M-Pesa or card. Nothing renews by itself.": "Начните с бесплатного периода, дней: {days}, карта не нужна. Дальше платите за месяц или год, через M-Pesa или картой. Ничего не продлевается само.",
  "Start with {days} days free, no card needed. Then pay for a month or a year at a time, by card. Nothing renews by itself.": "Начните с бесплатного периода, дней: {days}, карта не нужна. Дальше платите за месяц или год картой. Ничего не продлевается само.",
  "The prices couldn't be loaded just now. Please try again in a few minutes.": "Не удалось загрузить цены. Попробуйте через несколько минут.",
- "Subscriptions aren't on sale just yet. Everything is free while we get ready.": "Подписка пока не продаётся. Пока мы готовимся, всё бесплатно.",
  "Free for everyone, no account needed": "Бесплатно для всех, без аккаунта",
  "Your opponents' games from chess-results, Chess.com and Lichess": "Партии соперников с chess-results, Chess.com и Lichess",
  "Their games brought up to date when you open them": "Партии обновляются, когда вы их открываете",
@@ -968,8 +967,6 @@
  "That payment didn't go through. No money was taken.": "Платёж не прошёл. Деньги не списаны.",
  "You can try again below.": "Попробовать снова можно ниже.",
  "We're still waiting to hear from Paystack. If you completed the payment, your access will appear here shortly, and Paystack has emailed you a receipt.": "Мы всё ещё ждём ответа от Paystack. Если вы оплатили, доступ скоро появится здесь, а Paystack отправил вам чек на почту.",
- "Subscriptions aren't on sale just yet. Check back soon, or": "Подписка пока не продаётся. Загляните позже или",
- "ask us": "спросите нас",
  "Pay with M-Pesa or a card. Payments are handled by Paystack.": "Оплата через M-Pesa или картой. Платежи обрабатывает Paystack.",
  "Pay by card. Payments are handled by Paystack.": "Оплата картой. Платежи обрабатывает Paystack.",
  "Nothing renews automatically: when your time runs out, you choose whether to pay again.": "Ничего не продлевается автоматически: когда срок закончится, вы решаете, платить ли снова.",
@@ -1556,5 +1553,8 @@
  "Tester": "Тестировщик",
  "Tester access: never expires.": "Доступ тестировщика: бессрочно.",
  "Never: tester access": "Никогда: доступ тестировщика",
- "You have tester access.": "У вас доступ тестировщика."
+ "You have tester access.": "У вас доступ тестировщика.",
+ "Never: free in your country": "Никогда: бесплатно в вашей стране",
+ "Free in your country: nothing to pay.": "Бесплатно в вашей стране: платить ничего не нужно.",
+ "It's free in your country: create an account and use everything, with nothing to pay.": "В вашей стране это бесплатно: создайте аккаунт и пользуйтесь всем, ничего не платя."
 }

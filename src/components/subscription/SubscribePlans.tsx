@@ -45,6 +45,7 @@ function StatusLine({ sub }: { sub: MySubscription }) {
   const date = (iso: string | null) => <strong>{formatDate(iso, locale)}</strong>;
   if (sub.state === "staff") return <T>You have staff access.</T>;
   if (sub.state === "tester") return <T>You have tester access.</T>;
+  if (sub.state === "free") return <T>Free in your country: nothing to pay.</T>;
   if (sub.state === "trial") return <T vars={{ date: date(sub.access_until) }}>{"Your free trial runs until {date}."}</T>;
   if (sub.state === "paid" || sub.state === "negotiated") {
     return <T vars={{ date: date(sub.access_until) }}>{"You have access until {date}. Paying now adds the time on after that."}</T>;
@@ -236,11 +237,9 @@ export function SubscribePlans({ expired, returnedReference }: { expired: boolea
         <StatusLine sub={sub} />
       </p>
 
-      {sub.plans.length === 0 ? (
-        <div className="card p-6 text-sm text-gray-600 dark:text-gray-300">
-          {t("Subscriptions aren't on sale just yet. Check back soon, or")} <Link href={helpHref(pathname)} className="font-medium text-brand-600 hover:underline dark:text-brand-400">{t("ask us")}</Link>.
-        </div>
-      ) : (
+      {/* Nothing on sale to them means it's free where they are (the backend's
+          services.free_in), which the status line above already says. */}
+      {sub.plans.length === 0 ? null : (
         <div {...highlight.gridProps} className="grid gap-4 pt-3 sm:grid-cols-2">
           {sub.plans.map((plan) => (
             <PlanCard
