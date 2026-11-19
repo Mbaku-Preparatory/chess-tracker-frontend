@@ -503,7 +503,7 @@ export interface MySubscription {
   /** May use the app right now: the one thing the redirect reads. */
   allowed: boolean;
   has_access: boolean;
-  state: "trial" | "paid" | "negotiated" | "staff" | "tester" | "none";
+  state: "trial" | "paid" | "negotiated" | "staff" | "tester" | "free" | "none";
   access_until: string | null;
   paid_until: string | null;
   negotiated_until: string | null;

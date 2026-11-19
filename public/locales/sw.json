@@ -1079,7 +1079,6 @@
  "Start with {days} days free, no card needed. Then pay for a month or a year at a time, by M-Pesa or card. Nothing renews by itself.": "Anza na siku {days} za bure, bila kadi. Kisha lipia mwezi au mwaka kwa wakati, kwa M-Pesa au kadi. Hakuna kinachojilipia chenyewe.",
  "Start with {days} days free, no card needed. Then pay for a month or a year at a time, by card. Nothing renews by itself.": "Anza na siku {days} za bure, bila kadi. Kisha lipia mwezi au mwaka kwa wakati, kwa kadi. Hakuna kinachojilipia chenyewe.",
  "The prices couldn't be loaded just now. Please try again in a few minutes.": "Bei hazikuweza kupakiwa kwa sasa. Tafadhali jaribu tena baada ya dakika chache.",
- "Subscriptions aren't on sale just yet. Everything is free while we get ready.": "Usajili bado haujaanza kuuzwa. Kila kitu ni bure wakati tunajiandaa.",
  "Free for everyone, no account needed": "Bure kwa kila mtu, bila akaunti",
  "Your opponents' games from chess-results, Chess.com and Lichess": "Michezo ya wapinzani wako kutoka chess-results, Chess.com na Lichess",
  "Their games brought up to date when you open them": "Michezo yao inasasishwa unapoifungua",
@@ -1161,8 +1160,6 @@
  "That payment didn't go through. No money was taken.": "Malipo hayo hayakupita. Hakuna pesa iliyochukuliwa.",
  "You can try again below.": "Unaweza kujaribu tena hapa chini.",
  "We're still waiting to hear from Paystack. If you completed the payment, your access will appear here shortly, and Paystack has emailed you a receipt.": "Bado tunasubiri kusikia kutoka Paystack. Ikiwa ulikamilisha malipo, ufikiaji wako utaonekana hapa hivi karibuni, na Paystack imekutumia risiti kwa barua pepe.",
- "Subscriptions aren't on sale just yet. Check back soon, or": "Usajili bado haujaanza kuuzwa. Rudi hivi karibuni, au",
- "ask us": "tuulize",
  "Pay with M-Pesa or a card. Payments are handled by Paystack.": "Lipa kwa M-Pesa au kadi. Malipo yanashughulikiwa na Paystack.",
  "Pay by card. Payments are handled by Paystack.": "Lipa kwa kadi. Malipo yanashughulikiwa na Paystack.",
  "Nothing renews automatically: when your time runs out, you choose whether to pay again.": "Hakuna kinachojilipia chenyewe: muda wako ukiisha, unachagua kama utalipa tena.",
@@ -1482,5 +1479,8 @@
  "Tester": "Mjaribu",
  "Tester access: never expires.": "Ufikiaji wa mjaribu: hauishi kamwe.",
  "Never: tester access": "Kamwe: ufikiaji wa mjaribu",
- "You have tester access.": "Una ufikiaji wa mjaribu."
+ "You have tester access.": "Una ufikiaji wa mjaribu.",
+ "Never: free in your country": "Kamwe: bure katika nchi yako",
+ "Free in your country: nothing to pay.": "Bure katika nchi yako: hakuna cha kulipa.",
+ "It's free in your country: create an account and use everything, with nothing to pay.": "Ni bure katika nchi yako: fungua akaunti na utumie kila kitu, bila kulipa chochote."
 }

@@ -99,7 +99,10 @@ export async function PricingView({ country }: { country: string }) {
           <T>One plan, with everything in it.</T>
         </h1>
         <p className="max-w-[58ch] text-[18px] leading-[1.5] text-ink-muted">
-          {country === "KE" ? (
+          {pricing !== null && region === null ? (
+            // Nothing on sale to this country: it's free there (backend services.free_in).
+            <T>{"It's free in your country: create an account and use everything, with nothing to pay."}</T>
+          ) : country === "KE" ? (
             <T vars={{ days: trialDays }}>
               {"Start with {days} days free, no card needed. Then pay for a month or a year at a time, by M-Pesa or card. Nothing renews by itself."}
             </T>
@@ -115,11 +118,7 @@ export async function PricingView({ country }: { country: string }) {
         <p className="rounded-xl bg-ink-card p-8 text-[16px] text-ink-muted">
           <T>{"The prices couldn't be loaded just now. Please try again in a few minutes."}</T>
         </p>
-      ) : region === null ? (
-        <p className="rounded-xl bg-ink-card p-8 text-[16px] text-ink-muted">
-          <T>{"Subscriptions aren't on sale just yet. Everything is free while we get ready."}</T>
-        </p>
-      ) : (
+      ) : region === null ? null : (
         <PricingPlans
           plans={region.plans}
           features={INCLUDED}

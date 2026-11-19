@@ -32,7 +32,8 @@ function StatusBadge({ sub }: { sub: MySubscription }) {
         : sub.state === "negotiated" ? [msg("Active, agreed terms"), "brand"]
           : sub.state === "staff" ? [msg("Staff"), "gray"]
             : sub.state === "tester" ? [msg("Tester"), "gray"]
-              : [msg("Expired"), "red"];
+              : sub.state === "free" ? [msg("Free"), "brand"]
+                : [msg("Expired"), "red"];
   const colours = {
     brand: "bg-brand-50 text-brand-700 ring-brand-600/20 dark:bg-brand-900/30 dark:text-brand-300",
     gray: "bg-gray-100 text-gray-700 ring-gray-500/20 dark:bg-dark-elevated dark:text-gray-300",
@@ -75,6 +76,8 @@ function dueRow(sub: MySubscription, t: Translate, locale: string): { label: str
       return { label: t("Next payment due"), value: t("Never: staff access") };
     case "tester":
       return { label: t("Next payment due"), value: t("Never: tester access") };
+    case "free":
+      return { label: t("Next payment due"), value: t("Never: free in your country") };
     default:
       return sub.access_until
         ? { label: t("Access ended"), value: when }
@@ -135,7 +138,7 @@ export default function BillingPage() {
 
   const due = sub ? dueRow(sub, t, locale) : null;
   const button =
-    !sub || sub.state === "staff" || sub.state === "tester" ? null
+    !sub || sub.state === "staff" || sub.state === "tester" || sub.state === "free" ? null
       : sub.state === "paid" || sub.state === "negotiated" ? t("Renew or add time")
         : t("Subscribe");
 

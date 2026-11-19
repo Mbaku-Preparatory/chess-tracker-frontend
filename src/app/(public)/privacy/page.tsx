@@ -257,7 +257,9 @@ export default async function PrivacyPolicyPage() {
           using a copy of DB-IP&rsquo;s IP-to-country database kept on our own server (IP
           geolocation by{" "}
           <a href="https://db-ip.com" className="underline">DB-IP</a>), so your address is not sent
-          to anyone for this. We do not store the result. After your first payment, the country of
+          to anyone for this. We keep the country it gives (never the address itself) with your
+          account, because the app is free in some countries and the reminder emails need to know
+          which. After your first payment, the country of
           the card that paid (or Kenya, for M-Pesa) sets your prices from then on, and we keep which
           price group that put you in.
         </p>
